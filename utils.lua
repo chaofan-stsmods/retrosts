@@ -33,14 +33,6 @@ function shallowcopy(orig)
 	return copy
 end
 
-math.randomseed(tstamp())
-function shuffle(tInput)
-	for i = #tInput,1,-1 do
-		local j = math.random(i)
-		tInput[i],tInput[j] = tInput[j],tInput[i]
-	end
-end
-
 function lerp(from,to,progress)
 	if math.abs(from - to) < 1 then
 		return to
@@ -99,6 +91,24 @@ function resetColors(colors)
 	end
 end
 
+local syncQueue = {}
+local hasSync = false
+function queueSync(mask,bank)
+	if not hasSync then
+		sync(mask,bank)
+		hasSync = true
+		return
+	end
+	table.insert(syncQueue,table.pack(mask,bank))
+end
+
+function doSync()
+	if #syncQueue > 0 then
+		sync(table.unpack(table.remove(syncQueue,1)))
+	end
+	hasSync = #syncQueue > 0
+end
+
 function noop() end
 
 -- objects
@@ -109,4 +119,56 @@ function Object:new(o)
 	setmetatable(o, self)
 	self.__index = self
 	return o
+end
+
+-- random
+local A1, A2 = 727595, 798405  -- 5^17=D20*A1+A2
+local D20, D40 = 1048576, 1099511627776  -- 2^20, 2^40
+
+Random = Object:new{x1=0,x2=1}
+function Random:new(seed,x2)
+	seed = math.floor(seed or tstamp())
+	local x1 = seed
+	if x2 == nil then
+		x1 = math.floor(seed/D20)
+		x2 = seed - x1*D20
+	end
+	x1 = x1 % D20
+	x2 = x2 % D20
+	x2 = math.floor(x2/2)*2+1
+	return Object.new(self,{x1=x1,x2=x2})
+end
+
+function Random:randRaw()
+	local x1 = self.x1
+	local x2 = self.x2
+    local u = x2*A2
+    local v = (x1*A2 + x2*A1) % D20
+    v = (v*D20 + u) % D40
+    self.x1 = math.floor(v/D20)
+    self.x2 = v - self.x1*D20
+    return v
+end
+
+function Random:rand()
+	return self:randRaw()/D40
+end
+
+function Random:randInt(from,to)
+	if to == nil then
+		to = from
+		from = 1
+	end
+	return math.floor(self:rand() * (to-from+1)) + from
+end
+
+function Random:randBool()
+	return self:rand() > 0.5
+end
+
+function Random:shuffle(array)
+	for i = #array,1,-1 do
+		local j = self:randInt(i)
+		array[i],array[j] = array[j],array[i]
+	end
 end

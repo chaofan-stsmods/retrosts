@@ -75,10 +75,13 @@ function drawCardBack(card,large,colorless,l,t)
 	mapColor(9,cardRarityColor[card.rarity][2])
 	if large then
 		map(3,2,7,7,l,t,0)
-		spr(cardTypeToSprIndex[card.type],l+48,t,0)
+		--spr(cardTypeToSprIndex[card.type],l+48,t,0)
 	else
 		map(10,2,4,5,l,t,0)
 	end
+	local typeLeft = card.cost >= -1 and l+8 or l
+	spr(29,typeLeft,t-6,0)
+	spr(cardTypeToSprIndex[card.type],typeLeft,t-6,0)
 	if not colorless then
 		resetColors{14,15}
 	end
@@ -86,6 +89,7 @@ function drawCardBack(card,large,colorless,l,t)
 end
 
 function drawCost(card,colorless,l,t)
+	t = t-5
 	if card.cost >= -1 then
 		spr(colorless and 46 or 45,l,t,0)
 		local costStr = card.cost == -1 and 'X' or tostring(card.cost)
@@ -96,10 +100,10 @@ function drawCost(card,colorless,l,t)
 end
 
 function drawTitle(card,large,l,t)
-    local titleStart = card.cost>=-1 and l+9 or l+1
+    local titleStart = l+2
     local cardName = card.name
-	if #cardName > 6 and not large then
-		cardName = cardName:sub(1,6)
+	if #cardName > 8 and not large then
+		cardName = cardName:sub(1,8)
 	end
 	print(cardName,titleStart,t+2,card.rarity == 'rare' and 0 or 12,false,1,true)
 end

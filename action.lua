@@ -3,6 +3,11 @@
 
 actions = {}
 runningAction = nil
+function resetActions()
+	actions = {}
+	runningAction = nil
+end
+
 function addAction(pos,action)
 	if action == nil then
 		table.insert(actions,pos)
@@ -71,7 +76,7 @@ function ShuffleAction:tick()
 	for i=#discardPile,1,-1 do
 		table.insert(drawPile,table.remove(discardPile,i))
 	end
-	shuffle(drawPile)
+	shuffleRand:shuffle(drawPile)
 	self.isDone = true
 end
 
