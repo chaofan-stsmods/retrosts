@@ -2,7 +2,7 @@
 -- powers
 
 Power = Object:new{
-	owner=nil,amount=0,stackable=true,debuff=false,turnBased=false,maxAmount=99,icon=40,iconflip=0,priority=100,
+	owner=nil,amount=0,stackable=true,debuff=false,turnBased=false,maxAmount=999,icon=40,iconflip=0,priority=100,
 	onTurnStart=noop,
 	onAttacked=function(self,damage,source,card) return damage end,
 	onAttack=function(self,damage,target,card) return damage end,

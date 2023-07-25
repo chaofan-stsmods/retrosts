@@ -134,6 +134,10 @@ end
 
 DamageAction = Action:new{source=nil,target=nil,value=nil,type=nil,duration=10}
 function DamageAction:tick()
+	if not self.source.alive then
+		self.isDone = true
+		return
+	end
 	if self.duration == self.startDuration then
 		self.target:damage(self.source,self.value,self.type)
 	end
@@ -159,13 +163,19 @@ function EndTurnAction:tick()
 		addAction(DiscardAllCardsAction:new())
 		player:onTurnEnd()
 		for _, enemy in ipairs(enemies) do
-			enemy:onTurnStart()
+			if enemy.alive then
+				enemy:onTurnStart()
+			end
 		end
 		for _, enemy in ipairs(enemies) do
-			enemy:enemyTurn()
+			if enemy.alive then
+				enemy:enemyTurn()
+			end
 		end
 		for _, enemy in ipairs(enemies) do
-			enemy:onTurnEnd()
+			if enemy.alive then
+				enemy:onTurnEnd()
+			end
 		end
 		addAction(NewTurnAction:new())
 	end

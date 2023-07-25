@@ -1,8 +1,8 @@
+-- creature
 ---@diagnostic disable: lowercase-global
--- creatures
 
 Creature = Object:new{
-	hp=100,maxHp=100,x=0,y=0,width=3,height=3,block=0,powerIndex=0,powers={},
+	hp=100,maxHp=100,x=0,y=0,width=3,height=3,block=0,powerIndex=0,powers={},alive=true,visible=true,
 	applyPowers=noop,
 	onCombatStart=noop,
 	onTurnEnd=noop,
@@ -20,9 +20,11 @@ function Creature:new(o)
 end
 
 function Creature:tick()
-    self:drawImage()
-	self:drawHealthBar()
-	self:drawPowers()
+	if self.visible then
+		self:drawImage()
+		self:drawHealthBar()
+		self:drawPowers()
+	end
 end
 
 function Creature:drawHealthBar()
@@ -57,9 +59,10 @@ function Creature:drawPowers()
 	local y = self.y+8*self.height+8
 	for _, power in ipairs(self.powers) do
 		spr(power.icon,x,y,0)
-		if power.stackable then
+		if power.stackable and power.amount ~= 0 then
 			local color = power.turnBased and 12 or (power.amount > 0 and 5 or 2)
-			local width = print(tostring(power.amount),x+5,y+3,color,false,1,true)
+			local left = power.amount > 0 and x+5 or x+1
+			local width = print(tostring(power.amount),left,y+3,color,false,1,true)
 			x = x+5+width
 		else
 			x = x+8
@@ -81,6 +84,15 @@ function Creature:damage(source,value,type)
 		end
 	end
 	self.hp = self.hp - value
+	if self.hp < 0 then
+		self.hp = 0
+		self:die()
+	end
+end
+
+function Creature:die()
+	self.alive = false
+	self.visible = false
 end
 
 function Creature:onTurnStart()

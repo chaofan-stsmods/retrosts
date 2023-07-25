@@ -132,9 +132,11 @@ end
 
 function setupEnemies()
 	enemies = {}
-	local enemy = Cultist:new({ hp=51,maxHp=51,x=140,y=48,width=4,height=4 })
+	local enemy = Cultist:new({ hp=51,maxHp=51,x=110,y=48,width=4,height=4 })
 	table.insert(enemies,enemy)
-	enemy = Cultist:new({ hp=51,maxHp=51,x=180,y=48,width=4,height=4 })
+	enemy = Cultist:new({ hp=51,maxHp=51,x=150,y=48,width=4,height=4 })
+	table.insert(enemies,enemy)
+	enemy = Cultist:new({ hp=51,maxHp=51,x=190,y=48,width=4,height=4 })
 	table.insert(enemies,enemy)
 end
 
@@ -250,35 +252,51 @@ function drawHand()
 end
 
 function combatControls()
-	function handisNotInHand(i) return not hand[i].isNotInHand end
+	function cardIsInHand(i) return not hand[i].isNotInHand end
+	function enemyIsAlive(i) return enemies[i].alive end
 	if combatSelection.type == 'hand' then
 		if combatSelection.index == 0 and #hand > 0 and not inEnemyTurn then
-			combatSelection.index = nextOrOtherIndexInTableIf(hand,combatSelection.index,handisNotInHand)
+			combatSelection.index = nextOrOtherIndexInTableIf(hand,combatSelection.index,cardIsInHand)
 		end
 		if btnp(2) then
-			combatSelection.index = previousOrOtherIndexInTableIf(hand,combatSelection.index,handisNotInHand)
+			combatSelection.index = previousOrOtherIndexInTableIf(hand,combatSelection.index,cardIsInHand)
 		elseif btnp(3) then
-			combatSelection.index = nextOrOtherIndexInTableIf(hand,combatSelection.index,handisNotInHand)
+			combatSelection.index = nextOrOtherIndexInTableIf(hand,combatSelection.index,cardIsInHand)
 		elseif btnp(4) and combatSelection.index >= 1 and combatSelection.index <= #hand and hand[combatSelection.index].card:canUse() then
-			combatSelection.type = 'usecard'
 			combatSelection.handIndex = combatSelection.index
-			combatSelection.index = 1
+			combatSelection.index = nextOrOtherIndexInTableIf(enemies,0,enemyIsAlive)
 			local card = hand[combatSelection.handIndex].card
-			if card.enemyTarget and not card.toAllEnemy then
-				hand[combatSelection.handIndex].card:applyPowers(enemies[combatSelection.index])
+			combatSelection.singleEnemy = card.enemyTarget and not card.toAllEnemy
+			if combatSelection.index == 0 and combatSelection.singleEnemy then
+				combatSelection.index = combatSelection.handIndex
+				combatSelection.handIndex = nil
+			else
+				combatSelection.type = 'usecard'
+				if combatSelection.singleEnemy then
+					hand[combatSelection.handIndex].card:applyPowers(enemies[combatSelection.index])
+				end
 			end
 		elseif btnp(7) then
 			combatSelection.index = 0
 		end
 	elseif combatSelection.type == 'usecard' then
+		if combatSelection.index == 0 or not enemyIsAlive(combatSelection.index) then
+			combatSelection.index = nextOrOtherIndexInTableIf(enemies,combatSelection.index,enemyIsAlive)
+			if combatSelection.index == 0 and combatSelection.singleEnemy then
+				combatSelection.type = 'hand'
+				combatSelection.index = combatSelection.handIndex
+				hand[combatSelection.handIndex].card:applyPowers()
+				combatSelection.handIndex = nil
+			end
+		end
 		if btnp(2) then
-			combatSelection.index = limit(combatSelection.index-1,1,#enemies)
+			combatSelection.index = previousOrOtherIndexInTableIf(enemies,combatSelection.index,enemyIsAlive)
 			local card = hand[combatSelection.handIndex].card
 			if card.enemyTarget and not card.toAllEnemy then
 				hand[combatSelection.handIndex].card:applyPowers(enemies[combatSelection.index])
 			end
 		elseif btnp(3) then
-			combatSelection.index = limit(combatSelection.index+1,1,#enemies)
+			combatSelection.index = nextOrOtherIndexInTableIf(enemies,combatSelection.index,enemyIsAlive)
 			local card = hand[combatSelection.handIndex].card
 			if card.enemyTarget and not card.toAllEnemy then
 				hand[combatSelection.handIndex].card:applyPowers(enemies[combatSelection.index])
@@ -286,7 +304,7 @@ function combatControls()
 		elseif btnp(4) then
 			addAction(UseCardAction:new(combatSelection.handIndex,enemies[combatSelection.index]))
 			combatSelection.type = 'hand'
-			combatSelection.index = previousOrOtherIndexInTableIf(hand,combatSelection.handIndex,handisNotInHand)
+			combatSelection.index = previousOrOtherIndexInTableIf(hand,combatSelection.handIndex,cardIsInHand)
 			combatSelection.handIndex = nil
 		elseif btnp(5) or btnp(7) then
 			combatSelection.type = 'hand'
@@ -369,6 +387,24 @@ function nextIndexInTableIf(table,currentIndex,condition)
 		return currentIndex
 	end
 	return nextIndex
+end
+
+-- lose
+function lose()
+	cls(0)
+	player:tick()
+	for i=1,#enemies do
+		enemies[i]:tick()
+	end
+	tickEffects()
+	drawTopBar()
+	local str = 'You Lose!'
+	local strWidth = strWidth(str,false,false,3)
+	printShadowed('You Lose!',120-strWidth/2,30,3,1,3)
+	if btnp(4) or btnp(5) then
+		screen = 'title'
+		sync(1|4,0)
+	end
 end
 
 -- main

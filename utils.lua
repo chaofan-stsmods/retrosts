@@ -1,12 +1,15 @@
+-- utils
 ---@diagnostic disable: lowercase-global
 
-function strWidth(str,fixed,small)
-	return print(str,0,-8,0,fixed,1,small)
+function strWidth(str,fixed,small,scale)
+	scale = scale or 1
+	return print(str,0,-8*scale,0,fixed,scale,small)
 end
 
-function printShadowed(str,x,y,color,shadowColor)
-	print(str,x+1,y+1,shadowColor or 15,false)
-	print(str,x,y,color,false)
+function printShadowed(str,x,y,color,shadowColor,scale)
+	scale = scale or 1
+	print(str,x+1,y+1,shadowColor or 15,false,scale)
+	print(str,x,y,color,false,scale)
 end
 
 function limit(num,min,max)
@@ -107,5 +110,3 @@ function Object:new(o)
 	self.__index = self
 	return o
 end
-
-trace(Object)

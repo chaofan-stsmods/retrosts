@@ -24,7 +24,7 @@ end
 
 Strike = Card:new{ name='Strike',description='{63} !D!.',rarity='basic',cost=1,baseDamage=6,damage=6,enemyTarget=true }
 function Strike:use(target)
-	return { DamageAction:new{target=target,source=self,value=self.damage} }
+	return { DamageAction:new{target=target,source=player,value=self.damage} }
 end
 
 Defend = Card:new{ name='Defend',description='Gain !B! {47}.',rarity='basic',type='skill',cost=1,baseBlock=5,block=5,playerTarget=true }
@@ -34,5 +34,5 @@ end
 
 Bash = Card:new{ name='Bash',description='{63} !D!. NL Apply !M! {60}.',rarity='basic',cost=2,enemyTarget=true,baseDamage=8,damage=8,baseMagic=2,magic=2 }
 function Bash:use(target)
-	return { DamageAction:new{target=target,source=self,value=self.damage}, ApplyPowerAction:new(VulnerablePower:new(target,self.magic)) }
+	return { DamageAction:new{target=target,source=player,value=self.damage}, ApplyPowerAction:new(VulnerablePower:new(target,self.magic)) }
 end

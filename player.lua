@@ -12,3 +12,8 @@ function Player:applyPowers()
 		enemy:applyPowers()
 	end
 end
+
+function Player:die()
+	screen = 'lose'
+	Creature.die(self)
+end

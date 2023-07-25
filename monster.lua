@@ -52,7 +52,9 @@ end
 
 function Monster:tick()
 	Creature.tick(self)
-	self:drawIntent()
+	if self.visible then
+		self:drawIntent()
+	end
 end
 
 intentSpriteMap = {
