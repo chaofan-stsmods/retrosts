@@ -6,7 +6,7 @@ Creature = Object:new{
 	applyPowers=noop,
 	onCombatStart=noop,
 	onTurnEnd=noop,
-    drawImage=noop,
+	drawImage=noop,
 }
 function Creature:new(o)
 	o = o or {}

@@ -1,8 +1,9 @@
+-- player
 ---@diagnostic disable: lowercase-global
 
 Player = Creature:new{
-    x=30,y=52,
-    getStartDeck=function() return {} end
+	x=30,y=52,
+	getStartDeck=function() return {} end
 }
 function Player:applyPowers()
 	for _, cardItem in ipairs(hand) do
@@ -14,6 +15,6 @@ function Player:applyPowers()
 end
 
 function Player:die()
-	screen = 'lose'
+	transferScreen('lose')
 	Creature.die(self)
 end

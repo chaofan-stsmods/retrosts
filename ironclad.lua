@@ -6,7 +6,7 @@ function Ironclad:drawImage()
 end
 
 function Ironclad:getStartDeck()
-    local deck = {}
+	local deck = {}
 	local strike = Strike:new()
 	table.insert(deck,strike)
 	table.insert(deck,strike)
@@ -19,7 +19,7 @@ function Ironclad:getStartDeck()
 	table.insert(deck,defend)
 	table.insert(deck,defend)
 	table.insert(deck,Bash:new())
-    return deck
+	return deck
 end
 
 Strike = Card:new{ name='Strike',description='{63} !D!.',rarity='basic',cost=1,baseDamage=6,damage=6,enemyTarget=true }

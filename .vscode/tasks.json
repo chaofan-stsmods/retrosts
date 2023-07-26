@@ -1,29 +1,29 @@
 // See https://go.microsoft.com/fwlink/?LinkId=733558
 // for the documentation about the tasks.json format
 {
-    "version": "2.0.0",
-    "tasks": [
-        {
-            "label": "Run TIC-80.exe",
-            "type": "process",
-            "command": "D:\\Games\\tic80-v1.0-win\\tic80.exe",
-            "args": [
-                "${file}",
-                "--fs=${fileDirname}",
-                "--skip"
-            ],
-            "problemMatcher": []
-        },
-        {
-            "label": "Run STS",
-            "type": "process",
-            "command": "D:\\Games\\tic80-v1.0-win\\tic80.exe",
-            "args": [
-                "C:\\Users\\Chaofan\\AppData\\Roaming\\com.nesbox.tic\\TIC-80\\myproj\\sts\\sts.lua",
-                "--fs=C:\\Users\\Chaofan\\AppData\\Roaming\\com.nesbox.tic\\TIC-80\\myproj\\sts",
-                "--skip"
-            ],
-            "problemMatcher": []
-        }
-    ]
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "Run TIC-80.exe",
+			"type": "process",
+			"command": "D:\\Games\\tic80-v1.0-win\\tic80.exe",
+			"args": [
+				"${file}",
+				"--fs=${fileDirname}",
+				"--skip"
+			],
+			"problemMatcher": []
+		},
+		{
+			"label": "Run STS",
+			"type": "process",
+			"command": "D:\\Games\\tic80-v1.0-win\\tic80.exe",
+			"args": [
+				"C:\\Users\\Chaofan\\AppData\\Roaming\\com.nesbox.tic\\TIC-80\\myproj\\sts\\sts.lua",
+				"--fs=C:\\Users\\Chaofan\\AppData\\Roaming\\com.nesbox.tic\\TIC-80\\myproj\\sts",
+				"--skip"
+			],
+			"problemMatcher": []
+		}
+	]
 }

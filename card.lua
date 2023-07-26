@@ -60,9 +60,9 @@ function CardItem:tick()
 		l = self.x-16
 		t = self.y-20
 	end
-    drawCardBack(self.card,self.large,colorless,l,t)
-    drawCost(self.card,colorless,l,t)
-    drawTitle(self.card,self.large,l,t)
+	drawCardBack(self.card,self.large,colorless,l,t)
+	drawCost(self.card,colorless,l,t)
+	drawTitle(self.card,self.large,l,t)
 	drawDescription(self.card,self.card.description,l+3,t+10,self.large and 51 or 27,self.large and 999 or 4)
 end
 
@@ -100,8 +100,8 @@ function drawCost(card,colorless,l,t)
 end
 
 function drawTitle(card,large,l,t)
-    local titleStart = l+2
-    local cardName = card.name
+	local titleStart = l+2
+	local cardName = card.name
 	if #cardName > 8 and not large then
 		cardName = cardName:sub(1,8)
 	end
@@ -121,7 +121,7 @@ function drawDescription(card,description,x,y,lineWidth,maxLine)
 				return
 			end
 		else
-			local lastStart = 0
+			local lastStart = 1
 			local findStart,findEnd,findStr = findMinimal(word,{'({%d+})','(!%w!)'},lastStart)
 			while findStart and findEnd and findStr do
 				local strBeforeFind = word:sub(lastStart,findStart-1)

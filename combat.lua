@@ -14,6 +14,7 @@ turn = 1
 inEnemyTurn = false
 
 function startCombat()
+	transferScreen('combat')
 	shuffleRand = Random:new(seed+20)
 	setupEnemies()
 	resetActions()
@@ -35,6 +36,7 @@ function startCombat()
 end
 
 function setupEnemies()
+	queueSync(2,1)
 	enemies = {}
 	local enemy = Cultist:new({ hp=51,maxHp=51,x=110,y=48,width=4,height=4 })
 	table.insert(enemies,enemy)
@@ -156,8 +158,8 @@ function drawHand()
 end
 
 function combatControls()
-	function cardIsInHand(i) return not hand[i].isNotInHand end
-	function enemyIsAlive(i) return enemies[i].alive end
+	local function cardIsInHand(i) return not hand[i].isNotInHand end
+	local function enemyIsAlive(i) return enemies[i].alive end
 
 	if combatSelection.type == 'hand' then
 		if combatSelection.index == 0 and #hand > 0 and not inEnemyTurn then
@@ -237,61 +239,4 @@ function removeHand(index)
 	elseif combatSelection.type == 'usecard' and combatSelection.handIndex > index then
 		combatSelection.handIndex = combatSelection.handIndex - 1
 	end
-end
-
-function previousOrOtherIndexInTableIf(table,currentIndex,condition)
-	local previous = previousIndexInTableIf(table,currentIndex,condition)
-	if previous == 0 then
-		return nextIndexInTableIf(table,currentIndex,condition)
-	end
-	return previous
-end
-
-function nextOrOtherIndexInTableIf(table,currentIndex,condition)
-	local next = nextIndexInTableIf(table,currentIndex,condition)
-	if next == 0 then
-		return previousIndexInTableIf(table,currentIndex,condition)
-	end
-	return next
-end
-
-function previousIndexInTableIf(table,currentIndex,condition)
-	currentIndex = limit(currentIndex,1,#table)
-	if currentIndex == nil then
-		return 0
-	end
-	local condition = condition or function () return true end
-	local previousIndex = currentIndex
-	repeat
-		previousIndex = previousIndex - 1
-	until previousIndex < 1 or condition(previousIndex)
-	if previousIndex < 1 then
-		if not condition(currentIndex) then
-			return 0
-		end
-		return currentIndex
-	end
-	return previousIndex
-end
-
-function nextIndexInTableIf(table,currentIndex,condition)
-	if currentIndex == 0 and #table > 0 and condition(1) then
-		return 1
-	end
-	currentIndex = limit(currentIndex,1,#table)
-	if currentIndex == nil then
-		return 0
-	end
-	local condition = condition or function () return true end
-	local nextIndex = currentIndex
-	repeat
-		nextIndex = nextIndex + 1
-	until nextIndex > #table or condition(nextIndex)
-	if nextIndex > #table then
-		if not condition(currentIndex) then
-			return 0
-		end
-		return currentIndex
-	end
-	return nextIndex
 end
