@@ -8,14 +8,15 @@ function event()
 	else
 		cls(0)
 	end
-	drawTopBar()
+	tickEffects()
+	tickTopBar(true)
 end
 
 function openEventScreen(event)
 	currentEvent = event or currentEvent
 	transferScreen('event')
 	if currentEvent and currentEvent.spritebank then
-		queueSync(2,event.spritebank)
+		queueSync(2,currentEvent.spritebank)
 	end
 end
 
@@ -68,10 +69,15 @@ end
 function Event:tick()
 	self:drawBackground()
 	self:drawOptions()
-	self:controlOptions()
+	self:eventControls()
 end
 
-function Event:controlOptions()
+function Event:eventControls()
+	if cursorOnTopBar then
+		self.selectedOption = 0
+		return
+	end
+
 	local function validOption(i) return not self.options[i].locked end
 	if self.selectedOption == 0 then
 		self.selectedOption = nextOrOtherIndexInTableIf(self.options,self.selectedOption,validOption)
@@ -86,7 +92,7 @@ function Event:controlOptions()
 	end
 end
 
-NeowEvent = Event:new()
+NeowEvent = Event:new{screen='entry',spritebank=0}
 function NeowEvent:new(random)
 	local o = Event.new(self)
 	table.insert(o.options,{description='[ Obtain a card. ]'})
@@ -99,5 +105,16 @@ end
 function NeowEvent:drawBackground()
 	map(30,0,30,17,0,0)
 	player:drawImage()
-	sprmap(14,2,13,10,136,16)
+	sprmap(16,34,13,10,136,16)
+end
+
+function NeowEvent:onOption()
+	if self.screen == 'entry' then
+		self.screen = 'exit'
+		self.options = {}
+		table.insert(self.options,{description='[Leave]'})
+	else
+		completeRoom()
+		transferScreen('mapScreen')
+	end
 end

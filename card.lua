@@ -2,9 +2,10 @@
 ---@diagnostic disable: lowercase-global
 
 Card = Object:new{
-	name='',description='',cost=0,type='attack',rarity='common',color='red',
+	name='',description='',cost=0,type='attack',rarity='common',
 	damage=0,baseDamage=0,block=0,baseBlock=0,magic=0,baseMagic=0,
-	enemyTarget=false,playerTarget=false,toAllEnemy=false
+	enemyTarget=false,playerTarget=false,toAllEnemy=false,
+	color={2,1},costIcon=45,typeIconColor=4
 }
 
 function Card:copy()
@@ -45,13 +46,11 @@ function Card:resetPower()
 end
 
 CardItem = Object:new{ x=0,y=136,tx=0,ty=136,card=nil,large=false,isNotInHand=false }
-cardTypeToSprIndex = {attack=57,skill=58,power=59}
-cardFaceColor = {2,1}
+cardTypeToSprIndex = {attack=57,skill=58,power=59,status=55,curse=56}
 cardRarityColor = {basic={14,15},common={14,15},special={14,15},uncommon={10,9},rare={4,3}}
 function CardItem:tick()
 	self.x = lerp(self.x,self.tx,0.2)
 	self.y = lerp(self.y,self.ty,0.2)
-	local colorless = self.card.color == 'colorless'
 	local l,t
 	if self.large then
 		l = self.x-28
@@ -60,17 +59,16 @@ function CardItem:tick()
 		l = self.x-16
 		t = self.y-20
 	end
-	drawCardBack(self.card,self.large,colorless,l,t)
-	drawCost(self.card,colorless,l,t)
+	drawCardBack(self.card,self.large,l,t)
+	drawCost(self.card,l,t,self.isNotInHand)
 	drawTitle(self.card,self.large,l,t)
 	drawDescription(self.card,self.card.description,l+3,t+10,self.large and 51 or 27,self.large and 999 or 4)
 end
 
-function drawCardBack(card,large,colorless,l,t)
-	if not colorless then
-		mapColor(14,cardFaceColor[1])
-		mapColor(15,cardFaceColor[2])
-	end
+function drawCardBack(card,large,l,t)
+	mapColor(14,card.color[1])
+	mapColor(15,card.color[2])
+	mapColor(3,card.typeIconColor)
 	mapColor(10,cardRarityColor[card.rarity][1])
 	mapColor(9,cardRarityColor[card.rarity][2])
 	if large then
@@ -82,19 +80,16 @@ function drawCardBack(card,large,colorless,l,t)
 	local typeLeft = card.cost >= -1 and l+8 or l
 	spr(29,typeLeft,t-6,0)
 	spr(cardTypeToSprIndex[card.type],typeLeft,t-6,0)
-	if not colorless then
-		resetColors{14,15}
-	end
-	resetColors{9,10}
+	resetColors{3,9,10,14,15}
 end
 
-function drawCost(card,colorless,l,t)
+function drawCost(card,l,t,notInHand)
 	t = t-5
 	if card.cost >= -1 then
-		spr(colorless and 46 or 45,l,t,0)
+		spr(card.costIcon,l,t,0)
 		local costStr = card.cost == -1 and 'X' or tostring(card.cost)
 		local txtWidth = strWidth(costStr)
-		local color = card:canUse() and 12 or 1
+		local color = (card:canUse() or notInHand) and 12 or 1
 		printShadowed(costStr,l+4-txtWidth//2,t+1,color)
 	end
 end

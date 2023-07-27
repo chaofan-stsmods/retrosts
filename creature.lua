@@ -75,6 +75,9 @@ function Creature:drawPowers()
 end
 
 function Creature:damage(source,value,type)
+	if not source.alive or not self.alive then
+		return
+	end
 	type = type or 'attack'
 	if type ~= 'hploss' then
 		if self.block > 0 then

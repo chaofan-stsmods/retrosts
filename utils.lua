@@ -28,6 +28,15 @@ function printShadowed(str,x,y,color,shadowColor,scale)
 	print(str,x,y,color,false,scale)
 end
 
+function printGlowed(str,x,y,color,glowColor,scale)
+	scale = scale or 1
+	print(str,x+1,y,glowColor or 15,false,scale)
+	print(str,x-1,y,glowColor or 15,false,scale)
+	print(str,x,y-1,glowColor or 15,false,scale)
+	print(str,x,y+1,glowColor or 15,false,scale)
+	print(str,x,y,color,false,scale)
+end
+
 function limit(num,min,max)
 	if min > max then return nil end
 	if num < min then return min end
@@ -56,16 +65,17 @@ function lerp(from,to,progress)
 	return from * (1 - progress) + to * progress
 end
 
-function drawSelectionBox(x,y,w,h,color)
+function drawSelectionBox(x,y,w,h,color,l)
 	color = color or 4
-	line(x,y,x+3,y,color)
-	line(x,y,x,y+3,color)
-	line(x+w,y,x+w-3,y,color)
-	line(x+w,y,x+w,y+3,color)
-	line(x+w,y+h,x+w-3,y+h,color)
-	line(x+w,y+h,x+w,y+h-3,color)
-	line(x,y+h,x+3,y+h,color)
-	line(x,y+h,x,y+h-3,color)
+	l = l or 3
+	line(x,y,x+l,y,color)
+	line(x,y,x,y+l,color)
+	line(x+w-1,y,x+w-l-1,y,color)
+	line(x+w-1,y,x+w-1,y+l,color)
+	line(x+w-1,y+h-1,x+w-l-1,y+h-1,color)
+	line(x+w-1,y+h-1,x+w-1,y+h-l-1,color)
+	line(x,y+h-1,x+l,y+h-1,color)
+	line(x,y+h-1,x,y+h-l-1,color)
 end
 
 function drawBezier(count,x0,y0,x1,y1,x2,y2)
@@ -134,6 +144,13 @@ function table:indexOf(item)
 		end
 	end
 	return nil
+end
+
+function makeRand(act,room,index)
+	act = act or 0
+	room = room or 0
+	index = index or 0
+	return Random:new(seed+10000*act+20*room+2*index)
 end
 
 function noop() end

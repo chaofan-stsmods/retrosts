@@ -9,14 +9,15 @@ discardPile = {}
 exhaustPile = {}
 hand = {}
 energy = 3
-combatSelection = {type='hand',index=1}
 turn = 1
 inEnemyTurn = false
+combatSpriteBank = 1
+local combatSelection = {type='hand',index=1}
 
 function startCombat()
-	transferScreen('combat')
-	shuffleRand = Random:new(seed+20)
+	shuffleRand = makeRand(act,room.id,1)
 	setupEnemies()
+	openCombatScreen()
 	resetActions()
 	drawPile = {}
 	discardPile = {}
@@ -33,17 +34,25 @@ function startCombat()
 		enemy:onCombatStart()
 	end
 	addAction(NewTurnAction:new())
+	combatSelection.type = 'hand'
+	combatSelection.index = 0
+end
+
+function openCombatScreen()
+	transferScreen('combat')
+	queueSync(2,combatSpriteBank)
 end
 
 function setupEnemies()
-	queueSync(2,1)
+	combatSpriteBank = 1
 	enemies = {}
-	local enemy = Cultist:new({ hp=51,maxHp=51,x=110,y=48,width=4,height=4 })
+	local enemy
+	--enemy = Cultist:new({ hp=51,maxHp=51,x=110,y=48,width=4,height=4 })
+	--table.insert(enemies,enemy)
+	enemy = Cultist:new({ hp=1,maxHp=51,x=150,y=48,width=4,height=4 })
 	table.insert(enemies,enemy)
-	enemy = Cultist:new({ hp=51,maxHp=51,x=150,y=48,width=4,height=4 })
-	table.insert(enemies,enemy)
-	enemy = Cultist:new({ hp=51,maxHp=51,x=190,y=48,width=4,height=4 })
-	table.insert(enemies,enemy)
+	--enemy = Cultist:new({ hp=51,maxHp=51,x=190,y=48,width=4,height=4 })
+	--table.insert(enemies,enemy)
 end
 
 function combat()
@@ -56,20 +65,7 @@ function combat()
 	tickActions()
 	combatControls()
 	drawOverlay()
-	drawTopBar()
-end
-
-function drawTopBar()
-	map(0,0,30,1,0,0)
-	printShadowed(player.hp .. '/' .. player.maxHp,17,1,3)
-	printShadowed(tostring(gold),73,1,4)
-	printShadowed(tostring(floor),153,1,12)
-	printShadowed(#deck,225,1,12)
-	for i = 1,#potions do
-		if potions[i] == 'slot' then
-			spr(41,96+i*8,0,0)
-		end
-	end
+	tickTopBar(true)
 end
 
 function tickEffects()
@@ -158,6 +154,17 @@ function drawHand()
 end
 
 function combatControls()
+	if cursorOnTopBar then
+		if combatSelection.type ~= 'topbar' then
+			combatSelection.oldType = combatSelection.type
+			combatSelection.type = 'topbar'
+		end
+		return
+	elseif combatSelection.type == 'topbar' then
+		combatSelection.type = combatSelection.oldType or 'hand'
+		combatSelection.oldType = nil
+	end
+
 	local function cardIsInHand(i) return not hand[i].isNotInHand end
 	local function enemyIsAlive(i) return enemies[i].alive end
 
@@ -212,7 +219,7 @@ function combatControls()
 		elseif btnp(4) then
 			addAction(UseCardAction:new(combatSelection.handIndex,enemies[combatSelection.index]))
 			combatSelection.type = 'hand'
-			combatSelection.index = previousOrOtherIndexInTableIf(hand,combatSelection.handIndex,cardIsInHand)
+			combatSelection.index = nextOrOtherIndexInTableIf(hand,combatSelection.handIndex,cardIsInHand)
 			combatSelection.handIndex = nil
 		elseif btnp(5) or btnp(7) then
 			combatSelection.type = 'hand'
@@ -239,4 +246,23 @@ function removeHand(index)
 	elseif combatSelection.type == 'usecard' and combatSelection.handIndex > index then
 		combatSelection.handIndex = combatSelection.handIndex - 1
 	end
+end
+
+function checkCombatEnd()
+	local hasAlive = false
+	for _, enemy in ipairs(enemies) do
+		if enemy.alive then
+			hasAlive = true
+		end
+	end
+	if not hasAlive then
+		combatEnd()
+	end
+end
+
+function combatEnd()
+	local rewardRandom = makeRand(act,room.id,2)
+	generateRewards(rewardRandom)
+	completeRoom()
+	transferScreen('reward')
 end

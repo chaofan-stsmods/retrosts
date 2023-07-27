@@ -6,16 +6,16 @@ local mapScreenScrollSpeed = 0
 local mapTop = 440
 local bossPosition = -424
 local bossY = 16
-mapScreenAvailableSelections = {1,2,3,4,5,6,7}
+mapScreenAvailableSelections = {}
 mapScreenX = 0
 mapScreenY = 1
-mapScreenSelectionMode = true
+mapScreenSelectionMode = false
 function mapScreen()
 	cls(0)
 	drawMap(mapScreenScroll)
-	drawTopBar()
-	scrollMapControl()
-	selectMapControl()
+	tickEffects()
+	mapControls()
+	tickTopBar(true)
 end
 
 local roomIconMap = {event=503,monster=499,rest=501,treasure=502,shop=504,elite=500,strongElite=507}
@@ -44,12 +44,23 @@ function drawMap(y)
 	end
 	if y > -64 then
 		spr(257,88,bossDrawY,12,2,0,0,4,4)
+		if (mapScreenY == bossY and mapScreenSelectionMode) or
+			(currentRoomY == bossY and not mapScreenSelectionMode) then
+			drawSelectionBox(257,88,64,64,15)
+		end
 	end
 	resetColor(15)
 end
 
+function mapControls()
+	scrollMapControl()
+	selectMapControl()
+end
+
 function scrollMapControl()
-	if btn(0) then
+	if cursorOnTopBar then
+		mapScreenScrollSpeed = mapScreenScrollSpeed*0.8
+	elseif btn(0) then
 		mapScreenScrollSpeed = limit(mapScreenScrollSpeed+1,-4,4) or 0
 	elseif btn(1) then
 		mapScreenScrollSpeed = limit(mapScreenScrollSpeed-1,-4,4) or 0
@@ -65,6 +76,16 @@ function scrollMapControl()
 end
 
 function selectMapControl()
+	if cursorOnTopBar then
+		mapScreenX = 0
+		return
+	end
+
+	if btnp(5) then
+		backToRoom()
+		return
+	end
+
 	if not mapScreenSelectionMode or mapScreenY < 1 or mapScreenY > bossY then
 		return
 	end
@@ -83,6 +104,10 @@ function selectMapControl()
 		mapScreenX = previousOrOtherIndexInTableIf(stsMap[mapScreenY],mapScreenX,validRoom)
 	elseif btnp(3) then
 		mapScreenX = nextOrOtherIndexInTableIf(stsMap[mapScreenY],mapScreenX,validRoom)
+	end
+
+	if btnp(4) then
+		enterRoom(mapScreenX)
 	end
 end
 
@@ -128,7 +153,8 @@ function drawRoom(room,rx,ry)
 		else
 			for _, nextRoom in ipairs(room.next) do
 				if mapScreenSelectionMode then
-					if nextRoom.y <= #playerPath and playerPath[nextRoom.y] == nextRoom.x then
+					if inPlayerPath and ((nextRoom.y <= #playerPath and playerPath[nextRoom.y] == nextRoom.x) or
+						(nextRoom.y == mapScreenY and table.indexOf(mapScreenAvailableSelections,nextRoom.x))) then
 						mapColor(15,15)
 					else
 						mapColor(15,13)
@@ -153,7 +179,7 @@ function generateMap(random,width,height,count)
 	for i=1,height do
 		map[i] = {}
 		for j=1,width do
-			local room = {id=(i-1)*width+j-1,x=j,y=i,previous={},next={},type=nil,hasEdge=false,completed=false}
+			local room = {id=(i-1)*width+j,x=j,y=i,previous={},next={},type=nil,hasEdge=false,completed=false}
 			if i == 1 then
 				room.type = 'monster'
 			elseif i == height then
@@ -205,7 +231,7 @@ function generateMap(random,width,height,count)
 	mapTop = 16-bossPosition
 	bossY = height+1
 
-	local bossRoom = {id=height*width,x=1,y=bossY,previous={},next={},type=nil,hasEdge=false,completed=false}
+	local bossRoom = {id=height*width+1,x=1,y=bossY,previous={},next={},type='boss',hasEdge=false,completed=false}
 	for j=1,width do
 		local room = map[height][j]
 		if room.hasEdge then
@@ -264,7 +290,10 @@ function assignRooms(unassignedRooms,roomPool)
 end
 
 function canAssignRoom(room,roomType)
-	if (roomType == 'elite' or roomType == 'rest') and (room.y <= 5 or room.y >= 14) then
+	if (roomType == 'elite' or roomType == 'rest') and room.y <= 5 then
+		return false
+	end
+	if roomType == 'rest' and room.y >= 14 then
 		return false
 	end
 	if roomType == 'elite' or roomType == 'rest' or roomType == 'shop' then

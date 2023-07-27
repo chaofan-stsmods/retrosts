@@ -57,6 +57,11 @@ function Monster:tick()
 	end
 end
 
+function Monster:die()
+	Creature.die(self)
+	checkCombatEnd()
+end
+
 intentSpriteMap = {
 	attack={76},defend={47},attackDefend={76,47},buff={77},attackBuff={76,77},defendBuff={79},debuff={78},attackDebuff={76,78},
 	strongDebuff={77}

@@ -126,12 +126,7 @@ function UseCardEndAction:tick()
 	self.cardItem.ty = 136
 	Action.tick(self)
 	if self.isDone or (math.abs(self.cardItem.tx - self.cardItem.x) < 2 and math.abs(self.cardItem.ty - self.cardItem.y) < 2) then
-		for i = #hand,1,-1 do
-			if hand[i] == self.cardItem then
-				removeHand(i)
-				break
-			end
-		end
+		removeHand(table.indexOf(hand,self.cardItem))
 		table.insert(discardPile,self.cardItem.card)
 		self.isDone = true
 	end
@@ -151,7 +146,7 @@ end
 
 GainBlockAction = Action:new{target=nil,value=nil,duration=10}
 function GainBlockAction:tick()
-	if self.duration == self.startDuration then
+	if self.duration == self.startDuration and self.target.alive then
 		self.target.block = self.target.block + self.value
 	end
 	Action.tick(self)
