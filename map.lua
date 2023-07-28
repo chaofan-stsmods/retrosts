@@ -1,25 +1,32 @@
 -- map
 ---@diagnostic disable: lowercase-global
 
-local mapScreenScroll = 0
-local mapScreenScrollSpeed = 0
-local mapTop = 440
-local bossPosition = -424
-local bossY = 16
 mapScreenAvailableSelections = {}
 mapScreenX = 0
 mapScreenY = 1
 mapScreenSelectionMode = false
-function mapScreen()
-	cls(0)
-	drawMap(mapScreenScroll)
+
+MapWindow = Window:new{name='MapWindow',scroll=0,scrollSpeed=0,maxScroll=440,bossPosition=-424,bossY=16}
+function MapWindow:onOpen()
+    queueSync(1|4,1)
+    queueSync(2,0)
+
+	local height = #stsMap
+	self.bossPosition = 56-height*32
+	self.maxScroll = 16-self.bossPosition
+	self.bossY = height+1
+	self.scroll = limit(mapScreenY*32-80,0,self.maxScroll)
+end
+
+function MapWindow:tick()
+	self:drawMap(self.scroll)
 	tickEffects()
-	mapControls()
+	self:mapControls()
 	tickTopBar(true)
 end
 
 local roomIconMap = {event=503,monster=499,rest=501,treasure=502,shop=504,elite=500,strongElite=507}
-function drawMap(y)
+function MapWindow:drawMap(y)
 	local backgroundOffset = y % 8
 	for i = 0,16 do
 		sprmap(0,1,30,1,0,i*8+backgroundOffset,0)
@@ -34,76 +41,75 @@ function drawMap(y)
 		for j = 1,#stsMap[i] do
 			local room = stsMap[i][j]
 			if room.hasEdge then
-				drawRoom(room,20+(j-1)*32,112-(i-1)*32+y)
+				self:drawRoom(room,20+(j-1)*32,112-(i-1)*32+y)
 			end
 		end
 	end
-	local bossDrawY = y+bossPosition
-	if bossY <= #playerPath then
+	local bossDrawY = y+self.bossPosition
+	if self.bossY <= currentRoomY then
 		resetColor(15)
 	end
 	if y > -64 then
-		spr(257,88,bossDrawY,12,2,0,0,4,4)
-		if (mapScreenY == bossY and mapScreenSelectionMode) or
-			(currentRoomY == bossY and not mapScreenSelectionMode) then
-			drawSelectionBox(257,88,64,64,15)
+		if (mapScreenY == self.bossY and mapScreenSelectionMode) or
+			(currentRoomY == self.bossY and not mapScreenSelectionMode) then
+			drawSelectionBox(88-2,bossDrawY-2,68,68,15)
 		end
+		spr(257,88,bossDrawY,12,2,0,0,4,4)
 	end
 	resetColor(15)
 end
 
-function mapControls()
-	scrollMapControl()
-	selectMapControl()
+function MapWindow:mapControls()
+	self:scrollMapControl()
+	self:selectMapControl()
 end
 
-function scrollMapControl()
+function MapWindow:scrollMapControl()
 	if cursorOnTopBar then
-		mapScreenScrollSpeed = mapScreenScrollSpeed*0.8
+		self.scrollSpeed = self.scrollSpeed*0.8
 	elseif btn(0) then
-		mapScreenScrollSpeed = limit(mapScreenScrollSpeed+1,-4,4) or 0
+		self.scrollSpeed = limit(self.scrollSpeed+1,-4,4) or 0
 	elseif btn(1) then
-		mapScreenScrollSpeed = limit(mapScreenScrollSpeed-1,-4,4) or 0
+		self.scrollSpeed = limit(self.scrollSpeed-1,-4,4) or 0
 	else
-		mapScreenScrollSpeed = mapScreenScrollSpeed*0.8
+		self.scrollSpeed = self.scrollSpeed*0.8
 	end
-	mapScreenScroll = mapScreenScroll + mapScreenScrollSpeed
-	if mapScreenScroll < 0 then
-		mapScreenScroll = 0
-	elseif mapScreenScroll > mapTop then
-		mapScreenScroll = mapTop
+	self.scroll = self.scroll + self.scrollSpeed
+	if self.scroll < 0 then
+		self.scroll = 0
+	elseif self.scroll > self.maxScroll then
+		self.scroll = self.maxScroll
 	end
 end
 
-function selectMapControl()
+function MapWindow:selectMapControl()
 	if cursorOnTopBar then
 		mapScreenX = 0
 		return
 	end
 
 	if btnp(5) then
-		backToRoom()
+		self:close()
 		return
 	end
 
-	if not mapScreenSelectionMode or mapScreenY < 1 or mapScreenY > bossY then
+	if not mapScreenSelectionMode or mapScreenY < 1 or mapScreenY > self.bossY then
 		return
 	end
 
-	if mapScreenY == bossY then
+	if mapScreenY == self.bossY then
 		mapScreenX = 1
-		return
-	end
+	else
+		local function validRoom(i) return stsMap[mapScreenY][i].hasEdge and table.indexOf(mapScreenAvailableSelections,i) end
+		if mapScreenX == 0 then
+			mapScreenX = nextOrOtherIndexInTableIf(stsMap[mapScreenY],mapScreenX,validRoom)
+		end
 
-	local function validRoom(i) return stsMap[mapScreenY][i].hasEdge and table.indexOf(mapScreenAvailableSelections,i) end
-	if mapScreenX == 0 then
-		mapScreenX = nextOrOtherIndexInTableIf(stsMap[mapScreenY],mapScreenX,validRoom)
-	end
-
-	if btnp(2) then
-		mapScreenX = previousOrOtherIndexInTableIf(stsMap[mapScreenY],mapScreenX,validRoom)
-	elseif btnp(3) then
-		mapScreenX = nextOrOtherIndexInTableIf(stsMap[mapScreenY],mapScreenX,validRoom)
+		if btnp(2) then
+			mapScreenX = previousOrOtherIndexInTableIf(stsMap[mapScreenY],mapScreenX,validRoom)
+		elseif btnp(3) then
+			mapScreenX = nextOrOtherIndexInTableIf(stsMap[mapScreenY],mapScreenX,validRoom)
+		end
 	end
 
 	if btnp(4) then
@@ -126,7 +132,7 @@ local function middleEdge(rx,ry)
 	spr(505,rx,ry-20,12)
 end
 
-function drawRoom(room,rx,ry)
+function MapWindow:drawRoom(room,rx,ry)
 	if ry > -10 and ry < 160 then
 		local inPlayerPath = room.y <= #playerPath and playerPath[room.y] == room.x
 		if inPlayerPath or (room.y == mapScreenY and table.indexOf(mapScreenAvailableSelections,room.x)) then
@@ -227,11 +233,8 @@ function generateMap(random,width,height,count)
 
 	random:shuffle(roomPool)
 	assignRooms(unassignedRooms,roomPool)
-	bossPosition = 56-height*32
-	mapTop = 16-bossPosition
-	bossY = height+1
 
-	local bossRoom = {id=height*width+1,x=1,y=bossY,previous={},next={},type='boss',hasEdge=false,completed=false}
+	local bossRoom = {id=height*width+1,x=1,y=height+1,previous={},next={},type='boss',hasEdge=false,completed=false}
 	for j=1,width do
 		local room = map[height][j]
 		if room.hasEdge then

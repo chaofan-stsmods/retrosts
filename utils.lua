@@ -109,13 +109,30 @@ function mapColor(from,to)
 	poke4(PALETTE_MAP * 2 + from, to)
 end
 
+function darkenColors()
+	poke(PALETTE_MAP+0,0)
+	poke(PALETTE_MAP+1,14*16+15)
+	poke(PALETTE_MAP+2,13*16+13)
+	poke(PALETTE_MAP+3,15*16+14)
+	poke(PALETTE_MAP+4,15*16)
+	poke(PALETTE_MAP+5,13*16+14)
+	poke(PALETTE_MAP+6,14*16+13)
+	poke(PALETTE_MAP+7,15)
+end
+
 function resetColor(color)
 	mapColor(color,color)
 end
 
 function resetColors(colors)
-	for _, color in ipairs(colors) do
-		resetColor(color)
+	if colors == nil then
+		for i = 0,8 do
+			poke(PALETTE_MAP+i,i*2+(i*2+1)*16)
+		end
+	else
+		for _, color in ipairs(colors) do
+			resetColor(color)
+		end
 	end
 end
 

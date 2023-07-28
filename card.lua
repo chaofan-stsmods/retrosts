@@ -45,7 +45,7 @@ function Card:resetPower()
 	self.block = self.baseBlock
 end
 
-CardItem = Object:new{ x=0,y=136,tx=0,ty=136,card=nil,large=false,isNotInHand=false }
+CardItem = Object:new{ x=0,y=136,tx=0,ty=136,card=nil,large=false,isNotInHand=false}
 cardTypeToSprIndex = {attack=57,skill=58,power=59,status=55,curse=56}
 cardRarityColor = {basic={14,15},common={14,15},special={14,15},uncommon={10,9},rare={4,3}}
 function CardItem:tick()
@@ -62,7 +62,7 @@ function CardItem:tick()
 	drawCardBack(self.card,self.large,l,t)
 	drawCost(self.card,l,t,self.isNotInHand)
 	drawTitle(self.card,self.large,l,t)
-	drawDescription(self.card,self.card.description,l+3,t+10,self.large and 51 or 27,self.large and 999 or 4)
+	drawDescription(self.card,self.card.description,l+3,t+10,self.large and 51 or 27,self.large and 999 or 3)
 end
 
 function drawCardBack(card,large,l,t)

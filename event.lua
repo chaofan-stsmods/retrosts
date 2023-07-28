@@ -12,14 +12,6 @@ function event()
 	tickTopBar(true)
 end
 
-function openEventScreen(event)
-	currentEvent = event or currentEvent
-	transferScreen('event')
-	if currentEvent and currentEvent.spritebank then
-		queueSync(2,currentEvent.spritebank)
-	end
-end
-
 -- event instance
 
 Event = Object:new{
@@ -103,7 +95,7 @@ function NeowEvent:new(random)
 end
 
 function NeowEvent:drawBackground()
-	map(30,0,30,17,0,0)
+	drawActBackground()
 	player:drawImage()
 	sprmap(16,34,13,10,136,16)
 end
@@ -112,9 +104,10 @@ function NeowEvent:onOption()
 	if self.screen == 'entry' then
 		self.screen = 'exit'
 		self.options = {}
+		self.selectedOption = 0
 		table.insert(self.options,{description='[Leave]'})
 	else
 		completeRoom()
-		transferScreen('mapScreen')
+		openWindowAbove(MapWindow:new())
 	end
 end

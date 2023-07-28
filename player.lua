@@ -14,7 +14,12 @@ function Player:applyPowers()
 	end
 end
 
+function Player:onCombatEnd()
+	self.block = 0
+	self.power = {}
+end
+
 function Player:die()
-	transferScreen('lose')
+	switchWindow(LoseWindow:new())
 	Creature.die(self)
 end

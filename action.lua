@@ -81,8 +81,7 @@ function ShuffleAction:tick()
 end
 
 UseCardAction = Action:new{cardItem=nil,target=nil,duration=20}
-function UseCardAction:new(cardIndex,target)
-	local cardItem = hand[cardIndex]
+function UseCardAction:new(cardItem,target)
 	cardItem.isNotInHand = true
 	cardItem.ty = cardItem.ty - 16
 	if not cardItem.card.enemyTarget or cardItem.card.toAllEnemy then

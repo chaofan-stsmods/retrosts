@@ -17,7 +17,7 @@ local combatSelection = {type='hand',index=1}
 function startCombat()
 	shuffleRand = makeRand(act,room.id,1)
 	setupEnemies()
-	openCombatScreen()
+	closeChildWindows()
 	resetActions()
 	drawPile = {}
 	discardPile = {}
@@ -38,11 +38,6 @@ function startCombat()
 	combatSelection.index = 0
 end
 
-function openCombatScreen()
-	transferScreen('combat')
-	queueSync(2,combatSpriteBank)
-end
-
 function setupEnemies()
 	combatSpriteBank = 1
 	enemies = {}
@@ -56,7 +51,7 @@ function setupEnemies()
 end
 
 function combat()
-	map(30,0,30,17,0,0)
+	drawActBackground()
 	player:tick()
 	for i=1,#enemies do
 		enemies[i]:tick()
@@ -66,6 +61,10 @@ function combat()
 	combatControls()
 	drawOverlay()
 	tickTopBar(true)
+end
+
+function drawActBackground()
+	map(30,0,30,17,0,0)
 end
 
 function tickEffects()
@@ -187,7 +186,7 @@ function combatControls()
 			else
 				combatSelection.type = 'usecard'
 				if combatSelection.singleEnemy then
-					hand[combatSelection.handIndex].card:applyPowers(enemies[combatSelection.index])
+					card:applyPowers(enemies[combatSelection.index])
 				end
 			end
 		elseif btnp(7) then
@@ -208,23 +207,25 @@ function combatControls()
 			combatSelection.index = previousOrOtherIndexInTableIf(enemies,combatSelection.index,enemyIsAlive)
 			local card = hand[combatSelection.handIndex].card
 			if card.enemyTarget and not card.toAllEnemy then
-				hand[combatSelection.handIndex].card:applyPowers(enemies[combatSelection.index])
+				card:applyPowers(enemies[combatSelection.index])
 			end
 		elseif btnp(3) then
 			combatSelection.index = nextOrOtherIndexInTableIf(enemies,combatSelection.index,enemyIsAlive)
 			local card = hand[combatSelection.handIndex].card
 			if card.enemyTarget and not card.toAllEnemy then
-				hand[combatSelection.handIndex].card:applyPowers(enemies[combatSelection.index])
+				card:applyPowers(enemies[combatSelection.index])
 			end
 		elseif btnp(4) then
-			addAction(UseCardAction:new(combatSelection.handIndex,enemies[combatSelection.index]))
+			addAction(UseCardAction:new(hand[combatSelection.handIndex],enemies[combatSelection.index]))
 			combatSelection.type = 'hand'
 			combatSelection.index = nextOrOtherIndexInTableIf(hand,combatSelection.handIndex,cardIsInHand)
 			combatSelection.handIndex = nil
 		elseif btnp(5) or btnp(7) then
 			combatSelection.type = 'hand'
 			combatSelection.index = combatSelection.handIndex
-			hand[combatSelection.handIndex].card:applyPowers()
+			if combatSelection.handIndex <= #hand then
+				hand[combatSelection.handIndex].card:applyPowers()
+			end
 			combatSelection.handIndex = nil
 			if btnp(7) then
 				combatSelection.index = 0
@@ -262,7 +263,8 @@ end
 
 function combatEnd()
 	local rewardRandom = makeRand(act,room.id,2)
-	generateRewards(rewardRandom)
+	local rewards = generateRewards(rewardRandom)
+	player:onCombatEnd()
 	completeRoom()
-	transferScreen('reward')
+	openWindowAbove(RewardWindow:new(rewards))
 end

@@ -8,7 +8,7 @@ Monster = Creature:new{
 }
 
 function Monster:applyPowers()
-	if self.lockIntentDamage then
+	if self.lockIntentDamage or not self.alive then
 		return
 	end
 	local damage = self.intentBaseDamage
@@ -26,12 +26,12 @@ end
 
 function Monster:onCombatStart()
 	addAction(NextIntentAction:new(self,true,false))
-	Creature:onCombatStart()
+	Creature.onCombatStart(self)
 end
 
 function Monster:onTurnEnd()
 	addAction(AllEnemyTurnEndAction:new(self))
-	Creature:onTurnEnd()
+	Creature.onTurnEnd(self)
 end
 
 function Monster:enemyTurn()

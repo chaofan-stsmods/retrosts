@@ -5,15 +5,14 @@ Creature = Object:new{
 	hp=100,maxHp=100,x=0,y=0,width=3,height=3,block=0,powerIndex=0,powers={},alive=true,visible=true,
 	applyPowers=noop,
 	onCombatStart=noop,
-	onTurnEnd=noop,
 	drawImage=noop,
 }
 function Creature:new(o)
 	o = o or {}
 	o.powers={}
-	if o.maxHp then
+	if o.maxHp and not o.hp then
 		o.hp = o.maxHp
-	elseif o.hp then
+	elseif o.hp and not o.maxHp then
 		o.maxHp = o.hp
 	end
 	return Object.new(self,o)
@@ -102,6 +101,13 @@ function Creature:onTurnStart()
 	self.block = 0
 	for _, power in ipairs(self.powers) do
 		power:onTurnStart()
+	end
+end
+
+function Creature:onTurnEnd()
+	self.block = 0
+	for _, power in ipairs(self.powers) do
+		power:onTurnEnd()
 	end
 end
 

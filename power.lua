@@ -4,6 +4,7 @@
 Power = Object:new{
 	owner=nil,amount=0,stackable=true,debuff=false,turnBased=false,maxAmount=999,icon=40,iconflip=0,priority=100,
 	onTurnStart=noop,
+	onTurnEnd=noop,
 	onAttacked=function(self,damage,source,card) return damage end,
 	onAttack=function(self,damage,target,card) return damage end,
 	onAmountUpdated=noop,
@@ -43,7 +44,7 @@ function VulnerablePower:onAttacked(damage)
 end
 
 RitualPower = Power:new{icon=73}
-function RitualPower:onTurnStart()
+function RitualPower:onTurnEnd()
 	addAction(ApplyPowerAction:new(StrengthPower:new(self.owner,self.amount)))
 end
 

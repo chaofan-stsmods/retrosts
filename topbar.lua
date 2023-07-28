@@ -72,10 +72,10 @@ function controlTopBar()
 
     if btnp(4) then
         if topBarSelection.type == 'map' then
-            if screen ~= 'mapScreen' then
-                transferScreen('mapScreen')
+            if getmetatable(nearestWindow) == MapWindow then
+                nearestWindow:close()
             else
-                backToRoom()
+                openWindowAbove(MapWindow:new())
             end
             exitTopBar()
         end

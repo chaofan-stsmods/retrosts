@@ -12,6 +12,7 @@
 package.path = package.path..";C:/Users/Chaofan/AppData/Roaming/com.nesbox.tic/TIC-80/myproj/sts/?.lua"
 
 require 'utils'
+require 'window'
 require 'creature'
 require 'card'
 require 'action'
@@ -28,102 +29,11 @@ require 'reward'
 PALETTE_MAP = 0x3FF0
 HAND_LIMIT = 10
 
-lastScreen = 'title'
-screen = 'title'
-screenBankMap = {
-	title={[0]=1|4},
-	charselect={[0]=1|4},
-	lose={[1]=1|4},
-	combat={[1]=1|4},
-	mapScreen={[0]=2,[1]=1|4},
-	event={[1]=1|4},
-	reward={[0]=2,[1]=1|4},
-}
+switchWindow(TitleWindow:new())
 
 function TIC()
 	doSync()
-	_G[screen]()
-end
-
-function transferScreen(targetScreen)
-	lastScreen = screen
-	screen = targetScreen
-	for bank, mask in pairs(screenBankMap[targetScreen]) do
-		queueSync(mask,bank)
-	end
-end
-
--- title
-titleSelection = 1
-titleOptions = {'New Game','Exit'}
-
-function title()
-	if btnp(0) then
-		titleSelection = titleSelection - 1
-	elseif btnp(1) then
-		titleSelection = titleSelection + 1
-	end
-	titleSelection = limit(titleSelection,1,#titleOptions)
-
-	if btnp(4) then
-		if titleSelection == 2 then
-			exit()
-		elseif titleSelection == 1 then
-			transferScreen('charselect')
-		end
-	end
-
-	map(0,0,30,17,0,0)
-	local startY = 112
-	for i=1,#titleOptions do
-		local color = i == titleSelection and 4 or 12
-		printShadowed(titleOptions[i],10,startY,color)
-		startY = startY + 8
-	end
-end
-
--- charselect
-charSelection = 1
-chars = {'Ironclad','Silent','Defect','Watcher'}
-
-function charselect()
-	if btnp(0) then
-		charSelection = charSelection - 1
-	elseif btnp(1) then
-		charSelection = charSelection + 1
-	end
-	charSelection = limit(charSelection,1,#chars)
-
-	if btnp(4) then
-		startGame(chars[charSelection])
-	elseif btnp(5) then
-		transferScreen('title')
-	end
-
-	map(0,0,30,17,0,0)
-	local startY = 96
-	for i=1,#chars do
-		local color = i == charSelection and 4 or 12
-		printShadowed(chars[i],10,startY,color)
-		startY = startY + 8
-	end
-end
-
--- lose
-function lose()
-	cls(0)
-	player:tick()
-	for i=1,#enemies do
-		enemies[i]:tick()
-	end
-	tickEffects()
-	tickTopBar()
-	local str = 'You Lose!'
-	local strWidth = strWidth(str,false,false,3)
-	printShadowed('You Lose!',120-strWidth/2,30,3,1,3)
-	if btnp(4) or btnp(5) then
-		transferScreen('title')
-	end
+	window:windowTick()
 end
 
 -- in game properties
@@ -173,7 +83,8 @@ function startGame(character)
 	rubyKeyObtained = false
 	emeraldKeyObtained = false
 	sapphireKeyObtained = false
-	openEventScreen(NeowEvent:new(makeRand(act,room.id,1)))
+	currentEvent = NeowEvent:new(makeRand(act,room.id,1))
+	switchWindow(GameWindow:new())
 end
 
 function startAct(actId)
@@ -189,18 +100,6 @@ function startAct(actId)
 		table.insert(room.next,nextRoom)
 	end
 	roomType = 'event'
-end
-
-function backToRoom()
-	if roomType == 'event' then
-		openEventScreen()
-	elseif roomType == 'combat' then
-		if room.completed then
-			transferScreen('reward')
-		else
-			openCombatScreen()
-		end
-	end
 end
 
 function completeRoom()
@@ -243,7 +142,8 @@ function enterRoom(x)
 		startCombat()
 	else
 		roomType = 'event'
-		openEventScreen()
+		closeChildWindows()
+		-- TODO currentEvent = generateEvent()
 	end
 end
 
@@ -251,7 +151,7 @@ end
 
 queueSync(32,1)
 startGame('Ironclad')
-transferScreen('reward')
+--transferScreen('reward')
 --startCombat()
 
 -- <TILES>
