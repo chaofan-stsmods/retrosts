@@ -154,6 +154,17 @@ function doSync()
 	hasSync = #syncQueue > 0
 end
 
+function makeRand(act,room,index)
+	act = act or 0
+	room = room or 0
+	index = index or 0
+	return Random:new(seed+10000*act+20*room+2*index)
+end
+
+function noop() end
+
+-- table
+
 function table:indexOf(item)
 	for index, value in ipairs(self) do
 		if value == item then
@@ -163,14 +174,14 @@ function table:indexOf(item)
 	return nil
 end
 
-function makeRand(act,room,index)
-	act = act or 0
-	room = room or 0
-	index = index or 0
-	return Random:new(seed+10000*act+20*room+2*index)
+function table:allMatch(condition)
+	for _, value in ipairs(self) do
+		if not condition(value) then
+			return false
+		end
+	end
+	return true
 end
-
-function noop() end
 
 -- selection
 

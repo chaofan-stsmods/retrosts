@@ -57,12 +57,12 @@ function Creature:drawPowers()
 	local x = self.x
 	local y = self.y+8*self.height+8
 	for _, power in ipairs(self.powers) do
-		spr(power.icon,x,y,0)
+		spr(power.icon,x,y,0,1,power.iconflip)
 		if power.stackable and power.amount ~= 0 then
-			local color = power.turnBased and 12 or (power.amount > 0 and 5 or 2)
+			local color = power.turnBased and 12 or (power.amount > 0 and 5 or 3)
 			local left = power.amount > 0 and x+5 or x+1
 			local width = print(tostring(power.amount),left,y+3,color,false,1,true)
-			x = x+5+width
+			x = left+width
 		else
 			x = x+8
 		end
@@ -83,10 +83,16 @@ function Creature:damage(source,value,type)
 			local blocked = math.min(value,self.block)
 			self.block = self.block - blocked
 			value = value - blocked
+			if value == 0 then
+				addEffect(TextEffect:new{x=self.x+self.width*4,y=self.y,text='Blocked',color=11,ySpeed=-0.5})
+			end
 		end
 	end
+	if value > 0 then
+		addEffect(TextEffect:new{x=self.x+self.width*4,y=self.y,text=tostring(value),color=3,ySpeed=-0.5})
+	end
 	self.hp = self.hp - value
-	if self.hp < 0 then
+	if self.hp <= 0 then
 		self.hp = 0
 		self:die()
 	end
@@ -105,7 +111,6 @@ function Creature:onTurnStart()
 end
 
 function Creature:onTurnEnd()
-	self.block = 0
 	for _, power in ipairs(self.powers) do
 		power:onTurnEnd()
 	end
@@ -126,6 +131,7 @@ function Creature:getPower(powerType)
 			return self.powers[i]
 		end
 	end
+	return nil
 end
 
 function Creature:removePower(power)

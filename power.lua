@@ -57,3 +57,14 @@ StrengthPower = PositiveBuffNegativeDebuffPower:new{icon=76,iconflip=1}
 function StrengthPower:onAttack(damage)
 	return damage + self.amount
 end
+
+WeakPower = TurnBasedPower:new{debuff=true,icon=61,priority=150}
+function WeakPower:onAttack(damage)
+	return damage * 0.75
+end
+
+LoseStrengthPower = Power:new{debuff=true,icon=14}
+function LoseStrengthPower:onTurnEnd()
+	addAction(ApplyPowerAction:new(StrengthPower:new(self.owner,-self.amount)))
+	addAction(ReducePowerAction:new(self,self.amount))
+end

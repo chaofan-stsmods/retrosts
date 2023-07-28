@@ -1,0 +1,53 @@
+-- effect
+---@diagnostic disable: lowercase-global
+
+effects = {}
+pendingEffects = {}
+local tickingEffect = false
+function tickEffects()
+    tickingEffect = true
+	for i=#effects,1,-1 do
+		effects[i]:tick()
+		if effects[i].isDone then
+			table.remove(effects,i)
+		end
+	end
+    tickingEffect = false
+	for i=#pendingEffects,1,-1 do
+		table.insert(effects,pendingEffects[i])
+		table.remove(pendingEffects,i)
+	end
+end
+
+function addEffect(effect)
+    if tickingEffect then
+        table.insert(pendingEffects,effect)
+    else
+        table.insert(effects,effect)
+    end
+end
+
+Effect = Action:new()
+
+TextEffect = Effect:new{duration=120,color=2,xSpeed=0,ySpeed=0,text='',x=120,y=68}
+function TextEffect:tick()
+    print(self.text,self.x-strWidth(self.text,false,true)/2,self.y,self.color,false,1,true)
+    self.x = self.x + self.xSpeed
+    self.y = self.y + self.ySpeed
+    Effect.tick(self)
+end
+
+CardEffect = Effect:new{duration=50,cardItem=nil,tx=0,ty=0,pauseDuration=30}
+function CardEffect:tick()
+    self.pauseDuration = self.pauseDuration - 1
+    if self.pauseDuration == 0 then
+        self.cardItem.tx = self.tx
+        self.cardItem.ty = self.ty
+    end
+    self.cardItem:tick()
+    Effect.tick(self)
+    if math.abs(self.tx - self.cardItem.x) < 2 and math.abs(self.ty - self.cardItem.y) < 2 then
+        self.isDone = true
+    end
+end
+

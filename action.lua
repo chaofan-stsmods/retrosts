@@ -68,6 +68,7 @@ function DrawCardAction:tick()
 		end
 		local card = table.remove(drawPile,#drawPile)
 		table.insert(hand,CardItem:new{card=card})
+		card:applyPowers()
 	end
 end
 
@@ -84,7 +85,7 @@ UseCardAction = Action:new{cardItem=nil,target=nil,duration=20}
 function UseCardAction:new(cardItem,target)
 	cardItem.isNotInHand = true
 	cardItem.ty = cardItem.ty - 16
-	if not cardItem.card.enemyTarget or cardItem.card.toAllEnemy then
+	if not cardItem.card.enemyTarget or cardItem.card.toAllEnemies then
 		target = nil
 	end
 	return Action.new(self,{cardItem=cardItem,target=target})
@@ -101,14 +102,17 @@ function UseCardAction:tick()
 			self.cardItem.isNotInHand = false
 			return
 		end
+		local handIndex = table.indexOf(hand,self.cardItem)
+		if handIndex then
+			removeHand(handIndex)
+			table.insert(limbo,self.cardItem)
+		end
 		local cardActions = card:use(self.target) or {}
 		for i = 1, #cardActions do
 			addAction(i,cardActions[i])
 		end
 		addAction(#cardActions+1,UseCardEndAction:new(self.cardItem,self.target))
-		if card.cost == -1 then
-			energy = 0
-		elseif card.cost > 0 then
+		if card.cost > 0 then
 			energy = energy - card.cost
 		end
 	end
@@ -121,12 +125,32 @@ function UseCardEndAction:new(cardItem,target)
 end
 
 function UseCardEndAction:tick()
-	self.cardItem.tx = 240
-	self.cardItem.ty = 136
+	local card = self.cardItem.card
+	if card.type == 'power' then
+		self.cardItem.tx = player.x+player.width*4
+		self.cardItem.ty = player.y+player.height*4
+	elseif card.exhaust then
+		self.cardItem.tx = 120
+		self.cardItem.ty = -32
+	else
+		self.cardItem.tx = 240
+		self.cardItem.ty = 136
+	end
 	Action.tick(self)
 	if self.isDone or (math.abs(self.cardItem.tx - self.cardItem.x) < 2 and math.abs(self.cardItem.ty - self.cardItem.y) < 2) then
-		removeHand(table.indexOf(hand,self.cardItem))
-		table.insert(discardPile,self.cardItem.card)
+		local limboIndex = table.indexOf(limbo,self.cardItem)
+		if limboIndex then
+			table.remove(limbo,limboIndex)
+		end
+		card:resetPowers()
+		if card.type ~= 'power' then
+			if card.exhaust then
+				table.insert(exhaustPile,self.cardItem.card)
+			else
+				table.insert(discardPile,self.cardItem.card)
+			end
+		end
+		handApplyPowers()
 		self.isDone = true
 	end
 end
@@ -139,6 +163,41 @@ function DamageAction:tick()
 	end
 	if self.duration == self.startDuration then
 		self.target:damage(self.source,self.value,self.type)
+	end
+	Action.tick(self)
+end
+
+DamageAllEnemiesAction = Action:new{source=nil,value=nil,type=nil,duration=10}
+function DamageAllEnemiesAction:tick()
+	if not self.source.alive then
+		self.isDone = true
+		return
+	end
+	if self.duration == self.startDuration then
+		for i, enemy in ipairs(enemies) do
+			if enemy.alive then
+				enemy:damage(self.source,self.value[i],self.type)
+			end
+		end
+	end
+	Action.tick(self)
+end
+
+DamageRandomEnemyAction = Action:new{source=nil,value=nil,type=nil,duration=10}
+function DamageRandomEnemyAction:tick()
+	if not self.source.alive then
+		self.isDone = true
+		return
+	end
+	if self.duration == self.startDuration then
+		local aliveEnemies = {}
+		for i, enemy in ipairs(enemies) do
+			if enemy.alive then
+				table.insert(aliveEnemies,{enemy=enemy,damage=self.value[i]})
+			end
+		end
+		local target = aliveEnemies[miscRand:randInt(#aliveEnemies)]
+		target.enemy:damage(self.source,target.damage,self.type)
 	end
 	Action.tick(self)
 end
@@ -224,7 +283,7 @@ function ReducePowerAction:tick()
 		local owner = power.owner
 		power.amount = power.amount - self.amount
 		if power.amount == 0 then
-			owner:removePower(self.power)
+			owner:removePower(power)
 		else
 			power:onAmountUpdated()
 		end
@@ -245,11 +304,90 @@ function ApplyPowerAction:tick()
 		local existingPower = owner:getPower(getmetatable(power))
 		if existingPower then
 			existingPower.amount = limit(existingPower.amount+power.amount,-existingPower.maxAmount,existingPower.maxAmount)
-			existingPower:onAmountUpdated()
+			if existingPower.amount == 0 then
+				owner:removePower(existingPower)
+			else
+				existingPower:onAmountUpdated()
+			end
 		else
 			owner:addPower(power)
 		end
 		owner:applyPowers()
+	end
+	Action.tick(self)
+end
+
+GainEnergyAction = Action:new{duration=10}
+function GainEnergyAction:new(amount)
+	return Action.new(self,{amount=amount})
+end
+
+function GainEnergyAction:tick()
+	if self.duration == self.startDuration then
+		energy = energy + self.amount
+	end
+	Action.tick(self)
+end
+
+XCardAction = Action:new()
+function XCardAction:new(callback)
+	return Action.new(self,{callback=callback})
+end
+
+function XCardAction:tick()
+	if self.duration == self.startDuration then
+		if self.callback then
+			local actions = self.callback(energy) or {}
+			for i = 1, #actions do
+				addAction(i,actions[i])
+			end
+		end
+		energy = 0
+	end
+	Action.tick(self)
+end
+
+AnonymousAction = Action:new()
+function AnonymousAction:new(callback)
+	return Action.new(self,{callback=callback})
+end
+
+function AnonymousAction:tick()
+	if self.callback then
+		self.callback()
+	end
+	self.isDone = true
+end
+
+MakeTempCardToDiscardPileAction = Action:new{duration=30}
+function MakeTempCardToDiscardPileAction:new(card,amount)
+	amount = amount or 1
+	return Action.new(self,{card=card,amount=amount})
+end
+
+local cardPositionCandidates = {{80,68},{160,68},{40,68},{200,68},{100,28},{140,28},{60,28},{180,28}}
+function MakeTempCardToDiscardPileAction:tick()
+	if self.duration == self.startDuration then
+		for _ = 1,self.amount do
+			local card = self.card:copy()
+			table.insert(discardPile,card)
+			card:resetPowers()
+			local cardItem = CardItem:new{card=card,x=0,y=136}
+			local effect = CardEffect:new{cardItem=cardItem,pauseDuration=30,duration=50,tx=240,ty=136}
+			local useCandidates = false
+			for j = 1,#cardPositionCandidates do
+				if table.allMatch(effects,function (e) return e.useCardPosition ~= j end) then
+					useCandidates = true
+					cardItem.tx,cardItem.ty = table.unpack(cardPositionCandidates[j])
+					effect.useCardPosition = j
+					break
+				end
+			end
+			if not useCandidates then
+				cardItem.tx,cardItem.ty = miscRand:randInt(32,208),miscRand:randInt(40,104)
+			end
+			addEffect(effect)
+		end
 	end
 	Action.tick(self)
 end

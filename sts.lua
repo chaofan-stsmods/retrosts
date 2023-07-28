@@ -25,6 +25,7 @@ require 'map'
 require 'event'
 require 'topbar'
 require 'reward'
+require 'effect'
 
 PALETTE_MAP = 0x3FF0
 HAND_LIMIT = 10
@@ -45,8 +46,6 @@ gold = 0
 deck = {}
 potions = {'slot','slot','slot'}
 maxEnergy = 3
-effects = {}
-pendingEffects = {}
 rubyKeyObtained = false
 emeraldKeyObtained = false
 sapphireKeyObtained = false
@@ -311,6 +310,7 @@ startGame('Ironclad')
 -- 011:eeeeffeeeeef44feeef4424fef442444f442443ff33443ffeff33feeffffffff
 -- 012:000ddddd00deeeee0deeeeeedeeeeeeefeeeeeee0feeeeee00feeeee000fffff
 -- 013:ddddddddeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeffffffff
+-- 014:0000111000014441000134410011134101441441144434411333441001111100
 -- 025:ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
 -- 026:0111111101111111001111110011111100111111001111110011111100111111
 -- 027:1111111111111111111111111111111111111111111111111111111111111111
@@ -340,6 +340,7 @@ startGame('Ironclad')
 -- 051:00000000000eeeee0aaaaaaa0aaaaaaa0aaaaaaa0aaaaaaa09aaaaaa09999999
 -- 052:00000000eeeeeeeeaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa99999999
 -- 053:00000000eeeeee00aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa999999999
+-- 054:777777777cc7cc7777ccc007777c007777ccc7777cc0cc777700700777777777
 -- 055:0000000000000000003333000300003003033030030030300033003000000300
 -- 056:0000000000000000003333000333333003033030033333300030030000333300
 -- 057:0000000000000000000003300000333003033300003330000333000000303000

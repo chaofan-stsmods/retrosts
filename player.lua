@@ -6,9 +6,7 @@ Player = Creature:new{
 	getStartDeck=function() return {} end
 }
 function Player:applyPowers()
-	for _, cardItem in ipairs(hand) do
-		cardItem.card:applyPowers()
-	end
+	handApplyPowers()
 	for _, enemy in ipairs(enemies) do
 		enemy:applyPowers()
 	end
@@ -16,7 +14,7 @@ end
 
 function Player:onCombatEnd()
 	self.block = 0
-	self.power = {}
+	self.powers = {}
 end
 
 function Player:die()

@@ -3,11 +3,13 @@
 
 -- in combat properties
 shuffleRand = nil
+miscRand = nil
 enemies = {}
 drawPile = {}
 discardPile = {}
 exhaustPile = {}
 hand = {}
+limbo = {}
 energy = 3
 turn = 1
 inEnemyTurn = false
@@ -16,6 +18,7 @@ local combatSelection = {type='hand',index=1}
 
 function startCombat()
 	shuffleRand = makeRand(act,room.id,1)
+	miscRand = makeRand(act,room.id,2)
 	setupEnemies()
 	closeChildWindows()
 	resetActions()
@@ -23,6 +26,7 @@ function startCombat()
 	discardPile = {}
 	exhaustPile = {}
 	hand = {}
+	limbo = {}
 	turn = 0
 	inEnemyTurn = false
 	for _,card in ipairs(deck) do
@@ -42,12 +46,12 @@ function setupEnemies()
 	combatSpriteBank = 1
 	enemies = {}
 	local enemy
-	--enemy = Cultist:new({ hp=51,maxHp=51,x=110,y=48,width=4,height=4 })
-	--table.insert(enemies,enemy)
-	enemy = Cultist:new({ hp=1,maxHp=51,x=150,y=48,width=4,height=4 })
+	enemy = Cultist:new({ hp=51,maxHp=51,x=110,y=48,width=4,height=4 })
 	table.insert(enemies,enemy)
-	--enemy = Cultist:new({ hp=51,maxHp=51,x=190,y=48,width=4,height=4 })
-	--table.insert(enemies,enemy)
+	enemy = Cultist:new({ hp=51,maxHp=51,x=150,y=48,width=4,height=4 })
+	table.insert(enemies,enemy)
+	enemy = Cultist:new({ hp=51,maxHp=51,x=190,y=48,width=4,height=4 })
+	table.insert(enemies,enemy)
 end
 
 function combat()
@@ -57,27 +61,14 @@ function combat()
 		enemies[i]:tick()
 	end
 	tickEffects()
+	drawOverlay()
 	tickActions()
 	combatControls()
-	drawOverlay()
 	tickTopBar(true)
 end
 
 function drawActBackground()
 	map(30,0,30,17,0,0)
-end
-
-function tickEffects()
-	for i=#effects,1,-1 do
-		effects[i]:tick()
-		if effects[i].isDone then
-			table.remove(effects,i)
-		end
-	end
-	for i=#pendingEffects,1,-1 do
-		table.insert(effects,pendingEffects[i])
-		table.remove(pendingEffects,i)
-	end
 end
 
 function drawOverlay()
@@ -130,6 +121,9 @@ function drawHand()
 		hand[index].large = true
 		hand[index]:tick()
 	end
+	for _, cardItem in ipairs(limbo) do
+		cardItem:tick()
+	end
 	if combatSelection.type == 'usecard' then
 		local cardItem = hand[combatSelection.handIndex]
 		local card = cardItem.card
@@ -137,10 +131,12 @@ function drawHand()
 			drawSelectionBox(player.x,player.y,8*player.width,8*player.height)
 		end
 		if card.enemyTarget then
-			if card.toAllEnemy then
+			if card.toAllEnemies then
 				for i = 1,#enemies do
 					local enemy = enemies[i]
-					drawSelectionBox(enemy.x,enemy.y,8*enemy.width,8*enemy.height)
+					if enemy.alive then
+						drawSelectionBox(enemy.x,enemy.y,8*enemy.width,8*enemy.height)
+					end
 				end
 			else
 				local enemy = enemies[combatSelection.index]
@@ -179,7 +175,7 @@ function combatControls()
 			combatSelection.handIndex = combatSelection.index
 			combatSelection.index = nextOrOtherIndexInTableIf(enemies,0,enemyIsAlive)
 			local card = hand[combatSelection.handIndex].card
-			combatSelection.singleEnemy = card.enemyTarget and not card.toAllEnemy
+			combatSelection.singleEnemy = card.enemyTarget and not card.toAllEnemies
 			if combatSelection.index == 0 and combatSelection.singleEnemy then
 				combatSelection.index = combatSelection.handIndex
 				combatSelection.handIndex = nil
@@ -206,13 +202,13 @@ function combatControls()
 		if btnp(2) then
 			combatSelection.index = previousOrOtherIndexInTableIf(enemies,combatSelection.index,enemyIsAlive)
 			local card = hand[combatSelection.handIndex].card
-			if card.enemyTarget and not card.toAllEnemy then
+			if card.enemyTarget and not card.toAllEnemies then
 				card:applyPowers(enemies[combatSelection.index])
 			end
 		elseif btnp(3) then
 			combatSelection.index = nextOrOtherIndexInTableIf(enemies,combatSelection.index,enemyIsAlive)
 			local card = hand[combatSelection.handIndex].card
-			if card.enemyTarget and not card.toAllEnemy then
+			if card.enemyTarget and not card.toAllEnemies then
 				card:applyPowers(enemies[combatSelection.index])
 			end
 		elseif btnp(4) then
@@ -239,8 +235,20 @@ function combatControls()
 	end
 end
 
+function handApplyPowers()
+	for _, cardItem in ipairs(hand) do
+		cardItem.card:applyPowers()
+	end
+	if combatSelection.type == 'usecard' and combatSelection.handIndex > 0 and combatSelection.handIndex <= #hand and
+		combatSelection.index > 0 and combatSelection.index <= #enemies then
+		local card = hand[combatSelection.handIndex].card
+		if card.enemyTarget and not card.toAllEnemies then
+			card:applyPowers(enemies[combatSelection.index])
+		end
+	end
+end
+
 function removeHand(index)
-	hand[index].card:resetPower()
 	table.remove(hand,index)
 	if combatSelection.type == 'hand' and combatSelection.index > index then
 		combatSelection.index = combatSelection.index - 1

@@ -3,10 +3,22 @@
 
 Card = Object:new{
 	name='',description='',cost=0,type='attack',rarity='common',
-	damage=0,baseDamage=0,block=0,baseBlock=0,magic=0,baseMagic=0,
-	enemyTarget=false,playerTarget=false,toAllEnemy=false,
-	color={2,1},costIcon=45,typeIconColor=4
+	damage=0,baseDamage=0,block=0,baseBlock=0,magic=0,baseMagic=0,multiDamage={},
+	enemyTarget=false,playerTarget=false,toAllEnemies=false,
+	color={2,1},costIcon=45,typeIconColor=4,exhaust=false,
+	upgrade=noop,upgraded=false,tags={},
 }
+function Card:new(o)
+	local r = Object.new(self,o)
+	if type(r.upgrade) == 'table'then
+		local upgradeTable = r.upgrade
+		r.upgrade = function (self)
+			self:upgradeValues(upgradeTable)
+		end
+	end
+	r:resetPowers()
+	return r
+end
 
 function Card:copy()
 	local result = shallowcopy(self)
@@ -30,7 +42,28 @@ function Card:applyPowers(target)
 		damage = power:onAttack(damage,target,self)
 	end
 
-	if target ~= nil then
+	if self.toAllEnemies then
+		self.multiDamage = {}
+		local minDamage = 9999999
+		local maxDamage = 0
+		for i,enemy in ipairs(enemies) do
+			if enemy.alive then
+				local targetDamage = damage
+				for _,power in ipairs(enemy.powers) do
+					targetDamage = power:onAttacked(targetDamage,player,self)
+				end
+				targetDamage = math.floor(targetDamage)
+				self.multiDamage[i] = targetDamage
+				minDamage = math.min(minDamage,targetDamage)
+				maxDamage = math.max(maxDamage,targetDamage)
+			else
+				self.multiDamage[i] = 0
+			end
+		end
+		if minDamage == maxDamage then
+			damage = minDamage
+		end
+	elseif target ~= nil then
 		for _, power in ipairs(target.powers) do
 			damage = power:onAttacked(damage,player,self)
 		end
@@ -38,11 +71,24 @@ function Card:applyPowers(target)
 
 	self.damage = math.floor(damage)
 	self.block = math.floor(block)
+	self.magic = self.baseMagic
 end
 
-function Card:resetPower()
+function Card:resetPowers()
 	self.damage = self.baseDamage
 	self.block = self.baseBlock
+	self.magic = self.baseMagic
+end
+
+function Card:upgradeValues(o)
+	if self.upgraded then
+		return
+	end
+	for key, value in pairs(o) do
+		self[key] = value
+	end
+	self.upgraded = true
+	self.name = self.name .. '+'
 end
 
 CardItem = Object:new{ x=0,y=136,tx=0,ty=136,card=nil,large=false,isNotInHand=false}
@@ -85,12 +131,15 @@ end
 
 function drawCost(card,l,t,notInHand)
 	t = t-5
-	if card.cost >= -1 then
+	if card.cost >= 0 then
 		spr(card.costIcon,l,t,0)
 		local costStr = card.cost == -1 and 'X' or tostring(card.cost)
 		local txtWidth = strWidth(costStr)
 		local color = (card:canUse() or notInHand) and 12 or 1
 		printShadowed(costStr,l+4-txtWidth//2,t+1,color)
+	elseif card.cost == -1 then
+		spr(card.costIcon,l,t,0)
+		spr(54,l,t,7)
 	end
 end
 
@@ -100,7 +149,11 @@ function drawTitle(card,large,l,t)
 	if #cardName > 8 and not large then
 		cardName = cardName:sub(1,8)
 	end
-	print(cardName,titleStart,t+2,card.rarity == 'rare' and 0 or 12,false,1,true)
+	local color = card.upgraded and 5 or 12
+	if card.rarity == 'rare' then
+		color = card.upgraded and 6 or 0
+	end
+	print(cardName,titleStart,t+2,color,false,1,true)
 end
 
 function drawDescription(card,description,x,y,lineWidth,maxLine)
@@ -117,7 +170,7 @@ function drawDescription(card,description,x,y,lineWidth,maxLine)
 			end
 		else
 			local lastStart = 1
-			local findStart,findEnd,findStr = findMinimal(word,{'({%d+})','(!%w!)'},lastStart)
+			local findStart,findEnd,findStr = findMinimal(word,{'({%d+<?})','(!%w!)'},lastStart)
 			while findStart and findEnd and findStr do
 				local strBeforeFind = word:sub(lastStart,findStart-1)
 				if #strBeforeFind > 0 then
@@ -127,13 +180,20 @@ function drawDescription(card,description,x,y,lineWidth,maxLine)
 					end
 				end
 				if findStr:sub(1,1) == '{' then
-					local sprId = tonumber(findStr:sub(2,#findStr-1))
+					local flip = findStr:sub(#findStr-1,#findStr-1) == '<'
+					local sprId = tonumber(findStr:sub(2,#findStr-1-(flip and 1 or 0)))
 					if sprId then
 						currentX,currentY = moveLimitLineWidth(currentX,currentY,x,8,lineWidth)
 						if currentY > maxY then
 							return
 						end
-						spr(sprId,currentX,currentY-2,0)
+						if sprId >= 55 and sprId <= 59 then
+							mapColor(3,card.typeIconColor)
+							spr(sprId,currentX,currentY-2,0,1,flip and 1 or 0)
+							resetColor(3)
+						else
+							spr(sprId,currentX,currentY-2,0,1,flip and 1 or 0)
+						end
 						currentX = currentX + 8
 					end
 				elseif findStr:sub(1,1) == '!' then
@@ -150,7 +210,7 @@ function drawDescription(card,description,x,y,lineWidth,maxLine)
 						base = card.baseMagic
 						value = card.magic
 					end
-					local color = base > value and 5 or (base < value and type ~= 'M' and 3 or 12)
+					local color = base > value and 3 or (base < value and type ~= 'M' and 5 or 12)
 					currentX,currentY = moveLimitLineWidthAndPrint(tostring(value),currentX,currentY,x,lineWidth,maxY,color)
 					if currentY > maxY then
 						return

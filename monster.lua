@@ -30,8 +30,8 @@ function Monster:onCombatStart()
 end
 
 function Monster:onTurnEnd()
-	addAction(AllEnemyTurnEndAction:new(self))
 	Creature.onTurnEnd(self)
+	addAction(AllEnemyTurnEndAction:new(self))
 end
 
 function Monster:enemyTurn()
