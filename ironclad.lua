@@ -7,20 +7,19 @@ end
 
 function Ironclad:getStartDeck()
 	local deck = {}
-	local strike = Disarm:new()
-	table.insert(deck,Anger:new())
-	table.insert(deck,Rampage:new())
-	table.insert(deck,SeeingRed:new())
-	table.insert(deck,Uppercut:new())
-	table.insert(deck,Disarm:new())
+	local strike = Strike:new()
+	table.insert(deck,Metallicize:new())
+	table.insert(deck,Sentinel:new())
+	table.insert(deck,SecondWind:new())
+	table.insert(deck,PowerThrough:new())
+	table.insert(deck,SeverSoul:new())
 	local defend = Defend:new()
-	local entrench = Disarm:new()
-	entrench:upgrade()
-	table.insert(deck,Flex:new())
-	table.insert(deck,ShrugItOff:new())
-	table.insert(deck,Intimidate:new())
-	table.insert(deck,entrench)
-	table.insert(deck,Bash:new())
+	defend:upgrade()
+	table.insert(deck,Havoc:new())
+	table.insert(deck,Bloodletting:new())
+	table.insert(deck,RecklessCharge:new())
+	table.insert(deck,Armaments:new())
+	table.insert(deck,Barricade:new())
 	return deck
 end
 
@@ -118,7 +117,7 @@ end
 
 SwordBoomerang = RedCard:new{
 	name='Sword Boomerang',description='{63} !D! to a random enemy !M! times.',rarity='common',cost=1,baseDamage=3,baseMagic=3,
-	enemyTarget=true,toAllEnemies=true,upgrade={baseMagic=3}
+	enemyTarget=true,toAllEnemies=true,upgrade={baseMagic=4}
 }
 function SwordBoomerang:use()
 	local result = {}
@@ -374,4 +373,320 @@ Anger = RedCard:new{
 }
 function Anger:use(target)
 	return { DamageAction:new{target=target,source=player,value=self.damage},MakeTempCardToDiscardPileAction:new(self,1) }
+end
+
+Armaments = RedCard:new{
+	name='Armaments',description='Gain !B! {47}. NL Upgrade a card in hand for the combat.',rarity='common',type='skill',cost=1,baseBlock=5,
+	playerTarget=true,upgrade={description='Gain !B! {47}. NL Upgrade all cards in hand for the combat.'}
+}
+function Armaments:use()
+	return {
+		GainBlockAction:new{target=player,value=self.block},
+		AnonymousAction:new(function ()
+			local handCopy = shallowcopy(hand)
+			table.retainIf(handCopy,HandSelectUpgradeWindow.filter)
+			if #handCopy == 0 then
+				return
+			end
+			if #handCopy == 1 or self.upgraded then
+				for _, cardItem in ipairs(handCopy) do
+					cardItem.card:upgrade()
+					cardItem.card:applyPowers()
+				end
+			else
+				openWindowAbove(HandSelectUpgradeWindow:new{cardItems=hand},function (cards)
+					for _, cardItem in ipairs(cards) do
+						cardItem.card:upgrade()
+						cardItem.card:applyPowers()
+					end
+				end)
+			end
+		end)
+	}
+end
+
+PowerThrough = RedCard:new{
+	name='Power Through',description='Add !M! Wounds into hand. NL Gain !B! {47}.',rarity='uncommon',type='skill',cost=1,baseBlock=15,baseMagic=2,
+	upgrade={baseBlock=20},playerTarget=true
+}
+function PowerThrough:use()
+	return { GainBlockAction:new{target=player,value=self.block}, MakeTempCardToHandAction:new(Wound:new(),self.magic) }
+end
+
+Havoc = RedCard:new{
+	name='Havoc',description='Play the top card of draw pile and exhaust it.',rarity='common',type='skill',cost=1,
+	upgrade={cost=0},enemyTarget=true,toAllEnemies=true,playerTarget=true
+}
+function Havoc:use()
+	return { PlayTopCardAction:new{randomTarget=true,exhaust=true} }
+end
+
+TrueGrit = RedCard:new{
+	name='True Grit',description='Gain !B! {47}. NL Exhaust a card at random.',rarity='common',type='skill',cost=1,baseBlock=7,
+	playerTarget=true,upgrade={baseBlock=9,description='Gain !B! {47}. NL Exhaust a card.'}
+}
+function TrueGrit:use()
+	return {
+		GainBlockAction:new{target=player,value=self.block},
+		AnonymousAction:new(function ()
+			if #hand == 0 then
+				return
+			end
+			if not self.upgraded or #hand == 1 then
+				local cardIndex = miscRand:randInt(#hand)
+				addAction(1,ExhaustCardAction:new{cardItem=hand[cardIndex],show=true})
+				removeHand(cardIndex)
+			else
+				openWindowAbove(HandSelectWindow:new{cardItems=hand,title='Choose a Card to Exhaust',max=1},function (cards)
+					for _, cardItem in ipairs(cards) do
+						local cardIndex = table.indexOf(hand,cardItem)
+						addAction(1,ExhaustCardAction:new{cardItem=cardItem})
+						removeHand(cardIndex)
+					end
+				end)
+			end
+		end)
+	}
+end
+
+Warcry = RedCard:new{
+	name='Warcry',description='Draw !M! card. NL Put a card from hand onto the top of draw pile. NL Exhaust.',rarity='common',type='skill',cost=0,baseMagic=1,
+	playerTarget=true,upgrade={baseMagic=2,description='Draw !M! cards. NL Put a card from hand onto the top of draw pile. NL Exhaust.'},exhaust=true
+}
+function Warcry:use()
+	return {
+		DrawCardAction:new(self.magic),
+		AnonymousAction:new(function ()
+			if #hand == 0 then
+				return
+			end
+			if #hand == 1 then
+				addAction(1,PutCardOnDrawCardTopAction:new{cardItem=hand[1],show=true})
+				removeHand(1)
+			else
+				openWindowAbove(HandSelectWindow:new{cardItems=hand,title='Choose a Card to Put on Top of Draw Pile',max=1},function (cards)
+					for _, cardItem in ipairs(cards) do
+						local cardIndex = table.indexOf(hand,cardItem)
+						addAction(1,PutCardOnDrawCardTopAction:new{cardItem=cardItem})
+						removeHand(cardIndex)
+					end
+				end)
+			end
+		end)
+	}
+end
+
+WildStrike = RedCard:new{
+	name='Wild Strike',description='{63} !D!. NL Shuffle a Wound into draw pile.',rarity='common',cost=1,baseDamage=12,
+	playerTarget=true,enemyTarget=true,upgrade={baseDamage=17},tags={'strike'}
+}
+function WildStrike:use(target)
+	return { DamageAction:new{target=target,source=player,value=self.damage}, MakeTempCardToDrawPileAction:new(Wound:new()) }
+end
+
+BattleTrance = RedCard:new{
+	name='Battle Trance',description='Draw !M! card. NL You cannot draw additional cards this turn.',rarity='uncommon',type='skill',
+	cost=0,baseMagic=3,playerTarget=true,upgrade={baseMagic=4}
+}
+function BattleTrance:use()
+	return { DrawCardAction:new(self.magic), ApplyPowerAction:new(NoDrawPower:new(player)) }
+end
+
+BloodForBlood = RedCard:new{
+	name='Blood for Blood',description='Costs 1 less {62} each time you lose HP this combat. NL {63} !D!.',rarity='uncommon',
+	cost=4,baseDamage=18,enemyTarget=true
+}
+function BloodForBlood:use(target)
+	return { DamageAction:new{target=target,source=player,value=self.damage} }
+end
+
+function BloodForBlood:onHpLoss()
+	self.cost = self.cost - 1
+end
+
+function BloodForBlood:upgrade()
+	self.cost = self.cost - 1
+	self:upgradeValues({baseDamage=22})
+end
+
+BurningPact = RedCard:new{
+	name='Burning Pact',description='Exhaust a card. NL Draw !M! cards.',rarity='uncommon',type='skill',cost=1,baseMagic=2,
+	playerTarget=true,upgrade={baseMagic=3}
+}
+function BurningPact:use()
+	return {
+		AnonymousAction:new(function ()
+			if #hand == 0 then
+				return
+			end
+			if #hand == 1 then
+				addAction(1,ExhaustCardAction:new{cardItem=hand[1],show=true})
+				removeHand(1)
+			else
+				openWindowAbove(HandSelectWindow:new{cardItems=hand,title='Choose a Card to Exhaust',max=1},function (cards)
+					for _, cardItem in ipairs(cards) do
+						local cardIndex = table.indexOf(hand,cardItem)
+						addAction(1,ExhaustCardAction:new{cardItem=cardItem})
+						removeHand(cardIndex)
+					end
+				end)
+			end
+		end),
+		DrawCardAction:new(self.magic)
+	}
+end
+
+Carnage = RedCard:new{
+	name='Carnage',description='{63} !D!. NL Ethereal.',rarity='uncommon',cost=2,baseDamage=20,
+	enemyTarget=true,upgrade={baseDamage=28},ethereal=true
+}
+function Carnage:use(target)
+	return { DamageAction:new{target=target,source=player,value=self.damage} }
+end
+
+Dropkick = RedCard:new{
+	name='Dropkick',description='{63} !D!. NL If enemy has {60}, gain {62} and draw 1 card.',rarity='uncommon',cost=1,baseDamage=5,
+	enemyTarget=true,playerTarget=true,upgrade={baseDamage=8}
+}
+function Dropkick:use(target)
+	local r = { DamageAction:new{target=target,source=player,value=self.damage} }
+	if target:getPower(VulnerablePower) then
+		table.insert(r,GainEnergyAction:new(1))
+		table.insert(r,DrawCardAction:new(1))
+	end
+	return r
+end
+
+DualWield = RedCard:new{
+	name='Dual Wield',description='Choose a {57} or {59}. Add a copy of that card into hand.',rarity='uncommon',type='skill',cost=1,baseMagic=1,
+	playerTarget=true,upgrade={baseMagic=2,description='Choose a {57} or {59}. Add !M! copies of that card into hand.'}
+}
+function DualWield:use()
+	local function isAttackOrPower(cardItem) return cardItem.card.type == 'attack' or cardItem.card.type == 'power' end
+	return {
+		AnonymousAction:new(function ()
+			local validCards = shallowcopy(hand)
+			table.retainIf(validCards,isAttackOrPower)
+			if #validCards == 0 then
+				return
+			end
+			if #validCards == 1 then
+				addAction(1,MakeTempCardToHandAction:new(validCards[1].card,self.magic))
+			else
+				openWindowAbove(HandSelectWindow:new{cardItems=hand,title='Choose a Card to Copy',max=1,filter=isAttackOrPower},
+					function (cards)
+						for _, cardItem in ipairs(cards) do
+							addAction(1,MakeTempCardToHandAction:new(cardItem.card,self.magic))
+						end
+					end)
+			end
+		end)
+	}
+end
+
+GhostlyArmor = RedCard:new{
+	name='GhostlyArmor',description='Gain !B! {47}. NL Ethereal.',rarity='uncommon',type='skill',cost=1,baseBlock=10,
+	playerTarget=true,upgrade={baseBlock=13},ethereal=true
+}
+function GhostlyArmor:use()
+	return { GainBlockAction:new{target=player,value=self.block} }
+end
+
+RecklessCharge = RedCard:new{
+	name='Reckless Charge',description='{63} !D!. NL Shuffle a Dazed into draw pile.',rarity='uncommon',cost=0,baseDamage=7,
+	playerTarget=true,enemyTarget=true,upgrade={baseDamage=10}
+}
+function RecklessCharge:use(target)
+	return { DamageAction:new{target=target,source=player,value=self.damage}, MakeTempCardToDrawPileAction:new(Dazed:new()) }
+end
+
+Metallicize = RedCard:new{ name='Metallicize',description='At the end of turn, gain !M! {47}.',rarity='uncommon',type='power',cost=1,playerTarget=true,baseMagic=3,upgrade={baseMagic=4} }
+function Metallicize:use()
+	return { ApplyPowerAction:new(MetallicizePower:new(player,self.magic)) }
+end
+
+Rage = RedCard:new{
+	name='Rage',description='Whenever you play a {57} this turn, gain !M! {47}.',rarity='uncommon',type='skill',cost=0,baseMagic=3,
+	playerTarget=true,upgrade={baseMagic=5}
+}
+function Rage:use()
+	return { ApplyPowerAction:new(RagePower:new(player,self.magic)) }
+end
+
+RagePower = Power:new{icon=17}
+function RagePower:onUseCard(card)
+	if card.type == 'attack' then
+		addAction(GainBlockAction:new{target=self.owner,value=self.amount})
+	end
+end
+
+function RagePower:onTurnEnd()
+	addAction(ReducePowerAction:new(self,self.amount))
+end
+
+SecondWind = RedCard:new{
+	name='Second Wind',description='Exhaust all non-{57} in hand, gain !B! {47} for each card exhausted.',rarity='uncommon',type='skill',
+	cost=1,baseBlock=5,playerTarget=true,upgrade={baseBlock=7}
+}
+function SecondWind:use()
+	local function isNotAttack(cardItem) return cardItem.card.type ~= 'attack' end
+	return {
+		AnonymousAction:new(function ()
+			local targetCards = shallowcopy(hand)
+			table.retainIf(targetCards,isNotAttack)
+			miscRand:shuffle(targetCards)
+			
+			for _ = 1,#targetCards do
+				addAction(1,GainBlockAction:new{target=player,value=self.block})
+			end
+
+			for _, cardItem in ipairs(targetCards) do
+				local cardIndex = table.indexOf(hand,cardItem)
+				addAction(1,ExhaustCardAction:new{cardItem=cardItem,duration=5})
+				removeHand(cardIndex)
+			end
+		end)
+	}
+end
+
+SeverSoul = RedCard:new{
+	name='Sever Soul',description='Exhaust all non-{57} in hand. NL {63} !D!.',rarity='uncommon',cost=2,baseDamage=16,
+	playerTarget=true,enemyTarget=true,upgrade={baseDamage=22}
+}
+function SeverSoul:use(target)
+	local function isNotAttack(cardItem) return cardItem.card.type ~= 'attack' end
+	return {
+		AnonymousAction:new(function ()
+			local targetCards = shallowcopy(hand)
+			table.retainIf(targetCards,isNotAttack)
+			miscRand:shuffle(targetCards)
+
+			for _, cardItem in ipairs(targetCards) do
+				local cardIndex = table.indexOf(hand,cardItem)
+				addAction(1,ExhaustCardAction:new{cardItem=cardItem,duration=5})
+				removeHand(cardIndex)
+			end
+		end),
+		DamageAction:new{target=target,source=player,value=self.damage}
+	}
+end
+
+Sentinel = RedCard:new{
+	name='Sentinel',description='Gain !B! {47}. NL When this card is exhausted, gain {62}{62}.',rarity='uncommon',type='skill',cost=1,baseBlock=5,
+	baseMagic=2,playerTarget=true,upgrade={baseBlock=8,baseMagic=3,description='Gain !B! {47}. NL When this card is exhausted, gain {62}{62}{62}.'}
+}
+function Sentinel:use()
+	return { GainBlockAction:new{target=player,value=self.block} }
+end
+
+function Sentinel:onExhaust()
+	addAction(GainEnergyAction:new(self.magic))
+end
+
+Barricade = RedCard:new{
+	name='Barricade',description='{47} is not removed at the start of turn.',rarity='rare',type='power',cost=3,playerTarget=true,
+	upgrade={cost=2}
+}
+function Barricade:use()
+	return { ApplyPowerAction:new(BarricadePower:new(player)) }
 end

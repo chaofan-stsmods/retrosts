@@ -6,7 +6,7 @@
 		{
 			"label": "Run TIC-80.exe",
 			"type": "process",
-			"command": "D:\\Games\\tic80-v1.0-win\\tic80.exe",
+			"command": "D:\\Games\\tic80-1.1.2268-win\\tic80.exe",
 			"args": [
 				"${file}",
 				"--fs=${fileDirname}",
@@ -17,7 +17,7 @@
 		{
 			"label": "Run STS",
 			"type": "process",
-			"command": "D:\\Games\\tic80-v1.0-win\\tic80.exe",
+			"command": "D:\\Games\\tic80-1.1.2268-win\\tic80.exe",
 			"args": [
 				"C:\\Users\\Chaofan\\AppData\\Roaming\\com.nesbox.tic\\TIC-80\\myproj\\sts\\sts.lua",
 				"--fs=C:\\Users\\Chaofan\\AppData\\Roaming\\com.nesbox.tic\\TIC-80\\myproj\\sts",

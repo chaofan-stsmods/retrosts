@@ -5,25 +5,27 @@ Card = Object:new{
 	name='',description='',cost=0,type='attack',rarity='common',
 	damage=0,baseDamage=0,block=0,baseBlock=0,magic=0,baseMagic=0,multiDamage={},
 	enemyTarget=false,playerTarget=false,toAllEnemies=false,
-	color={2,1},costIcon=45,typeIconColor=4,exhaust=false,
-	upgrade=noop,upgraded=false,tags={},
+	color={2,1},costIcon=45,typeIconColor=4,exhaust=false,ethereal=false,
+	upgrade=noop,upgraded=false,tags={},free=false,
 }
 function Card:new(o)
 	local r = Object.new(self,o)
-	if type(r.upgrade) == 'table'then
+	if type(r.upgrade) == 'table' then
 		local upgradeTable = r.upgrade
 		r.upgrade = function (self)
 			self:upgradeValues(upgradeTable)
 		end
 	end
+	if type(r.canUse) == 'boolean' then
+		local canUseValue = r.canUse
+		r.canUse = function (self) return canUseValue end
+	end
+	if type(r.canUpgrade) == 'boolean' then
+		local canUpgradeValue = r.canUpgrade
+		r.canUpgrade = function (self) return canUpgradeValue end
+	end
 	r:resetPowers()
 	return r
-end
-
-function Card:copy()
-	local result = shallowcopy(self)
-	setmetatable(result,getmetatable(self))
-	return result
 end
 
 function Card:use()
@@ -31,17 +33,14 @@ function Card:use()
 end
 
 function Card:canUse()
-	return self.cost <= energy and not inEnemyTurn
+	return (self.cost <= energy or self.free) and not inEnemyTurn
 end
 
 function Card:applyPowers(target)
 	local damage = self.baseDamage
 	local block = self.baseBlock
 
-	for _, power in ipairs(player.powers) do
-		damage = power:onAttack(damage,target,self)
-	end
-
+	damage = player:triggerReducerEvent('onAttack',damage,target,self)
 	if self.toAllEnemies then
 		self.multiDamage = {}
 		local minDamage = 9999999
@@ -49,9 +48,7 @@ function Card:applyPowers(target)
 		for i,enemy in ipairs(enemies) do
 			if enemy.alive then
 				local targetDamage = damage
-				for _,power in ipairs(enemy.powers) do
-					targetDamage = power:onAttacked(targetDamage,player,self)
-				end
+				targetDamage = enemy:triggerReducerEvent('onAttacked',targetDamage,player,self)
 				targetDamage = math.floor(targetDamage)
 				self.multiDamage[i] = targetDamage
 				minDamage = math.min(minDamage,targetDamage)
@@ -64,9 +61,7 @@ function Card:applyPowers(target)
 			damage = minDamage
 		end
 	elseif target ~= nil then
-		for _, power in ipairs(target.powers) do
-			damage = power:onAttacked(damage,player,self)
-		end
+		damage = target:triggerReducerEvent('onAttacked',damage,player,self)
 	end
 
 	self.damage = math.floor(damage)
@@ -80,6 +75,16 @@ function Card:resetPowers()
 	self.magic = self.baseMagic
 end
 
+function Card:showUpgrade()
+	self.damage,self.baseDamage = self.baseDamage,self.damage
+	self.block,self.baseBlock = self.baseBlock,self.block
+	self.magic,self.baseMagic = self.baseMagic,self.magic
+end
+
+function Card:canUpgrade()
+	return not self.upgraded
+end
+
 function Card:upgradeValues(o)
 	if self.upgraded then
 		return
@@ -91,7 +96,13 @@ function Card:upgradeValues(o)
 	self.name = self.name .. '+'
 end
 
-CardItem = Object:new{ x=0,y=136,tx=0,ty=136,card=nil,large=false,isNotInHand=false}
+function Card:triggerEvent(name,...)
+	if self[name] then
+		self[name](self,...)
+	end	
+end
+
+CardItem = Object:new{ x=0,y=136,tx=0,ty=136,card=nil,large=false,isNotInHand=false,showWhiteCost=false}
 cardTypeToSprIndex = {attack=57,skill=58,power=59,status=55,curse=56}
 cardRarityColor = {basic={14,15},common={14,15},special={14,15},uncommon={10,9},rare={4,3}}
 function CardItem:tick()
@@ -106,7 +117,7 @@ function CardItem:tick()
 		t = self.y-20
 	end
 	drawCardBack(self.card,self.large,l,t)
-	drawCost(self.card,l,t,self.isNotInHand)
+	drawCost(self.card,l,t,self.isNotInHand,self.showWhiteCost)
 	drawTitle(self.card,self.large,l,t)
 	drawDescription(self.card,self.card.description,l+3,t+10,self.large and 51 or 27,self.large and 999 or 3)
 end
@@ -123,19 +134,19 @@ function drawCardBack(card,large,l,t)
 	else
 		map(10,2,4,5,l,t,0)
 	end
-	local typeLeft = card.cost >= -1 and l+8 or l
+	local typeLeft = card.cost >= -1 and l+8 or l+1
 	spr(29,typeLeft,t-6,0)
 	spr(cardTypeToSprIndex[card.type],typeLeft,t-6,0)
 	resetColors{3,9,10,14,15}
 end
 
-function drawCost(card,l,t,notInHand)
+function drawCost(card,l,t,isNotInHand,showWhiteCost)
 	t = t-5
 	if card.cost >= 0 then
 		spr(card.costIcon,l,t,0)
 		local costStr = card.cost == -1 and 'X' or tostring(card.cost)
 		local txtWidth = strWidth(costStr)
-		local color = (card:canUse() or notInHand) and 12 or 1
+		local color = (card:canUse() or isNotInHand or showWhiteCost) and 12 or 1
 		printShadowed(costStr,l+4-txtWidth//2,t+1,color)
 	elseif card.cost == -1 then
 		spr(card.costIcon,l,t,0)
@@ -210,7 +221,8 @@ function drawDescription(card,description,x,y,lineWidth,maxLine)
 						base = card.baseMagic
 						value = card.magic
 					end
-					local color = base > value and 3 or (base < value and type ~= 'M' and 5 or 12)
+					local color = base > value and 3 or (base < value and 5 or 12)
+					if type == 'M' and base > value then color = 5 end
 					currentX,currentY = moveLimitLineWidthAndPrint(tostring(value),currentX,currentY,x,lineWidth,maxY,color)
 					if currentY > maxY then
 						return
@@ -263,4 +275,293 @@ function moveLimitLineWidthAndPrint(str,currentX,currentY,x,lineWidth,maxY,color
 	print(str,currentX,currentY,color,false,1,true)
 	currentX = currentX + strWidth
 	return currentX,currentY
+end
+
+-- hand ui
+HandUI = Object:new{cardItems=nil,selection=0,cursorOnSelf=false,hideSelection=false,onSelect=noop}
+function HandUI:new(cardItems)
+	return Object.new(self,{cardItems=cardItems})
+end
+
+function HandUI:tick()
+	self:drawCards()
+	self:handControls()
+end
+
+function HandUI:drawCards()
+	local handWidth
+	local handDistance
+	local handStart
+	if #self.cardItems < 7 then
+		handWidth = #self.cardItems * 24 + 8
+		handDistance = 24
+		handStart = 120 - handWidth / 2 + 16 - handDistance
+	else
+		handWidth = 180
+		handDistance = (handWidth - 32) / (#self.cardItems - 1)
+		handStart = 30
+	end
+	if self.hideSelection then
+		for i = 1,#self.cardItems do
+			if not self.cardItems[i].isNotInHand then
+				self.cardItems[i].tx = handStart + i * handDistance
+				self.cardItems[i].ty = 136
+			end
+			self.cardItems[i].large = false
+			self.cardItems[i]:tick()
+		end
+	else
+		for i = 1,#self.cardItems do
+			if not self.cardItems[i].isNotInHand then
+				self.cardItems[i].tx = handStart + i * handDistance
+				self.cardItems[i].ty = 136
+			end
+			self.cardItems[i].large = false
+			if self.selection == i and not self.cursorOnSelf then
+				self.cardItems[i].ty = 128
+			end
+			if self.selection ~= i or not self.cursorOnSelf then
+				self.cardItems[i]:tick()
+			end
+		end
+		if self.cursorOnSelf and self.selection <= #self.cardItems and self.selection >= 1 then
+			local index = self.selection
+			if self.cardItems[index].isNotInHand then
+				self.cardItems[index].large = false
+			else
+				self.cardItems[index].ty = 108
+				self.cardItems[index].large = true
+			end
+			self.cardItems[index]:tick()
+		end
+	end
+end
+
+function HandUI:handControls()
+	if not self.cursorOnSelf then
+		return
+	end
+
+	local function cardIsInHand(i) return not self.cardItems[i].isNotInHand end
+
+	if self.selection > #self.cardItems then
+		self.selection = #self.cardItems
+	end
+	if self.selection == 0 and #self.cardItems > 0 then
+		self.selection = nextOrOtherIndexInTableIf(self.cardItems,self.selection,cardIsInHand)
+	end
+
+	if btnp(2) then
+		self.selection = previousOrOtherIndexInTableIf(self.cardItems,self.selection,cardIsInHand)
+	elseif btnp(3) then
+		self.selection = nextOrOtherIndexInTableIf(self.cardItems,self.selection,cardIsInHand)
+	elseif btnp(4) and self.selection >= 1 and self.selection <= #self.cardItems then
+		local oldSelection = self.selection
+		self.selection = keepCurrentIndexInTableIf(self.cardItems,oldSelection,cardIsInHand)
+		if oldSelection == self.selection then
+			self.onSelect(self.selection)
+		end
+	end
+end
+
+-- hand select UI
+HandSelectWindow = Window:new{
+	name='HandSelectWindow',selectedCards=nil,title='Choose a card',cardItems=nil,single=false,
+	cursorOnSelectedCards=false,selection=0,max=999,min=1,filter=nil
+}
+function HandSelectWindow:new(o)
+	o.originalCardItems = o.cardItems
+	o.cardItems = shallowcopy(o.cardItems)
+	for i = 1,#o.cardItems do
+		local cardItem = o.cardItems[i]:copy()
+		cardItem.originalIndex = i
+		cardItem.isNotInHand = false
+		cardItem.showWhiteCost = true
+		o.cardItems[i] = cardItem
+	end
+	o.filter = o.filter or self.filter
+	if o.filter then
+		table.retainIf(o.cardItems,o.filter)
+	end
+	local handUI = HandUI:new(o.cardItems)
+	handUI.cursorOnSelf = true
+	o.handUI = handUI
+	o.selectedCards = {}
+	r = Window.new(self,o)
+	handUI.onSelect = function (selection)
+		r:handUISelect(selection)
+	end
+	return r
+end
+
+function HandSelectWindow:tick()
+	self:drawTitle()
+	self:drawSelectedCards()
+	self.handUI:tick()
+	self:selectedCardsControls()
+	tickTopBar(true)
+end
+
+function HandSelectWindow:drawTitle()
+	local str = self.title:gsub('{#}',tostring(#self.selectedCards))
+	printShadowed(str,120-strWidth(str)/2,16,12)
+end
+
+function HandSelectWindow:drawSelectedCards()
+	local startX,stepX
+	if #self.selectedCards <= 5 then
+		startX = 120-(#self.selectedCards*48-48)/2-48
+		stepX = 48
+	else
+		stepX = 192/(#self.selectedCards-1)
+		startX = 24-stepX
+	end
+	for i, cardItem in ipairs(self.selectedCards) do
+		cardItem.tx = startX+i*stepX
+		cardItem.ty = 60
+		if not self.cursorOnSelectedCards or self.selection ~= i then
+			cardItem.large = false
+			cardItem:tick()
+		end
+	end
+	if self.cursorOnSelectedCards and self.selection > 0 and self.selection <= #self.selectedCards then
+		self.selectedCards[self.selection].large = true
+		self.selectedCards[self.selection]:tick()
+	end
+end
+
+function HandSelectWindow:selectedCardsControls()
+	self.handUI.cursorOnSelf = not cursorOnTopBar and not self.cursorOnSelectedCards
+	if cursorOnTopBar then
+		return
+	end
+
+	if self.cursorOnSelectedCards then
+		if self.selection == 0 and #self.selectedCards > 0 then
+			self.selection = 1
+		end
+		if btnp(1) and #self.cardItems > 0 then
+			self.cursorOnSelectedCards = false
+			self.handUI.cursorOnSelf = true
+		elseif btnp(2) then
+			self.selection = limit(self.selection-1,1,#self.selectedCards)
+		elseif btnp(3) then
+			self.selection = limit(self.selection+1,1,#self.selectedCards)
+		elseif btnp(4) then
+			local cardItem = table.remove(self.selectedCards,self.selection)
+			table.insert(self.cardItems,cardItem)
+			table.sort(self.cardItems,function(a,b) return a.originalIndex < b.originalIndex end)
+			self.selection = limit(self.selection,1,#self.selectedCards)
+			if #self.selectedCards == 0 then
+				self.cursorOnSelectedCards = false
+				self.handUI.cursorOnSelf = true
+			end
+		end
+	else
+		if btnp(0) and #self.selectedCards > 0 then
+			self.cursorOnSelectedCards = true
+			self.handUI.cursorOnSelf = false
+			self.selection = limit(self.selection,1,#self.selectedCards) or 0
+		end
+	end
+
+	if btnp(7) and #self.selectedCards >= self.min then
+		self:close()
+	end
+end
+
+function HandSelectWindow:handUISelect(selection)
+	if self.max == 1 then
+		local selectedCardItem = table.remove(self.cardItems,selection)
+		for i = #self.selectedCards,1,-1 do
+			local cardItem = table.remove(self.selectedCards,i)
+			table.insert(self.cardItems,cardItem)
+		end
+		table.sort(self.cardItems,function(a,b) return a.originalIndex < b.originalIndex end)
+		table.insert(self.selectedCards,selectedCardItem)
+	else
+		if #self.selectedCards < self.max then
+			local cardItem = table.remove(self.cardItems,selection)
+			table.insert(self.selectedCards,cardItem)
+		end
+	end
+end
+
+function HandSelectWindow:close()
+	for _, cardItem in ipairs(self.cardItems) do
+		local originalCardItem = self.originalCardItems[cardItem.originalIndex]
+		if originalCardItem then
+			originalCardItem.x = cardItem.x
+			originalCardItem.y = cardItem.y
+			originalCardItem.tx = cardItem.tx
+			originalCardItem.ty = cardItem.ty
+		end
+	end
+	local output = {}
+	for _, cardItem in ipairs(self.selectedCards) do
+		local originalCardItem = self.originalCardItems[cardItem.originalIndex]
+		if originalCardItem then
+			originalCardItem.x = cardItem.x
+			originalCardItem.y = cardItem.y
+			originalCardItem.tx = cardItem.tx
+			originalCardItem.ty = cardItem.ty
+			table.insert(output,originalCardItem)
+		end
+	end
+	
+	Window.close(self,output)
+end
+
+HandSelectUpgradeWindow = HandSelectWindow:new{
+	name='HandSelectUpgradeWindow',title='Choose a Card to Upgrade',max=1,min=1,cardItems={},
+	selectedPreview=nil,upgradedPreview=nil,
+	filter=function (cardItem) return cardItem.card:canUpgrade() end
+}
+function HandSelectUpgradeWindow:new(o)
+	o = o or {}
+	o.selectedPreview = CardItem:new{showWhiteCost=true}
+	o.upgradedPreview = CardItem:new{showWhiteCost=true}
+	return HandSelectWindow.new(self,o)
+end
+
+function HandSelectUpgradeWindow:drawSelectedCards()
+	if #self.selectedCards == 0 then
+		return
+	end
+	local cardItem = self.selectedCards[1]
+	local selectedPreview = self.selectedPreview
+	local upgradedPreview = self.upgradedPreview
+	if selectedPreview.card == nil or getmetatable(selectedPreview.card) ~= getmetatable(cardItem.card) then
+		selectedPreview.card = cardItem.card:copy()
+		selectedPreview.card:resetPowers()
+		selectedPreview.x = cardItem.x
+		selectedPreview.y = cardItem.y
+		upgradedPreview.card = cardItem.card:copy()
+		upgradedPreview.card:resetPowers()
+		upgradedPreview.card:upgrade()
+		upgradedPreview.card:showUpgrade()
+		upgradedPreview.x = cardItem.x
+		upgradedPreview.y = cardItem.y
+	end
+
+	selectedPreview.ty = 60
+	upgradedPreview.ty = 60
+	if self.selection == 1 and self.cursorOnSelectedCards then
+		selectedPreview.tx = 76
+		selectedPreview.large = true
+		upgradedPreview.tx = 164
+		upgradedPreview.large = true
+	else
+		selectedPreview.tx = 88
+		selectedPreview.large = false
+		upgradedPreview.tx = 152
+		upgradedPreview.large = false
+	end
+	selectedPreview:tick()
+	upgradedPreview:tick()
+	cardItem.x = selectedPreview.x
+	cardItem.y = selectedPreview.y
+	for i = -1, 1 do
+		tri(120-3-i*8,56,120-3-i*8,64,120+3-i*8,60,4)
+	end
 end

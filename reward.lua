@@ -1,7 +1,7 @@
 -- reward
 ---@diagnostic disable: lowercase-global
 
-RewardWindow = Window:new{rewards={},selection=0,name='RewardWindow'}
+RewardWindow = Window:new{rewards=nil,selection=0,name='RewardWindow'}
 function RewardWindow:new(rewards)
     o = {rewards=rewards}
     return Window.new(self,o)
@@ -109,7 +109,7 @@ function generateRewards(random)
 end
 
 -- cardselect
-CardRewardWindow = Window:new{name='CardRewardWindow',cards={},selection=0,single=false}
+CardRewardWindow = Window:new{name='CardRewardWindow',cards=nil,selection=0,single=false}
 function CardRewardWindow:onOpen()
     queueSync(2,0)
     queueSync(1|4,1)

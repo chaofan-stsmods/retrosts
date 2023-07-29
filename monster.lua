@@ -13,13 +13,8 @@ function Monster:applyPowers()
 	end
 	local damage = self.intentBaseDamage
 
-	for _, power in ipairs(self.powers) do
-		damage = power:onAttack(damage,player)
-	end
-
-	for _, power in ipairs(player.powers) do
-		damage = power:onAttacked(damage,self)
-	end
+	damage = self:triggerReducerEvent('onAttack',damage,player)
+	damage = player:triggerReducerEvent('onAttacked',damage,self)
 
 	self.intentDamage = math.floor(damage)
 end

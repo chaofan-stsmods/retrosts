@@ -90,6 +90,7 @@ function Creature:damage(source,value,type)
 	end
 	if value > 0 then
 		addEffect(TextEffect:new{x=self.x+self.width*4,y=self.y,text=tostring(value),color=3,ySpeed=-0.5})
+		self:triggerEvent('onHpLoss',source,value,type)
 	end
 	self.hp = self.hp - value
 	if self.hp <= 0 then
@@ -103,17 +104,39 @@ function Creature:die()
 	self.visible = false
 end
 
-function Creature:onTurnStart()
-	self.block = 0
+function Creature:triggerEvent(name,...)
 	for _, power in ipairs(self.powers) do
-		power:onTurnStart()
+		if power[name] then
+			power[name](power,...)
+		end
 	end
 end
 
-function Creature:onTurnEnd()
+function Creature:triggerReducerEvent(name,value,...)
 	for _, power in ipairs(self.powers) do
-		power:onTurnEnd()
+		if power[name] then
+			value = power[name](power,value,...) or value
+		end
 	end
+	return value
+end
+
+function Creature:triggerConditionEvent(name,...)
+	for _, power in ipairs(self.powers) do
+		if power[name] and power[name](power,...) then
+			 return true
+		end
+	end
+	return false
+end
+
+function Creature:onTurnStart()
+	self.block = self.block - self:triggerReducerEvent('onTurnStartLoseBlock',self.block)
+	self:triggerEvent('onTurnStart')
+end
+
+function Creature:onTurnEnd()
+	self:triggerEvent('onTurnEnd')
 end
 
 function Creature:addPower(power)

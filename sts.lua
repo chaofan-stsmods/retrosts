@@ -19,6 +19,7 @@ require 'action'
 require 'power'
 require 'player'
 require 'ironclad'
+require 'colorless'
 require 'monster'
 require 'combat'
 require 'map'
@@ -150,7 +151,6 @@ end
 
 queueSync(32,1)
 startGame('Ironclad')
---transferScreen('reward')
 --startCombat()
 
 -- <TILES>
@@ -311,6 +311,10 @@ startGame('Ironclad')
 -- 012:000ddddd00deeeee0deeeeeedeeeeeeefeeeeeee0feeeeee00feeeee000fffff
 -- 013:ddddddddeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeffffffff
 -- 014:0000111000014441000134410011134101441441144434411333441001111100
+-- 015:00fff000022dd2200f2222df0fd22ddffd2222f0f22dd220f2dddf2000fff000
+-- 016:000cc00000ccdc000cccddc0ccccdddcedddeeee0eddeee000edee00000ee000
+-- 017:0141410012414210443134411110111044312441124143100141410000101000
+-- 018:0088880008bbbb8008aaaa8008aaaa808bbb9bb88aaa9aa88aaa9aa808880880
 -- 025:ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
 -- 026:0111111101111111001111110011111100111111001111110011111100111111
 -- 027:1111111111111111111111111111111111111111111111111111111111111111

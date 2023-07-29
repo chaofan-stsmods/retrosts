@@ -14,7 +14,9 @@ energy = 3
 turn = 1
 inEnemyTurn = false
 combatSpriteBank = 1
+local handUI = HandUI:new(hand)
 local combatSelection = {type='hand',index=1}
+local pauseControl = false
 
 function startCombat()
 	shuffleRand = makeRand(act,room.id,1)
@@ -26,6 +28,8 @@ function startCombat()
 	discardPile = {}
 	exhaustPile = {}
 	hand = {}
+	handUI.cardItems = hand
+	handUI.onSelect = handUISelect
 	limbo = {}
 	turn = 0
 	inEnemyTurn = false
@@ -42,18 +46,6 @@ function startCombat()
 	combatSelection.index = 0
 end
 
-function setupEnemies()
-	combatSpriteBank = 1
-	enemies = {}
-	local enemy
-	enemy = Cultist:new({ hp=51,maxHp=51,x=110,y=48,width=4,height=4 })
-	table.insert(enemies,enemy)
-	enemy = Cultist:new({ hp=51,maxHp=51,x=150,y=48,width=4,height=4 })
-	table.insert(enemies,enemy)
-	enemy = Cultist:new({ hp=51,maxHp=51,x=190,y=48,width=4,height=4 })
-	table.insert(enemies,enemy)
-end
-
 function combat()
 	drawActBackground()
 	player:tick()
@@ -61,6 +53,7 @@ function combat()
 		enemies[i]:tick()
 	end
 	tickEffects()
+	handUI:tick()
 	drawOverlay()
 	tickActions()
 	combatControls()
@@ -87,43 +80,11 @@ function drawOverlay()
 		printShadowed(tostring(#exhaustPile),232-width,121,12)
 	end
 	drawHand()
+	drawLimbo()
 end
 
 function drawHand()
-	local handWidth
-	local handDistance
-	local handStart
-	if #hand < 7 then
-		handWidth = #hand * 24 + 8
-		handDistance = 24
-		handStart = 120 - handWidth / 2 + 16 - handDistance
-	else
-		handWidth = 180
-		handDistance = (handWidth - 32) / (#hand - 1)
-		handStart = 30
-	end
-	for i = 1,#hand do
-		if not hand[i].isNotInHand then
-			hand[i].tx = handStart + i * handDistance
-			hand[i].ty = 136
-		end
-		hand[i].large = false
-		if combatSelection.type == 'usecard' and combatSelection.handIndex == i then
-			hand[i].ty = 128
-		end
-		if combatSelection.type ~= 'hand' or combatSelection.index ~= i then
-			hand[i]:tick()
-		end
-	end
-	if combatSelection.type == 'hand' and combatSelection.index <= #hand and combatSelection.index >= 1 then
-		local index = combatSelection.index
-		hand[index].ty = 108
-		hand[index].large = true
-		hand[index]:tick()
-	end
-	for _, cardItem in ipairs(limbo) do
-		cardItem:tick()
-	end
+	-- handled in hand UI
 	if combatSelection.type == 'usecard' then
 		local cardItem = hand[combatSelection.handIndex]
 		local card = cardItem.card
@@ -148,55 +109,77 @@ function drawHand()
 	end
 end
 
+function drawLimbo()
+	for _, cardItem in ipairs(limbo) do
+		cardItem:tick()
+	end
+end
+
+local function enemyIsAlive(i) return enemies[i].alive end
+
+function handUISelect(selection)
+	if not hand[selection].card:canUse() then
+		return
+	end
+
+	combatSelection.handIndex = selection
+	combatSelection.index = nextOrOtherIndexInTableIf(enemies,0,enemyIsAlive)
+	local card = hand[combatSelection.handIndex].card
+	combatSelection.singleEnemy = card.enemyTarget and not card.toAllEnemies
+	if combatSelection.index == 0 and combatSelection.singleEnemy then
+		combatSelection.handIndex = nil
+	else
+		combatSelection.type = 'usecard'
+		handUI.cursorOnSelf = false
+		if combatSelection.singleEnemy then
+			card:applyPowers(enemies[combatSelection.index])
+		end
+		pauseControl = true
+	end
+end
+
 function combatControls()
 	if cursorOnTopBar then
 		if combatSelection.type ~= 'topbar' then
 			combatSelection.oldType = combatSelection.type
 			combatSelection.type = 'topbar'
+			handUI.cursorOnSelf = false
+			handUI.hideSelection = true
 		end
 		return
 	elseif combatSelection.type == 'topbar' then
 		combatSelection.type = combatSelection.oldType or 'hand'
 		combatSelection.oldType = nil
+		handUI.hideSelection = false
 	end
 
-	local function cardIsInHand(i) return not hand[i].isNotInHand end
-	local function enemyIsAlive(i) return enemies[i].alive end
+	if pauseControl then
+		pauseControl = false
+		return
+	end
 
 	if combatSelection.type == 'hand' then
-		if combatSelection.index == 0 and #hand > 0 and not inEnemyTurn then
-			combatSelection.index = nextOrOtherIndexInTableIf(hand,combatSelection.index,cardIsInHand)
-		end
-		if btnp(2) then
-			combatSelection.index = previousOrOtherIndexInTableIf(hand,combatSelection.index,cardIsInHand)
-		elseif btnp(3) then
-			combatSelection.index = nextOrOtherIndexInTableIf(hand,combatSelection.index,cardIsInHand)
-		elseif btnp(4) and combatSelection.index >= 1 and combatSelection.index <= #hand and hand[combatSelection.index].card:canUse() then
-			combatSelection.handIndex = combatSelection.index
-			combatSelection.index = nextOrOtherIndexInTableIf(enemies,0,enemyIsAlive)
-			local card = hand[combatSelection.handIndex].card
-			combatSelection.singleEnemy = card.enemyTarget and not card.toAllEnemies
-			if combatSelection.index == 0 and combatSelection.singleEnemy then
-				combatSelection.index = combatSelection.handIndex
-				combatSelection.handIndex = nil
-			else
-				combatSelection.type = 'usecard'
-				if combatSelection.singleEnemy then
-					card:applyPowers(enemies[combatSelection.index])
-				end
-			end
-		elseif btnp(7) then
-			combatSelection.index = 0
-		end
+		-- handled in hand UI
+		handUI.cursorOnSelf = true
 
 	elseif combatSelection.type == 'usecard' then
+		if combatSelection.handIndex < 1 or combatSelection.handIndex > #hand or not hand[combatSelection.handIndex].card:canUse() then
+			combatSelection.type = 'hand'
+			handUI.cursorOnSelf = true
+			if combatSelection.handIndex < 1 or combatSelection.handIndex > #hand then
+				hand[combatSelection.handIndex].card:applyPowers()
+			end
+			combatSelection.handIndex = nil
+			return
+		end
 		if combatSelection.index == 0 or not enemyIsAlive(combatSelection.index) then
 			combatSelection.index = nextOrOtherIndexInTableIf(enemies,combatSelection.index,enemyIsAlive)
 			if combatSelection.index == 0 and combatSelection.singleEnemy then
 				combatSelection.type = 'hand'
-				combatSelection.index = combatSelection.handIndex
+				handUI.cursorOnSelf = true
 				hand[combatSelection.handIndex].card:applyPowers()
 				combatSelection.handIndex = nil
+				return
 			end
 		end
 		if btnp(2) then
@@ -212,26 +195,25 @@ function combatControls()
 				card:applyPowers(enemies[combatSelection.index])
 			end
 		elseif btnp(4) then
-			addAction(UseCardAction:new(hand[combatSelection.handIndex],enemies[combatSelection.index]))
+			local cardItem = hand[combatSelection.handIndex]
+			cardItem.ty = cardItem.ty - 16
+			addAction(UseCardAction:new{cardItem=cardItem,target=enemies[combatSelection.index],manually=true})
 			combatSelection.type = 'hand'
-			combatSelection.index = nextOrOtherIndexInTableIf(hand,combatSelection.handIndex,cardIsInHand)
+			handUI.cursorOnSelf = true
 			combatSelection.handIndex = nil
 		elseif btnp(5) or btnp(7) then
 			combatSelection.type = 'hand'
-			combatSelection.index = combatSelection.handIndex
+			handUI.cursorOnSelf = true
 			if combatSelection.handIndex <= #hand then
 				hand[combatSelection.handIndex].card:applyPowers()
 			end
 			combatSelection.handIndex = nil
-			if btnp(7) then
-				combatSelection.index = 0
-			end
 		end
 	end
 
 	if btnp(7) and not inEnemyTurn then
 		inEnemyTurn = true
-		addAction(EndTurnAction:new())
+		addAction(EndTurnAction:new{manually=true})
 	end
 end
 
@@ -275,4 +257,31 @@ function combatEnd()
 	player:onCombatEnd()
 	completeRoom()
 	openWindowAbove(RewardWindow:new(rewards))
+end
+
+-- enemies
+
+function setupEnemies()
+	combatSpriteBank = 1
+	enemies = {}
+	local enemy
+	enemy = Cultist:new({ hp=51,maxHp=51,x=110,y=48,width=4,height=4 })
+	table.insert(enemies,enemy)
+	enemy = Cultist:new({ hp=51,maxHp=51,x=150,y=48,width=4,height=4 })
+	table.insert(enemies,enemy)
+	enemy = Cultist:new({ hp=51,maxHp=51,x=190,y=48,width=4,height=4 })
+	table.insert(enemies,enemy)
+end
+
+function getRandomAliveEnemy()
+	local aliveEnemies = {}
+	for i, enemy in ipairs(enemies) do
+		if enemy.alive then
+			table.insert(aliveEnemies,table.pack(enemy,i))
+		end
+	end
+	if #aliveEnemies == 0 then
+		return nil,0
+	end
+	return table.unpack(aliveEnemies[miscRand:randInt(#aliveEnemies)])
 end

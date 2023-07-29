@@ -138,18 +138,6 @@ function CharacterSelectWindow:onOption()
     startGame(self.options[self.selection])
 end
 
-GameWindow = Window:new{name='GameWindow'}
-function GameWindow:onOpen()
-    if self.child == nil then
-        queueSync(1|4,1)
-        if roomType == 'combat' then
-            queueSync(2,combatSpriteBank)
-        elseif roomType == 'event' and currentEvent ~= nil then
-            queueSync(2,currentEvent.spritebank)
-        end
-    end
-end
-
 LoseWindow = Window:new{name='LoseWindow'}
 function LoseWindow:onOpen()
     queueSync(1|4,1)
@@ -171,6 +159,18 @@ function LoseWindow:tick()
 	end
 end
 
+GameWindow = Window:new{name='GameWindow'}
+function GameWindow:onOpen()
+    if self.child == nil then
+        queueSync(1|4,1)
+        if roomType == 'combat' then
+            queueSync(2,combatSpriteBank)
+        elseif roomType == 'event' and currentEvent ~= nil then
+            queueSync(2,currentEvent.spritebank)
+        end
+    end
+end
+
 function GameWindow:tick()
     if roomType == 'combat' then
         combat()
@@ -184,6 +184,11 @@ function GameWindow:tickBelow()
         darkenColors()
         drawActBackground()
         player:drawImage()
+        for _, enemy in ipairs(enemies) do
+            if enemy.visible then
+                enemy:drawImage()
+            end
+        end
         resetColors()
     else
         cls(0)

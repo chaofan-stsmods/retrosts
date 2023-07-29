@@ -2,23 +2,29 @@
 -- actions
 
 actions = {}
+secondaryActions = {}
 runningAction = nil
 function resetActions()
 	actions = {}
+	secondaryActions = {}
 	runningAction = nil
 end
 
 function addAction(pos,action)
 	if action == nil then
-		table.insert(actions,pos)
+		table.insert(pos.manually and secondaryActions or actions,pos)
 	else
 		table.insert(actions,pos,action)
 	end
 end
 
 function tickActions()
-	if #actions > 0 and runningAction == nil then
-		runningAction = table.remove(actions,1)
+	if runningAction == nil then
+		if #actions > 0 then
+			runningAction = table.remove(actions,1)
+		elseif #secondaryActions > 0 then
+			runningAction = table.remove(secondaryActions,1)
+		end
 	end
 	if runningAction then
 		runningAction:tick()
@@ -49,7 +55,7 @@ function DrawCardAction:new(numCards)
 end
 
 function DrawCardAction:tick()
-	if self.numCards <= 0 then
+	if self.numCards <= 0 or player:getPower(NoDrawPower) or (#discardPile == 0 and #drawPile == 0) then
 		self.isDone = true
 		return
 	end
@@ -81,56 +87,80 @@ function ShuffleAction:tick()
 	self.isDone = true
 end
 
-UseCardAction = Action:new{cardItem=nil,target=nil,duration=20}
-function UseCardAction:new(cardItem,target)
+UseCardAction = Action:new{cardItem=nil,target=nil,manually=false,exhaust=false,randomTarget=false,free=false,tx=120,ty=68,duration=20}
+function UseCardAction:new(o)
+	local cardItem = o.cardItem
 	cardItem.isNotInHand = true
-	cardItem.ty = cardItem.ty - 16
 	if not cardItem.card.enemyTarget or cardItem.card.toAllEnemies then
-		target = nil
+		o.target = nil
 	end
-	return Action.new(self,{cardItem=cardItem,target=target})
+	return Action.new(self,o)
 end
 
 function UseCardAction:tick()
 	if self.duration == self.startDuration then
 		local card = self.cardItem.card
-		self.cardItem.tx = 120
-		self.cardItem.ty = 68
-		card:applyPowers(self.target)
-		if not card:canUse() then
+		self.cardItem.tx = self.tx
+		self.cardItem.ty = self.ty
+		local handIndex = table.indexOf(hand,self.cardItem)
+		-- can't manually play a card that is not in hand
+		if self.manually and handIndex == nil then
 			self.isDone = true
-			self.cardItem.isNotInHand = false
 			return
 		end
-		local handIndex = table.indexOf(hand,self.cardItem)
+		if self.randomTarget and card.enemyTarget and not card.toAllEnemies then
+			local target = getRandomAliveEnemy()
+			if target then
+				self.target = target
+			end
+		end
+		card:applyPowers(self.target)
+		card.free = self.free
+		if not card:canUse() then
+			card.free = false
+			if handIndex then
+				self.cardItem.isNotInHand = false
+				self.isDone = true
+			else
+				addAction(1,UseCardEndAction:new{cardItem=self.cardItem,exhaust=self.exhaust,useCardPosition=self.useCardPosition})
+			end
+			Action.tick(self)
+			return
+		end
+		card.free = false
 		if handIndex then
 			removeHand(handIndex)
-			table.insert(limbo,self.cardItem)
+			if not table.indexOf(limbo,self.cardItem) then
+				table.insert(limbo,self.cardItem)
+			end
 		end
+		trace('useCard '..card.name)
 		local cardActions = card:use(self.target) or {}
-		for i = 1, #cardActions do
-			addAction(i,cardActions[i])
+		for i,cardAction in ipairs(cardActions) do
+			cardAction.free = self.free
+			addAction(i,cardAction)
 		end
-		addAction(#cardActions+1,UseCardEndAction:new(self.cardItem,self.target))
-		if card.cost > 0 then
+		addAction(#cardActions+1,UseCardEndAction:new{cardItem=self.cardItem,exhaust=self.exhaust,useCardPosition=self.useCardPosition})
+		player:triggerEvent('onUseCard',card,self.target,self)
+		for _, enemy in ipairs(enemies) do
+			enemy:triggerEvent('onUseCard',card,self.target,self)
+		end
+		if card.cost > 0 and not self.free then
 			energy = energy - card.cost
 		end
 	end
 	Action.tick(self)
 end
 
-UseCardEndAction = Action:new{cardItem=nil,target=nil,duration=20}
-function UseCardEndAction:new(cardItem,target)
-	return Action.new(self,{cardItem=cardItem,target=target})
-end
-
+UseCardEndAction = Action:new{cardItem=nil,exhaust=false,duration=20}
 function UseCardEndAction:tick()
 	local card = self.cardItem.card
+	local exhaust = card.exhaust or self.exhaust
 	if card.type == 'power' then
 		self.cardItem.tx = player.x+player.width*4
 		self.cardItem.ty = player.y+player.height*4
-	elseif card.exhaust then
-		self.cardItem.tx = 120
+	elseif exhaust then
+		--self.cardItem.tx = 120
 		self.cardItem.ty = -32
 	else
 		self.cardItem.tx = 240
@@ -144,8 +174,9 @@ function UseCardEndAction:tick()
 		end
 		card:resetPowers()
 		if card.type ~= 'power' then
-			if card.exhaust then
+			if exhaust then
 				table.insert(exhaustPile,self.cardItem.card)
+				card:triggerEvent('onExhaust')
 			else
 				table.insert(discardPile,self.cardItem.card)
 			end
@@ -190,14 +221,10 @@ function DamageRandomEnemyAction:tick()
 		return
 	end
 	if self.duration == self.startDuration then
-		local aliveEnemies = {}
-		for i, enemy in ipairs(enemies) do
-			if enemy.alive then
-				table.insert(aliveEnemies,{enemy=enemy,damage=self.value[i]})
-			end
+		local target,index = getRandomAliveEnemy()
+		if target then
+			target:damage(self.source,self.value[index],self.type)
 		end
-		local target = aliveEnemies[miscRand:randInt(#aliveEnemies)]
-		target.enemy:damage(self.source,target.damage,self.type)
 	end
 	Action.tick(self)
 end
@@ -213,11 +240,10 @@ end
 EndTurnAction = Action:new{duration=10}
 function EndTurnAction:tick()
 	if self.duration == self.startDuration then
-		for i = #actions,1,-1 do
-			if getmetatable(actions[i]) == UseCardAction then
-				table.remove(actions,i)
-			end
+		for i = #secondaryActions,1,-1 do
+			table.remove(secondaryActions,i)
 		end
+		addAction(ExhaustEtherealCardsAction:new())
 		addAction(DiscardAllCardsAction:new())
 		player:onTurnEnd()
 		for _, enemy in ipairs(enemies) do
@@ -238,6 +264,25 @@ function EndTurnAction:tick()
 		addAction(NewTurnAction:new())
 	end
 	Action.tick(self)
+end
+
+ExhaustEtherealCardsAction = Action:new{duration=10}
+function ExhaustEtherealCardsAction:tick()
+	local etherealCards = {}
+	for i = #hand,1,-1 do
+		local cardItem = hand[i]
+		if cardItem.card.ethereal then
+			table.insert(etherealCards,cardItem)
+		end
+	end
+	miscRand:shuffle(etherealCards)
+	for i, cardItem in ipairs(etherealCards) do
+		addAction(i,AnonymousAction:new(function()
+			removeHand(table.indexOf(hand,cardItem))
+			addAction(1,ExhaustCardAction:new{cardItem=cardItem,duration=5})
+		end))
+	end
+	self.isDone = true
 end
 
 DiscardAllCardsAction = Action:new{duration=20}
@@ -329,7 +374,7 @@ function GainEnergyAction:tick()
 	Action.tick(self)
 end
 
-XCardAction = Action:new()
+XCardAction = Action:new{free=false}
 function XCardAction:new(callback)
 	return Action.new(self,{callback=callback})
 end
@@ -342,7 +387,9 @@ function XCardAction:tick()
 				addAction(i,actions[i])
 			end
 		end
-		energy = 0
+		if not self.free then
+			energy = 0
+		end
 	end
 	Action.tick(self)
 end
@@ -359,13 +406,31 @@ function AnonymousAction:tick()
 	self.isDone = true
 end
 
+local cardPositionCandidates = {{80,68},{160,68},{40,68},{200,68},{100,28},{140,28},{60,28},{180,28}}
+function fillCardPosition(cardItem)
+	local useCandidates = false
+	for j = 1,#cardPositionCandidates do
+		if table.allMatch(effects,function (e) return e.useCardPosition ~= j end) and 
+			table.allMatch(actions,function (e) return e.useCardPosition ~= j end) and
+			table.allMatch(secondaryActions,function (e) return e.useCardPosition ~= j end) and
+			(runningAction == nil or runningAction.useCardPosition ~= j) then
+			useCandidates = true
+			cardItem.tx,cardItem.ty = table.unpack(cardPositionCandidates[j])
+			return j
+		end
+	end
+	if not useCandidates then
+		cardItem.tx,cardItem.ty = miscRand:randInt(32,208),miscRand:randInt(40,104)
+	end
+	return nil
+end
+
 MakeTempCardToDiscardPileAction = Action:new{duration=30}
 function MakeTempCardToDiscardPileAction:new(card,amount)
 	amount = amount or 1
 	return Action.new(self,{card=card,amount=amount})
 end
 
-local cardPositionCandidates = {{80,68},{160,68},{40,68},{200,68},{100,28},{140,28},{60,28},{180,28}}
 function MakeTempCardToDiscardPileAction:tick()
 	if self.duration == self.startDuration then
 		for _ = 1,self.amount do
@@ -374,20 +439,114 @@ function MakeTempCardToDiscardPileAction:tick()
 			card:resetPowers()
 			local cardItem = CardItem:new{card=card,x=0,y=136}
 			local effect = CardEffect:new{cardItem=cardItem,pauseDuration=30,duration=50,tx=240,ty=136}
-			local useCandidates = false
-			for j = 1,#cardPositionCandidates do
-				if table.allMatch(effects,function (e) return e.useCardPosition ~= j end) then
-					useCandidates = true
-					cardItem.tx,cardItem.ty = table.unpack(cardPositionCandidates[j])
-					effect.useCardPosition = j
-					break
-				end
-			end
-			if not useCandidates then
-				cardItem.tx,cardItem.ty = miscRand:randInt(32,208),miscRand:randInt(40,104)
-			end
+			effect.useCardPosition = fillCardPosition(cardItem)
 			addEffect(effect)
 		end
+	end
+	Action.tick(self)
+end
+
+MakeTempCardToHandAction = Action:new{duration=20}
+function MakeTempCardToHandAction:new(card,amount)
+	amount = amount or 1
+	return Action.new(self,{card=card,amount=amount})
+end
+
+function MakeTempCardToHandAction:tick()
+	if self.duration == self.startDuration then
+		for _ = 1,self.amount do
+			local card = self.card:copy()
+			local cardItem = CardItem:new{card=card,x=0,y=136}
+			card:applyPowers()
+			table.insert(hand,cardItem)
+		end
+	end
+	Action.tick(self)
+end
+
+MakeTempCardToDrawPileAction = Action:new{duration=30}
+function MakeTempCardToDrawPileAction:new(card,amount)
+	amount = amount or 1
+	return Action.new(self,{card=card,amount=amount})
+end
+
+function MakeTempCardToDrawPileAction:tick()
+	if self.duration == self.startDuration then
+		for _ = 1,self.amount do
+			local card = self.card:copy()
+			table.insert(drawPile,miscRand:randInt(#drawPile+1),card)
+			card:resetPowers()
+			local cardItem = CardItem:new{card=card,x=0,y=136}
+			local effect = CardEffect:new{cardItem=cardItem,pauseDuration=30,duration=50,tx=0,ty=136}
+			effect.useCardPosition = fillCardPosition(cardItem)
+			addEffect(effect)
+		end
+	end
+	Action.tick(self)
+end
+
+PlayTopCardAction = Action:new{duration=10,target=nil,exhaust=false,randomTarget=false}
+function PlayTopCardAction:tick()
+	if #drawPile == 0 then
+		if #discardPile > 0 then
+			addAction(1,ShuffleAction:new())
+			addAction(2,PlayTopCardAction:new{target=self.target,exhaust=self.exhaust,randomTarget=self.randomTarget})
+		end
+		self.isDone = true
+		return
+	end
+	if self.duration == self.startDuration then
+		local card = table.remove(drawPile,#drawPile)
+		local cardItem = CardItem:new{card=card}
+		table.insert(limbo,cardItem)
+		local useCardAction = UseCardAction:new{cardItem=cardItem,exhaust=self.exhaust,randomTarget=self.randomTarget,target=self.target,free=true}
+		useCardAction.useCardPosition = fillCardPosition(cardItem)
+		useCardAction.tx,useCardAction.ty = cardItem.tx,cardItem.ty
+		addAction(1,useCardAction)
+	end
+	Action.tick(self)
+end
+
+ExhaustCardAction = Action:new{duration=30,cardItem=nil,show=false}
+function ExhaustCardAction:tick()
+	if self.duration == self.startDuration then
+		local cardItem = self.cardItem
+		local card = cardItem.card
+		card:resetPowers()
+		table.insert(exhaustPile,card)
+		card:triggerEvent('onExhaust')
+		cardItem.large = false
+		local effect = CardEffect:new{cardItem=cardItem,pauseDuration=30,duration=50,tx=120,ty=-32}
+		if self.show then
+			effect.useCardPosition = fillCardPosition(cardItem)
+		else
+			effect.pauseDuration = 1
+			effect.duration = 20
+			effect.startDuration = 20
+		end
+		effect.tx = cardItem.tx
+		addEffect(effect)
+	end
+	Action.tick(self)
+end
+
+PutCardOnDrawCardTopAction = Action:new{duration=30,cardItem=nil,show=false}
+function PutCardOnDrawCardTopAction:tick()
+	if self.duration == self.startDuration then
+		local cardItem = self.cardItem
+		local card = cardItem.card
+		table.insert(drawPile,card)
+		card:resetPowers()
+		cardItem.large = false
+		local effect = CardEffect:new{cardItem=cardItem,pauseDuration=30,duration=50,tx=0,ty=136}
+		if self.show then
+			effect.useCardPosition = fillCardPosition(cardItem)
+		else
+			effect.pauseDuration = 1
+			effect.duration = 20
+			effect.startDuration = 20
+		end
+		addEffect(effect)
 	end
 	Action.tick(self)
 end

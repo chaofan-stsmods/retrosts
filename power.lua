@@ -68,3 +68,26 @@ function LoseStrengthPower:onTurnEnd()
 	addAction(ApplyPowerAction:new(StrengthPower:new(self.owner,-self.amount)))
 	addAction(ReducePowerAction:new(self,self.amount))
 end
+
+NoDrawPower = Power:new{debuff=true,icon=15,stackable=false}
+function NoDrawPower:new(owner)
+	return Power.new(self,owner,1)
+end
+
+function NoDrawPower:onTurnEnd()
+	addAction(ReducePowerAction:new(self,self.amount))
+end
+
+MetallicizePower = Power:new{icon=16}
+function MetallicizePower:onTurnEnd()
+	addAction(GainBlockAction:new{target=self.owner,value=self.amount})
+end
+
+BarricadePower = Power:new{icon=18,stackable=false}
+function BarricadePower:new(owner)
+	return Power.new(self,owner,1)
+end
+
+function BarricadePower:onTurnStartLoseBlock(block)
+	return 0
+end

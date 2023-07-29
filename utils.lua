@@ -140,10 +140,12 @@ local syncQueue = {}
 local hasSync = false
 function queueSync(mask,bank)
 	if not hasSync then
+		trace('sync ' .. mask .. ' ' .. bank)
 		sync(mask,bank)
 		hasSync = true
 		return
 	end
+	trace('queuesync ' .. mask .. ' ' .. bank)
 	table.insert(syncQueue,table.pack(mask,bank))
 end
 
@@ -183,7 +185,26 @@ function table:allMatch(condition)
 	return true
 end
 
+function table:retainIf(condition)
+	for i = #self,1,-1 do
+		if not condition(self[i]) then
+			table.remove(self,i)
+		end
+	end
+end
+
 -- selection
+
+function keepCurrentIndexInTableIf(table,currentIndex,condition)
+	currentIndex = limit(currentIndex,1,#table)
+	if currentIndex == nil then
+		return 0
+	end
+	if condition(currentIndex) then
+		return currentIndex
+	end
+	return previousOrOtherIndexInTableIf(table,currentIndex,condition)
+end
 
 function previousOrOtherIndexInTableIf(table,currentIndex,condition)
 	local previous = previousIndexInTableIf(table,currentIndex,condition)
@@ -250,6 +271,12 @@ function Object:new(o)
 	setmetatable(o, self)
 	self.__index = self
 	return o
+end
+
+function Object:copy()
+	local result = shallowcopy(self)
+	setmetatable(result,getmetatable(self))
+	return result
 end
 
 -- random

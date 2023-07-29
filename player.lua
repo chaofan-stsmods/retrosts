@@ -12,6 +12,22 @@ function Player:applyPowers()
 	end
 end
 
+function Player:triggerEvent(name,...)
+	Creature.triggerEvent(self,name,...)
+	for _, hand in ipairs(hand) do
+		hand.card:triggerEvent(name,...)
+	end
+	for _, card in ipairs(drawPile) do
+		card:triggerEvent(name,...)
+	end
+	for _, card in ipairs(discardPile) do
+		card:triggerEvent(name,...)
+	end
+	for _, card in ipairs(exhaustPile) do
+		card:triggerEvent(name,...)
+	end
+end
+
 function Player:onCombatEnd()
 	self.block = 0
 	self.powers = {}
