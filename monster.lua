@@ -161,7 +161,9 @@ function Cultist:drawImage()
 end
 
 function Cultist:buff()
-	addAction(ApplyPowerAction:new(RitualPower:new(self,3)))
+	local power = RitualPower:new(self,3)
+	power.skipFirst = true
+	addAction(ApplyPowerAction:new(power))
 	addAction(SetIntentAction:new(self,'attack','attack',6,1))
 end
 

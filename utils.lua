@@ -28,13 +28,13 @@ function printShadowed(str,x,y,color,shadowColor,scale)
 	print(str,x,y,color,false,scale)
 end
 
-function printGlowed(str,x,y,color,glowColor,scale)
+function printGlowed(str,x,y,color,glowColor,scale,smallFont)
 	scale = scale or 1
-	print(str,x+1,y,glowColor or 15,false,scale)
-	print(str,x-1,y,glowColor or 15,false,scale)
-	print(str,x,y-1,glowColor or 15,false,scale)
-	print(str,x,y+1,glowColor or 15,false,scale)
-	print(str,x,y,color,false,scale)
+	print(str,x+1,y,glowColor or 15,false,scale,smallFont)
+	print(str,x-1,y,glowColor or 15,false,scale,smallFont)
+	print(str,x,y-1,glowColor or 15,false,scale,smallFont)
+	print(str,x,y+1,glowColor or 15,false,scale,smallFont)
+	return print(str,x,y,color,false,scale,smallFont)
 end
 
 function limit(num,min,max)

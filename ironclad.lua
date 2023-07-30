@@ -8,18 +8,18 @@ end
 function Ironclad:getStartDeck()
 	local deck = {}
 	local strike = Strike:new()
-	table.insert(deck,Metallicize:new())
-	table.insert(deck,Sentinel:new())
+	table.insert(deck,Juggernaut:new())
+	table.insert(deck,Berserk:new())
 	table.insert(deck,SecondWind:new())
 	table.insert(deck,PowerThrough:new())
-	table.insert(deck,SeverSoul:new())
-	local defend = Defend:new()
+	table.insert(deck,FireBreathing:new())
+	local defend = Brutality:new()
 	defend:upgrade()
 	table.insert(deck,Havoc:new())
 	table.insert(deck,Bloodletting:new())
-	table.insert(deck,RecklessCharge:new())
-	table.insert(deck,Armaments:new())
-	table.insert(deck,Barricade:new())
+	table.insert(deck,defend)
+	table.insert(deck,defend)
+	table.insert(deck,FiendFire:new())
 	return deck
 end
 
@@ -313,8 +313,8 @@ Shockwave = RedCard:new{
 function Shockwave:use()
 	local result = {}
 	for _, enemy in ipairs(enemies) do
-		table.insert(result,ApplyPowerAction:new(VulnerablePower:new(enemy,self.magic)))
 		table.insert(result,ApplyPowerAction:new(WeakPower:new(enemy,self.magic)))
+		table.insert(result,ApplyPowerAction:new(VulnerablePower:new(enemy,self.magic)))
 	end
 	return result
 end
@@ -679,8 +679,10 @@ function Sentinel:use()
 	return { GainBlockAction:new{target=player,value=self.block} }
 end
 
-function Sentinel:onExhaust()
-	addAction(GainEnergyAction:new(self.magic))
+function Sentinel:onExhaust(card)
+	if card == self then
+		addAction(GainEnergyAction:new(self.magic))
+	end
 end
 
 Barricade = RedCard:new{
@@ -690,3 +692,232 @@ Barricade = RedCard:new{
 function Barricade:use()
 	return { ApplyPowerAction:new(BarricadePower:new(player)) }
 end
+
+DarkEmbrace = RedCard:new{
+	name='Dark Embrace',description='Whenever a card is exhausted, draw a card.',rarity='uncommon',type='power',cost=2,playerTarget=true,
+	upgrade={cost=1}
+}
+function DarkEmbrace:use()
+	return { ApplyPowerAction:new(DarkEmbracePower:new(player,1)) }
+end
+
+DarkEmbracePower = Power:new{icon=243}
+function DarkEmbracePower:onExhaust()
+	addAction(DrawCardAction:new(self.amount))
+end
+
+Combust = RedCard:new{
+	name='Combust',description='At the end of turn, lose 1 HP and {63} !M! to all enemies.',rarity='uncommon',type='power',cost=1,
+	playerTarget=true,baseMagic=5,upgrade={baseMagic=7}
+}
+function Combust:use()
+	return { ApplyPowerAction:new(CombustPower:new(player,self.magic)) }
+end
+
+CombustPower = Power:new{icon=19,hpLoss=1}
+function CombustPower:onAmountUpdated(diff)
+	if diff > 0 then
+		self.hpLoss = self.hpLoss + 1
+	end
+end
+
+function CombustPower:onTurnEnd()
+	addAction(DamageAction:new{source=player,target=player,type='hploss',value=self.hpLoss})
+	local damage = {}
+	for i=1,#enemies do
+		damage[i] = self.amount
+	end
+	addAction(DamageAllEnemiesAction:new{source=player,value=damage})
+end
+
+Evolve = RedCard:new{
+	name='Evolve',description='Whenever you draw a {55}, draw !M! card.',rarity='uncommon',type='power',cost=1,
+	playerTarget=true,baseMagic=1,upgrade={baseMagic=2,description='Whenever you draw a {55}, draw !M! cards.'}
+}
+function Evolve:use()
+	return { ApplyPowerAction:new(EvolvePower:new(player,self.magic)) }
+end
+
+EvolvePower = Power:new{icon=244}
+function EvolvePower:onDraw(card)
+	if card.type == 'status' then
+		addAction(DrawCardAction:new(self.amount))
+	end
+end
+
+FeelNoPain = RedCard:new{
+	name='Feel No Pain',description='Whenever a card is exhausted, gain !M! {47}.',rarity='uncommon',type='power',cost=1,playerTarget=true,
+	baseMagic=3,upgrade={baseMagic=4}
+}
+function FeelNoPain:use()
+	return { ApplyPowerAction:new(FeelNoPainPower:new(player,self.magic)) }
+end
+
+FeelNoPainPower = Power:new{icon=245}
+function FeelNoPainPower:onExhaust()
+	addAction(GainBlockAction:new{target=self.owner,value=self.amount})
+end
+
+FireBreathing = RedCard:new{
+	name='Fire Breathing',description='Whenever you draw a {55} or {56}, {63} !M! to all enemies.',rarity='uncommon',type='power',cost=1,
+	playerTarget=true,baseMagic=6,upgrade={baseMagic=10}
+}
+function FireBreathing:use()
+	return { ApplyPowerAction:new(FireBreathingPower:new(player,self.magic)) }
+end
+
+FireBreathingPower = Power:new{icon=246}
+function FireBreathingPower:onDraw(card)
+	if card.type == 'status' or card.type == 'curse' then
+		local damage = {}
+		for i=1,#enemies do
+			damage[i] = self.amount
+		end
+		addAction(DamageAllEnemiesAction:new{source=player,value=damage})
+	end
+end
+
+FlameBarrier = RedCard:new{
+	name='Flame Barrier',description='Gain !B! {47}. NL Whenever attacked this turn, {63} !M! back.',rarity='uncommon',type='skill',cost=2,
+	playerTarget=true,baseBlock=12,baseMagic=4,upgrade={baseBlock=16,baseMagic=6}
+}
+function FlameBarrier:use()
+	return { GainBlockAction:new{target=player,value=self.block}, ApplyPowerAction:new(FlameBarrierPower:new(player,self.magic)) }
+end
+
+FlameBarrierPower = Power:new{icon=247}
+function FlameBarrierPower:onBeforeDamaged(value,source,type)
+	if source ~= player and type == 'attack' then
+		addAction(DamageAction:new{source=player,target=source,value=self.amount})
+	end
+end
+
+function FlameBarrierPower:onTurnStart()
+	addAction(ReducePowerAction:new(self,self.amount))
+end
+
+Rupture = RedCard:new{
+	name='Rupture',description='Whenever you loss HP from a card, gain !M! {76<}.',rarity='uncommon',type='power',cost=1,
+	playerTarget=true,baseMagic=1,upgrade={baseMagic=2}
+}
+function Rupture:use()
+	return { ApplyPowerAction:new(RupturePower:new(player,self.magic)) }
+end
+
+RupturePower = Power:new{icon=248}
+function RupturePower:onHpLoss(value,source,type)
+	if source == self.owner then
+		addAction(ApplyPowerAction:new(StrengthPower:new(self.owner,self.amount)))
+	end
+end
+
+SearingBlow = RedCard:new{
+	name='Searing Blow',description='{63} !D!. NL Can be upgraded any number of times.',rarity='uncommon',cost=2,baseDamage=12,
+	playerTarget=true,enemyTarget=true,canUpgrade=true,numUpgraded=0,
+}
+function SearingBlow:use(target)
+	return { DamageAction:new{target=target,source=player,value=self.damage} }
+end
+
+function SearingBlow:upgrade()
+	self.baseDamage = self.baseDamage + self.numUpgraded + 4
+	self.upgraded = true
+	self.numUpgraded = self.numUpgraded + 1
+	self.name = 'Searing Blow+' .. self.numUpgraded
+end
+
+Berserk = RedCard:new{
+	name='Berserk',description='Gain !M! {60}. NL At the start of turn, gain {62}.',rarity='rare',type='power',cost=0,
+	playerTarget=true,baseMagic=2,upgrade={baseMagic=1}
+}
+function Berserk:use()
+	return { ApplyPowerAction:new(VulnerablePower:new(player,self.magic)), ApplyPowerAction:new(BerserkPower:new(player,1)) }
+end
+
+BerserkPower = Power:new{icon=249}
+function BerserkPower:onTurnStart()
+	addAction(GainEnergyAction:new(self.amount))
+end
+
+Brutality = RedCard:new{
+	name='Brutality',description='At the start of turn, lose 1 HP and draw a card.',rarity='rare',type='power',cost=0,
+	playerTarget=true,upgrade={innate=true,description='Innate. NL At the start of turn, lose 1 HP and draw a card.'}
+}
+function Brutality:use()
+	return { ApplyPowerAction:new(BrutalityPower:new(player,1)) }
+end
+
+BrutalityPower = Power:new{icon=250,hpLoss=1}
+function BrutalityPower:onAmountUpdated(diff)
+	if diff > 0 then
+		self.hpLoss = self.hpLoss + 1
+	end
+end
+
+function BrutalityPower:onTurnStart()
+	addAction(DamageAction:new{source=player,target=player,type='hploss',value=self.hpLoss})
+	addAction(DrawCardAction:new(self.amount))
+end
+
+DemonForm = RedCard:new{
+	name='DemonForm',description='At the start of turn, gain !M! {76<}.',rarity='rare',type='power',cost=3,
+	playerTarget=true,baseMagic=2,upgrade={baseMagic=3}
+}
+function DemonForm:use()
+	return { ApplyPowerAction:new(DemonFormPower:new(player,self.magic)) }
+end
+
+DemonFormPower = Power:new{icon=251}
+function DemonFormPower:onTurnStart()
+	addAction(ApplyPowerAction:new(StrengthPower:new(player,self.amount)))
+end
+
+Juggernaut = RedCard:new{
+	name='Juggernaut',description='Whenever you gain {47}, {63} !M! to a random enemy.',rarity='rare',type='power',cost=2,
+	playerTarget=true,baseMagic=5,upgrade={baseMagic=7}
+}
+function Juggernaut:use()
+	return { ApplyPowerAction:new(JuggernautPower:new(player,self.magic)) }
+end
+
+JuggernautPower = Power:new{icon=252}
+function JuggernautPower:onGainBlock()
+	local damage = {}
+	for i=1,#enemies do
+		damage[i] = self.amount
+	end
+	addAction(DamageRandomEnemyAction:new{source=self.owner,value=damage})
+end
+
+FiendFire = RedCard:new{
+	name='Fiend Fire',description='Exhaust your hand, {63} !D! for each card exhausted. NL Exhaust.',rarity='rare',
+	cost=2,baseDamage=7,enemyTarget=true,upgrade={baseDamage=10},exhaust=true
+}
+function FiendFire:use(target)
+	return {
+		AnonymousAction:new(function ()
+			local targetCards = shallowcopy(hand)
+			miscRand:shuffle(targetCards)
+			
+			for _ = 1,#targetCards do
+				addAction(1,DamageAction:new{source=player,target=target,value=self.damage})
+			end
+
+			for _, cardItem in ipairs(targetCards) do
+				local cardIndex = table.indexOf(hand,cardItem)
+				addAction(1,ExhaustCardAction:new{cardItem=cardItem,duration=5})
+				removeHand(cardIndex)
+			end
+		end)
+	}
+end
+
+-- TODO
+-- Headbutt - GridUI
+-- Infernal Blade - Card list
+-- Corruption - Cost modification
+-- Double Tap - Use card action refine
+-- Exhume - GridUI
+-- Feed - Fatal
+-- Immolate - Burn
+-- Reaper - Get damage value

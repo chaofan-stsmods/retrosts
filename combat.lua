@@ -33,15 +33,25 @@ function startCombat()
 	limbo = {}
 	turn = 0
 	inEnemyTurn = false
+	local innateCards = {}
 	for _,card in ipairs(deck) do
-		table.insert(drawPile,card:copy())
+		local card = card:copy()
+		if card.innate then
+			table.insert(innateCards,card)
+		else
+			table.insert(drawPile,card)
+		end
 	end
 	shuffleRand:shuffle(drawPile)
+	shuffleRand:shuffle(innateCards)
+	for _,card in ipairs(innateCards) do
+		table.insert(drawPile,card)
+	end
 	player:onCombatStart()
 	for _, enemy in ipairs(enemies) do
 		enemy:onCombatStart()
 	end
-	addAction(NewTurnAction:new())
+	addAction(NewTurnAction:new{additionalCard=math.max(0,#innateCards-5)})
 	combatSelection.type = 'hand'
 	combatSelection.index = 0
 end
@@ -197,7 +207,7 @@ function combatControls()
 		elseif btnp(4) then
 			local cardItem = hand[combatSelection.handIndex]
 			cardItem.ty = cardItem.ty - 16
-			addAction(UseCardAction:new{cardItem=cardItem,target=enemies[combatSelection.index],manually=true})
+			addAction(UseCardAction:new{cardItem=cardItem,target=enemies[combatSelection.index],secondary=true})
 			combatSelection.type = 'hand'
 			handUI.cursorOnSelf = true
 			combatSelection.handIndex = nil
@@ -213,7 +223,7 @@ function combatControls()
 
 	if btnp(7) and not inEnemyTurn then
 		inEnemyTurn = true
-		addAction(EndTurnAction:new{manually=true})
+		addAction(EndTurnAction:new{secondary=true})
 	end
 end
 

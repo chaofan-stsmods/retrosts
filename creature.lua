@@ -60,8 +60,10 @@ function Creature:drawPowers()
 		spr(power.icon,x,y,0,1,power.iconflip)
 		if power.stackable and power.amount ~= 0 then
 			local color = power.turnBased and 12 or (power.amount > 0 and 5 or 3)
+			local glowColor = power.turnBased and 15 or (power.amount > 0 and 7 or 1)
 			local left = power.amount > 0 and x+5 or x+1
-			local width = print(tostring(power.amount),left,y+3,color,false,1,true)
+			local width = printGlowed(tostring(power.amount),left,y+3,color,glowColor,1,true)
+			--print(tostring(power.amount),left,y+3,color,false,1,true)
 			x = left+width
 		else
 			x = x+8
@@ -78,6 +80,7 @@ function Creature:damage(source,value,type)
 		return
 	end
 	type = type or 'attack'
+	value = self:triggerReducerEvent('onBeforeDamaged',value,source,type)
 	if type ~= 'hploss' then
 		if self.block > 0 then
 			local blocked = math.min(value,self.block)
@@ -90,7 +93,7 @@ function Creature:damage(source,value,type)
 	end
 	if value > 0 then
 		addEffect(TextEffect:new{x=self.x+self.width*4,y=self.y,text=tostring(value),color=3,ySpeed=-0.5})
-		self:triggerEvent('onHpLoss',source,value,type)
+		self:triggerEvent('onHpLoss',value,source,type)
 	end
 	self.hp = self.hp - value
 	if self.hp <= 0 then
@@ -131,7 +134,7 @@ function Creature:triggerConditionEvent(name,...)
 end
 
 function Creature:onTurnStart()
-	self.block = self.block - self:triggerReducerEvent('onTurnStartLoseBlock',self.block)
+	self.block = self.block - self:triggerReducerEvent('onBeforeTurnStartLoseBlock',self.block)
 	self:triggerEvent('onTurnStart')
 end
 

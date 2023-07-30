@@ -12,7 +12,7 @@ end
 
 function addAction(pos,action)
 	if action == nil then
-		table.insert(pos.manually and secondaryActions or actions,pos)
+		table.insert(pos.secondary and secondaryActions or actions,pos)
 	else
 		table.insert(actions,pos,action)
 	end
@@ -34,7 +34,7 @@ function tickActions()
 	end
 end
 
-Action = Object:new{isDone=false,duration=10,startDuration=10}
+Action = Object:new{isDone=false,duration=10,startDuration=10,secondary=false}
 function Action:new(o)
 	if o and o.duration then
 		o.startDuration = o.duration
@@ -75,6 +75,7 @@ function DrawCardAction:tick()
 		local card = table.remove(drawPile,#drawPile)
 		table.insert(hand,CardItem:new{card=card})
 		card:applyPowers()
+		player:triggerEvent('onDraw',card)
 	end
 end
 
@@ -87,7 +88,10 @@ function ShuffleAction:tick()
 	self.isDone = true
 end
 
-UseCardAction = Action:new{cardItem=nil,target=nil,manually=false,exhaust=false,randomTarget=false,free=false,tx=120,ty=68,duration=20}
+UseCardAction = Action:new{
+	cardItem=nil,target=nil,secondary=false,exhaust=false,randomTarget=false,free=false,
+	tx=120,ty=68,duration=20
+}
 function UseCardAction:new(o)
 	local cardItem = o.cardItem
 	cardItem.isNotInHand = true
@@ -103,8 +107,8 @@ function UseCardAction:tick()
 		self.cardItem.tx = self.tx
 		self.cardItem.ty = self.ty
 		local handIndex = table.indexOf(hand,self.cardItem)
-		-- can't manually play a card that is not in hand
-		if self.manually and handIndex == nil then
+		-- can't secondary play a card that is not in hand
+		if self.secondary and handIndex == nil then
 			self.isDone = true
 			return
 		end
@@ -176,7 +180,7 @@ function UseCardEndAction:tick()
 		if card.type ~= 'power' then
 			if exhaust then
 				table.insert(exhaustPile,self.cardItem.card)
-				card:triggerEvent('onExhaust')
+				player:triggerEvent('onExhaust',card)
 			else
 				table.insert(discardPile,self.cardItem.card)
 			end
@@ -232,7 +236,9 @@ end
 GainBlockAction = Action:new{target=nil,value=nil,duration=10}
 function GainBlockAction:tick()
 	if self.duration == self.startDuration and self.target.alive then
-		self.target.block = self.target.block + self.value
+		local oldBlock = self.target.block
+		self.target.block = math.min(self.target.block+self.value,999)
+		self.target:triggerEvent('onGainBlock',self.target.block-oldBlock)
 	end
 	Action.tick(self)
 end
@@ -253,17 +259,27 @@ function EndTurnAction:tick()
 		end
 		for _, enemy in ipairs(enemies) do
 			if enemy.alive then
-				enemy:enemyTurn()
-			end
-		end
-		for _, enemy in ipairs(enemies) do
-			if enemy.alive then
-				enemy:onTurnEnd()
+				addAction(EnemeyTurnAction:new{enemy=enemy})
 			end
 		end
 		addAction(NewTurnAction:new())
 	end
 	Action.tick(self)
+end
+
+EnemeyTurnAction = Action:new{secondary=true,enemy=nil}
+function EnemeyTurnAction:tick()
+	self.enemy:enemyTurn()
+	addAction(EnemeyTurnEndAction:new{enemy=self.enemy})
+	self.isDone = true
+end
+
+EnemeyTurnEndAction = Action:new{secondary=true,enemy=nil}
+function EnemeyTurnEndAction:tick()
+	if self.enemy.alive then
+		self.enemy:onTurnEnd()
+	end
+	self.isDone = true
 end
 
 ExhaustEtherealCardsAction = Action:new{duration=10}
@@ -303,11 +319,11 @@ function DiscardAllCardsAction:tick()
 	end
 end
 
-NewTurnAction = Action:new{duration=10}
+NewTurnAction = Action:new{duration=10,secondary=true,additionalCard=0}
 function NewTurnAction:tick()
 	if self.duration == self.startDuration then
 		player:onTurnStart()
-		addAction(DrawCardAction:new(5))
+		addAction(DrawCardAction:new(5+self.additionalCard))
 		energy = maxEnergy
 	end
 	Action.tick(self)
@@ -330,7 +346,7 @@ function ReducePowerAction:tick()
 		if power.amount == 0 then
 			owner:removePower(power)
 		else
-			power:onAmountUpdated()
+			power:onAmountUpdated(-self.amount)
 		end
 		owner:applyPowers()
 	end
@@ -348,11 +364,12 @@ function ApplyPowerAction:tick()
 		local owner = power.owner
 		local existingPower = owner:getPower(getmetatable(power))
 		if existingPower then
+			local oldAmount = existingPower.amount
 			existingPower.amount = limit(existingPower.amount+power.amount,-existingPower.maxAmount,existingPower.maxAmount)
 			if existingPower.amount == 0 then
 				owner:removePower(existingPower)
 			else
-				existingPower:onAmountUpdated()
+				existingPower:onAmountUpdated(existingPower.amount-oldAmount)
 			end
 		else
 			owner:addPower(power)
@@ -498,6 +515,7 @@ function PlayTopCardAction:tick()
 	if self.duration == self.startDuration then
 		local card = table.remove(drawPile,#drawPile)
 		local cardItem = CardItem:new{card=card}
+		trace('playtopcard '..card.name)
 		table.insert(limbo,cardItem)
 		local useCardAction = UseCardAction:new{cardItem=cardItem,exhaust=self.exhaust,randomTarget=self.randomTarget,target=self.target,free=true}
 		useCardAction.useCardPosition = fillCardPosition(cardItem)
@@ -508,13 +526,22 @@ function PlayTopCardAction:tick()
 end
 
 ExhaustCardAction = Action:new{duration=30,cardItem=nil,show=false}
+function ExhaustCardAction:new(o)
+	table.insert(limbo,o.cardItem)
+	return Action.new(self,o)
+end
+
 function ExhaustCardAction:tick()
 	if self.duration == self.startDuration then
 		local cardItem = self.cardItem
 		local card = cardItem.card
 		card:resetPowers()
+		local limboIndex = table.indexOf(limbo,cardItem)
+		if limboIndex then
+			table.remove(limbo,limboIndex)
+		end
 		table.insert(exhaustPile,card)
-		card:triggerEvent('onExhaust')
+		player:triggerEvent('onExhaust',card)
 		cardItem.large = false
 		local effect = CardEffect:new{cardItem=cardItem,pauseDuration=30,duration=50,tx=120,ty=-32}
 		if self.show then

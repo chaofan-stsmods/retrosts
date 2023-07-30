@@ -5,7 +5,7 @@ Card = Object:new{
 	name='',description='',cost=0,type='attack',rarity='common',
 	damage=0,baseDamage=0,block=0,baseBlock=0,magic=0,baseMagic=0,multiDamage={},
 	enemyTarget=false,playerTarget=false,toAllEnemies=false,
-	color={2,1},costIcon=45,typeIconColor=4,exhaust=false,ethereal=false,
+	color={2,1},costIcon=45,typeIconColor=4,exhaust=false,ethereal=false,innate=false,
 	upgrade=noop,upgraded=false,tags={},free=false,
 }
 function Card:new(o)

@@ -1,6 +1,19 @@
 ---@diagnostic disable: lowercase-global
 -- powers
 
+local function isCreature(obj)
+	local objType = getmetatable(obj)
+	for i = 1,3 do
+		if objType == Creature then
+			return true
+		elseif objType == nil or type(objType) ~= 'table' then
+			return false
+		end
+		objType = getmetatable(objType)
+	end
+	return false
+end
+
 Power = Object:new{
 	owner=nil,amount=0,stackable=true,debuff=false,turnBased=false,maxAmount=999,icon=40,iconflip=0,priority=100,
 	onTurnStart=noop,
@@ -11,12 +24,12 @@ Power = Object:new{
 }
 function Power:new(owner,amount)
 	local result
-	if amount == nil then
+	if amount == nil and not isCreature(owner) then
 		result = Object.new(self,owner)
 	else
-		result = Object.new(self,{owner=owner,amount=amount})
+		result = Object.new(self,{owner=owner,amount=amount or 1})
 	end
-	result:onAmountUpdated()
+	result:onAmountUpdated(0)
 	return result
 end
 
@@ -31,6 +44,20 @@ function TurnBasedPower:new(owner,amount,keepForOneTurn)
 end
 
 function TurnBasedPower:onTurnStart()
+	if self.owner ~= player then
+		return
+	end
+	if self.keepForOneTurn then
+		self.keepForOneTurn = false
+		return
+	end
+	addAction(ReducePowerAction:new(self,1))
+end
+
+function TurnBasedPower:onTurnEnd()
+	if self.owner == player then
+		return
+	end
 	if self.keepForOneTurn then
 		self.keepForOneTurn = false
 		return
@@ -43,8 +70,12 @@ function VulnerablePower:onAttacked(damage)
 	return damage * 1.5
 end
 
-RitualPower = Power:new{icon=73}
+RitualPower = Power:new{icon=73,skipFirst=false}
 function RitualPower:onTurnEnd()
+	if self.skipFirst then
+		self.skipFirst = false
+		return
+	end
 	addAction(ApplyPowerAction:new(StrengthPower:new(self.owner,self.amount)))
 end
 
@@ -70,10 +101,6 @@ function LoseStrengthPower:onTurnEnd()
 end
 
 NoDrawPower = Power:new{debuff=true,icon=15,stackable=false}
-function NoDrawPower:new(owner)
-	return Power.new(self,owner,1)
-end
-
 function NoDrawPower:onTurnEnd()
 	addAction(ReducePowerAction:new(self,self.amount))
 end
@@ -84,10 +111,6 @@ function MetallicizePower:onTurnEnd()
 end
 
 BarricadePower = Power:new{icon=18,stackable=false}
-function BarricadePower:new(owner)
-	return Power.new(self,owner,1)
-end
-
-function BarricadePower:onTurnStartLoseBlock(block)
+function BarricadePower:onBeforeTurnStartLoseBlock(block)
 	return 0
 end
