@@ -8,8 +8,8 @@ mapScreenSelectionMode = false
 
 MapWindow = Window:new{name='MapWindow',scroll=0,scrollSpeed=0,maxScroll=440,bossPosition=-424,bossY=16}
 function MapWindow:onOpen()
-    queueSync(1|4,1)
-    queueSync(2,0)
+	queueSync(1|4,1)
+	queueSync(2,0)
 
 	local height = #stsMap
 	self.bossPosition = 56-height*32

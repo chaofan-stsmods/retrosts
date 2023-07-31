@@ -12,9 +12,11 @@ end
 
 function addAction(pos,action)
 	if action == nil then
-		table.insert(pos.secondary and secondaryActions or actions,pos)
+		local queue = pos.secondary and secondaryActions or actions
+		table.insert(queue,pos)
 	else
-		table.insert(actions,pos,action)
+		local queue = action.secondary and secondaryActions or actions
+		table.insert(queue,pos,action)
 	end
 end
 
@@ -89,8 +91,8 @@ function ShuffleAction:tick()
 end
 
 UseCardAction = Action:new{
-	cardItem=nil,target=nil,secondary=false,exhaust=false,randomTarget=false,free=false,
-	tx=120,ty=68,duration=20
+	cardItem=nil,target=nil,secondary=false,exhaust=false,randomTarget=false,free=false,forceUse=false,energyOnUse=nil,
+	tempCard=false,isDoubleTap=false,tx=120,ty=68,duration=20
 }
 function UseCardAction:new(o)
 	local cardItem = o.cardItem
@@ -119,14 +121,12 @@ function UseCardAction:tick()
 			end
 		end
 		card:applyPowers(self.target)
-		card.free = self.free
-		if not card:canUse() then
-			card.free = false
+		if not self.forceUse and (not card:canUse(self.free) or (self.target ~= nil and not self.target.alive)) then
 			if handIndex then
 				self.cardItem.isNotInHand = false
 				self.isDone = true
 			else
-				addAction(1,UseCardEndAction:new{cardItem=self.cardItem,exhaust=self.exhaust,useCardPosition=self.useCardPosition})
+				addAction(1,self:makeUseCardEndAction())
 			end
 			Action.tick(self)
 			return
@@ -139,31 +139,39 @@ function UseCardAction:tick()
 			end
 		end
 		trace('useCard '..card.name)
-		local cardActions = card:use(self.target) or {}
+		self.energyOnUse = self.energyOnUse or energy
+		local cardActions = card:use(self.target,self.energyOnUse,self.free) or {}
 		for i,cardAction in ipairs(cardActions) do
-			cardAction.free = self.free
 			addAction(i,cardAction)
 		end
-		addAction(#cardActions+1,UseCardEndAction:new{cardItem=self.cardItem,exhaust=self.exhaust,useCardPosition=self.useCardPosition})
 		player:triggerEvent('onUseCard',card,self.target,self)
 		for _, enemy in ipairs(enemies) do
 			enemy:triggerEvent('onUseCard',card,self.target,self)
 		end
-		if card.cost > 0 and not self.free then
-			energy = energy - card.cost
+		addAction(#cardActions+1,self:makeUseCardEndAction())
+		local cost = card:getCost()
+		if cost > 0 and not self.free then
+			energy = energy - cost
 		end
 	end
 	Action.tick(self)
 end
 
-UseCardEndAction = Action:new{cardItem=nil,exhaust=false,duration=20}
+function UseCardAction:makeUseCardEndAction()
+	return UseCardEndAction:new{
+		cardItem=self.cardItem,exhaust=self.exhaust,
+		useCardPosition=self.useCardPosition,tempCard=self.tempCard,
+	}
+end
+
+UseCardEndAction = Action:new{cardItem=nil,exhaust=false,tempCard=false,duration=20}
 function UseCardEndAction:tick()
 	local card = self.cardItem.card
 	local exhaust = card.exhaust or self.exhaust
 	if card.type == 'power' then
 		self.cardItem.tx = player.x+player.width*4
 		self.cardItem.ty = player.y+player.height*4
-	elseif exhaust then
+	elseif exhaust or self.tempCard then
 		--self.cardItem.tx = 120
 		self.cardItem.ty = -32
 	else
@@ -176,8 +184,10 @@ function UseCardEndAction:tick()
 		if limboIndex then
 			table.remove(limbo,limboIndex)
 		end
+		card.costForOneTurnPlay = nil
+		card.costForOnePlay = nil
 		card:resetPowers()
-		if card.type ~= 'power' then
+		if card.type ~= 'power' and not self.tempCard then
 			if exhaust then
 				table.insert(exhaustPile,self.cardItem.card)
 				player:triggerEvent('onExhaust',card)
@@ -249,6 +259,7 @@ function EndTurnAction:tick()
 		for i = #secondaryActions,1,-1 do
 			table.remove(secondaryActions,i)
 		end
+		addAction(AutoPlayOnEndTurnAction:new())
 		addAction(ExhaustEtherealCardsAction:new())
 		addAction(DiscardAllCardsAction:new())
 		player:onTurnEnd()
@@ -282,7 +293,23 @@ function EnemeyTurnEndAction:tick()
 	self.isDone = true
 end
 
-ExhaustEtherealCardsAction = Action:new{duration=10}
+AutoPlayOnEndTurnAction = Action:new{secondary=true}
+function AutoPlayOnEndTurnAction:tick()
+	local autoPlayCards = {}
+	for i = #hand,1,-1 do
+		local cardItem = hand[i]
+		if cardItem.card.autoPlayOnEndTurn then
+			table.insert(autoPlayCards,cardItem)
+		end
+	end
+	miscRand:shuffle(autoPlayCards)
+	for i,cardItem in ipairs(autoPlayCards) do
+		addAction(1,UseCardAction:new{cardItem=cardItem,secondary=true,forceUse=true})
+	end
+	self.isDone = true
+end
+
+ExhaustEtherealCardsAction = Action:new{secondary=true}
 function ExhaustEtherealCardsAction:tick()
 	local etherealCards = {}
 	for i = #hand,1,-1 do
@@ -301,7 +328,7 @@ function ExhaustEtherealCardsAction:tick()
 	self.isDone = true
 end
 
-DiscardAllCardsAction = Action:new{duration=20}
+DiscardAllCardsAction = Action:new{duration=20,secondary=true}
 function DiscardAllCardsAction:tick()
 	Action.tick(self)
 	for i = #hand,1,-1 do
@@ -312,6 +339,7 @@ function DiscardAllCardsAction:tick()
 		if self.isDone or (math.abs(cardItem.tx - cardItem.x) < 2 and math.abs(cardItem.ty - cardItem.y) < 2) then
 			removeHand(i)
 			table.insert(discardPile,cardItem.card)
+			cardItem.card.costForOneTurnPlay = nil
 		end
 	end
 	if #hand == 0 then
@@ -391,15 +419,15 @@ function GainEnergyAction:tick()
 	Action.tick(self)
 end
 
-XCardAction = Action:new{free=false}
-function XCardAction:new(callback)
-	return Action.new(self,{callback=callback})
+XCardAction = Action:new{free=false,energyOnUse=nil}
+function XCardAction:new(callback,energyOnUse,free)
+	return Action.new(self,{callback=callback,energyOnUse=energyOnUse,free=free})
 end
 
 function XCardAction:tick()
 	if self.duration == self.startDuration then
 		if self.callback then
-			local actions = self.callback(energy) or {}
+			local actions = self.callback(self.energyOnUse or energy) or {}
 			for i = 1, #actions do
 				addAction(i,actions[i])
 			end
@@ -504,15 +532,15 @@ end
 
 PlayTopCardAction = Action:new{duration=10,target=nil,exhaust=false,randomTarget=false}
 function PlayTopCardAction:tick()
-	if #drawPile == 0 then
-		if #discardPile > 0 then
-			addAction(1,ShuffleAction:new())
-			addAction(2,PlayTopCardAction:new{target=self.target,exhaust=self.exhaust,randomTarget=self.randomTarget})
-		end
-		self.isDone = true
-		return
-	end
 	if self.duration == self.startDuration then
+		if #drawPile == 0 then
+			if #discardPile > 0 then
+				addAction(1,ShuffleAction:new())
+				addAction(2,PlayTopCardAction:new{target=self.target,exhaust=self.exhaust,randomTarget=self.randomTarget})
+			end
+			self.isDone = true
+			return
+		end
 		local card = table.remove(drawPile,#drawPile)
 		local cardItem = CardItem:new{card=card}
 		trace('playtopcard '..card.name)
@@ -540,6 +568,7 @@ function ExhaustCardAction:tick()
 		if limboIndex then
 			table.remove(limbo,limboIndex)
 		end
+		card.costForOneTurnPlay = nil
 		table.insert(exhaustPile,card)
 		player:triggerEvent('onExhaust',card)
 		cardItem.large = false
@@ -576,4 +605,13 @@ function PutCardOnDrawCardTopAction:tick()
 		addEffect(effect)
 	end
 	Action.tick(self)
+end
+
+FatalAction = Action:new{target=nil,callback=nil}
+function FatalAction:tick()
+	local target = self.target
+	if target:getPower(MinionPower) == nil and not target.alive and self.callback then
+		self.callback()
+	end
+	self.isDone = true
 end

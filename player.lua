@@ -3,13 +3,17 @@
 
 Player = Creature:new{
 	x=30,y=52,
-	getStartDeck=function() return {} end
 }
 function Player:applyPowers()
 	handApplyPowers()
 	for _, enemy in ipairs(enemies) do
 		enemy:applyPowers()
 	end
+end
+
+function Player:onCombatStart()
+	self:triggerEvent('onCombatStart')
+	Creature.onCombatStart(self)
 end
 
 function Player:triggerEvent(name,...)
@@ -36,4 +40,12 @@ end
 function Player:die()
 	switchWindow(LoseWindow:new())
 	Creature.die(self)
+end
+
+function Player:getStartDeck()
+	return {}
+end
+
+function Player:getCards()
+	return {}
 end

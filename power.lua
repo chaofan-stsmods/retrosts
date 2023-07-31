@@ -114,3 +114,5 @@ BarricadePower = Power:new{icon=18,stackable=false}
 function BarricadePower:onBeforeTurnStartLoseBlock(block)
 	return 0
 end
+
+MinionPower = Power:new{icon=32,stackable=false}

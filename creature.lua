@@ -75,6 +75,16 @@ function Creature:drawPowers()
 	end
 end
 
+function Creature:increaseMaxHp(value)
+	self.maxHp = self.maxHp + value
+	self:heal(value)
+end
+
+function Creature:heal(value)
+	self.hp = math.min(self.hp+value,self.maxHp)
+	addEffect(TextEffect:new{x=self.x+self.width*4,y=self.y+self.height*2-30,duration=60,text=tostring(value),color=5,ySpeed=0.5})
+end
+
 function Creature:damage(source,value,type)
 	if not source.alive or not self.alive then
 		return

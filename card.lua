@@ -2,11 +2,13 @@
 ---@diagnostic disable: lowercase-global
 
 Card = Object:new{
-	name='',description='',cost=0,type='attack',rarity='common',
+	name='',description='',type='attack',rarity='common',
+	color={2,1},costIcon=45,typeIconColor=4,
+	baseCost=0,cost=0,costForOneTurnPlay=nil,costForOnePlay=nil,
 	damage=0,baseDamage=0,block=0,baseBlock=0,magic=0,baseMagic=0,multiDamage={},
 	enemyTarget=false,playerTarget=false,toAllEnemies=false,
-	color={2,1},costIcon=45,typeIconColor=4,exhaust=false,ethereal=false,innate=false,
-	upgrade=noop,upgraded=false,tags={},free=false,
+	exhaust=false,ethereal=false,innate=false,autoPlayOnEndTurn=false,
+	upgrade=noop,upgraded=false,tags={},canGenerateInCombat=true,
 }
 function Card:new(o)
 	local r = Object.new(self,o)
@@ -28,17 +30,23 @@ function Card:new(o)
 	return r
 end
 
-function Card:use()
+function Card:use(target,energyOnUse,free)
 	return {}
 end
 
-function Card:canUse()
-	return (self.cost <= energy or self.free) and not inEnemyTurn
+function Card:canUse(free)
+	return (self:getCost() <= energy or free) and not inEnemyTurn
+end
+
+function Card:getCost()
+	if self.cost < 0 then
+		return self.cost
+	end
+	return self.costForOneTurnPlay or self.costForOnePlay or self.cost
 end
 
 function Card:applyPowers(target)
 	local damage = self.baseDamage
-	local block = self.baseBlock
 
 	damage = player:triggerReducerEvent('onAttack',damage,target,self)
 	if self.toAllEnemies then
@@ -65,20 +73,27 @@ function Card:applyPowers(target)
 	end
 
 	self.damage = math.floor(damage)
-	self.block = math.floor(block)
+
+	self.block = self.baseBlock
 	self.magic = self.baseMagic
+
+	local cost = self.baseCost
+	cost = player:triggerReducerEvent('onModifyCost',cost,self)
+	self.cost = math.floor(cost)
 end
 
 function Card:resetPowers()
 	self.damage = self.baseDamage
 	self.block = self.baseBlock
 	self.magic = self.baseMagic
+	self.cost = self.baseCost
 end
 
 function Card:showUpgrade()
 	self.damage,self.baseDamage = self.baseDamage,self.damage
 	self.block,self.baseBlock = self.baseBlock,self.block
 	self.magic,self.baseMagic = self.baseMagic,self.magic
+	self.cost,self.baseCost = self.baseCost,self.cost
 end
 
 function Card:canUpgrade()
@@ -99,7 +114,7 @@ end
 function Card:triggerEvent(name,...)
 	if self[name] then
 		self[name](self,...)
-	end	
+	end
 end
 
 CardItem = Object:new{ x=0,y=136,tx=0,ty=136,card=nil,large=false,isNotInHand=false,showWhiteCost=false}
@@ -134,7 +149,7 @@ function drawCardBack(card,large,l,t)
 	else
 		map(10,2,4,5,l,t,0)
 	end
-	local typeLeft = card.cost >= -1 and l+8 or l+1
+	local typeLeft = card.baseCost >= -1 and l+8 or l+1
 	spr(29,typeLeft,t-6,0)
 	spr(cardTypeToSprIndex[card.type],typeLeft,t-6,0)
 	resetColors{3,9,10,14,15}
@@ -142,13 +157,17 @@ end
 
 function drawCost(card,l,t,isNotInHand,showWhiteCost)
 	t = t-5
-	if card.cost >= 0 then
+	local cost = card:getCost()
+	if cost >= 0 then
 		spr(card.costIcon,l,t,0)
-		local costStr = card.cost == -1 and 'X' or tostring(card.cost)
+		local costStr = cost == -1 and 'X' or tostring(cost)
 		local txtWidth = strWidth(costStr)
 		local color = (card:canUse() or isNotInHand or showWhiteCost) and 12 or 1
+		if color == 12 and cost ~= card.baseCost then
+			color = 5
+		end
 		printShadowed(costStr,l+4-txtWidth//2,t+1,color)
-	elseif card.cost == -1 then
+	elseif cost == -1 then
 		spr(card.costIcon,l,t,0)
 		spr(54,l,t,7)
 	end
@@ -508,7 +527,7 @@ function HandSelectWindow:close()
 			table.insert(output,originalCardItem)
 		end
 	end
-	
+
 	Window.close(self,output)
 end
 
