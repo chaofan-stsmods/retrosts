@@ -84,6 +84,7 @@ function startGame(character)
 	emeraldKeyObtained = false
 	sapphireKeyObtained = false
 	currentEvent = NeowEvent:new(makeRand(act,room.id,1))
+	cursorOnTopBar = false
 	switchWindow(GameWindow:new())
 end
 
@@ -150,11 +151,8 @@ end
 -- main
 
 queueSync(32,1)
-startGame('Ironclad')
+--startGame('Ironclad')
 --startCombat()
-
-func = load('trace("hello") return 1')
-trace(func())
 
 -- <TILES>
 -- 000:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd

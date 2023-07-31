@@ -9,9 +9,11 @@ end
 
 function Ironclad:getStartDeck()
 	local deck = {}
-	local strike = DoubleTap:new()
+	local strike = Exhume:new()
 	strike:upgrade()
-	table.insert(deck,Rampage:new())
+	table.insert(deck,Headbutt:new())
+	table.insert(deck,strike)
+	table.insert(deck,strike)
 	table.insert(deck,strike)
 	table.insert(deck,SecondWind:new())
 	table.insert(deck,PowerThrough:new())
@@ -30,7 +32,7 @@ function Ironclad:getCards()
 	return redCards
 end
 
-RedCard = Card:new{color={2,1},costIcon=45,typeIconColor=4}
+RedCard = Card:new{color={2,1},costIcon=45,typeIconColor=4,colorName='red'}
 
 Strike = RedCard:new{ name='Strike',description='{63} !D!.',rarity='basic',baseCost=1,baseDamage=6,enemyTarget=true,upgrade={baseDamage=9},tags={'strike'} }
 function Strike:use(target)
@@ -335,7 +337,7 @@ function SeeingRed:use()
 end
 
 Pummel = RedCard:new{
-	name='Pummel',description='{63} !D!, !M! times.',rarity='uncommon',baseCost=1,baseDamage=2,baseMagic=4,
+	name='Pummel',description='{63} !D!, !M! times. NL Exhaust.',rarity='uncommon',baseCost=1,baseDamage=2,baseMagic=4,
 	enemyTarget=true,upgrade={baseMagic=5},exhaust=true,
 }
 function Pummel:use(target)
@@ -394,8 +396,7 @@ function Armaments:use()
 			table.retainIf(handCopy,HandSelectUpgradeWindow.filter)
 			if #handCopy == 0 then
 				return
-			end
-			if #handCopy == 1 or self.upgraded then
+			elseif #handCopy == 1 or self.upgraded then
 				for _, cardItem in ipairs(handCopy) do
 					cardItem.card:upgrade()
 					cardItem.card:applyPowers()
@@ -438,8 +439,7 @@ function TrueGrit:use()
 		AnonymousAction:new(function ()
 			if #hand == 0 then
 				return
-			end
-			if not self.upgraded or #hand == 1 then
+			elseif not self.upgraded or #hand == 1 then
 				local cardIndex = miscRand:randInt(#hand)
 				addAction(1,ExhaustCardAction:new{cardItem=hand[cardIndex],show=true})
 				removeHand(cardIndex)
@@ -466,8 +466,7 @@ function Warcry:use()
 		AnonymousAction:new(function ()
 			if #hand == 0 then
 				return
-			end
-			if #hand == 1 then
+			elseif #hand == 1 then
 				addAction(1,PutCardOnDrawCardTopAction:new{cardItem=hand[1],show=true})
 				removeHand(1)
 			else
@@ -508,7 +507,7 @@ function BloodForBlood:use(target)
 end
 
 function BloodForBlood:onHpLoss()
-	self.baseCost = self.baseCost - 1
+	self.baseCost = math.max(0,self.baseCost-1)
 end
 
 function BloodForBlood:upgrade()
@@ -525,8 +524,7 @@ function BurningPact:use()
 		AnonymousAction:new(function ()
 			if #hand == 0 then
 				return
-			end
-			if #hand == 1 then
+			elseif #hand == 1 then
 				addAction(1,ExhaustCardAction:new{cardItem=hand[1],show=true})
 				removeHand(1)
 			else
@@ -576,8 +574,7 @@ function DualWield:use()
 			table.retainIf(validCards,isAttackOrPower)
 			if #validCards == 0 then
 				return
-			end
-			if #validCards == 1 then
+			elseif #validCards == 1 then
 				addAction(1,MakeTempCardToHandAction:new(validCards[1].card,self.magic))
 			else
 				openWindowAbove(HandSelectWindow:new{cardItems=hand,title='Choose a Card to Copy',max=1,filter=isAttackOrPower},
@@ -592,7 +589,7 @@ function DualWield:use()
 end
 
 GhostlyArmor = RedCard:new{
-	name='GhostlyArmor',description='Gain !B! {47}. NL Ethereal.',rarity='uncommon',type='skill',baseCost=1,baseBlock=10,
+	name='Ghostly Armor',description='Gain !B! {47}. NL Ethereal.',rarity='uncommon',type='skill',baseCost=1,baseBlock=10,
 	playerTarget=true,upgrade={baseBlock=13},ethereal=true
 }
 function GhostlyArmor:use()
@@ -1018,11 +1015,77 @@ InfernalBlade = RedCard:new{
 }
 function InfernalBlade:use()
 	local attackCardTypes = shallowcopy(redCards)
-	table.retainIf(attackCardTypes,function (cardType) return cardType.type == 'attack' and cardType.canGenerateInCombat end)
+	table.retainIf(attackCardTypes,function (cardType)
+		return cardType.type == 'attack' and cardType.rarity ~= 'basic' and cardType.canGenerateInCombat
+	end)
 	local randomType = attackCardTypes[miscRand:randInt(#attackCardTypes)]
 	local card = randomType:new()
 	card.costForOneTurnPlay = 0
 	return { MakeTempCardToHandAction:new(card,1) }
+end
+
+Headbutt = RedCard:new{
+	name='Headbutt',description='{63} !D!. NL Put a card from discard pile on top of draw pile.',rarity='common',baseCost=1,
+	enemyTarget=true,playerTarget=true,baseDamage=9,upgrade={baseDamage=12}
+}
+function Headbutt:use(target)
+	return {
+		DamageAction:new{source=player,target=target,value=self.damage},
+		AnonymousAction:new(function ()
+			local cardItems = {}
+			for i, card in ipairs(discardPile) do
+				cardItems[i] = CardItem:new{card=card,x=240,y=136,tx=240,ty=136,isNotInHand=true}
+			end
+			if #cardItems == 0 then
+				return
+			elseif #cardItems == 1 then
+				table.remove(discardPile,table.indexOf(discardPile,cardItems[1].card))
+				addAction(1,PutCardOnDrawCardTopAction:new{cardItem=cardItems[1],show=true})
+			else
+				openWindowAbove(CardGridSelectWindow:new{cardItems=cardItems,title='Choose a Card to Put on Top of Draw Pile',max=1,top=8},
+					function (cards)
+						for _, cardItem in ipairs(cards) do
+							table.remove(discardPile,table.indexOf(discardPile,cardItem.card))
+							addAction(1,PutCardOnDrawCardTopAction:new{cardItem=cardItem})
+						end
+					end)
+			end
+		end)
+	}
+end
+
+Exhume = RedCard:new{
+	name='Exhume',description='Put a card from exhaust pile into hand. NL Exhaust.',rarity='rare',type='skill',baseCost=1,
+	playerTarget=true,upgrade={baseCost=0},exhaust=true,
+}
+function Exhume:use()
+	return {
+		AnonymousAction:new(function ()
+			local cardItems = {}
+			for i, card in ipairs(exhaustPile) do
+				cardItems[i] = CardItem:new{card=card,x=240,y=128,isNotInHand=true}
+			end
+			table.retainIf(cardItems,function (cardItem) return getmetatable(cardItem.card) ~= Exhume end)
+			if #cardItems == 0 then
+				return
+			elseif #cardItems == 1 then
+				table.remove(exhaustPile,table.indexOf(exhaustPile,cardItems[1].card))
+				table.insert(hand,cardItems[1])
+				cardItems[1].isNotInHand = false
+				cardItems[1].card:applyPowers()
+			else
+				openWindowAbove(CardGridSelectWindow:new{cardItems=cardItems,title='Choose a Card to Put into Hand',max=1},
+					function (cards)
+						for _, cardItem in ipairs(cards) do
+							table.remove(exhaustPile,table.indexOf(exhaustPile,cardItem.card))
+							table.insert(hand,cardItem)
+							cardItem.isNotInHand = false
+							cardItem.card:applyPowers()
+						end
+					end)
+			end
+		end)
+	}
 end
 
 redCards = {
@@ -1032,9 +1095,8 @@ redCards = {
 	Anger,Armaments,PowerThrough,Havoc,TrueGrit,Warcry,WildStrike,BattleTrance,BloodForBlood,BurningPact,Carnage,
 	Dropkick,DualWield,GhostlyArmor,RecklessCharge,Metallicize,Rage,SecondWind,SeverSoul,Sentinel,Barricade,
 	DarkEmbrace,Combust,Evolve,FeelNoPain,FireBreathing,FlameBarrier,Rupture,SearingBlow,Berserk,Brutality,
-	DemonForm,Juggernaut,FiendFire,Corruption,Immolate,DoubleTap,Feed,Reaper,InfernalBlade,
+	DemonForm,Juggernaut,FiendFire,Corruption,Immolate,DoubleTap,Feed,Reaper,InfernalBlade,Headbutt,Exhume,
 }
 
 -- TODO
--- Headbutt - GridUI
 -- Exhume - GridUI

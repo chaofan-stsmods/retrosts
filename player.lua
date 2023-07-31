@@ -33,6 +33,7 @@ function Player:triggerEvent(name,...)
 end
 
 function Player:onCombatEnd()
+	self:triggerEvent('onCombatEnd')
 	self.block = 0
 	self.powers = {}
 end

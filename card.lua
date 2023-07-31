@@ -3,7 +3,7 @@
 
 Card = Object:new{
 	name='',description='',type='attack',rarity='common',
-	color={2,1},costIcon=45,typeIconColor=4,
+	color={2,1},costIcon=45,typeIconColor=4,colorName='',
 	baseCost=0,cost=0,costForOneTurnPlay=nil,costForOnePlay=nil,
 	damage=0,baseDamage=0,block=0,baseBlock=0,magic=0,baseMagic=0,multiDamage={},
 	enemyTarget=false,playerTarget=false,toAllEnemies=false,
@@ -117,7 +117,7 @@ function Card:triggerEvent(name,...)
 	end
 end
 
-CardItem = Object:new{ x=0,y=136,tx=0,ty=136,card=nil,large=false,isNotInHand=false,showWhiteCost=false}
+CardItem = Object:new{ x=0,y=136,tx=0,ty=136,card=nil,large=false,isNotInHand=false,showWhiteCost=false,glow=nil}
 cardTypeToSprIndex = {attack=57,skill=58,power=59,status=55,curse=56}
 cardRarityColor = {basic={14,15},common={14,15},special={14,15},uncommon={10,9},rare={4,3}}
 function CardItem:tick()
@@ -130,6 +130,12 @@ function CardItem:tick()
 	else
 		l = self.x-16
 		t = self.y-20
+	end
+	if t < -60 or t > 140 then
+		return
+	end
+	if self.glow ~= nil then
+		rect(l,t,self.large and 57 or 33,self.large and 57 or 41,self.glow)
 	end
 	drawCardBack(self.card,self.large,l,t)
 	drawCost(self.card,l,t,self.isNotInHand,self.showWhiteCost)
@@ -383,6 +389,74 @@ function HandUI:handControls()
 	end
 end
 
+-- grid UI
+CardGridUI = Object:new{cardItems=nil,selection=0,cursorOnSelf=false,onSelect=noop,top=0,ty=0,y=0}
+function CardGridUI:new(cardItems)
+	return Object.new(self,{cardItems=cardItems})
+end
+
+function CardGridUI:tick()
+	self:drawCards()
+	self:gridControls()
+end
+
+function CardGridUI:drawCards()
+	self.y = lerp(self.y,self.ty,0.2)
+	for i, cardItem in ipairs(self.cardItems) do
+		local row,col = math.floor((i-1)/5),(i-1)%5
+		local x,y = 28+col*46,self.top+36+row*56-self.y
+		cardItem.tx = x
+		cardItem.ty = y
+		cardItem.large = self.cursorOnSelf and self.selection == i
+		if self.selection ~= i then
+			cardItem:tick()
+		end
+	end
+	if self.selection > 0 and self.selection <= #self.cardItems then
+		self.cardItems[self.selection]:tick()
+	end
+end
+
+function CardGridUI:gridControls()
+	if not self.cursorOnSelf then
+		return
+	end
+	
+	if self.selection > #self.cardItems then
+		self.selection = #self.cardItems
+	end
+	if self.selection == 0 and #self.cardItems > 0 then
+		self.selection = 1
+	end
+
+	local pressed = false
+	if btnp(0) then
+		self.selection = limit(self.selection-5,1,#self.cardItems)
+		pressed = true
+	elseif btnp(1) then
+		self.selection = limit(self.selection+5,1,#self.cardItems)
+		pressed = true
+	elseif btnp(2) then
+		self.selection = limit(self.selection-1,1,#self.cardItems)
+		pressed = true
+	elseif btnp(3) then
+		self.selection = limit(self.selection+1,1,#self.cardItems)
+		pressed = true
+	elseif btnp(4) and self.selection >= 1 and self.selection <= #self.cardItems then
+		self.onSelect(self.selection)
+	end
+
+	if pressed then
+		local row = math.floor((self.selection-1)/5)
+		local y = self.top+36+row*56-self.y
+		if y < 36+self.top then
+			self.ty = row*56
+		elseif y > 100 then
+			self.ty = self.top+row*56-64
+		end
+	end
+end
+
 -- hand select UI
 HandSelectWindow = Window:new{
 	name='HandSelectWindow',selectedCards=nil,title='Choose a card',cardItems=nil,single=false,
@@ -583,4 +657,75 @@ function HandSelectUpgradeWindow:drawSelectedCards()
 	for i = -1, 1 do
 		tri(120-3-i*8,56,120-3-i*8,64,120+3-i*8,60,4)
 	end
+end
+
+-- grid select window
+CardGridSelectWindow = Window:new{
+	name='CardGridSelectWindow',selectedCards=nil,title='Choose a card',cardItems=nil,single=false,
+	max=999,min=1,
+}
+function CardGridSelectWindow:new(o)
+	local gridUI = CardGridUI:new(o.cardItems)
+	gridUI.cursorOnSelf = true
+	gridUI.top = 16
+	o.maxY = math.ceil(#o.cardItems/5-1)*56-64+gridUI.top
+	o.height = 120
+	o.gridUI = gridUI
+	o.selectedCards = {}
+	r = Window.new(self,o)
+	gridUI.onSelect = function (selection)
+		r:gridUISelect(selection)
+	end
+	return r
+end
+
+function CardGridSelectWindow:tick()
+	print(self.title,120-strWidth(self.title)/2,9,12)
+	if self.maxY > 0 then
+		local t=16+self.gridUI.y/(self.maxY+self.height)*112
+		local b=16+(self.gridUI.y+self.height)/(self.maxY+self.height)*112
+		rect(234,t,4,b-t,14)
+	end
+	clip(0,16,240,136)
+	self.gridUI:tick()
+	clip()
+	self:selectedCardsControls()
+	tickTopBar(true)
+end
+
+function CardGridSelectWindow:gridUISelect(selection)
+	local cardItem = self.cardItems[selection]
+	local selectionIndex = table.indexOf(self.selectedCards,cardItem)
+	if selectionIndex then
+		cardItem.glow = nil
+		table.remove(self.selectedCards,selectionIndex)
+	elseif self.max == 1 then
+		for i=#self.selectedCards,1,-1 do
+			self.selectedCards[i].glow = nil
+			table.remove(self.selectedCards,i)
+		end
+		cardItem.glow = 11
+		table.insert(self.selectedCards,cardItem)
+	elseif #self.selectedCards < self.max then
+		cardItem.glow = 11
+		table.insert(self.selectedCards,cardItem)
+	end
+end
+
+function CardGridSelectWindow:selectedCardsControls()
+	self.gridUI.cursorOnSelf = not cursorOnTopBar
+	if cursorOnTopBar then
+		return
+	end
+
+	if btnp(7) then
+		self:close()
+	end
+end
+
+function CardGridSelectWindow:close()
+	for _, cardItem in ipairs(self.selectedCards) do
+		cardItem.glow = nil
+	end
+	Window.close(self,self.selectedCards)
 end

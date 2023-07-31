@@ -124,10 +124,12 @@ function TitleSelectionWindow:tick()
 	end
 end
 
-TitleWindow = TitleSelectionWindow:new{options={'New Game','Exit'},name='TitleWindow'}
+TitleWindow = TitleSelectionWindow:new{options={'New Game','Card List','Exit'},name='TitleWindow'}
 function TitleWindow:onOption()
-	if self.selection == 2 then
+	if self.selection == #self.options then
 		exit()
+	elseif self.selection == 2 then
+		self:open(CardListWindow:new())
 	elseif self.selection == 1 then
 		self:open(CharacterSelectWindow:new())
 	end
@@ -136,6 +138,57 @@ end
 CharacterSelectWindow = TitleSelectionWindow:new{selection=1,options={'Ironclad','Silent','Defect','Watcher'},name='CharacterSelectWindow'}
 function CharacterSelectWindow:onOption()
 	startGame(self.options[self.selection])
+end
+
+CardListWindow = Window:new{name='CardListWindow',gridUI=nil,cardItems=nil}
+local rarityPriority = {basic=0,special=1,common=2,uncommon=3,rare=4}
+local colorPriority = {red=0,colorless=10}
+function CardListWindow:new()
+	local cardItems = {}
+	for _,cardType in ipairs(Ironclad:getCards()) do
+		table.insert(cardItems,CardItem:new{card=cardType:new(),isNotInHand=true})
+	end
+	for _,cardType in ipairs(getColorlessCards()) do
+		table.insert(cardItems,CardItem:new{card=cardType:new(),isNotInHand=true})
+	end
+	table.sort(cardItems,function (a, b)
+		if a.card.rarity == b.card.rarity and a.card.colorName == b.card.colorName then
+			return a.card.name < b.card.name
+		elseif a.card.colorName == b.card.colorName then
+			return rarityPriority[a.card.rarity] < rarityPriority[b.card.rarity]
+		else
+			return colorPriority[a.card.colorName] < colorPriority[b.card.colorName]
+		end
+	end)
+	local gridUI = CardGridUI:new(cardItems)
+	local r = Window.new(self,{gridUI=gridUI,cardItems=cardItems})
+	gridUI.cursorOnSelf = true
+	gridUI.onSelect = function (selection)
+		r:gridUISelect(selection)
+	end
+	return r
+end
+
+function CardListWindow:onOpen()
+	queueSync(1|4,1)
+end
+
+function CardListWindow:tick()
+	cls(0)
+	self.gridUI:tick()
+	if btnp(5) then
+		self:close()
+	end
+end
+
+function CardListWindow:gridUISelect(selection)
+	local cardItem = self.cardItems[selection]
+	if cardItem.card.upgraded then
+		cardItem.card = getmetatable(cardItem.card):new()
+	else
+		cardItem.card:upgrade()
+		cardItem.card:showUpgrade()
+	end
 end
 
 LoseWindow = Window:new{name='LoseWindow'}

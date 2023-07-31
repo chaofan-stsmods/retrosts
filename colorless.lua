@@ -1,7 +1,9 @@
 -- colorless
 ---@diagnostic disable: lowercase-global
 
-ColorlessCard = Card:new{color={14,15},costIcon=46,typeIconColor=13}
+local colorlessCards
+
+ColorlessCard = Card:new{color={14,15},costIcon=46,typeIconColor=13,colorName='colorless'}
 
 Wound = ColorlessCard:new{ name='Wound',description='Unplayable.',rarity='special',baseCost=-2,type='status',canUse=false,canUpgrade=false }
 
@@ -13,4 +15,12 @@ Burn = ColorlessCard:new{
 }
 function Burn:use()
 	return { DamageAction:new{source=player,target=player,value=self.magic} }
+end
+
+colorlessCards = {
+	Wound,Dazed,Burn
+}
+
+function getColorlessCards()
+	return colorlessCards
 end
