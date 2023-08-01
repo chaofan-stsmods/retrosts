@@ -81,13 +81,22 @@ function drawOverlay()
 	printShadowed(energyText,16-width/2,105,12)
 	spr(38,0,128,0)
 	printShadowed(tostring(#drawPile),8,129,12)
+	if combatSelection.type == 'drawPile' then
+		drawSelectionBox(0,127,9+strWidth(tostring(#drawPile)),9,4,2)
+	end
 	spr(39,232,128,0)
 	width = strWidth(tostring(#discardPile))
 	printShadowed(tostring(#discardPile),232-width,129,12)
+	if combatSelection.type == 'discardPile' then
+		drawSelectionBox(230-width,127,width+10,9,4,2)
+	end
 	if #exhaustPile > 0 then
 		spr(40,232,120,0)
 		width = strWidth(tostring(#exhaustPile))
 		printShadowed(tostring(#exhaustPile),232-width,121,12)
+		if combatSelection.type == 'exhaustPile' then
+			drawSelectionBox(230-width,119,width+10,9,4,2)
+		end
 	end
 	drawHand()
 	drawLimbo()
@@ -160,7 +169,6 @@ function combatControls()
 	elseif combatSelection.type == 'topbar' then
 		combatSelection.type = combatSelection.oldType or 'hand'
 		combatSelection.oldType = nil
-		handUI.hideSelection = false
 	end
 
 	if pauseControl then
@@ -171,6 +179,18 @@ function combatControls()
 	if combatSelection.type == 'hand' then
 		-- handled in hand UI
 		handUI.cursorOnSelf = true
+		handUI.hideSelection = false
+		if not handUI.justChangedSelection then
+			if handUI.selection == 1 and btnp(2) then
+				combatSelection.type = 'drawPile'
+				handUI.cursorOnSelf = false
+				handUI.hideSelection = true
+			elseif handUI.selection == #hand and btnp(3) then
+				combatSelection.type = 'discardPile'
+				handUI.cursorOnSelf = false
+				handUI.hideSelection = true
+			end
+		end
 
 	elseif combatSelection.type == 'usecard' then
 		if combatSelection.handIndex < 1 or combatSelection.handIndex > #hand or not hand[combatSelection.handIndex].card:canUse() then
@@ -218,6 +238,40 @@ function combatControls()
 				hand[combatSelection.handIndex].card:applyPowers()
 			end
 			combatSelection.handIndex = nil
+		end
+	elseif combatSelection.type == 'drawPile' then
+		if btnp(3) then
+			combatSelection.type = 'hand'
+			handUI.cursorOnSelf = true
+		elseif btnp(4) then
+			local cardItems = table.map(drawPile, function (card) return CardItem:new{card=card,x=0,y=136,isNotInHand=true} end)
+			table.sort(cardItems,function (a, b) return a.card.name < b.card.name end)
+			local gridView = CardGridSelectWindow:new{title='Your Draw Pile',cardItems=cardItems,min=0,max=0,canCancel=true}
+			openWindowAbove(gridView)
+		end
+	elseif combatSelection.type == 'discardPile' then
+		if btnp(2) then
+			combatSelection.type = 'hand'
+			handUI.cursorOnSelf = true
+		elseif btnp(0) then
+			if #exhaustPile > 0 then
+				combatSelection.type = 'exhaustPile'
+			end
+		elseif btnp(4) then
+			local cardItems = table.map(discardPile, function (card) return CardItem:new{card=card,x=240,y=136,isNotInHand=true} end)
+			local gridView = CardGridSelectWindow:new{title='Your Discard Pile',cardItems=cardItems,min=0,max=0,canCancel=true}
+			openWindowAbove(gridView)
+		end
+	elseif combatSelection.type == 'exhaustPile' then
+		if btnp(2) then
+			combatSelection.type = 'hand'
+			handUI.cursorOnSelf = true
+		elseif btnp(1) then
+			combatSelection.type = 'discardPile'
+		elseif btnp(4) then
+			local cardItems = table.map(exhaustPile, function (card) return CardItem:new{card=card,x=240,y=128,isNotInHand=true} end)
+			local gridView = CardGridSelectWindow:new{title='Exhasted Cards',cardItems=cardItems,min=0,max=0,canCancel=true}
+			openWindowAbove(gridView)
 		end
 	end
 

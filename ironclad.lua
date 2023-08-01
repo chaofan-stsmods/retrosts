@@ -9,28 +9,28 @@ end
 
 function Ironclad:getStartDeck()
 	local deck = {}
-	local strike = Exhume:new()
-	strike:upgrade()
-	table.insert(deck,Headbutt:new())
-	table.insert(deck,strike)
-	table.insert(deck,strike)
-	table.insert(deck,strike)
-	table.insert(deck,SecondWind:new())
-	table.insert(deck,PowerThrough:new())
-	table.insert(deck,Reaper:new())
-	local defend = InfernalBlade:new()
-	defend:upgrade()
-	table.insert(deck,defend)
-	table.insert(deck,defend)
-	table.insert(deck,defend)
-	table.insert(deck,Shockwave:new())
-	table.insert(deck,defend)
+	table.insert(deck,Strike:new())
+	table.insert(deck,Strike:new())
+	table.insert(deck,Strike:new())
+	table.insert(deck,Strike:new())
+	table.insert(deck,Strike:new())
+	table.insert(deck,Defend:new())
+	table.insert(deck,Defend:new())
+	table.insert(deck,Defend:new())
+	table.insert(deck,Defend:new())
+	table.insert(deck,Bash:new())
 	return deck
 end
 
 function Ironclad:getCards()
 	return redCards
 end
+
+function Ironclad:getStartRelics()
+	return { BurningBlood:new() }
+end
+
+-- cards
 
 RedCard = Card:new{color={2,1},costIcon=45,typeIconColor=4,colorName='red'}
 
@@ -1098,5 +1098,11 @@ redCards = {
 	DemonForm,Juggernaut,FiendFire,Corruption,Immolate,DoubleTap,Feed,Reaper,InfernalBlade,Headbutt,Exhume,
 }
 
--- TODO
--- Exhume - GridUI
+-- relics
+
+RedRelic = Relic:new{colorName='red'}
+
+BurningBlood = RedRelic:new{name='Burning Blood',icon=254,tier='basic'}
+function BurningBlood:onCombatEnd()
+	player:heal(6)
+end

@@ -2,7 +2,8 @@
 ---@diagnostic disable: lowercase-global
 
 cursorOnTopBar = false
-topBarSelection = {type=nil,index=0}
+local topBarSelection = {type=nil,index=0}
+local relicOffset = 0
 function tickTopBar(control)
 	drawTopBar()
 	if control then
@@ -33,6 +34,21 @@ function drawTopBar()
 	if emeraldKeyObtained then spr(3,0,0,0) end
 	if rubyKeyObtained then spr(4,0,0,0) end
 	if sapphireKeyObtained then spr(5,0,0,0) end
+	drawRelics()
+end
+
+function drawRelics()
+	local x = 1-relicOffset
+	local y = 9
+	for _, relic in ipairs(relics) do
+		spr(relic.icon,x,y,0)
+		if relic.counter ~= nil then
+			local counterStr = tostring(relic.counter)
+			local width = strWidth(counterStr,false,true)
+			printGlowed(counterStr,math.min(x+5,x+12-width),y+3,12,15,1,true)
+		end
+		x = x+12
+	end
 end
 
 function controlTopBar()
@@ -76,6 +92,16 @@ function controlTopBar()
 				nearestWindow:close()
 			else
 				openWindowAbove(MapWindow:new())
+			end
+			exitTopBar()
+		elseif topBarSelection.type == 'deck' then
+			if getmetatable(nearestWindow) == CardGridSelectWindow and nearestWindow.isDeckView then
+				nearestWindow:close()
+			else
+				closeWindowsIf(function (w) return getmetatable(w) == CardGridSelectWindow and w.isDeckView end)
+				local cardItems = table.map(deck, function (card) return CardItem:new{card=card,x=240,y=0,isNotInHand=true} end)
+				local gridView = CardGridSelectWindow:new{title='Your Deck',cardItems=cardItems,isDeckView=true,min=0,max=0,canCancel=true}
+				openWindowAbove(gridView)
 			end
 			exitTopBar()
 		end

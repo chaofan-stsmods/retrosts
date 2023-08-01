@@ -15,6 +15,7 @@ require 'utils'
 require 'window'
 require 'creature'
 require 'card'
+require 'relic'
 require 'action'
 require 'power'
 require 'player'
@@ -46,6 +47,7 @@ floor = 1
 gold = 0
 deck = {}
 potions = {'slot','slot','slot'}
+relics = {}
 maxEnergy = 3
 rubyKeyObtained = false
 emeraldKeyObtained = false
@@ -76,6 +78,7 @@ function startGame(character)
 	floor = 0
 	gold = 99
 	deck = player:getStartDeck()
+	relics = player:getStartRelics()
 	potions = {'slot','slot','slot'}
 	maxEnergy = 3
 	effects = {}
@@ -101,6 +104,7 @@ function startAct(actId)
 		table.insert(room.next,nextRoom)
 	end
 	roomType = 'event'
+	resetCardRewardGenerator(actId)
 end
 
 function completeRoom()
@@ -400,6 +404,8 @@ queueSync(32,1)
 -- 251:20000002202222022222112221211f221211f221121122210122121000122100
 -- 252:0000f0ff00ffdfed0fdfeded0fedeeedfdeeeedffedeeedffeeeddf0fdddff00
 -- 253:0000011100021211000222220122233212333321233222112321110012110000
+-- 254:0000200000002000020220003423230002333200024443020224324300222030
+-- 255:0000100000001000010110001d1e1e0001eee10101ddde11011de1de001110e1
 -- </TILES1>
 
 -- <SPRITES>

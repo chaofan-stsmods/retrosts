@@ -72,15 +72,15 @@ end
 
 function openWindowAbove(targetWindow,onClose)
 	if targetWindow.single then
-		closeWindowsWithType(getmetatable(targetWindow))
+		closeWindowsIf(function (w) return getmetatable(w) == getmetatable(targetWindow) end)
 	end
 	nearestWindow:open(targetWindow,onClose)
 end
 
-function closeWindowsWithType(windowType,output)
+function closeWindowsIf(condition,output)
 	local w = window
 	while w ~= nil do
-		if getmetatable(w) == windowType then
+		if condition(w) then
 			w:close(output)
 		end
 		w = w.child

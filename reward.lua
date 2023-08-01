@@ -13,8 +13,8 @@ function RewardWindow:onOpen()
 end
 
 function RewardWindow:tick()
-	sprmap(0,36,12,13,72,24,0)
-	sprmap(0,34,16,2,56,16,0)
+	sprmap(0,36,12,13,72,26,0)
+	sprmap(0,34,16,2,56,18,0)
 	local title = 'Rewards'
 	local width = strWidth(title)
 	printGlowed(title,120-width/2,19,12)
@@ -100,12 +100,97 @@ end
 
 function generateRewards(random)
 	local rewards = {}
-	table.insert(rewards,{title='100 G',icon=478,type='gold',value=100})
-	table.insert(rewards,{title='Add a card to deck',icon=431,type='card',value={Strike:new(),Defend:new(),Bash:new()}})
-	table.insert(rewards,{title='Add a card to deck',icon=447,type='card',value={Strike:new(),Defend:new(),Bash:new()}})
-	table.insert(rewards,{title='Emerald key',icon=462,type='key',value='emeraldKeyObtained'})
-	table.insert(rewards,{title='Sapphire key',icon=463,type='key',value='sapphireKeyObtained'})
+	generateGoldReward(rewards,random)
+	generateCardRewards(rewards,random)
+	--table.insert(rewards,{title='Emerald key',icon=462,type='key',value='emeraldKeyObtained'})
+	--table.insert(rewards,{title='Sapphire key',icon=463,type='key',value='sapphireKeyObtained'})
 	return rewards
+end
+
+function generateGoldReward(rewards,random)
+	local gold = nil
+	if room.type == 'monster' then
+		gold = random:randInt(10,20)
+	elseif room.type == 'elite' then
+		gold = random:randInt(25,35)
+	elseif room.type == 'boss' then
+		gold = random:randInt(95,105)
+	end
+	if gold then
+		table.insert(rewards,{title=gold..' Gold',icon=478,type='gold',value=gold})
+	end
+end
+
+local rareCardRandOffset = 5
+local initRareCardRandOffset = 5
+local rareCardRandOffsetGrow = -1
+local minRareCardRandOffset = -40
+local cardUpgradedChance = 0
+function resetCardRewardGenerator(actId)
+	rareCardRandOffset = initRareCardRandOffset
+	cardUpgradedChance = 0
+	if actId == 2 then
+		cardUpgradedChance = 0.25
+	elseif actId >= 3 then
+		cardUpgradedChance = 0.5
+	end
+end
+
+function generateCardRewards(rewards,random)
+	local cardCount = 3
+	local cardTypes = {}
+	for _=1,cardCount do
+		local rarity = generateCardRarity(random)
+		if rarity == 'rare' then
+			rareCardRandOffset = initRareCardRandOffset
+		elseif rarity == 'common' then
+			rareCardRandOffset = math.max(rareCardRandOffset+rareCardRandOffsetGrow,minRareCardRandOffset)
+		end
+		local allCardTypes = shallowcopy(player:getCards())
+		table.retainIf(allCardTypes,function (cardType) return cardType.rarity == rarity end)
+		local cardType
+		repeat
+			cardType = allCardTypes[random:randInt(#allCardTypes)]
+		until table.indexOf(cardTypes,cardType) == nil
+		table.insert(cardTypes,cardType)
+	end
+
+	local reward = {
+		title='Add a card to deck',
+		icon=room.type == 'boss' and 447 or 431,
+		type='card',
+		value={}
+	}
+	for i, cardType in ipairs(cardTypes) do
+		local card = cardType:new()
+		reward.value[i] = card
+		if card.rarity ~= 'rare' and card:canUpgrade() and random:rand() < cardUpgradedChance then
+			card:upgrade()
+		end
+	end
+
+	table.insert(rewards,reward)
+end
+
+function generateCardRarity(random)
+	local roll = random:randInt(0,99)+rareCardRandOffset
+	local rareCardChance = 3
+	local uncommonCardChance = 37
+	if room.type == 'boss' then
+		rareCardChance = 999
+	elseif room.type == 'elite' then
+		rareCardChance = 10
+		uncommonCardChance = 40
+	elseif room.type == 'shop' then
+		rareCardChance = 9
+	end
+	if roll < rareCardChance then
+		return 'rare'
+	elseif roll < rareCardChance + uncommonCardChance then
+		return 'uncommon'
+	else
+		return 'common'
+	end
 end
 
 -- cardselect
@@ -126,7 +211,7 @@ function CardRewardWindow:onOpen()
 end
 
 function CardRewardWindow:tick()
-	sprmap(0,34,16,2,56,16,0)
+	sprmap(0,34,16,2,56,18,0)
 	local title = 'Choose a Card'
 	local width = strWidth(title)
 	printGlowed(title,120-width/2,19,12)

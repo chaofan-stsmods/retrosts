@@ -193,6 +193,14 @@ function table:retainIf(condition)
 	end
 end
 
+function table:map(func)
+	local r = {}
+	for _, value in ipairs(self) do
+		table.insert(r,func(value))
+	end
+	return r
+end
+
 -- selection
 
 function keepCurrentIndexInTableIf(table,currentIndex,condition)

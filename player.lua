@@ -17,6 +17,11 @@ function Player:onCombatStart()
 end
 
 function Player:triggerEvent(name,...)
+	for _, relic in ipairs(relics) do
+		if relic[name] then
+			relic[name](relic,...)
+		end
+	end
 	Creature.triggerEvent(self,name,...)
 	for _, hand in ipairs(hand) do
 		hand.card:triggerEvent(name,...)
@@ -47,6 +52,14 @@ function Player:getStartDeck()
 	return {}
 end
 
+function Player:getStartRelics()
+	return {}
+end
+
 function Player:getCards()
+	return {}
+end
+
+function Player:getRelics()
 	return {}
 end

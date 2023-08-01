@@ -140,7 +140,11 @@ function MapWindow:drawRoom(room,rx,ry)
 		elseif mapScreenSelectionMode then
 			mapColor(15,13)
 		end
-		spr(roomIconMap[room.type] or 503,rx,ry,12)
+		if room.hasKey and room.type == 'elite' then
+			spr(507,rx,ry,12)
+		else
+			spr(roomIconMap[room.type] or 503,rx,ry,12)
+		end
 		if (mapScreenSelectionMode and room.x == mapScreenX and room.y == mapScreenY) or
 			(not mapScreenSelectionMode and room.x == currentRoomX and room.y == currentRoomY) then
 			drawSelectionBox(rx-2,ry-2,12,12,15)
@@ -185,7 +189,7 @@ function generateMap(random,width,height,count)
 	for i=1,height do
 		map[i] = {}
 		for j=1,width do
-			local room = {id=(i-1)*width+j,x=j,y=i,previous={},next={},type=nil,hasEdge=false,completed=false}
+			local room = {id=(i-1)*width+j,x=j,y=i,previous={},next={},type=nil,hasEdge=false,hasKey=false,completed=false}
 			if i == 1 then
 				room.type = 'monster'
 			elseif i == height then
@@ -233,6 +237,20 @@ function generateMap(random,width,height,count)
 
 	random:shuffle(roomPool)
 	assignRooms(unassignedRooms,roomPool)
+	if not emeraldKeyObtained then
+		local eliteRooms = {}
+		for i=height,1,-1 do
+			for j=1,width do
+				local room = map[i][j]
+				if room.hasEdge and room.type == 'elite' then
+					table.insert(eliteRooms,room)
+				end
+			end
+		end
+		if #eliteRooms > 0 then
+			eliteRooms[random:randInt(#eliteRooms)].hasKey = true
+		end
+	end
 
 	local bossRoom = {id=height*width+1,x=1,y=height+1,previous={},next={},type='boss',hasEdge=false,completed=false}
 	for j=1,width do

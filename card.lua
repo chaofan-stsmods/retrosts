@@ -303,7 +303,7 @@ function moveLimitLineWidthAndPrint(str,currentX,currentY,x,lineWidth,maxY,color
 end
 
 -- hand ui
-HandUI = Object:new{cardItems=nil,selection=0,cursorOnSelf=false,hideSelection=false,onSelect=noop}
+HandUI = Object:new{cardItems=nil,selection=0,cursorOnSelf=false,hideSelection=false,onSelect=noop,justChangedSelection=false}
 function HandUI:new(cardItems)
 	return Object.new(self,{cardItems=cardItems})
 end
@@ -363,12 +363,14 @@ function HandUI:drawCards()
 end
 
 function HandUI:handControls()
+	self.justChangedSelection = false
 	if not self.cursorOnSelf then
 		return
 	end
 
 	local function cardIsInHand(i) return not self.cardItems[i].isNotInHand end
 
+	local oldSelection = self.selection
 	if self.selection > #self.cardItems then
 		self.selection = #self.cardItems
 	end
@@ -386,6 +388,10 @@ function HandUI:handControls()
 		if oldSelection == self.selection then
 			self.onSelect(self.selection)
 		end
+	end
+	
+	if oldSelection ~= self.selection then
+		self.justChangedSelection = true
 	end
 end
 
@@ -662,12 +668,12 @@ end
 -- grid select window
 CardGridSelectWindow = Window:new{
 	name='CardGridSelectWindow',selectedCards=nil,title='Choose a card',cardItems=nil,single=false,
-	max=999,min=1,
+	max=999,min=1,canCancel=true,
 }
 function CardGridSelectWindow:new(o)
 	local gridUI = CardGridUI:new(o.cardItems)
 	gridUI.cursorOnSelf = true
-	gridUI.top = 16
+	gridUI.top = 24
 	o.maxY = math.ceil(#o.cardItems/5-1)*56-64+gridUI.top
 	o.height = 120
 	o.gridUI = gridUI
@@ -680,13 +686,13 @@ function CardGridSelectWindow:new(o)
 end
 
 function CardGridSelectWindow:tick()
-	print(self.title,120-strWidth(self.title)/2,9,12)
+	print(self.title,120-strWidth(self.title)/2,18,12)
 	if self.maxY > 0 then
 		local t=16+self.gridUI.y/(self.maxY+self.height)*112
 		local b=16+(self.gridUI.y+self.height)/(self.maxY+self.height)*112
 		rect(234,t,4,b-t,14)
 	end
-	clip(0,16,240,136)
+	clip(0,24,240,136)
 	self.gridUI:tick()
 	clip()
 	self:selectedCardsControls()
@@ -718,7 +724,9 @@ function CardGridSelectWindow:selectedCardsControls()
 		return
 	end
 
-	if btnp(7) then
+	if btnp(5) and self.canCancel then
+		self:cancel()
+	elseif btnp(7) and #self.selectedCards >= self.min then
 		self:close()
 	end
 end
@@ -728,4 +736,8 @@ function CardGridSelectWindow:close()
 		cardItem.glow = nil
 	end
 	Window.close(self,self.selectedCards)
+end
+
+function CardGridSelectWindow:cancel()
+	Window.close(self,nil)
 end
