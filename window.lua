@@ -235,7 +235,7 @@ end
 function GameWindow:tickBelow()
 	if roomType == 'combat' then
 		darkenColors()
-		drawActBackground()
+		act:drawBackground()
 		player:drawImage()
 		for _, enemy in ipairs(enemies) do
 			if enemy.visible then

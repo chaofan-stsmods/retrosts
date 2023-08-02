@@ -150,9 +150,11 @@ function drawCardBack(card,large,l,t)
 	mapColor(10,cardRarityColor[card.rarity][1])
 	mapColor(9,cardRarityColor[card.rarity][2])
 	if large then
+		rect(l+7,t+7,42,42,card.color[1])
 		map(3,2,7,7,l,t,0)
 		--spr(cardTypeToSprIndex[card.type],l+48,t,0)
 	else
+		rect(l+7,t+7,18,26,card.color[1])
 		map(10,2,4,5,l,t,0)
 	end
 	local typeLeft = card.baseCost >= -1 and l+8 or l+1
@@ -192,28 +194,32 @@ function drawTitle(card,large,l,t)
 	print(cardName,titleStart,t+2,color,false,1,true)
 end
 
-function drawDescription(card,description,x,y,lineWidth,maxLine)
+function drawDescription(card,description,x,y,lineWidth,maxLine,color)
+	color = color or 12
+	local originalColor = color
 	maxLine = maxLine or 999
 	local currentX = x
 	local currentY = y
 	local maxY = y+8*(maxLine-1)
+	local maxX = x
 	for word in description:gmatch('([^ ]+)') do
 		if word == 'NL' then
 			currentX = x
 			currentY = currentY + 8
 			if currentY > maxY then
-				return
+				return maxX-x,maxY
 			end
 		else
 			local lastStart = 1
-			local findStart,findEnd,findStr = findMinimal(word,{'({%d+<?})','(!%w!)'},lastStart)
+			local findStart,findEnd,findStr = findMinimal(word,{'({%d+<?})','(!%w!)','(#%d+#)'},lastStart)
 			while findStart and findEnd and findStr do
 				local strBeforeFind = word:sub(lastStart,findStart-1)
 				if #strBeforeFind > 0 then
-					currentX,currentY = moveLimitLineWidthAndPrint(strBeforeFind,currentX,currentY,x,lineWidth,maxY,12)
+					currentX,currentY = moveLimitLineWidthAndPrint(strBeforeFind,currentX,currentY,x,lineWidth,maxY,color)
 					if currentY > maxY then
-						return
+						return maxX-x,maxY
 					end
+					maxX = math.max(maxX,currentX)
 				end
 				if findStr:sub(1,1) == '{' then
 					local flip = findStr:sub(#findStr-1,#findStr-1) == '<'
@@ -221,7 +227,7 @@ function drawDescription(card,description,x,y,lineWidth,maxLine)
 					if sprId then
 						currentX,currentY = moveLimitLineWidth(currentX,currentY,x,8,lineWidth)
 						if currentY > maxY then
-							return
+							return maxX-x,maxY
 						end
 						if sprId >= 55 and sprId <= 59 then
 							mapColor(3,card.typeIconColor)
@@ -231,6 +237,7 @@ function drawDescription(card,description,x,y,lineWidth,maxLine)
 							spr(sprId,currentX,currentY-2,0,1,flip and 1 or 0)
 						end
 						currentX = currentX + 8
+						maxX = math.max(maxX,currentX)
 					end
 				elseif findStr:sub(1,1) == '!' then
 					local type = findStr:sub(2,2)
@@ -246,26 +253,32 @@ function drawDescription(card,description,x,y,lineWidth,maxLine)
 						base = card.baseMagic
 						value = card.magic
 					end
-					local color = base > value and 3 or (base < value and 5 or 12)
-					if type == 'M' and base > value then color = 5 end
-					currentX,currentY = moveLimitLineWidthAndPrint(tostring(value),currentX,currentY,x,lineWidth,maxY,color)
+					local valueColor = base > value and 3 or (base < value and 5 or 12)
+					if type == 'M' and base > value then valueColor = 5 end
+					currentX,currentY = moveLimitLineWidthAndPrint(tostring(value),currentX,currentY,x,lineWidth,maxY,valueColor)
 					if currentY > maxY then
-						return
+						return maxX-x,maxY
 					end
+					maxX = math.max(maxX,currentX)
+				elseif findStr:sub(1,1) == '#' then
+					local colorStr = findStr:sub(2,#findStr-1)
+					color = #colorStr == 0 and originalColor or tonumber(colorStr)
 				end
 				lastStart = findEnd + 1
-				findStart,findEnd,findStr = findMinimal(word,{'({%d+})','(!%w!)'},lastStart)
+				findStart,findEnd,findStr = findMinimal(word,{'({%d+})','(!%w!)','(#%d+#)'},lastStart)
 			end
 			local strAfterFind = word:sub(lastStart,#word)
 			if #strAfterFind > 0 then
-				currentX,currentY = moveLimitLineWidthAndPrint(strAfterFind,currentX,currentY,x,lineWidth,maxY,12)
+				currentX,currentY = moveLimitLineWidthAndPrint(strAfterFind,currentX,currentY,x,lineWidth,maxY,color)
 				if currentY > maxY then
-					return
+					return maxX-x,maxY
 				end
+				maxX = math.max(maxX,currentX)
 			end
 			currentX = currentX + 3
 		end
 	end
+	return maxX-x,currentY+8
 end
 
 function findMinimal(str, patterns, init)
@@ -507,14 +520,7 @@ function HandSelectWindow:drawTitle()
 end
 
 function HandSelectWindow:drawSelectedCards()
-	local startX,stepX
-	if #self.selectedCards <= 5 then
-		startX = 120-(#self.selectedCards*48-48)/2-48
-		stepX = 48
-	else
-		stepX = 192/(#self.selectedCards-1)
-		startX = 24-stepX
-	end
+	local startX,stepX = placeCardsInARow(#self.selectedCards)
 	for i, cardItem in ipairs(self.selectedCards) do
 		cardItem.tx = startX+i*stepX
 		cardItem.ty = 60
@@ -668,7 +674,7 @@ end
 -- grid select window
 CardGridSelectWindow = Window:new{
 	name='CardGridSelectWindow',selectedCards=nil,title='Choose a card',cardItems=nil,single=false,
-	max=999,min=1,canCancel=true,
+	max=999,min=1,canClose=true,
 }
 function CardGridSelectWindow:new(o)
 	local gridUI = CardGridUI:new(o.cardItems)
@@ -686,7 +692,8 @@ function CardGridSelectWindow:new(o)
 end
 
 function CardGridSelectWindow:tick()
-	print(self.title,120-strWidth(self.title)/2,18,12)
+	local str = self.title:gsub('{#}',tostring(#self.selectedCards))
+	print(str,120-strWidth(str)/2,18,12)
 	if self.maxY > 0 then
 		local t=16+self.gridUI.y/(self.maxY+self.height)*112
 		local b=16+(self.gridUI.y+self.height)/(self.maxY+self.height)*112
@@ -724,7 +731,7 @@ function CardGridSelectWindow:selectedCardsControls()
 		return
 	end
 
-	if btnp(5) and self.canCancel then
+	if btnp(5) and self.canClose then
 		self:cancel()
 	elseif btnp(7) and #self.selectedCards >= self.min then
 		self:close()

@@ -14,7 +14,7 @@ Burn = ColorlessCard:new{
 	canUse=false,canUpgrade=false,baseMagic=2,upgrade={baseMagic=4},autoPlayOnEndTurn=true
 }
 function Burn:use()
-	return { DamageAction:new{source=player,target=player,value=self.magic} }
+	return { DamageAction:new{source=player,target=player,value=self.magic,type='power'} }
 end
 
 colorlessCards = {

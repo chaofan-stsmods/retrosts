@@ -4,6 +4,9 @@
 -- in combat properties
 shuffleRand = nil
 miscRand = nil
+local rewardRand = nil
+aiRand = nil
+potionRand = nil
 enemies = {}
 drawPile = {}
 discardPile = {}
@@ -19,8 +22,11 @@ local combatSelection = {type='hand',index=1}
 local pauseControl = false
 
 function startCombat()
-	shuffleRand = makeRand(act,room.id,1)
-	miscRand = makeRand(act,room.id,2)
+	shuffleRand = makeRand(act.id,room.id,1)
+	miscRand = makeRand(act.id,room.id,2)
+	rewardRand = makeRand(act.id,room.id,3)
+	aiRand = makeRand(act.id,room.id,4)
+	potionRand = makeRand(act.id,room.id,5)
 	setupEnemies()
 	closeChildWindows()
 	resetActions()
@@ -57,7 +63,7 @@ function startCombat()
 end
 
 function combat()
-	drawActBackground()
+	act:drawBackground()
 	player:tick()
 	for i=1,#enemies do
 		enemies[i]:tick()
@@ -68,10 +74,6 @@ function combat()
 	tickActions()
 	combatControls()
 	tickTopBar(true)
-end
-
-function drawActBackground()
-	map(30,0,30,17,0,0)
 end
 
 function drawOverlay()
@@ -246,7 +248,7 @@ function combatControls()
 		elseif btnp(4) then
 			local cardItems = table.map(drawPile, function (card) return CardItem:new{card=card,x=0,y=136,isNotInHand=true} end)
 			table.sort(cardItems,function (a, b) return a.card.name < b.card.name end)
-			local gridView = CardGridSelectWindow:new{title='Your Draw Pile',cardItems=cardItems,min=0,max=0,canCancel=true}
+			local gridView = CardGridSelectWindow:new{title='Your Draw Pile',cardItems=cardItems,min=0,max=0,canClose=true}
 			openWindowAbove(gridView)
 		end
 	elseif combatSelection.type == 'discardPile' then
@@ -259,7 +261,7 @@ function combatControls()
 			end
 		elseif btnp(4) then
 			local cardItems = table.map(discardPile, function (card) return CardItem:new{card=card,x=240,y=136,isNotInHand=true} end)
-			local gridView = CardGridSelectWindow:new{title='Your Discard Pile',cardItems=cardItems,min=0,max=0,canCancel=true}
+			local gridView = CardGridSelectWindow:new{title='Your Discard Pile',cardItems=cardItems,min=0,max=0,canClose=true}
 			openWindowAbove(gridView)
 		end
 	elseif combatSelection.type == 'exhaustPile' then
@@ -270,7 +272,7 @@ function combatControls()
 			combatSelection.type = 'discardPile'
 		elseif btnp(4) then
 			local cardItems = table.map(exhaustPile, function (card) return CardItem:new{card=card,x=240,y=128,isNotInHand=true} end)
-			local gridView = CardGridSelectWindow:new{title='Exhasted Cards',cardItems=cardItems,min=0,max=0,canCancel=true}
+			local gridView = CardGridSelectWindow:new{title='Exhasted Cards',cardItems=cardItems,min=0,max=0,canClose=true}
 			openWindowAbove(gridView)
 		end
 	end
@@ -316,8 +318,7 @@ function checkCombatEnd()
 end
 
 function combatEnd()
-	local rewardRandom = makeRand(act,room.id,2)
-	local rewards = generateRewards(rewardRandom)
+	local rewards = generateRewards(rewardRand)
 	player:onCombatEnd()
 	completeRoom()
 	openWindowAbove(RewardWindow:new(rewards))
@@ -329,12 +330,12 @@ function setupEnemies()
 	combatSpriteBank = 1
 	enemies = {}
 	local enemy
-	enemy = Cultist:new({ hp=51,maxHp=51,x=110,y=48,width=4,height=4 })
+	--enemy = Cultist:new({ hp=51,maxHp=51,x=110,y=48,width=4,height=4 })
+	--table.insert(enemies,enemy)
+	enemy = Cultist:new({ hp=1,maxHp=51,x=150,y=48,width=4,height=4 })
 	table.insert(enemies,enemy)
-	enemy = Cultist:new({ hp=51,maxHp=51,x=150,y=48,width=4,height=4 })
-	table.insert(enemies,enemy)
-	enemy = Cultist:new({ hp=51,maxHp=51,x=190,y=48,width=4,height=4 })
-	table.insert(enemies,enemy)
+	--enemy = Cultist:new({ hp=51,maxHp=51,x=190,y=48,width=4,height=4 })
+	--table.insert(enemies,enemy)
 end
 
 function getRandomAliveEnemy()

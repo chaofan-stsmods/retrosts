@@ -221,7 +221,11 @@ function DamageAllEnemiesAction:tick()
 	if self.duration == self.startDuration then
 		for i, enemy in ipairs(enemies) do
 			if enemy.alive then
-				enemy:damage(self.source,self.value[i],self.type)
+				if type(self.value) == 'number' then
+					enemy:damage(self.source,self.value,self.type)
+				else
+					enemy:damage(self.source,self.value[i],self.type)
+				end
 			end
 		end
 	end
@@ -237,7 +241,11 @@ function DamageRandomEnemyAction:tick()
 	if self.duration == self.startDuration then
 		local target,index = getRandomAliveEnemy()
 		if target then
-			target:damage(self.source,self.value[index],self.type)
+			if type(self.value) == 'number' then
+				target:damage(self.source,self.value,self.type)
+			else
+				target:damage(self.source,self.value[index],self.type)
+			end
 		end
 	end
 	Action.tick(self)
@@ -273,6 +281,11 @@ function EndTurnAction:tick()
 				addAction(EnemeyTurnAction:new{enemy=enemy})
 			end
 		end
+		for _, enemy in ipairs(enemies) do
+			if enemy.alive then
+				addAction(EnemeyTurnEndAction:new{enemy=enemy})
+			end
+		end
 		addAction(NewTurnAction:new())
 	end
 	Action.tick(self)
@@ -281,7 +294,6 @@ end
 EnemeyTurnAction = Action:new{secondary=true,enemy=nil}
 function EnemeyTurnAction:tick()
 	self.enemy:enemyTurn()
-	addAction(EnemeyTurnEndAction:new{enemy=self.enemy})
 	self.isDone = true
 end
 

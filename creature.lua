@@ -80,9 +80,18 @@ function Creature:increaseMaxHp(value)
 	self:heal(value)
 end
 
+function Creature:decreaseMaxHp(value)
+	self.maxHp = self.maxHp - value
+	if self.hp > self.maxHp then
+		self.hp = self.maxHp
+	end
+end
+
 function Creature:heal(value)
 	self.hp = math.min(self.hp+value,self.maxHp)
-	addEffect(TextEffect:new{x=self.x+self.width*4,y=self.y+self.height*2-30,duration=60,text=tostring(value),color=5,ySpeed=0.5})
+	if value > 0 then
+		addEffect(TextEffect:new{x=self.x+self.width*4,y=self.y+self.height*2-30,duration=60,text=tostring(value),color=5,ySpeed=0.5})
+	end
 end
 
 function Creature:damage(source,value,type)
@@ -91,7 +100,7 @@ function Creature:damage(source,value,type)
 	end
 	type = type or 'attack'
 	value = self:triggerReducerEvent('onBeforeDamaged',value,source,type)
-	if type ~= 'hploss' then
+	if type ~= 'hpLoss' then
 		if self.block > 0 then
 			local blocked = math.min(value,self.block)
 			self.block = self.block - blocked

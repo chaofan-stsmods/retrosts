@@ -17,7 +17,7 @@ function RewardWindow:tick()
 	sprmap(0,34,16,2,56,18,0)
 	local title = 'Rewards'
 	local width = strWidth(title)
-	printGlowed(title,120-width/2,19,12)
+	printGlowed(title,120-width/2,21,12)
 	self:drawRewards()
 	self:rewardControls()
 	tickEffects()
@@ -77,12 +77,17 @@ function RewardWindow:collectReward()
 		_G[reward.value] = true
 		self:collectRewardComplete()
 	elseif reward.type == 'card' then
-		openWindowAbove(CardRewardWindow:new{cards=reward.value},function (card)
-			if card then
-				table.insert(deck,card)
+		openWindowAbove(CardRewardWindow:new{cards=reward.value},function (cardItem)
+			if cardItem then
+				cardItem.large = false
+				addEffect(CardEffect:new{cardItem=cardItem,pauseDuration=1,duration=20,tx=240,ty=0})
+				table.insert(deck,cardItem.card)
 				self:collectRewardComplete()
 			end
 		end)
+	elseif reward.type == 'relic' then
+		obtainRelic(reward.value)
+		self:collectRewardComplete()
 	end
 end
 
@@ -102,7 +107,7 @@ function generateRewards(random)
 	local rewards = {}
 	generateGoldReward(rewards,random)
 	generateCardRewards(rewards,random)
-	--table.insert(rewards,{title='Emerald key',icon=462,type='key',value='emeraldKeyObtained'})
+	generateRelicRewards(rewards,random)
 	--table.insert(rewards,{title='Sapphire key',icon=463,type='key',value='sapphireKeyObtained'})
 	return rewards
 end
@@ -117,7 +122,7 @@ function generateGoldReward(rewards,random)
 		gold = random:randInt(95,105)
 	end
 	if gold then
-		table.insert(rewards,{title=gold..' Gold',icon=478,type='gold',value=gold})
+		table.insert(rewards,{title=gold..' Gold',icon=7,type='gold',value=gold})
 	end
 end
 
@@ -125,26 +130,26 @@ local rareCardRandOffset = 5
 local initRareCardRandOffset = 5
 local rareCardRandOffsetGrow = -1
 local minRareCardRandOffset = -40
-local cardUpgradedChance = 0
-function resetCardRewardGenerator(actId)
+function resetCardRewardGenerator()
 	rareCardRandOffset = initRareCardRandOffset
-	cardUpgradedChance = 0
-	if actId == 2 then
-		cardUpgradedChance = 0.25
-	elseif actId >= 3 then
-		cardUpgradedChance = 0.5
-	end
 end
 
-function generateCardRewards(rewards,random)
-	local cardCount = 3
+function getPlayerCardTypeByRarity(rarity,random)
+	local allCardTypes = shallowcopy(player:getCards())
+	table.retainIf(allCardTypes,function (cardType) return cardType.rarity == rarity end)
+	return allCardTypes[random:randInt(#allCardTypes)]
+end
+
+function generateCardTypesForReward(cardCount,random,affectRareChance,cardRaritygenerator)
 	local cardTypes = {}
 	for _=1,cardCount do
-		local rarity = generateCardRarity(random)
-		if rarity == 'rare' then
-			rareCardRandOffset = initRareCardRandOffset
-		elseif rarity == 'common' then
-			rareCardRandOffset = math.max(rareCardRandOffset+rareCardRandOffsetGrow,minRareCardRandOffset)
+		local rarity = (cardRaritygenerator or generateCardRarity)(random)
+		if affectRareChance then
+			if rarity == 'rare' then
+				rareCardRandOffset = initRareCardRandOffset
+			elseif rarity == 'common' then
+				rareCardRandOffset = math.max(rareCardRandOffset+rareCardRandOffsetGrow,minRareCardRandOffset)
+			end
 		end
 		local allCardTypes = shallowcopy(player:getCards())
 		table.retainIf(allCardTypes,function (cardType) return cardType.rarity == rarity end)
@@ -154,6 +159,12 @@ function generateCardRewards(rewards,random)
 		until table.indexOf(cardTypes,cardType) == nil
 		table.insert(cardTypes,cardType)
 	end
+	return cardTypes
+end
+
+function generateCardRewards(rewards,random)
+	local cardCount = 3
+	local cardTypes = generateCardTypesForReward(cardCount,random,true)
 
 	local reward = {
 		title='Add a card to deck',
@@ -164,7 +175,7 @@ function generateCardRewards(rewards,random)
 	for i, cardType in ipairs(cardTypes) do
 		local card = cardType:new()
 		reward.value[i] = card
-		if card.rarity ~= 'rare' and card:canUpgrade() and random:rand() < cardUpgradedChance then
+		if card.rarity ~= 'rare' and card:canUpgrade() and random:rand() < act.cardUpgradedChance then
 			card:upgrade()
 		end
 	end
@@ -193,8 +204,47 @@ function generateCardRarity(random)
 	end
 end
 
+local fallbackTiers = {common='uncommon',uncommon='rare',shop='uncommon'}
+function generateRelicRewards(rewards,random)
+	if room.type ~= 'elite' then
+		return
+	end
+
+	local roll = random:randInt(0,99)
+	local tier = 'uncommon'
+	if roll < 50 then
+		tier = 'common'
+	elseif roll > 82 then
+		tier = 'rare'
+	end
+
+	local relic = getRelicTypeByTier(tier):new()
+	table.insert(rewards,{title=relic.name,icon=relic.icon,type='relic',value=relic})
+
+	if room.hasKey then
+		table.insert(rewards,{title='Emerald key',icon=462,type='key',value='emeraldKeyObtained'})
+	end
+end
+
+function getRelicTypeByTier(tier)
+	local relic
+	repeat
+		while tier ~= nil and #relicPools[tier] == 0 do
+			tier = fallbackTiers[tier]
+		end
+
+		trace(tier)
+		if tier == nil then
+			relic = Circlet
+		else
+			relic = table.remove(relicPools[tier],#relicPools[tier])
+		end
+	until relic:canSpwan()
+	return relic
+end
+
 -- cardselect
-CardRewardWindow = Window:new{name='CardRewardWindow',cards=nil,selection=0,single=false}
+CardRewardWindow = Window:new{name='CardRewardWindow',cards=nil,selection=0,single=false,canClose=true}
 function CardRewardWindow:onOpen()
 	queueSync(2,0)
 	queueSync(1|4,1)
@@ -214,7 +264,7 @@ function CardRewardWindow:tick()
 	sprmap(0,34,16,2,56,18,0)
 	local title = 'Choose a Card'
 	local width = strWidth(title)
-	printGlowed(title,120-width/2,19,12)
+	printGlowed(title,120-width/2,21,12)
 	self:drawCards()
 	self:cardRewardControls()
 	tickEffects()
@@ -250,8 +300,8 @@ function CardRewardWindow:cardRewardControls()
 	end
 
 	if btnp(4) then
-		self:close(self.cards[self.selection].card)
-	elseif btnp(5) then
+		self:close(self.cards[self.selection])
+	elseif btnp(5) and self.canClose then
 		self:close(nil)
 	end
 end

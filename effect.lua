@@ -29,9 +29,13 @@ end
 
 Effect = Action:new()
 
-TextEffect = Effect:new{duration=120,color=2,xSpeed=0,ySpeed=0,text='',x=120,y=68}
+TextEffect = Effect:new{duration=120,color=2,xSpeed=0,ySpeed=0,text='',x=120,y=68,small=true,scale=1,shadow=nil}
 function TextEffect:tick()
-	print(self.text,self.x-strWidth(self.text,false,true)/2,self.y,self.color,false,1,true)
+	if self.shadow then
+		printShadowed(self.text,self.x-strWidth(self.text,false,self.small,self.scale)/2,self.y,self.color,self.shadow,self.scale,self.small)
+	else
+		print(self.text,self.x-strWidth(self.text,false,self.small,self.scale)/2,self.y,self.color,false,self.scale,self.small)
+	end
 	self.x = self.x + self.xSpeed
 	self.y = self.y + self.ySpeed
 	Effect.tick(self)
@@ -51,3 +55,10 @@ function CardEffect:tick()
 	end
 end
 
+AnonymousEffect = Effect:new{duration=30,callback=nil}
+function AnonymousEffect:tick()
+	if self.callback then
+		self.callback(self.duration)
+	end
+	Effect.tick(self)
+end

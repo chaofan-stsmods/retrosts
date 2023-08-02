@@ -37,6 +37,24 @@ function Player:triggerEvent(name,...)
 	end
 end
 
+function Player:triggerConditionEvent(name,...)
+	for _, relic in ipairs(relics) do
+		if relic[name] and relic[name](relic,...) then
+			return true
+		end
+	end
+	return Creature.triggerConditionEvent(self,name,...)
+end
+
+function Player:triggerReducerEvent(name,value,...)
+	for _, relic in ipairs(relics) do
+		if relic[name] then
+			value = relic[name](relic,value,...) or value
+		end
+	end
+	return Creature.triggerReducerEvent(self,name,value,...)
+end
+
 function Player:onCombatEnd()
 	self:triggerEvent('onCombatEnd')
 	self.block = 0

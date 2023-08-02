@@ -6,14 +6,16 @@ function strWidth(str,fixed,small,scale)
 	return print(str,0,-8*scale,0,fixed,scale,small)
 end
 
-function printColorStr(str,x,y,small,lockColor)
-	local color = lockColor or 12
+function printColorStr(str,x,y,small,color,lockColor)
+	color = lockColor or color or 12
+	local originalColor = color
 	local lastStart = 1
 	local findStart,findEnd,findStr = str:find('(#%d+#)',lastStart)
 	while findStart and findEnd and findStr do
 		x = x + print(str:sub(lastStart,findStart-1),x,y,color,false,1,small)
 		if lockColor == nil then
-			color = tonumber(findStr:sub(2,#findStr-1)) or color
+			local colorStr = findStr:sub(2,#findStr-1)
+			color = #colorStr == 0 and originalColor or tonumber(colorStr) or color
 		end
 		lastStart = findEnd+1
 		findStart,findEnd,findStr = str:find('(#%d+#)',lastStart)
@@ -22,10 +24,10 @@ function printColorStr(str,x,y,small,lockColor)
 	return x
 end
 
-function printShadowed(str,x,y,color,shadowColor,scale)
+function printShadowed(str,x,y,color,shadowColor,scale,small)
 	scale = scale or 1
-	print(str,x+1,y+1,shadowColor or 15,false,scale)
-	print(str,x,y,color,false,scale)
+	print(str,x+1,y+1,shadowColor or 15,false,scale,small)
+	print(str,x,y,color,false,scale,small)
 end
 
 function printGlowed(str,x,y,color,glowColor,scale,smallFont)
@@ -35,6 +37,28 @@ function printGlowed(str,x,y,color,glowColor,scale,smallFont)
 	print(str,x,y-1,glowColor or 15,false,scale,smallFont)
 	print(str,x,y+1,glowColor or 15,false,scale,smallFont)
 	return print(str,x,y,color,false,scale,smallFont)
+end
+
+function drawTalkBubble(str,x,y,w,h,tx,ty,color,textColor)
+	color = color or 12
+	color = color or 15
+	if w > h then
+		circ(x+h/2,y+h/2,h/2,color)
+		circ(x+w-h/2,y+h/2,h/2,color)
+		rect(x+h/2,y,w-h,h,color)
+	else
+		circ(x+w/2,y+w/2,w/2,color)
+		circ(x+w/2,y+h-w/2,w/2,color)
+		rect(x,y+w/2,w,h-w,color)
+	end
+	local cx,cy = x+w/2,y+h/2
+	local d = math.atan(ty-cy,tx-cx)
+	tri(cx+w/3*math.cos(d-0.4),cy+h/3*math.sin(d-0.4),
+		cx+w/3*math.cos(d+0.4),cy+h/3*math.sin(d+0.4),
+		tx,ty,
+		color)
+	local tw,th = drawDescription(nil,str,-w*2,0,w,999,textColor)
+	drawDescription(nil,str,x+(w-tw)/2,y+(h-th)/2+2,w,999,textColor)
 end
 
 function limit(num,min,max)
@@ -156,11 +180,23 @@ function doSync()
 	hasSync = #syncQueue > 0
 end
 
-function makeRand(act,room,index)
-	act = act or 0
-	room = room or 0
+function makeRand(actId,roomId,index)
+	actId = actId or 0
+	roomId = roomId or 0
 	index = index or 0
-	return Random:new(seed+10000*act+20*room+2*index)
+	return Random:new(seed+10000*actId+20*roomId+2*index)
+end
+
+function placeCardsInARow(amount)
+	local startX,stepX
+	if amount <= 5 then
+		startX = 120-(amount*48-48)/2-48
+		stepX = 48
+	else
+		stepX = 192/(amount-1)
+		startX = 24-stepX
+	end
+	return startX,stepX
 end
 
 function noop() end

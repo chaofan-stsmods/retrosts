@@ -14,7 +14,9 @@ function tickTopBar(control)
 end
 
 function drawTopBar()
-	map(0,0,30,1,0,0)
+	rect(0,0,240,7,14)
+	line(0,7,250,7,15)
+	map(0,0,30,1,0,0,0)
 	printShadowed(player.hp .. '/' .. player.maxHp,17,1,3)
 	printShadowed(tostring(gold),73,1,4)
 	printShadowed(tostring(floor),153,1,12)
@@ -100,7 +102,7 @@ function controlTopBar()
 			else
 				closeWindowsIf(function (w) return getmetatable(w) == CardGridSelectWindow and w.isDeckView end)
 				local cardItems = table.map(deck, function (card) return CardItem:new{card=card,x=240,y=0,isNotInHand=true} end)
-				local gridView = CardGridSelectWindow:new{title='Your Deck',cardItems=cardItems,isDeckView=true,min=0,max=0,canCancel=true}
+				local gridView = CardGridSelectWindow:new{title='Your Deck',cardItems=cardItems,isDeckView=true,min=0,max=0,canClose=true}
 				openWindowAbove(gridView)
 			end
 			exitTopBar()

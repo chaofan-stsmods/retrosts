@@ -216,7 +216,7 @@ Bloodletting = RedCard:new{
 	baseMagic=2,playerTarget=true,upgrade={baseMagic=3,description='Lose 3 HP. NL Gain {62}{62}{62}.'}
 }
 function Bloodletting:use()
-	return { DamageAction:new{target=player,source=player,type='hploss',value=3}, GainEnergyAction:new(self.magic) }
+	return { DamageAction:new{target=player,source=player,type='hpLoss',value=3}, GainEnergyAction:new(self.magic) }
 end
 
 Entrench = RedCard:new{ name='Entrench',description='Double your {47}.',rarity='uncommon',type='skill',baseCost=2,playerTarget=true,upgrade={baseCost=1} }
@@ -228,7 +228,7 @@ end
 
 Hemokinesis = RedCard:new{ name='Hemokinesis',description='Lose 2 HP. NL {63} !D!.',rarity='uncommon',baseCost=1,baseDamage=15,enemyTarget=true,upgrade={baseDamage=20} }
 function Hemokinesis:use(target)
-	return { DamageAction:new{target=player,source=player,type='hploss',value=2}, DamageAction:new{target=target,source=player,value=self.damage} }
+	return { DamageAction:new{target=player,source=player,type='hpLoss',value=2}, DamageAction:new{target=target,source=player,value=self.damage} }
 end
 
 Rampage = RedCard:new{
@@ -291,7 +291,7 @@ Offering = RedCard:new{
 	baseMagic=3,playerTarget=true,upgrade={baseMagic=5},exhaust=true,
 }
 function Offering:use()
-	return { DamageAction:new{target=player,source=player,type='hploss',value=6}, GainEnergyAction:new(2), DrawCardAction:new(self.magic) }
+	return { DamageAction:new{target=player,source=player,type='hpLoss',value=6}, GainEnergyAction:new(2), DrawCardAction:new(self.magic) }
 end
 
 LimitBreak = RedCard:new{
@@ -726,12 +726,8 @@ function CombustPower:onAmountUpdated(diff)
 end
 
 function CombustPower:onTurnEnd()
-	addAction(DamageAction:new{source=player,target=player,type='hploss',value=self.hpLoss})
-	local damage = {}
-	for i=1,#enemies do
-		damage[i] = self.amount
-	end
-	addAction(DamageAllEnemiesAction:new{source=player,value=damage})
+	addAction(DamageAction:new{source=player,target=player,type='hpLoss',value=self.hpLoss})
+	addAction(DamageAllEnemiesAction:new{source=player,value=self.amount,type='power'})
 end
 
 Evolve = RedCard:new{
@@ -773,11 +769,7 @@ end
 FireBreathingPower = Power:new{icon=246}
 function FireBreathingPower:onDraw(card)
 	if card.type == 'status' or card.type == 'curse' then
-		local damage = {}
-		for i=1,#enemies do
-			damage[i] = self.amount
-		end
-		addAction(DamageAllEnemiesAction:new{source=player,value=damage})
+		addAction(DamageAllEnemiesAction:new{source=player,value=self.amount,type='power'})
 	end
 end
 
@@ -792,7 +784,7 @@ end
 FlameBarrierPower = Power:new{icon=247}
 function FlameBarrierPower:onBeforeDamaged(value,source,type)
 	if source ~= player and type == 'attack' then
-		addAction(DamageAction:new{source=player,target=source,value=self.amount})
+		addAction(DamageAction:new{source=player,target=source,value=self.amount,type='power'})
 	end
 end
 
@@ -859,7 +851,7 @@ function BrutalityPower:onAmountUpdated(diff)
 end
 
 function BrutalityPower:onTurnStart()
-	addAction(DamageAction:new{source=player,target=player,type='hploss',value=self.hpLoss})
+	addAction(DamageAction:new{source=player,target=player,type='hpLoss',value=self.hpLoss})
 	addAction(DrawCardAction:new(self.amount))
 end
 
@@ -886,11 +878,7 @@ end
 
 JuggernautPower = Power:new{icon=252}
 function JuggernautPower:onGainBlock()
-	local damage = {}
-	for i=1,#enemies do
-		damage[i] = self.amount
-	end
-	addAction(DamageRandomEnemyAction:new{source=self.owner,value=damage})
+	addAction(DamageRandomEnemyAction:new{source=self.owner,value=self.amount,type='power'})
 end
 
 FiendFire = RedCard:new{
@@ -1102,7 +1090,7 @@ redCards = {
 
 RedRelic = Relic:new{colorName='red'}
 
-BurningBlood = RedRelic:new{name='Burning Blood',icon=254,tier='basic'}
+BurningBlood = RedRelic:new{name='Burning Blood',description='At the end of combat, heal 6 HP.',icon=254,tier='basic'}
 function BurningBlood:onCombatEnd()
 	player:heal(6)
 end
