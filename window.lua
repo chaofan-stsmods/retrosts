@@ -142,13 +142,16 @@ end
 
 CardListWindow = Window:new{name='CardListWindow',gridUI=nil,cardItems=nil}
 local rarityPriority = {basic=0,special=1,common=2,uncommon=3,rare=4}
-local colorPriority = {red=0,colorless=10}
+local colorPriority = {red=0,colorless=10,curse=11}
 function CardListWindow:new()
 	local cardItems = {}
 	for _,cardType in ipairs(Ironclad:getCards()) do
 		table.insert(cardItems,CardItem:new{card=cardType:new(),isNotInHand=true})
 	end
 	for _,cardType in ipairs(getColorlessCards()) do
+		table.insert(cardItems,CardItem:new{card=cardType:new(),isNotInHand=true})
+	end
+	for _,cardType in ipairs(getCurseCards()) do
 		table.insert(cardItems,CardItem:new{card=cardType:new(),isNotInHand=true})
 	end
 	table.sort(cardItems,function (a, b)

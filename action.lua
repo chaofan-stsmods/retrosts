@@ -261,6 +261,14 @@ function GainBlockAction:tick()
 	Action.tick(self)
 end
 
+HealAction = Action:new{target=nil,value=nil,duration=10}
+function HealAction:tick()
+	if self.duration == self.startDuration and self.target.alive then
+		self.target:heal(self.value)
+	end
+	Action.tick(self)
+end
+
 EndTurnAction = Action:new{duration=10}
 function EndTurnAction:tick()
 	if self.duration == self.startDuration then
@@ -511,6 +519,15 @@ end
 
 function MakeTempCardToHandAction:tick()
 	if self.duration == self.startDuration then
+		if #hand+self.amount > HAND_LIMIT then
+			addAction(1,MakeTempCardToDiscardPileAction:new(self.card,#hand+self.amount-HAND_LIMIT))
+			if HAND_LIMIT-#hand > 0 then
+				self.amount = HAND_LIMIT-#hand
+			else
+				self.isDone = true
+				return
+			end
+		end
 		for _ = 1,self.amount do
 			local card = self.card:copy()
 			local cardItem = CardItem:new{card=card,x=0,y=136}

@@ -8,7 +8,7 @@ Card = Object:new{
 	damage=0,baseDamage=0,block=0,baseBlock=0,magic=0,baseMagic=0,multiDamage={},
 	enemyTarget=false,playerTarget=false,toAllEnemies=false,
 	exhaust=false,ethereal=false,innate=false,autoPlayOnEndTurn=false,
-	upgrade=noop,upgraded=false,tags={},canGenerateInCombat=true,
+	upgrade=noop,upgraded=false,tags={},canGenerateInCombat=true,canRemove=true,
 }
 function Card:new(o)
 	local r = Object.new(self,o)
@@ -150,11 +150,11 @@ function drawCardBack(card,large,l,t)
 	mapColor(10,cardRarityColor[card.rarity][1])
 	mapColor(9,cardRarityColor[card.rarity][2])
 	if large then
-		rect(l+7,t+7,42,42,card.color[1])
+		rect(l+7,t+7,42,42,14)
 		map(3,2,7,7,l,t,0)
 		--spr(cardTypeToSprIndex[card.type],l+48,t,0)
 	else
-		rect(l+7,t+7,18,26,card.color[1])
+		rect(l+7,t+7,18,26,14)
 		map(10,2,4,5,l,t,0)
 	end
 	local typeLeft = card.baseCost >= -1 and l+8 or l+1
@@ -313,6 +313,86 @@ function moveLimitLineWidthAndPrint(str,currentX,currentY,x,lineWidth,maxY,color
 	print(str,currentX,currentY,color,false,1,true)
 	currentX = currentX + strWidth
 	return currentX,currentY
+end
+
+function removeCardFromDeck(amount)
+	local cardItems = table.map(deck, function (card) return CardItem:new{card=card,x=240,y=0,isNotInHand=true} end)
+	table.retainIf(cardItems,function (cardItem) return cardItem.card.canRemove end)
+	local gridView = CardGridSelectWindow:new{title='Choose a Card to Remove',cardItems=cardItems,min=amount,max=amount}
+	if amount > 1 then
+		gridView.title = 'Choose Cards to Remove ({#}/'..amount..')'
+	end
+	openWindowAbove(gridView, function (cards)
+		local startX,stepX = placeCardsInARow(#cards)
+		for i, cardItem in ipairs(cards) do
+			table.remove(deck,table.indexOf(deck,cardItem.card))
+			cardItem.tx = startX+stepX*i
+			cardItem.ty = 68
+			cardItem.large = false
+			addEffect(CardEffect:new{cardItem=cardItem,pauseDuration=10,duration=30,tx=120,ty=-30})
+		end
+	end)
+end
+
+function upgradeCardFromDeck(amount)
+	local cardItems = table.map(deck, function (card) return CardItem:new{card=card,x=240,y=0,isNotInHand=true} end)
+	table.retainIf(cardItems,function (cardItem) return cardItem.card:canUpgrade() end)
+	local gridView = CardGridSelectWindow:new{title='Choose a Card to Upgrade',cardItems=cardItems,min=amount,max=amount}
+	if amount > 1 then
+		gridView.title = 'Choose Cards to Upgrade ({#}/'..amount..')'
+	end
+	openWindowAbove(gridView, function (cards)
+		local startX,stepX = placeCardsInARow(#cards)
+		for i, cardItem in ipairs(cards) do
+			cardItem.tx = startX+stepX*i
+			cardItem.ty = 68
+			cardItem.large = false
+			addEffect(CardEffect:new{cardItem=cardItem,pauseDuration=30,duration=50,tx=120,ty=-30})
+			addEffect(AnonymousEffect:new{duration=10,callback=function (duration)
+				if duration == 1 then
+					cardItem.card:upgrade()
+				end
+			end})
+		end
+	end)
+end
+
+function transformCardFromDeck(amount,random)
+	local cardItems = table.map(deck, function (card) return CardItem:new{card=card,x=240,y=0,isNotInHand=true} end)
+	table.retainIf(cardItems,function (cardItem) return cardItem.card.canRemove end)
+	local gridView = CardGridSelectWindow:new{title='Choose a Card to Transform',cardItems=cardItems,min=amount,max=amount}
+	if amount > 1 then
+		gridView.title = 'Choose Cards to Transform ({#}/'..amount..')'
+	end
+	openWindowAbove(gridView, function (cards)
+		local startX,stepX = placeCardsInARow(#cards)
+		for i, cardItem in ipairs(cards) do
+			local thisCardTypes
+			if cardItem.card.colorName == 'colorless' then
+				thisCardTypes = shallowcopy(getColorlessCards())
+				table.retainIf(thisCardTypes,function (card) return card.rarity == 'common' or card.rarity == 'uncommon' or card.rarity == 'rare' end)
+			elseif cardItem.card.colorName == 'curse' then
+				thisCardTypes = shallowcopy(getCurseCards())
+				table.retainIf(thisCardTypes,function (card) return card.rarity == 'common' or card.rarity == 'uncommon' or card.rarity == 'rare' end)
+			else
+				thisCardTypes = shallowcopy(player:getCards())
+				table.retainIf(thisCardTypes,function (card) return card.rarity == 'common' or card.rarity == 'uncommon' or card.rarity == 'rare' end)
+			end
+			table.retainIf(thisCardTypes,function (card) return getmetatable(cardItem.card) ~= card end)
+			local randomCard = thisCardTypes[random:randInt(#thisCardTypes)]:new()
+			table.remove(deck,table.indexOf(deck,cardItem.card))
+			table.insert(deck,randomCard)
+			cardItem.tx = startX+stepX*i
+			cardItem.ty = 68
+			cardItem.large = false
+			addEffect(CardEffect:new{cardItem=cardItem,pauseDuration=30,duration=50,tx=240,ty=0})
+			addEffect(AnonymousEffect:new{duration=10,callback=function (duration)
+				if duration == 1 then
+					cardItem.card = randomCard
+				end
+			end})
+		end
+	end)
 end
 
 -- hand ui

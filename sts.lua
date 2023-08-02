@@ -73,7 +73,7 @@ local availableBosses = {
 }
 
 function startGame(character)
-	mainRandom = Random:new(math.floor(tstamp()/5))
+	mainRandom = Random:new(math.floor(tstamp()))
 	seed = mainRandom:randRaw()
 	player = _G[character]:new()
 	relicPools = generateRelicPools(makeRand(0))
@@ -381,7 +381,7 @@ queueSync(32,1)
 -- 080:8ee222338ee2233288ee2233888ee2228888ee2288888fee8888880088888888
 -- 081:333443332344333223333332333333222233322222222222ffffffff00000000
 -- 082:33222f0833222f083222f088222f088822f08888ff0888880088888888888888
--- 083:0feeeeee0feeeeee0feeeeee0feeeeee0feeeeee00feeeee000feeee00000fff
+-- 083:0feeeeee0feeeeee0feeeeee0feeeeee0feeeeee00feeeee000feeee0000ffff
 -- 084:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeffffffff
 -- 085:eeeeeeefeeeeeeefeeeeeeefeeeeeeefeeeeeeefeeeeeef0eeeeef00fffff000
 -- 192:0000000000000000dd000000ddddddddeeeeeeee000000000000000000000000

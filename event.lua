@@ -155,8 +155,7 @@ function generateNeowRewards(options,random)
 		end}
 	elseif oid == 6 then
 		option = {description='[ #5#Choose a colorless card to obtain #12#]',onSelect=function ()
-			-- TODO
-			local cards = table.map(generateCardTypesForReward(3,random,false,function () return random:rand() < 0.33 and 'uncommon' or 'common' end),
+			local cards = table.map(generateCardTypesForReward(3,random,false,function () return 'uncommon' end,getColorlessCards()),
 				function (cardType) return cardType:new() end)
 			openWindowAbove(CardRewardWindow:new{cards=cards,canClose=false}, function (cardItem)
 				if cardItem then
@@ -172,6 +171,7 @@ function generateNeowRewards(options,random)
 	oid = random:randInt(5)
 	if oid == 1 then
 		option = {description='[ #5#Obtain 3 random potions #12#]',onSelect=function ()
+			-- TODO potion
 		end}
 	elseif oid == 2 then
 		option = {description='[ #5#Obtain a random common relic #12#]',onSelect=function ()
@@ -206,8 +206,7 @@ function generateNeowRewards(options,random)
 		end}
 	elseif nid == 3 then
 		negative = {description='[ #3#Obtain a curse ',onSelect=function ()
-			-- TODO curse
-			local card = Wound:new()
+			local card = getCurseCardType(random):new()
 			local cardItem = CardItem:new{card=card,x=0,y=136,tx=120,ty=68,isNotInHand=true}
 			addEffect(CardEffect:new{cardItem=cardItem,pauseDuration=30,duration=50,tx=240,ty=0})
 			table.insert(deck,cardItem.card)
@@ -225,8 +224,7 @@ function generateNeowRewards(options,random)
 	end
 	if oid == 1 then
 		option = {description='#5#Choose a rare colorless card to obtain #12#]',onSelect=function ()
-			-- TODO colorless
-			local cards = table.map(generateCardTypesForReward(3,random,false,function () return 'rare' end),
+			local cards = table.map(generateCardTypesForReward(3,random,false,function () return 'rare' end,getColorlessCards()),
 				function (cardType) return cardType:new() end)
 			openWindowAbove(CardRewardWindow:new{cards=cards,canClose=false}, function (cardItem)
 				if cardItem then
@@ -280,75 +278,4 @@ function generateNeowRewards(options,random)
 		table.remove(relics,1)
 		obtainRelic(getRelicTypeByTier('boss'):new())
 	end}
-end
-
-function removeCardFromDeck(amount)
-	local cardItems = table.map(deck, function (card) return CardItem:new{card=card,x=240,y=0,isNotInHand=true} end)
-	local gridView = CardGridSelectWindow:new{title='Choose a Card to Remove',cardItems=cardItems,min=amount,max=amount}
-	if amount > 1 then
-		gridView.title = 'Choose Cards to Remove ({#}/'..amount..')'
-	end
-	openWindowAbove(gridView, function (cards)
-		local startX,stepX = placeCardsInARow(#cards)
-		for i, cardItem in ipairs(cards) do
-			table.remove(deck,table.indexOf(deck,cardItem.card))
-			cardItem.tx = startX+stepX*i
-			cardItem.ty = 68
-			cardItem.large = false
-			addEffect(CardEffect:new{cardItem=cardItem,pauseDuration=10,duration=30,tx=120,ty=-30})
-		end
-	end)
-end
-
-function upgradeCardFromDeck(amount)
-	local cardItems = table.map(deck, function (card) return CardItem:new{card=card,x=240,y=0,isNotInHand=true} end)
-	table.retainIf(cardItems,function (cardItem) return cardItem.card:canUpgrade() end)
-	local gridView = CardGridSelectWindow:new{title='Choose a Card to Upgrade',cardItems=cardItems,min=amount,max=amount}
-	if amount > 1 then
-		gridView.title = 'Choose Cards to Upgrade ({#}/'..amount..')'
-	end
-	openWindowAbove(gridView, function (cards)
-		local startX,stepX = placeCardsInARow(#cards)
-		for i, cardItem in ipairs(cards) do
-			cardItem.tx = startX+stepX*i
-			cardItem.ty = 68
-			cardItem.large = false
-			addEffect(CardEffect:new{cardItem=cardItem,pauseDuration=30,duration=50,tx=120,ty=-30})
-			addEffect(AnonymousEffect:new{duration=10,callback=function (duration)
-				if duration == 1 then
-					cardItem.card:upgrade()
-				end
-			end})
-		end
-	end)
-end
-
-function transformCardFromDeck(amount,random)
-	local cardItems = table.map(deck, function (card) return CardItem:new{card=card,x=240,y=0,isNotInHand=true} end)
-	local gridView = CardGridSelectWindow:new{title='Choose a Card to Transform',cardItems=cardItems,min=amount,max=amount}
-	if amount > 1 then
-		gridView.title = 'Choose Cards to Transform ({#}/'..amount..')'
-	end
-	openWindowAbove(gridView, function (cards)
-		-- TODO color less
-		local playerCardTypes = shallowcopy(player:getCards())
-		table.retainIf(playerCardTypes,function (card) return card.rarity == 'common' or card.rarity == 'uncommon' or card.rarity == 'rare' end)
-		local startX,stepX = placeCardsInARow(#cards)
-		for i, cardItem in ipairs(cards) do
-			local thisCardTypes = shallowcopy(playerCardTypes)
-			table.retainIf(thisCardTypes,function (card) return getmetatable(cardItem.card) ~= card end)
-			local randomCard = thisCardTypes[random:randInt(#thisCardTypes)]:new()
-			table.remove(deck,table.indexOf(deck,cardItem.card))
-			table.insert(deck,randomCard)
-			cardItem.tx = startX+stepX*i
-			cardItem.ty = 68
-			cardItem.large = false
-			addEffect(CardEffect:new{cardItem=cardItem,pauseDuration=30,duration=50,tx=240,ty=0})
-			addEffect(AnonymousEffect:new{duration=10,callback=function (duration)
-				if duration == 1 then
-					cardItem.card = randomCard
-				end
-			end})
-		end
-	end)
 end

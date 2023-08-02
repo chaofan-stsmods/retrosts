@@ -26,6 +26,7 @@ function MapWindow:tick()
 end
 
 local roomIconMap = {event=503,monster=499,rest=501,treasure=502,shop=504,elite=500,strongElite=507}
+local bossIconMap = {Slime=257,Hexaghost=261,Guardian=265,Champ=320,Collector=324,Automation=328,Donu=392,TimeEater=388,Awakened=384,Heart=332}
 function MapWindow:drawMap(y)
 	local backgroundOffset = y % 8
 	for i = 0,16 do
@@ -54,7 +55,7 @@ function MapWindow:drawMap(y)
 			(currentRoomY == self.bossY and not mapScreenSelectionMode) then
 			drawSelectionBox(88-2,bossDrawY-2,68,68,15)
 		end
-		spr(257,88,bossDrawY,12,2,0,0,4,4)
+		spr(bossIconMap[boss] or 257,88,bossDrawY,12,2,0,0,4,4)
 	end
 	resetColor(15)
 end

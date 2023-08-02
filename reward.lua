@@ -140,10 +140,18 @@ function getPlayerCardTypeByRarity(rarity,random)
 	return allCardTypes[random:randInt(#allCardTypes)]
 end
 
-function generateCardTypesForReward(cardCount,random,affectRareChance,cardRaritygenerator)
+function getCurseCardType(random)
+	local allCardTypes = shallowcopy(getCurseCards())
+	table.retainIf(allCardTypes,function (cardType) return cardType.rarity ~= 'special' end)
+	return allCardTypes[random:randInt(#allCardTypes)]
+end
+
+function generateCardTypesForReward(cardCount,random,affectRareChance,cardRaritygenerator,cardSet)
+	cardSet = cardSet or player:getCards()
+	cardRaritygenerator = cardRaritygenerator or generateCardRarity
 	local cardTypes = {}
 	for _=1,cardCount do
-		local rarity = (cardRaritygenerator or generateCardRarity)(random)
+		local rarity = cardRaritygenerator(random)
 		if affectRareChance then
 			if rarity == 'rare' then
 				rareCardRandOffset = initRareCardRandOffset
@@ -151,7 +159,7 @@ function generateCardTypesForReward(cardCount,random,affectRareChance,cardRarity
 				rareCardRandOffset = math.max(rareCardRandOffset+rareCardRandOffsetGrow,minRareCardRandOffset)
 			end
 		end
-		local allCardTypes = shallowcopy(player:getCards())
+		local allCardTypes = shallowcopy(cardSet)
 		table.retainIf(allCardTypes,function (cardType) return cardType.rarity == rarity end)
 		local cardType
 		repeat
