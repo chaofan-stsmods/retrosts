@@ -196,7 +196,8 @@ end
 
 LoseWindow = Window:new{name='LoseWindow'}
 function LoseWindow:onOpen()
-	queueSync(1|4,1)
+	queueSync(4,1)
+	queueSync(1,player.tileBank)
 end
 
 function LoseWindow:tick()
@@ -218,7 +219,8 @@ end
 GameWindow = Window:new{name='GameWindow'}
 function GameWindow:onOpen()
 	if self.child == nil then
-		queueSync(1|4,1)
+		queueSync(4,1)
+		queueSync(1,player.tileBank)
 		if roomType == 'combat' then
 			queueSync(2,combatSpriteBank)
 		elseif roomType == 'event' and currentEvent ~= nil then

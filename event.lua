@@ -171,7 +171,14 @@ function generateNeowRewards(options,random)
 	oid = random:randInt(5)
 	if oid == 1 then
 		option = {description='[ #5#Obtain 3 random potions #12#]',onSelect=function ()
-			-- TODO potion
+			local rewards = {}
+			for i=1,3 do
+				local potion = getRandomPotion(random)
+				rewards[i] = {type='potion',title=potion.name,value=potion}
+			end
+			local rewardWindow = RewardWindow:new{rewards=rewards,canClose=true}
+			rewardWindow.onProceed = function (self) self:close() end
+			openWindowAbove(rewardWindow)
 		end}
 	elseif oid == 2 then
 		option = {description='[ #5#Obtain a random common relic #12#]',onSelect=function ()

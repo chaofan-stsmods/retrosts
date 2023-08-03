@@ -71,9 +71,10 @@ HandOfGreed = ColorlessCard:new{
 	enemyTarget=true,baseMagic=20,baseDamage=20,upgrade={baseMagic=25,baseDamage=25}
 }
 function HandOfGreed:use(target)
+	local damageAction = DamageAction:new{source=player,target=target,value=self.damage}
 	return {
-		DamageAction:new{source=player,target=target,value=self.damage},
-		FatalAction:new{target=target,callback=function ()
+		damageAction,
+		FatalAction:new{target=target,action=damageAction,callback=function ()
 			gold = gold + self.magic
 		end}
 	}

@@ -313,7 +313,8 @@ function checkCombatEnd()
 		end
 	end
 	if not hasAlive then
-		combatEnd()
+		table.retainIf(secondaryActions,function (a) return getmetatable(a) ~= UseCardAction end)
+		addAction(EndCombatAction:new())
 	end
 end
 
@@ -321,7 +322,7 @@ function combatEnd()
 	local rewards = generateRewards(rewardRand)
 	player:onCombatEnd()
 	completeRoom()
-	openWindowAbove(RewardWindow:new(rewards))
+	openWindowAbove(RewardWindow:new{rewards=rewards})
 end
 
 -- enemies

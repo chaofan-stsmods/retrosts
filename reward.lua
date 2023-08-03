@@ -1,23 +1,17 @@
 -- reward
 ---@diagnostic disable: lowercase-global
 
-RewardWindow = Window:new{rewards=nil,selection=0,name='RewardWindow'}
-function RewardWindow:new(rewards)
-	o = {rewards=rewards}
-	return Window.new(self,o)
-end
-
+RewardWindow = Window:new{rewards=nil,selection=0,title='Rewards',canClose=false,name='RewardWindow'}
 function RewardWindow:onOpen()
 	queueSync(2,0)
-	queueSync(1|4,1)
+	queueSync(4,1)
+	queueSync(1,player.tileBank)
 end
 
 function RewardWindow:tick()
 	sprmap(0,36,12,13,72,26,0)
 	sprmap(0,34,16,2,56,18,0)
-	local title = 'Rewards'
-	local width = strWidth(title)
-	printGlowed(title,120-width/2,21,12)
+	printGlowed(self.title,120-strWidth(self.title)/2,21,12)
 	self:drawRewards()
 	self:rewardControls()
 	tickEffects()
@@ -34,7 +28,11 @@ function RewardWindow:drawRewards()
 		if self.selection == i then
 			resetColor(14)
 		end
-		spr(reward.icon,79,y+4,0)
+		if reward.type == 'potion' then
+			reward.value:drawImage(79,y+4)
+		else
+			spr(reward.icon,79,y+4,0)
+		end
 		print(reward.title,90,y+5,12,false,1,true)
 	end
 end
@@ -59,8 +57,10 @@ function RewardWindow:rewardControls()
 
 	if btnp(4) then
 		self:collectReward()
+	elseif btnp(5) and self.canClose then
+		self:close()
 	elseif btnp(7) then
-		openWindowAbove(MapWindow:new())
+		self:onProceed()
 	end
 end
 
@@ -88,6 +88,10 @@ function RewardWindow:collectReward()
 	elseif reward.type == 'relic' then
 		obtainRelic(reward.value)
 		self:collectRewardComplete()
+	elseif reward.type == 'potion' then
+		if obtainPotion(reward.value) then
+			self:collectRewardComplete()
+		end
 	end
 end
 
@@ -95,10 +99,18 @@ function RewardWindow:collectRewardComplete()
 	table.remove(self.rewards,self.selection)
 	if #self.rewards == 0 then
 		self.selection = 0
-		openWindowAbove(MapWindow:new())
+		self:onComplete()
 	else
 		self.selection = limit(self.selection,1,#self.rewards)
 	end
+end
+
+function RewardWindow:onComplete()
+	self:onProceed()
+end
+
+function RewardWindow:onProceed()
+	openWindowAbove(MapWindow:new())
 end
 
 -- generate
@@ -185,6 +197,7 @@ function generateCardRewards(rewards,random)
 		reward.value[i] = card
 		if card.rarity ~= 'rare' and card:canUpgrade() and random:rand() < act.cardUpgradedChance then
 			card:upgrade()
+			card:resetPowers()
 		end
 	end
 
@@ -240,8 +253,6 @@ function getRelicTypeByTier(tier)
 		while tier ~= nil and #relicPools[tier] == 0 do
 			tier = fallbackTiers[tier]
 		end
-
-		trace(tier)
 		if tier == nil then
 			relic = Circlet
 		else
@@ -255,7 +266,8 @@ end
 CardRewardWindow = Window:new{name='CardRewardWindow',cards=nil,selection=0,single=false,canClose=true}
 function CardRewardWindow:onOpen()
 	queueSync(2,0)
-	queueSync(1|4,1)
+	queueSync(4,1)
+	queueSync(1,player.tileBank)
 	local replace = false
 	for i, card in ipairs(self.cards) do
 		if getmetatable(card) ~= CardItem then

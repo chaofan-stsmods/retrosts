@@ -207,7 +207,7 @@ function DamageAction:tick()
 		return
 	end
 	if self.duration == self.startDuration then
-		self.target:damage(self.source,self.value,self.type)
+		self.target:damage(self.source,self.value,self.type,self)
 	end
 	Action.tick(self)
 end
@@ -222,9 +222,9 @@ function DamageAllEnemiesAction:tick()
 		for i, enemy in ipairs(enemies) do
 			if enemy.alive then
 				if type(self.value) == 'number' then
-					enemy:damage(self.source,self.value,self.type)
+					enemy:damage(self.source,self.value,self.type,self)
 				else
-					enemy:damage(self.source,self.value[i],self.type)
+					enemy:damage(self.source,self.value[i],self.type,self)
 				end
 			end
 		end
@@ -242,9 +242,9 @@ function DamageRandomEnemyAction:tick()
 		local target,index = getRandomAliveEnemy()
 		if target then
 			if type(self.value) == 'number' then
-				target:damage(self.source,self.value,self.type)
+				target:damage(self.source,self.value,self.type,self)
 			else
-				target:damage(self.source,self.value[index],self.type)
+				target:damage(self.source,self.value[index],self.type,self)
 			end
 		end
 	end
@@ -379,6 +379,12 @@ function NewTurnAction:tick()
 		inEnemyTurn = false
 		turn = turn + 1
 	end
+end
+
+EndCombatAction = Action:new{secondary=true}
+function EndCombatAction:tick()
+	combatEnd()
+	self.isDone = true
 end
 
 ReducePowerAction = Action:new{duration=10}
@@ -572,7 +578,6 @@ function PlayTopCardAction:tick()
 		end
 		local card = table.remove(drawPile,#drawPile)
 		local cardItem = CardItem:new{card=card}
-		trace('playtopcard '..card.name)
 		table.insert(limbo,cardItem)
 		local useCardAction = UseCardAction:new{cardItem=cardItem,exhaust=self.exhaust,randomTarget=self.randomTarget,target=self.target,free=true}
 		useCardAction.useCardPosition = fillCardPosition(cardItem)
@@ -636,10 +641,10 @@ function PutCardOnDrawCardTopAction:tick()
 	Action.tick(self)
 end
 
-FatalAction = Action:new{target=nil,callback=nil}
+FatalAction = Action:new{target=nil,action=nil,callback=nil}
 function FatalAction:tick()
 	local target = self.target
-	if target:getPower(MinionPower) == nil and not target.alive and self.callback then
+	if target:getPower(MinionPower) == nil and not target.alive and self.callback and self.action.numKilled > 0 then
 		self.callback()
 	end
 	self.isDone = true

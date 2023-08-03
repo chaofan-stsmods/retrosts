@@ -24,6 +24,8 @@ function drawTopBar()
 	for i = 1,#potions do
 		if potions[i] == 'slot' then
 			spr(41,96+i*8,0,0)
+		else
+			potions[i]:drawImage(96+i*8,0)
 		end
 	end
 	if topBarSelection.type == 'potion' then

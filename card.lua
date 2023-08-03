@@ -351,6 +351,7 @@ function upgradeCardFromDeck(amount)
 			addEffect(AnonymousEffect:new{duration=10,callback=function (duration)
 				if duration == 1 then
 					cardItem.card:upgrade()
+					cardItem.card:resetPowers()
 				end
 			end})
 		end

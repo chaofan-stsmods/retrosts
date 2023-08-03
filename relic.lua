@@ -36,7 +36,7 @@ function generateRelicPools(random)
 end
 
 function obtainRelic(relic)
-    if not player:triggerConditionEvent('onBeforeObtainRelic',relic) then
+    if player:triggerConditionEvent('onBeforeObtainRelic',true,relic) then
         table.insert(relics,relic)
     end
 end
@@ -45,9 +45,9 @@ Circlet = Relic:new{name='Circlet',description='Collect as many as you can.',ico
 function Circlet:onBeforeObtainRelic(relic)
     if getmetatable(relic) == Circlet then
         self.counter = self.counter + 1
-        return true
+        return false
     end
-    return false
+    return nil
 end
 
 NeowsLament = Relic:new{name='Neow\'s Lament',description='Enemies in your first 3 combats will have 1 HP.',icon=68,tier='special',counter=3}

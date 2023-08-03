@@ -2,7 +2,7 @@
 ---@diagnostic disable: lowercase-global
 
 Player = Creature:new{
-	x=30,y=52,
+	x=30,y=52,tileBank=1,
 }
 function Player:applyPowers()
 	handApplyPowers()
@@ -37,13 +37,16 @@ function Player:triggerEvent(name,...)
 	end
 end
 
-function Player:triggerConditionEvent(name,...)
+function Player:triggerConditionEvent(name,default,...)
 	for _, relic in ipairs(relics) do
-		if relic[name] and relic[name](relic,...) then
-			return true
+		if relic[name] then
+			local b = relic[name](relic,...)
+			if b ~= nil then
+				return b
+			end
 		end
 	end
-	return Creature.triggerConditionEvent(self,name,...)
+	return Creature.triggerConditionEvent(self,name,default,...)
 end
 
 function Player:triggerReducerEvent(name,value,...)

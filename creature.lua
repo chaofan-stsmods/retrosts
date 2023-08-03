@@ -94,12 +94,12 @@ function Creature:heal(value)
 	end
 end
 
-function Creature:damage(source,value,type)
+function Creature:damage(source,value,type,action)
 	if not source.alive or not self.alive then
 		return
 	end
 	type = type or 'attack'
-	value = self:triggerReducerEvent('onBeforeDamaged',value,source,type)
+	value = self:triggerReducerEvent('onBeforeDamaged',value,source,type,action)
 	if type ~= 'hpLoss' then
 		if self.block > 0 then
 			local blocked = math.min(value,self.block)
@@ -112,12 +112,18 @@ function Creature:damage(source,value,type)
 	end
 	if value > 0 then
 		addEffect(TextEffect:new{x=self.x+self.width*4,y=self.y,text=tostring(value),color=3,ySpeed=-0.5})
-		self:triggerEvent('onHpLoss',value,source,type)
+		self:triggerEvent('onHpLoss',value,source,type,action)
+		if action then
+			action.damageDealt = (action.damageDealt or 0) + value
+		end
 	end
 	self.hp = self.hp - value
 	if self.hp <= 0 then
 		self.hp = 0
 		self:die()
+		if action then
+			action.numKilled = (action.numKilled or 0) + 1
+		end
 	end
 end
 
@@ -143,13 +149,16 @@ function Creature:triggerReducerEvent(name,value,...)
 	return value
 end
 
-function Creature:triggerConditionEvent(name,...)
+function Creature:triggerConditionEvent(name,default,...)
 	for _, power in ipairs(self.powers) do
-		if power[name] and power[name](power,...) then
-			 return true
+		if power[name] then
+			local b = power[name](power,...)
+			if b ~= nil then
+				return b
+			end
 		end
 	end
-	return false
+	return default
 end
 
 function Creature:onTurnStart()

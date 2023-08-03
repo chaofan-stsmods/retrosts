@@ -160,13 +160,30 @@ function resetColors(colors)
 	end
 end
 
+local syncCache = {0,0,0,0,0,0,0}
+local function syncCacheSetCompare(mask,bank)
+	local same = true
+	for i=1,7 do
+		if mask&1 == 1 and syncCache[i] ~= bank then
+			syncCache[i] = bank
+			same = false
+		end
+		mask=mask>>1
+	end
+	return not same
+end
+
 local syncQueue = {}
 local hasSync = false
 function queueSync(mask,bank)
 	if not hasSync then
-		trace('sync ' .. mask .. ' ' .. bank)
-		sync(mask,bank)
-		hasSync = true
+		if syncCacheSetCompare(mask,bank) then
+			trace('sync ' .. mask .. ' ' .. bank)
+			sync(mask,bank)
+			hasSync = true
+		else
+			trace('sync cached ' .. mask .. ' ' .. bank)
+		end
 		return
 	end
 	trace('queuesync ' .. mask .. ' ' .. bank)
@@ -174,8 +191,15 @@ function queueSync(mask,bank)
 end
 
 function doSync()
-	if #syncQueue > 0 then
-		sync(table.unpack(table.remove(syncQueue,1)))
+	while #syncQueue > 0 do
+		local mask,bank = table.unpack(table.remove(syncQueue,1))
+		if syncCacheSetCompare(mask,bank) then
+			trace('sync ' .. mask .. ' ' .. bank)
+			sync(mask,bank)
+			break
+		else
+			trace('sync cached ' .. mask .. ' ' .. bank)
+		end
 	end
 	hasSync = #syncQueue > 0
 end

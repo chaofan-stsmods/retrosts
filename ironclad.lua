@@ -2,7 +2,7 @@
 
 local redCards
 
-Ironclad = Player:new{ maxHp=80,width=5,height=4 }
+Ironclad = Player:new{ maxHp=80,width=5,height=4,tileBank=1 }
 function Ironclad:drawImage()
 	map(0,17,self.width,self.height,self.x-8,self.y,0)
 end
@@ -511,7 +511,7 @@ function BloodForBlood:onHpLoss()
 end
 
 function BloodForBlood:upgrade()
-	self.baseCost = self.baseCost - 1
+	self.baseCost = math.max(0,self.baseCost-1)
 	self:upgradeValues({baseDamage=22})
 end
 
@@ -965,9 +965,10 @@ Feed = RedCard:new{
 	enemyTarget=true,baseDamage=10,baseMagic=3,upgrade={baseDamage=12,baseMagic=4},exhaust=true,canGenerateInCombat=false,
 }
 function Feed:use(target)
+	local damageAction = DamageAction:new{source=player,target=target,value=self.damage}
 	return {
-		DamageAction:new{source=player,target=target,value=self.damage},
-		FatalAction:new{target=target,callback=function ()
+		damageAction,
+		FatalAction:new{target=target,action=damageAction,callback=function ()
 			player:increaseMaxHp(self.magic)
 		end}
 	}
@@ -978,20 +979,12 @@ Reaper = RedCard:new{
 	enemyTarget=true,toAllEnemies=true,baseDamage=4,upgrade={baseDamage=5},exhaust=true,canGenerateInCombat=false,
 }
 function Reaper:use()
-	local hpBefore,hpAfter = 0,0
+	local damageAction = DamageAllEnemiesAction:new{source=player,value=self.multiDamage}
 	return {
+		damageAction,
 		AnonymousAction:new(function ()
-			for _, enemy in ipairs(enemies) do
-				hpBefore = hpBefore + enemy.hp
-			end
-		end),
-		DamageAllEnemiesAction:new{source=player,value=self.multiDamage},
-		AnonymousAction:new(function ()
-			for _, enemy in ipairs(enemies) do
-				hpAfter = hpAfter + enemy.hp
-			end
-			if hpAfter < hpBefore then
-				player:heal(hpBefore-hpAfter)
+			if damageAction.damageDealt then
+				player:heal(damageAction.damageDealt)
 			end
 		end),
 	}
@@ -1030,7 +1023,7 @@ function Headbutt:use(target)
 				table.remove(discardPile,table.indexOf(discardPile,cardItems[1].card))
 				addAction(1,PutCardOnDrawCardTopAction:new{cardItem=cardItems[1],show=true})
 			else
-				openWindowAbove(CardGridSelectWindow:new{cardItems=cardItems,title='Choose a Card to Put on Top of Draw Pile',max=1,top=8},
+				openWindowAbove(CardGridSelectWindow:new{cardItems=cardItems,title='Choose a Card to Put on Top of Draw Pile',max=1},
 					function (cards)
 						for _, cardItem in ipairs(cards) do
 							table.remove(discardPile,table.indexOf(discardPile,cardItem.card))
