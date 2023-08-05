@@ -57,17 +57,7 @@ function Creature:drawPowers()
 	local x = self.x
 	local y = self.y+8*self.height+8
 	for _, power in ipairs(self.powers) do
-		spr(power.icon,x,y,0,1,power.iconflip)
-		if power.stackable and power.amount ~= 0 then
-			local color = power.turnBased and 12 or (power.amount > 0 and 5 or 3)
-			local glowColor = power.turnBased and 15 or (power.amount > 0 and 7 or 1)
-			local left = power.amount > 0 and x+5 or x+1
-			local width = printGlowed(tostring(power.amount),left,y+3,color,glowColor,1,true)
-			--print(tostring(power.amount),left,y+3,color,false,1,true)
-			x = left+width
-		else
-			x = x+8
-		end
+		x = x + power:drawImage(x,y)
 		if x>self.x+self.width*8 then
 			x = self.x
 			y = y + 9

@@ -33,6 +33,20 @@ function Power:new(owner,amount)
 	return result
 end
 
+function Power:drawImage(x,y)
+	spr(self.icon,x,y,0,1,self.iconflip)
+	if self.stackable and self.amount ~= 0 then
+		local color = self.turnBased and 12 or (self.amount > 0 and 5 or 3)
+		local glowColor = self.turnBased and 15 or (self.amount > 0 and 7 or 1)
+		local left = self.amount > 0 and x+5 or x+1
+		local width = printGlowed(tostring(self.amount),left,y+3,color,glowColor,1,true)
+		--print(tostring(power.amount),left,y+3,color,false,1,true)
+		return left+width-x
+	else
+		return 8
+	end
+end
+
 TurnBasedPower = Power:new{turnBased=true}
 function TurnBasedPower:new(owner,amount,keepForOneTurn)
 	if amount == nil then

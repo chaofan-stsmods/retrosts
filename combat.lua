@@ -229,7 +229,7 @@ function combatControls()
 		elseif btnp(4) then
 			local cardItem = hand[combatSelection.handIndex]
 			cardItem.ty = cardItem.ty - 16
-			addAction(UseCardAction:new{cardItem=cardItem,target=enemies[combatSelection.index],secondary=true})
+			addAction(UseCardAction:new{cardItem=cardItem,target=enemies[combatSelection.index],secondary=true,fromHand=true})
 			combatSelection.type = 'hand'
 			handUI.cursorOnSelf = true
 			combatSelection.handIndex = nil
@@ -313,7 +313,7 @@ function checkCombatEnd()
 		end
 	end
 	if not hasAlive then
-		table.retainIf(secondaryActions,function (a) return getmetatable(a) ~= UseCardAction end)
+		table.retainIf(secondaryActions,function (a) return getmetatable(a) ~= UseCardAction and getmetatable(a) ~= UsePotionAction end)
 		addAction(EndCombatAction:new())
 	end
 end
@@ -331,12 +331,12 @@ function setupEnemies()
 	combatSpriteBank = 1
 	enemies = {}
 	local enemy
-	--enemy = Cultist:new({ hp=51,maxHp=51,x=110,y=48,width=4,height=4 })
-	--table.insert(enemies,enemy)
+	enemy = Cultist:new({ hp=51,maxHp=51,x=110,y=48,width=4,height=4 })
+	table.insert(enemies,enemy)
 	enemy = Cultist:new({ hp=51,maxHp=51,x=150,y=48,width=4,height=4 })
 	table.insert(enemies,enemy)
-	--enemy = Cultist:new({ hp=51,maxHp=51,x=190,y=48,width=4,height=4 })
-	--table.insert(enemies,enemy)
+	enemy = Cultist:new({ hp=51,maxHp=51,x=190,y=48,width=4,height=4 })
+	table.insert(enemies,enemy)
 end
 
 function getRandomAliveEnemy()

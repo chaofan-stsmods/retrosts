@@ -115,6 +115,20 @@ function drawBezier(count,x0,y0,x1,y1,x2,y2)
 	end
 end
 
+function drawTooltipBox(x,y,w,h)
+	spr(83,x,y,0,1,2)
+	spr(83,x+w*8-8,y,0,1,3)
+	spr(83,x+w*8-8,y+h*8-8,0,1,1)
+	spr(83,x,y+h*8-8,0,1,0)
+	rect(x,y+8,w*8,h*8-16,14)
+	rect(x+8,y,w*8-16,8,14)
+	rect(x+8,y+h*8-8,w*8-16,8,14)
+	line(x,y+8,x,y+h*8-9,15)
+	line(x+w*8-1,y+8,x+w*8-1,y+h*8-9,15)
+	line(x+w,y,x+w*8-9,y,15)
+	line(x+w,y+h*8-1,x+w*8-9,y+h*8-1,15)
+end
+
 function sprmap(x, y, w, h, sx, sy, colorkey, scale, remap)
 	scale = scale or 1
 	for cx = x,x+w-1 do

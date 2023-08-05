@@ -120,6 +120,7 @@ function generateRewards(random)
 	generateGoldReward(rewards,random)
 	generateCardRewards(rewards,random)
 	generateRelicRewards(rewards,random)
+	generatePotionRewards(rewards,random)
 	--table.insert(rewards,{title='Sapphire key',icon=463,type='key',value='sapphireKeyObtained'})
 	return rewards
 end
@@ -142,8 +143,10 @@ local rareCardRandOffset = 5
 local initRareCardRandOffset = 5
 local rareCardRandOffsetGrow = -1
 local minRareCardRandOffset = -40
-function resetCardRewardGenerator()
+local potionRandOffset = 0
+function resetRewardGenerator()
 	rareCardRandOffset = initRareCardRandOffset
+	potionRandOffset = 0
 end
 
 function getPlayerCardTypeByRarity(rarity,random)
@@ -260,6 +263,36 @@ function getRelicTypeByTier(tier)
 		end
 	until relic:canSpwan()
 	return relic
+end
+
+function generatePotionRewards(rewards,random)
+	local chance = 40 + potionRandOffset
+	if #rewards >= 4 then
+		return
+	end
+
+	if random:randInt(0,99) < chance then
+		local potion = getRandomPotionType(random):new()
+		table.insert(rewards,{title=potion.name,type='potion',value=potion})
+		potionRandOffset = potionRandOffset - 10
+	else
+		potionRandOffset = potionRandOffset + 10
+	end
+end
+
+function getRandomPotionType(random)
+	local roll = random:randInt(0,99)
+	local rarity
+	if roll < 65 then
+		rarity = 'common'
+	elseif roll < 90 then
+		rarity = 'uncommon'
+	else
+		rarity = 'rare'
+	end
+	local allPotions = shallowcopy(getAllPotions())
+	table.retainIf(allPotions,function (p) return p.rarity == rarity end)
+	return allPotions[random:randInt(#allPotions)]
 end
 
 -- cardselect

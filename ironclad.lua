@@ -856,7 +856,7 @@ function BrutalityPower:onTurnStart()
 end
 
 DemonForm = RedCard:new{
-	name='DemonForm',description='At the start of turn, gain !M! {76<}.',rarity='rare',type='power',baseCost=3,
+	name='Demon Form',description='At the start of turn, gain !M! {76<}.',rarity='rare',type='power',baseCost=3,
 	playerTarget=true,baseMagic=2,upgrade={baseMagic=3}
 }
 function DemonForm:use()

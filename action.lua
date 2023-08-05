@@ -92,7 +92,7 @@ end
 
 UseCardAction = Action:new{
 	cardItem=nil,target=nil,secondary=false,exhaust=false,randomTarget=false,free=false,forceUse=false,energyOnUse=nil,
-	tempCard=false,isDoubleTap=false,tx=120,ty=68,duration=20
+	tempCard=false,isDoubleTap=false,fromHand=false,tx=120,ty=68,duration=20
 }
 function UseCardAction:new(o)
 	local cardItem = o.cardItem
@@ -109,8 +109,8 @@ function UseCardAction:tick()
 		self.cardItem.tx = self.tx
 		self.cardItem.ty = self.ty
 		local handIndex = table.indexOf(hand,self.cardItem)
-		-- can't secondary play a card that is not in hand
-		if self.secondary and handIndex == nil then
+		-- can't play a card that is not in hand
+		if self.fromHand and handIndex == nil then
 			self.isDone = true
 			return
 		end
@@ -122,7 +122,7 @@ function UseCardAction:tick()
 		end
 		card:applyPowers(self.target)
 		if not self.forceUse and (not card:canUse(self.free) or (self.target ~= nil and not self.target.alive)) then
-			if handIndex then
+			if self.fromHand and handIndex then
 				self.cardItem.isNotInHand = false
 				self.isDone = true
 			else
@@ -132,7 +132,7 @@ function UseCardAction:tick()
 			return
 		end
 		card.free = false
-		if handIndex then
+		if self.fromHand and handIndex then
 			removeHand(handIndex)
 			if not table.indexOf(limbo,self.cardItem) then
 				table.insert(limbo,self.cardItem)
@@ -198,6 +198,25 @@ function UseCardEndAction:tick()
 		handApplyPowers()
 		self.isDone = true
 	end
+end
+
+UsePotionAction = Action:new{potion=nil,target=nil,duration=1,secondary=true}
+function UsePotionAction:tick()
+	if self.duration == self.startDuration then
+		local potion = self.potion
+		local potionIndex = table.indexOf(potions,potion)
+		if not potion:realCanUse() or not potionIndex or (self.target ~= nil and not self.target.alive) then
+			self.isDone = true
+			return
+		end
+		potions[potionIndex] = Slot
+		potion:applyPowers()
+		local potionActions = potion:use(self.target) or {}
+		for i,potionAction in ipairs(potionActions) do
+			addAction(i,potionAction)
+		end
+	end
+	Action.tick(self)
 end
 
 DamageAction = Action:new{source=nil,target=nil,value=nil,type=nil,duration=10}
@@ -324,7 +343,7 @@ function AutoPlayOnEndTurnAction:tick()
 	end
 	miscRand:shuffle(autoPlayCards)
 	for i,cardItem in ipairs(autoPlayCards) do
-		addAction(1,UseCardAction:new{cardItem=cardItem,secondary=true,forceUse=true})
+		addAction(1,UseCardAction:new{cardItem=cardItem,secondary=true,forceUse=true,fromHand=true})
 	end
 	self.isDone = true
 end

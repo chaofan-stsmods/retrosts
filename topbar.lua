@@ -22,11 +22,7 @@ function drawTopBar()
 	printShadowed(tostring(floor),153,1,12)
 	printShadowed(#deck,225,1,12)
 	for i = 1,#potions do
-		if potions[i] == 'slot' then
-			spr(41,96+i*8,0,0)
-		else
-			potions[i]:drawImage(96+i*8,0)
-		end
+		potions[i]:drawImage(96+i*8,0)
 	end
 	if topBarSelection.type == 'potion' then
 		drawSelectionBox(95+topBarSelection.index*8,0,10,9,nil,2)
@@ -34,6 +30,16 @@ function drawTopBar()
 		drawSelectionBox(215,0,10,9,nil,2)
 	elseif topBarSelection.type == 'map' then
 		drawSelectionBox(207,0,10,9,nil,2)
+	elseif topBarSelection.type == 'potionMenu' then
+		drawSelectionBox(95+topBarSelection.potionIndex*8,0,10,9,nil,2)
+		drawPotionMenu(75+topBarSelection.potionIndex*8)
+	elseif topBarSelection.type == 'usePotion' then
+		local x = 99+topBarSelection.potionIndex*8
+		local enemy = enemies[topBarSelection.index]
+		drawSelectionBox(95+topBarSelection.potionIndex*8,0,10,9,nil,2)
+		drawSelectionBox(enemy.x,enemy.y,8*enemy.width,8*enemy.height)
+		drawBezier(20,x,8,math.min(x,enemy.x-20),enemy.y+enemy.height*4-5,enemy.x+enemy.width*4-4,enemy.y+enemy.height*4)
+		spr(74,enemy.x+enemy.width*4-8,enemy.y+enemy.height*4-4,0)
 	end
 	if emeraldKeyObtained then spr(3,0,0,0) end
 	if rubyKeyObtained then spr(4,0,0,0) end
@@ -45,14 +51,21 @@ function drawRelics()
 	local x = 1-relicOffset
 	local y = 9
 	for _, relic in ipairs(relics) do
-		spr(relic.icon,x,y,0)
-		if relic.counter ~= nil then
-			local counterStr = tostring(relic.counter)
-			local width = strWidth(counterStr,false,true)
-			printGlowed(counterStr,math.min(x+5,x+12-width),y+3,12,15,1,true)
-		end
+		relic:drawImage(x,y)
 		x = x+12
 	end
+end
+
+function drawPotionMenu(x)
+	local y = 9
+	drawTooltipBox(x,y,6,4)
+	rect(x+3,y+3,42,12,topBarSelection.index == 1 and 13 or 15)
+	rect(x+3,y+17,42,12,topBarSelection.index == 2 and 13 or 15)
+	local potion = potions[topBarSelection.potionIndex]
+	local color = potion:canUse() and 12 or 14
+	printShadowed(potion.useTitle,x+25-strWidth(potion.useTitle)/2,y+6,color,15)
+	local disard = 'Discard'
+	printShadowed(disard,x+25-strWidth(disard)/2,y+20,2,1)
 end
 
 function controlTopBar()
@@ -65,40 +78,107 @@ function controlTopBar()
 			topBarSelection.index = 1
 		end
 	end
-
-	if btnp(2) then
-		if topBarSelection.type == 'potion' then
+	
+	if topBarSelection.type == 'potion' then
+		if btnp(2) then
 			topBarSelection.index = limit(topBarSelection.index-1,1,#potions)
-		elseif topBarSelection.type == 'map' then
-			topBarSelection.type = 'potion'
-			topBarSelection.index = #potions
-		elseif topBarSelection.type == 'deck' then
-			topBarSelection.type = 'map'
-		end
-	elseif btnp(3) then
-		if topBarSelection.type == 'potion' then
+		elseif btnp(3) then
 			if topBarSelection.index == #potions then
 				topBarSelection.type = 'map'
 			else
 				topBarSelection.index = limit(topBarSelection.index+1,1,#potions)
 			end
-		elseif topBarSelection.type == 'map' then
+		elseif btnp(4) then
+			if potions[topBarSelection.index] ~= Slot then
+				topBarSelection.type = 'potionMenu'
+				topBarSelection.potionIndex = topBarSelection.index
+				topBarSelection.index = 1
+			end
+		elseif btnp(1) or btnp(5) then
+			exitTopBar()
+		end
+	elseif topBarSelection.type == 'potionMenu' then
+		if btnp(0) then
+			topBarSelection.index = 1
+		elseif btnp(1) then
+			topBarSelection.index = 2
+		elseif btnp(4) then
+			if topBarSelection.index == 1 then
+				local potion = potions[topBarSelection.potionIndex]
+				if potion:realCanUse() then
+					if potion.enemyTarget then
+						topBarSelection.type = 'usePotion'
+					else
+						trace('usePotion '..potion.name)
+						if potion.canUseOutsideCombat then
+							potion:applyPowers()
+							potion:use()
+							potions[topBarSelection.potionIndex] = Slot
+						else
+							addAction(UsePotionAction:new{potion=potion})
+						end
+						exitTopBar()
+					end
+				end
+			else
+				potions[topBarSelection.potionIndex] = Slot
+				topBarSelection.type = 'potion'
+				topBarSelection.index = topBarSelection.potionIndex
+				topBarSelection.potionIndex = nil
+			end
+		elseif btnp(5) then
+			topBarSelection.type = 'potion'
+			topBarSelection.index = topBarSelection.potionIndex
+			topBarSelection.potionIndex = nil
+		end
+	elseif topBarSelection.type == 'usePotion' then
+		local potion = potions[topBarSelection.potionIndex]
+		if not potion:canUse() then
+			topBarSelection.type = 'potionMenu'
+			topBarSelection.index = 1
+			return
+		end
+		local function enemyIsAlive(i) return enemies[i].alive end
+		if topBarSelection.index == 0 or not enemies[topBarSelection.index].alive then
+			topBarSelection.index = nextOrOtherIndexInTableIf(enemies,topBarSelection.index,enemyIsAlive)
+			if topBarSelection.index == 0 then
+				topBarSelection.type = 'potionMenu'
+				topBarSelection.index = 1
+				return
+			end
+		end
+		if btnp(2) then
+			topBarSelection.index = previousOrOtherIndexInTableIf(enemies,topBarSelection.index,enemyIsAlive)
+		elseif btnp(3) then
+			topBarSelection.index = nextOrOtherIndexInTableIf(enemies,topBarSelection.index,enemyIsAlive)
+		elseif btnp(4) then
+			addAction(UsePotionAction:new{potion=potion,target=enemies[topBarSelection.index]})
+			exitTopBar()
+		elseif btnp(5) then
+			topBarSelection.type = 'potionMenu'
+			topBarSelection.index = 1
+		end
+	elseif topBarSelection.type == 'map' then
+		if btnp(2) then
+			topBarSelection.type = 'potion'
+			topBarSelection.index = #potions
+		elseif btnp(3) then
 			topBarSelection.type = 'deck'
 			topBarSelection.index = #potions
-		end
-	elseif btnp(1) or btnp((5)) then
-		exitTopBar()
-	end
-
-	if btnp(4) then
-		if topBarSelection.type == 'map' then
+		elseif btnp(4) then
 			if getmetatable(nearestWindow) == MapWindow then
 				nearestWindow:close()
 			else
 				openWindowAbove(MapWindow:new())
 			end
 			exitTopBar()
-		elseif topBarSelection.type == 'deck' then
+		elseif btnp(1) or btnp(5) then
+			exitTopBar()
+		end
+	elseif topBarSelection.type == 'deck' then
+		if btnp(2) then
+			topBarSelection.type = 'map'
+		elseif btnp(4) then
 			if getmetatable(nearestWindow) == CardGridSelectWindow and nearestWindow.isDeckView then
 				nearestWindow:close()
 			else
@@ -108,6 +188,8 @@ function controlTopBar()
 				openWindowAbove(gridView)
 			end
 			exitTopBar()
+		elseif btnp(1) or btnp(5) then
+			exitTopBar()
 		end
 	end
 end
@@ -115,4 +197,5 @@ end
 function exitTopBar()
 	cursorOnTopBar = false
 	topBarSelection.type = nil
+	topBarSelection.potionIndex = nil
 end

@@ -173,7 +173,7 @@ function generateNeowRewards(options,random)
 		option = {description='[ #5#Obtain 3 random potions #12#]',onSelect=function ()
 			local rewards = {}
 			for i=1,3 do
-				local potion = getRandomPotion(random)
+				local potion = getTrueRandomPotionType(random):new()
 				rewards[i] = {type='potion',title=potion.name,value=potion}
 			end
 			local rewardWindow = RewardWindow:new{rewards=rewards,canClose=true}

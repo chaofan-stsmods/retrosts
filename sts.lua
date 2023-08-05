@@ -48,7 +48,7 @@ player = nil
 floor = 1
 gold = 0
 deck = {}
-potions = {'slot','slot','slot'}
+potions = {Slot,Slot,Slot}
 relics = {}
 maxEnergy = 3
 rubyKeyObtained = false
@@ -82,7 +82,7 @@ function startGame(character)
 	gold = 99
 	deck = player:getStartDeck()
 	relics = player:getStartRelics()
-	potions = {'slot','slot','slot'}
+	potions = {Slot,Slot,Slot}
 	maxEnergy = 3
 	effects = {}
 	pendingEffects = {}
@@ -108,7 +108,7 @@ function startAct(actId)
 		table.insert(room.next,nextRoom)
 	end
 	roomType = 'event'
-	resetCardRewardGenerator()
+	resetRewardGenerator()
 	act:playEntryEffect()
 end
 
@@ -160,7 +160,7 @@ end
 -- main
 
 queueSync(32,1)
---startGame('Ironclad')
+startGame('Ironclad')
 --startCombat()
 
 -- <TILES>
@@ -353,7 +353,7 @@ queueSync(32,1)
 -- 048:88888888888888cc88888cdd8888cd22888cd22388cd22338cd222338cd22233
 -- 049:cddddddedddeeeee222222222223333222333322233333333333333333443344
 -- 050:88888888ee888888eee8888822ee8888222ee8883332fe8832332fe833232f08
--- 051:00000000000eeeee0aaaaaaa0aaaaaaa0aaaaaaa0aaaaaaa09aaaaaa09999999
+-- 051:0000000000eeeeeeaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa9aaaaaaa99999999
 -- 052:00000000eeeeeeeeaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa99999999
 -- 053:00000000eeeeee00aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa999999999
 -- 054:777777777cc7cc7777ccc007777c007777ccc7777cc0cc777700700777777777
@@ -369,7 +369,7 @@ queueSync(32,1)
 -- 064:dd222333dd223334dd223333dd222333dd222333de232234de223333de223333
 -- 065:3444444344444444444cc44444ccc444444cc444444444444444444433444434
 -- 066:332222f0333222f0433322f0433322f0333232f0333232f0433222f0433222f0
--- 067:0feeeeee0feeeeee0feeeeee0feeeeee0feeeeee0feeeeee0feeeeee0feeeeee
+-- 067:feeeeeeefeeeeeeefeeeeeeefeeeeeeefeeeeeeefeeeeeeefeeeeeeefeeeeeee
 -- 068:000230002203403234ffff43811111188ffffff8344f4ff909ffff9009ffff90
 -- 069:eeeeeeefeeeeeeefeeeeeeefeeeeeeefeeeeeeefeeeeeeefeeeeeeefeeeeeeef
 -- 073:000ffff000fbbbaf0fbbaabf0fbabbf00fabbf00fbfff000fbf000000f000000
@@ -382,7 +382,7 @@ queueSync(32,1)
 -- 080:8ee222338ee2233288ee2233888ee2228888ee2288888fee8888880088888888
 -- 081:333443332344333223333332333333222233322222222222ffffffff00000000
 -- 082:33222f0833222f083222f088222f088822f08888ff0888880088888888888888
--- 083:0feeeeee0feeeeee0feeeeee0feeeeee0feeeeee00feeeee000feeee0000ffff
+-- 083:feeeeeeefeeeeeeefeeeeeeefeeeeeeefeeeeeee0feeeeee00feeeee000fffff
 -- 084:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeffffffff
 -- 085:eeeeeeefeeeeeeefeeeeeeefeeeeeeefeeeeeeefeeeeeef0eeeeef00fffff000
 -- 096:000cfde000cc3fee0c34c3f0c23c3c3cc11434c00c222c0000c2c000000c0000

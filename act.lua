@@ -3,8 +3,8 @@
 
 Act = Object:new{id=0,title='',smallTitle='',cardUpgradedChance=0,drawBackground=noop}
 function Act:playEntryEffect()
-    addEffect(TextEffect:new{duration=120,color=11,text=self.smallTitle,x=120,y=17,small=false,shadow=15})
-    addEffect(TextEffect:new{duration=120,color=4,text=self.title,x=120,y=24,small=false,scale=3,shadow=15})
+	addEffect(TextEffect:new{duration=120,color=11,text=self.smallTitle,x=120,y=17,small=false,shadow=15})
+	addEffect(TextEffect:new{duration=120,color=4,text=self.title,x=120,y=24,small=false,scale=3,shadow=15})
 end
 
 Exordium = Act:new{id=1,title='Exordium',smallTitle='Act 1',cardUpgradedChance=0}
