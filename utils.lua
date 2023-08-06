@@ -130,17 +130,9 @@ function drawTooltipBox(x,y,w,h)
 end
 
 function sprmap(x, y, w, h, sx, sy, colorkey, scale, remap)
-	scale = scale or 1
-	for cx = x,x+w-1 do
-		for cy = y,y+h-1 do
-			local tile, flip, rotate = mget(cx,cy), 0, 0
-			if remap then
-				local t,f,r = remap(tile,cx,cy)
-				tile, flip, rotate = t or tile, f or flip, r or rotate
-			end
-			spr(tile+256,sx+(cx-x)*8*scale,sy+(cy-y)*8*scale,colorkey,scale,flip,rotate)
-		end
-	end
+	poke4(2*0x03FFC,3)
+	map(x, y, w, h, sx, sy, colorkey or -1, scale or 1, remap or nil)
+	poke4(2*0x03FFC,2)
 end
 
 function mapColor(from,to)

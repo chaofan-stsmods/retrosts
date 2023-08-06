@@ -157,7 +157,7 @@ end
 
 Cultist = Monster:new{ maxHp=51,x=160,y=48,width=4,height=4 }
 function Cultist:drawImage()
-	sprmap(5,17,self.width,self.height,self.x,self.y,0,1)
+	sprmap(5,17,self.width,self.height,self.x,self.y,0)
 end
 
 function Cultist:buff()

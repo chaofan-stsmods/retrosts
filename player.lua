@@ -17,12 +17,11 @@ function Player:onCombatStart()
 end
 
 function Player:triggerEvent(name,...)
-	for _, relic in ipairs(relics) do
-		if relic[name] then
-			relic[name](relic,...)
+	for _, item in ipairs(sortByPriority(relics,self.powers)) do
+		if item[name] then
+			item[name](item,...)
 		end
 	end
-	Creature.triggerEvent(self,name,...)
 	for _, hand in ipairs(hand) do
 		hand.card:triggerEvent(name,...)
 	end
@@ -38,24 +37,24 @@ function Player:triggerEvent(name,...)
 end
 
 function Player:triggerConditionEvent(name,default,...)
-	for _, relic in ipairs(relics) do
-		if relic[name] then
-			local b = relic[name](relic,...)
+	for _, item in ipairs(sortByPriority(relics,self.powers)) do
+		if item[name] then
+			local b = item[name](item,...)
 			if b ~= nil then
 				return b
 			end
 		end
 	end
-	return Creature.triggerConditionEvent(self,name,default,...)
+	return default
 end
 
 function Player:triggerReducerEvent(name,value,...)
-	for _, relic in ipairs(relics) do
-		if relic[name] then
-			value = relic[name](relic,value,...) or value
+	for _, item in ipairs(sortByPriority(relics,self.powers)) do
+		if item[name] then
+			value = item[name](item,value,...) or value
 		end
 	end
-	return Creature.triggerReducerEvent(self,name,value,...)
+	return value
 end
 
 function Player:onCombatEnd()
@@ -83,4 +82,27 @@ end
 
 function Player:getRelics()
 	return {}
+end
+
+function sortByPriority(...)
+	local result = {}
+	local args = {...}
+	local i = 0
+	for _, arg in ipairs(args) do
+		for _, item in ipairs(arg) do
+			item.sortByPriorityIndex = i
+			table.insert(result,item)
+			i = i + 1
+		end
+	end
+	table.sort(result,function (a, b)
+		if a.priority == b.priority then
+			return a.sortByPriorityIndex < b.sortByPriorityIndex
+		end
+		return a.priority < b.priority
+	end)
+	for _, item in ipairs(result) do
+		item.sortByPriorityIndex = nil
+	end
+	return result
 end

@@ -34,6 +34,9 @@ function RewardWindow:drawRewards()
 			spr(reward.icon,79,y+4,0)
 		end
 		print(reward.title,90,y+5,12,false,1,true)
+		if reward.showLink then
+			spr(477,116,y-5,0)
+		end
 	end
 end
 
@@ -96,7 +99,13 @@ function RewardWindow:collectReward()
 end
 
 function RewardWindow:collectRewardComplete()
-	table.remove(self.rewards,self.selection)
+	local reward = table.remove(self.rewards,self.selection)
+	if reward.link then
+		local linkIndex = table.indexOf(self.rewards,reward.link)
+		if linkIndex then
+			table.remove(self.rewards,linkIndex)
+		end
+	end
 	if #self.rewards == 0 then
 		self.selection = 0
 		self:onComplete()
@@ -121,7 +130,6 @@ function generateRewards(random)
 	generateCardRewards(rewards,random)
 	generateRelicRewards(rewards,random)
 	generatePotionRewards(rewards,random)
-	--table.insert(rewards,{title='Sapphire key',icon=463,type='key',value='sapphireKeyObtained'})
 	return rewards
 end
 
@@ -135,8 +143,12 @@ function generateGoldReward(rewards,random)
 		gold = random:randInt(95,105)
 	end
 	if gold then
-		table.insert(rewards,{title=gold..' Gold',icon=7,type='gold',value=gold})
+		addGoldReward(rewards,gold)
 	end
+end
+
+function addGoldReward(rewards,amount)
+	table.insert(rewards,{title=amount..' Gold',icon=7,type='gold',value=amount})
 end
 
 local rareCardRandOffset = 5
@@ -243,11 +255,15 @@ function generateRelicRewards(rewards,random)
 	end
 
 	local relic = getRelicTypeByTier(tier):new()
-	table.insert(rewards,{title=relic.name,icon=relic.icon,type='relic',value=relic})
+	addRelicReward(rewards,relic)
 
 	if room.hasKey then
 		table.insert(rewards,{title='Emerald key',icon=462,type='key',value='emeraldKeyObtained'})
 	end
+end
+
+function addRelicReward(rewards,relic)
+	table.insert(rewards,{title=relic.name,icon=relic.icon,type='relic',value=relic})
 end
 
 function getRelicTypeByTier(tier)
@@ -273,11 +289,15 @@ function generatePotionRewards(rewards,random)
 
 	if random:randInt(0,99) < chance then
 		local potion = getRandomPotionType(random):new()
-		table.insert(rewards,{title=potion.name,type='potion',value=potion})
+		addPotionReward(rewards,potion)
 		potionRandOffset = potionRandOffset - 10
 	else
 		potionRandOffset = potionRandOffset + 10
 	end
+end
+
+function addPotionReward(rewards,potion)
+	table.insert(rewards,{title=potion.name,type='potion',value=potion})
 end
 
 function getRandomPotionType(random)

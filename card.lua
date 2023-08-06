@@ -135,7 +135,7 @@ function CardItem:tick()
 		return
 	end
 	if self.glow ~= nil then
-		rect(l,t,self.large and 57 or 33,self.large and 57 or 41,self.glow)
+		rect(l-1,t,self.large and 58 or 34,self.large and 57 or 41,self.glow)
 	end
 	drawCardBack(self.card,self.large,l,t)
 	drawCost(self.card,l,t,self.isNotInHand,self.showWhiteCost)
@@ -318,9 +318,14 @@ end
 function removeCardFromDeck(amount)
 	local cardItems = table.map(deck, function (card) return CardItem:new{card=card,x=240,y=0,isNotInHand=true} end)
 	table.retainIf(cardItems,function (cardItem) return cardItem.card.canRemove end)
+	if #cardItems == 0 then
+		return false
+	end
+	local oldAmount = amount
+	amount = math.min(amount,#cardItems)
 	local gridView = CardGridSelectWindow:new{title='Choose a Card to Remove',cardItems=cardItems,min=amount,max=amount}
 	if amount > 1 then
-		gridView.title = 'Choose Cards to Remove ({#}/'..amount..')'
+		gridView.title = 'Choose Cards to Remove ({#}/'..oldAmount..')'
 	end
 	openWindowAbove(gridView, function (cards)
 		local startX,stepX = placeCardsInARow(#cards)
@@ -332,16 +337,31 @@ function removeCardFromDeck(amount)
 			addEffect(CardEffect:new{cardItem=cardItem,pauseDuration=10,duration=30,tx=120,ty=-30})
 		end
 	end)
+	return true
 end
 
-function upgradeCardFromDeck(amount)
+function upgradeCardFromDeck(amount,canClose,onClose)
 	local cardItems = table.map(deck, function (card) return CardItem:new{card=card,x=240,y=0,isNotInHand=true} end)
 	table.retainIf(cardItems,function (cardItem) return cardItem.card:canUpgrade() end)
-	local gridView = CardGridSelectWindow:new{title='Choose a Card to Upgrade',cardItems=cardItems,min=amount,max=amount}
+	if #cardItems == 0 then
+		if onClose then
+			onClose(false)
+		end
+		return false
+	end
+	local oldAmount = amount
+	amount = math.min(amount,#cardItems)
+	local gridView = CardGridSelectWindow:new{title='Choose a Card to Upgrade',cardItems=cardItems,min=amount,max=amount,canClose=canClose or false}
 	if amount > 1 then
-		gridView.title = 'Choose Cards to Upgrade ({#}/'..amount..')'
+		gridView.title = 'Choose Cards to Upgrade ({#}/'..oldAmount..')'
 	end
 	openWindowAbove(gridView, function (cards)
+		if not cards then
+			if onClose then
+				onClose(false)
+			end
+			return
+		end
 		local startX,stepX = placeCardsInARow(#cards)
 		for i, cardItem in ipairs(cards) do
 			cardItem.tx = startX+stepX*i
@@ -355,15 +375,24 @@ function upgradeCardFromDeck(amount)
 				end
 			end})
 		end
+		if onClose then
+			onClose(true)
+		end
 	end)
+	return true
 end
 
 function transformCardFromDeck(amount,random)
 	local cardItems = table.map(deck, function (card) return CardItem:new{card=card,x=240,y=0,isNotInHand=true} end)
 	table.retainIf(cardItems,function (cardItem) return cardItem.card.canRemove end)
+	if #cardItems == 0 then
+		return false
+	end
+	local oldAmount = amount
+	amount = math.min(amount,#cardItems)
 	local gridView = CardGridSelectWindow:new{title='Choose a Card to Transform',cardItems=cardItems,min=amount,max=amount}
 	if amount > 1 then
-		gridView.title = 'Choose Cards to Transform ({#}/'..amount..')'
+		gridView.title = 'Choose Cards to Transform ({#}/'..oldAmount..')'
 	end
 	openWindowAbove(gridView, function (cards)
 		local startX,stepX = placeCardsInARow(#cards)
@@ -394,6 +423,7 @@ function transformCardFromDeck(amount,random)
 			end})
 		end
 	end)
+	return true
 end
 
 -- hand ui
@@ -755,7 +785,7 @@ end
 -- grid select window
 CardGridSelectWindow = Window:new{
 	name='CardGridSelectWindow',selectedCards=nil,title='Choose a card',cardItems=nil,single=false,
-	max=999,min=1,canClose=true,
+	max=999,min=1,canClose=false,
 }
 function CardGridSelectWindow:new(o)
 	local gridUI = CardGridUI:new(o.cardItems)

@@ -20,7 +20,7 @@ end
 
 function Creature:tick()
 	if self.visible then
-		self:drawImage()
+		self:drawImage(self.x,self.y)
 		self:drawHealthBar()
 		self:drawPowers()
 	end

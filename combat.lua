@@ -331,12 +331,12 @@ function setupEnemies()
 	combatSpriteBank = 1
 	enemies = {}
 	local enemy
-	enemy = Cultist:new({ hp=51,maxHp=51,x=110,y=48,width=4,height=4 })
+	--enemy = Cultist:new({ hp=51,maxHp=51,x=110,y=48,width=4,height=4 })
+	--table.insert(enemies,enemy)
+	enemy = Cultist:new({ hp=1,maxHp=51,x=150,y=48,width=4,height=4 })
 	table.insert(enemies,enemy)
-	enemy = Cultist:new({ hp=51,maxHp=51,x=150,y=48,width=4,height=4 })
-	table.insert(enemies,enemy)
-	enemy = Cultist:new({ hp=51,maxHp=51,x=190,y=48,width=4,height=4 })
-	table.insert(enemies,enemy)
+	--enemy = Cultist:new({ hp=51,maxHp=51,x=190,y=48,width=4,height=4 })
+	--table.insert(enemies,enemy)
 end
 
 function getRandomAliveEnemy()

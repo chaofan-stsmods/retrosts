@@ -249,6 +249,8 @@ function GameWindow:tickBelow()
 		end
 		resetColors()
 	else
-		cls(0)
+		darkenColors()
+		eventBelow()
+		resetColors()
 	end
 end

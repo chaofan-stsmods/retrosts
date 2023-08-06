@@ -1,88 +1,5 @@
--- event
+-- neow
 ---@diagnostic disable: lowercase-global
-
-currentEvent=nil
-function event()
-	if currentEvent then
-		currentEvent:tick()
-	else
-		cls(0)
-	end
-	tickEffects()
-	tickTopBar(true)
-end
-
--- event instance
-
-Event = Object:new{
-	spritebank=nil,options={},selectedOption=0,
-	onOption=noop
-}
-function Event:new(o)
-	o = o or {}
-	o.options = o.options or {}
-	return Object.new(self,o)
-end
-
-function Event:drawBackground()
-	cls(0)
-end
-
-function Event:drawOptions()
-	local x = 8
-	local y = 136-10*#self.options-16
-	for i, option in ipairs(self.options) do
-		if self.selectedOption == i then
-			mapColor(15,14)
-			mapColor(14,13)
-			mapColor(13,12)
-		end
-		if option.locked then
-			mapColor(15,0)
-			mapColor(14,15)
-			mapColor(13,14)
-		end
-		self:drawOptionButton(x,y+i*10,28)
-		printColorStr(option.description,x+4,y+i*10+1,true,12,option.locked and 13 or nil)
-		if self.selectedOption == i or option.locked then
-			resetColors{13,14,15}
-		end
-	end
-end
-
-function Event:drawOptionButton(x,y,width)
-	spr(12,x,y,0)
-	for i=2,width-1 do
-		spr(13,x+i*8-8,y,0)
-	end
-	spr(12,x+width*8-8,y,0,1,1)
-end
-
-function Event:tick()
-	self:drawBackground()
-	self:drawOptions()
-	self:eventControls()
-end
-
-function Event:eventControls()
-	if cursorOnTopBar then
-		self.selectedOption = 0
-		return
-	end
-
-	local function validOption(i) return not self.options[i].locked end
-	if self.selectedOption == 0 then
-		self.selectedOption = nextOrOtherIndexInTableIf(self.options,self.selectedOption,validOption)
-	end
-
-	if btnp(0) then
-		self.selectedOption = previousOrOtherIndexInTableIf(self.options,self.selectedOption,validOption)
-	elseif btnp(1) then
-		self.selectedOption = nextOrOtherIndexInTableIf(self.options,self.selectedOption,validOption)
-	elseif btnp(4) then
-		self:onOption(self.selectedOption)
-	end
-end
 
 NeowEvent = Event:new{screen='entry',spritebank=0,words='Greetings...',random=nil}
 function NeowEvent:new(random)
@@ -95,7 +12,7 @@ end
 function NeowEvent:drawBackground()
 	act:drawBackground()
 	player:drawImage()
-	sprmap(16,34,13,10,136,16)
+	sprmap(16,34,13,10,136,16,0)
 	drawTalkBubble(self.words,85,46,50,31,140,78,12,15)
 end
 
@@ -108,11 +25,10 @@ function NeowEvent:onOption(selection)
 		generateNeowRewards(self.options,self.random)
 	elseif self.screen == 'rewards' then
 		self.words = 'Granted...'
-		self.options[self.selectedOption].onSelect()
+		self.options[selection].onSelect()
 		self.screen = 'exit'
-		self.options = {}
+		self.options = {{description='[Leave]'}}
 		self.selectedOption = 0
-		table.insert(self.options,{description='[Leave]'})
 	else
 		completeRoom()
 		openWindowAbove(MapWindow:new())
