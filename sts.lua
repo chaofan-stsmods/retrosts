@@ -22,13 +22,14 @@ require 'power'
 require 'player'
 require 'ironclad'
 require 'colorless'
-require 'monster'
+require 'monster.index'
 require 'combat'
 require 'map'
 require 'event.all'
 require 'topbar'
 require 'reward'
 require 'effect'
+require 'encounter'
 require 'act'
 
 PALETTE_MAP = 0x3FF0
@@ -43,6 +44,7 @@ end
 
 -- in game properties
 seed = 0
+ascension = 0
 mainRandom = nil
 player = nil
 floor = 1
@@ -59,7 +61,12 @@ relicPools = {common={},uncommon={},rare={},shop={},boss={}}
 -- in act properties
 act = nil
 stsMap = {}
-boss = nil
+boss = nil -- TODO use bossEncounter
+monsterEncounters = {}
+eliteEncounters = {}
+bossEncounter = nil
+nextMonsterEncounterIndex = 1
+nextEliteEncounterIndex = 1
 playerPath = {}
 currentRoomX = 0
 currentRoomY = 0
@@ -73,16 +80,29 @@ local availableBosses = {
 	{'Heart'}
 }
 
-function startGame(character)
+function startGame(character,ascensionLevel)
 	mainRandom = Random:new(math.floor(tstamp()*2))
 	seed = mainRandom:randRaw()
+	ascension = ascensionLevel or 0
 	player = _G[character]:new()
+	if ascension >= 14 then
+		player:decreaseMaxHp(player:getAscensionMaxHPLoss())
+	end
+	if ascension >= 6 then
+		player.hp = math.floor(player.maxHp*0.9+0.5)
+	end
 	relicPools = generateRelicPools(makeRand(0))
 	floor = 0
 	gold = 99
 	deck = player:getStartDeck()
+	if ascension >= 10 then
+		table.insert(deck,1,AscendersBane:new())
+	end
 	relics = player:getStartRelics()
 	potions = {Slot,Slot,Slot}
+	if ascension >= 11 then
+		potions[3] = nil
+	end
 	maxEnergy = 3
 	effects = {}
 	pendingEffects = {}
@@ -100,6 +120,9 @@ function startAct(actId)
 	local mapRandom = makeRand(actId)
 	stsMap = generateMap(mapRandom,7,15,6)
 	boss = availableBosses[actId][mapRandom:randInt(#availableBosses[actId])]
+	monsterEncounters,eliteEncounters,bossEncounter = act:generateEncounters(mapRandom)
+	nextMonsterEncounterIndex = 1
+	nextEliteEncounterIndex = 1
 	playerPath = {}
 	currentRoomX = 0
 	currentRoomY = 0
@@ -147,9 +170,17 @@ function enterRoom(x)
 		room = map[currentRoomY][currentRoomX]
 	end
 
-	if room.type == 'monster' or room.type == 'elite' or room.type == 'boss' then
+	if room.type == 'monster' then
 		roomType = 'combat'
-		startCombat()
+		startCombat(monsterEncounters[nextMonsterEncounterIndex])
+		nextMonsterEncounterIndex = nextMonsterEncounterIndex + 1
+	elseif room.type == 'elite' then
+		roomType = 'combat'
+		startCombat(eliteEncounters[nextEliteEncounterIndex])
+		nextEliteEncounterIndex = nextEliteEncounterIndex + 1
+	elseif room.type == 'boss' then
+		roomType = 'combat'
+		startCombat(bossEncounter)
 	elseif room.type == 'rest' then
 		roomType = 'event'
 		currentEvent = CampfireEvent:new()
@@ -168,10 +199,11 @@ end
 -- main
 
 queueSync(32,1)
-startGame('Ironclad')
-currentEvent = TreasureEvent:new()
+startGame('Ironclad',3)
+roomType = 'combat'
+startCombat(TwoLouseEncounter)
+--currentEvent = TreasureEvent:new()
 window:onOpen()
---startCombat()
 
 -- <TILES>
 -- 000:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd
@@ -449,10 +481,10 @@ window:onOpen()
 -- 010:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
 -- 011:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
 -- 012:ccccccccccccccccccccccccccccccccfffcccccfffccccccffccccccccccccc
--- 013:ddddddddddddddddddddddddddddddddddddd2dd2d2d22d2222d222222222222
--- 014:ddddddddddddddddddddddddddddddddddddddddddc44cdddf4444ffddffffdd
--- 015:cdcdddddccdcddddcdcddddd0cdcdddd0ccddddd0cdddddd00cddddd00cddddd
--- 016:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd
+-- 013:04cccccc0444cccc044ccccc044ccccc0044cccc004ccccc04cccccc044ccccc
+-- 014:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
+-- 015:ccccc400cccc4440cccc4400ccccc400cccc4400ccccc440cccccc40cccc4440
+-- 016:cccccccccccfccccccccccccccccfccccccccccccccfccccccccccccccccfccc
 -- 017:ccccccfcccccccffccccffffccccfccccccccfcfcccccfcfcccccffccccccccc
 -- 018:ccffccffcccccccccfccffffffcfffccfcffccccccfccfcccffcfcccfffcffcc
 -- 019:ccccfffffffccffffcfffcffcfcfffcfccfcffcccccfcffcccccccffccfccccf
@@ -465,10 +497,10 @@ window:onOpen()
 -- 026:cccccccfccccccffccccccffccccffcfcccfcccfcccfccffccfcccfccfcfffff
 -- 027:ccccccccfccccccccfccccccccfccccccccfccccccccfccccccfffccfffccfcc
 -- 028:cccccccccccccccccffcccccfccfccccfccfccccfcfccccccffccccccccccccc
--- 029:11111111111111d1dd11d1d1dd1ddddddddddddddddddddddddddddddddddddd
--- 030:dddddddddddccddddcdddddddddddddddddddddddddddddddddddddddddddddd
--- 031:000cdddd000ddddd000ddddd0000dddd0000dddd00000ddd00000ddd000000dd
--- 032:eeeeeeeedddddddddddddddddddddddddddddddddddddddddddddddddddddddd
+-- 029:cccccccccccccccccfffffffccfcfcfcccfffffcccfcccfcccfffffccccccccc
+-- 030:fccccccfffccccffffffffffcfcffcfccffffffccfccccfccffffffccccccccc
+-- 031:2cccccc222cccc2222222222cf4ff4fccffffffccfccccfccffffffccccccccc
+-- 032:cccccccccccccfcfcccccccccccccfcccccfccccccccccccccfcccccfccccccc
 -- 033:cccccccfccccccffccccccffccccccffccccccffcccccccfcccccfcccccccfcf
 -- 034:fcccccccccfccccccfcccccccffcccccccccccccffcccccccfffffffcccccccc
 -- 035:ccfccfffcccfccccccccccccccccccccccccccccccccccffffffffccccccccfc
@@ -481,10 +513,10 @@ window:onOpen()
 -- 042:ccfcccfccccfccfcccccffcfcccccfcfccccccffccccccccccfccccccccfcccc
 -- 043:cccccfcccccffccfcffccccfffcccccfcccccccfcccccccfccccfffccccfcccf
 -- 044:ccccccccffcccccccfcccccccfcccccccccccccccccccccccccccccccccccccc
--- 045:ddddddddddddddfdddddddfdddddddfddddddddfdddddfffdddcffdddcddddfd
--- 046:ddddddddddddddddddddffddddffddddffdddddddddddddfddddfffdddffdcdd
--- 047:000000dd0000000d0000000d0000000d0000000d000000000000000000000000
--- 048:ccccdddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd
+-- 045:cccffcccccffffccccffcfcccffcfffcffffffffcfffffccffcfcffccccfccfc
+-- 046:cccccccccffffffcfccccccffcffffcffffccffffcffffcffccccccfcffffffc
+-- 047:cffffffccffffffccffccffcccccfffccccfffcccccffccccccccccccccffccc
+-- 048:cccccccfccccccffcccccffcffccffecffffffcccffffcccccffcccccccccccc
 -- 049:ccfcffffcffcffffcfccffcccccfccffccfccffcccfffccccccfcccccccccccc
 -- 050:ffcfffffccfccfccffcfcccfcccffcffccccffcfccccccfcccccccfcccccccff
 -- 051:cffffffcccfffffcfcffffccfccffccffccffcffcffcccfcfcfffffccccccccc
@@ -497,9 +529,7 @@ window:onOpen()
 -- 058:fccfccccfccfcccccffccccccccccccccccccccccccccccccccccccccccccccc
 -- 059:cccfcccfcccfcfffcccccccccccccccccccccccccccccccccccccccccccccccc
 -- 060:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
--- 061:ddddddfdddddddffddddfffddddfddfddddddffdddddddfeddddddfdddddddfd
--- 062:dfdddddcfddddcddddddddddddddddddddddddddeddddddddddddddddddddddd
--- 063:dddddddddddddddddddddddddffdddddfddddddddddddddddcdddddddddddddd
+-- 061:ccfffccccfffffccffffcfcccffcccfcffcfcffffffcccffcfffcffcccffffcc
 -- 064:ccccccccccccccccccccccccccccccccccccccccccccccccccffffccccfcccfc
 -- 065:cccccccccccccccccccccccfccccccffccccccfccffcccfccfcffffccffccfcc
 -- 066:ccccccccccccccccccccccccccccfcccfcfffcccfffcfcccffcfcccccccfcccf
@@ -576,10 +606,6 @@ window:onOpen()
 -- 137:cfccccccccfcccccfccfccccfcccfccccccccfccccccccfccccccccfcccccccf
 -- 138:ccccccccccccccccccccccccccccccccccccccccccccccccccccccccfccccccc
 -- 139:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
--- 140:0ddddddd0ddddddd00dddddd00dddddd00d0dd0d00d000000000000e000eeee2
--- 141:ddddddddddddddddddddddddddddddddd0d0ddeedede22222e22222222222222
--- 142:ddddddddddddddddddddddddddddddddddd2dddd2d22d2d22222222222222222
--- 143:dddddddddddddddddddddddddddddddddddddddddddddddd1d1d1ddd1111111d
 -- 144:cccccccccccccccccccccccccccccccccccccccccccfffffccccffffccccffcc
 -- 145:ccffffffccfcffccccfffccccffffccccffffccffffcfccfcffcfcffffffcccf
 -- 146:ffffffcccffccfccfffcccfcfffccccffffccccfcffccccfccfccccffffccccf
@@ -592,10 +618,6 @@ window:onOpen()
 -- 153:ccccccccffffffcccccccfffcccccccfcccccccccccccccfccccccfccccccfcc
 -- 154:fffffccccffccfffccffcccffcffcccccffcccccfccccccccccccccccfffcccc
 -- 155:ccccccccccccccccccccccccfccccccccfcccccccfcccccccfccccccccfccccc
--- 156:000e222200e2222100d2d2d100dddddd00dddddd0cdddddd0dcccdcd0ddddddd
--- 157:222221111111111111d11d11d1dddd1ddddddddddddddddddddddddddddddddd
--- 158:1111111111111111111111111d111d11dd1d1d1ddddddddddddddddddddddddd
--- 159:111111ddd11d1ddddddddddddddddddddddddddddddddccdddccdddddddddddd
 -- 160:cccccfccccccccffccccccfcccccccffcccccccfcccccccfccccccfcccccccfc
 -- 161:ccffccccfffcccccfcccccccfccccccccccccccccccccccccccccccfccccfffc
 -- 162:ccccccffcccccccfcccccccfccccccfcccccfffccfffccfcfccccccfcccccccc
@@ -608,10 +630,6 @@ window:onOpen()
 -- 169:ccccfccccccfcccfccfccccffffccccffccccccfffcccccccfccccccccfccccc
 -- 170:fcccfcccccccffcccccccfccfcccffccfcfffcccfffccccccccccccccccccccc
 -- 171:ccfccccccccfcccccccfcccccccfcccccccfcccccccfccccccffcccccffccccc
--- 172:0000000000eeeeee0eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
--- 173:00000000eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
--- 174:00000000eeeeee00eeeeeee0eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
--- 175:00fffff00fffffff0feeeeef0feddeef0fedddef0fedeeef0feeeeef00fffff0
 -- 176:cccccfcccccccfcfcccccffccccccccccccccccccccccccccccccccccccccccc
 -- 177:ccffccccffcccccccccccccccccccccccccccccccccccccccccccccccccccccc
 -- 178:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
@@ -624,72 +642,329 @@ window:onOpen()
 -- 185:ccfcccccccffccccccccffccccccccffcccccccccccccccccccccccccccccccc
 -- 186:cccccccfccccccffcccfffccfffccccccccccccccccccccccccccccccccccccc
 -- 187:ffcccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
--- 188:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee0eeeeeee00eeeeee00000000
--- 189:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee00000000
--- 190:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee0eeeeee0000000000
--- 191:0011111001444441013333310132233101322231013233310133333100111110
--- 192:000000000000000000000000000000000000000c000000cd00000cdd00000ccd
--- 193:000000000000000000000000000000000000000000000000000000cc0000ccdd
--- 194:000000000000000000000000000000000000cccc0cccddcdcddddcdcdddddddd
--- 195:00000000000000000000ccccccccddddddddddddcdddddddddddddddcdddddde
--- 196:0000ccccccccdddddddddddddddddddddddddddddddddddddddddddddddddddd
--- 197:ddddddeedddddededdddddeedddddededdddedeedddddededdddddeeddddddde
--- 198:0000000000000000000000000000000000000000000000004444000334444443
--- 199:0000000000000000000000000000000000000000444444444444444344444444
--- 200:0000444400044444000444440034444403344444333444444334444433344444
--- 201:4444444444444444444444444444444444444444444444444444444444444444
--- 202:4444000044444000444440004444430044444330444443334444433444444333
--- 203:0000000000000000000000000000000000000000444444443444444444444444
--- 204:0000000000000000000000000000000000000000000000003000444434444443
--- 205:0000000000100300012332300122222301222223122223101222220001111100
--- 206:0000500000056700005666700566665707666667007666700076667000077700
--- 207:0000000000a00f000a9aa9f0a99999f0a99999f00fa9999f0099999f00fffff0
--- 208:0000cddc0000cdcd000cdddd000cdddd00cddddd00cddddd0cdddddd0cdddddd
--- 209:000cdddd00cdddee0cdddeeecddeeeefdddeeeffddeeeeffdddeefffddeeefff
--- 210:deeeddddedeeedddeeeeedddfffffdddffffddddffffddddffffddddfffddddd
--- 211:dddddeeeddddeeffddddefffddddefffddddfffddddddddddddddddddddddddd
--- 212:edddddddfdddddddfddddddddddddddddddddddddddddddddddddddddddddddd
--- 213:eeeeeeeeeeeeeeeedddddddddddddddddddddddddddddddddddddddddddddddd
--- 214:0444443303444343003444340003334300000333000000030000000000000000
--- 215:4444444334444444344444433444444434444443333333340033443300003340
--- 216:4334444433344444433444443334333343334444344333343333000000000000
--- 217:4444444444444444444444443333333300000000000000000000000000000000
--- 218:4444433444444333444443343333433344443334433334430000333300000000
--- 219:3444444444444443344444434444444334444443433333333344330004330000
--- 220:3344444034344430434443003433300033300000300000000000000000000000
--- 221:0000044000004224000042420044442004242200420400004242000024200000
--- 224:0cdcdddd0ccdddddccddcdddcdcdddcdccddcdddcdcdddcdccddcdddcdcddddd
--- 225:ddeeffffddeeffffdddeffffdddeffdddddddddddddddddddddddddeddddddde
--- 226:ffddddddfdddddddfddddddddddddddddeeeddddeeffddddeffdddddffdddddd
--- 227:ddddddddddddddddddddddddddddddddedddddddeeeedddd0feeeeee00ffffff
--- 228:ddddddddddddddddddddddddddddddddddddddddddddddddeeeeeeeeffffffff
--- 229:dddddddddddddddddddddddddddddddeddddeeeeeeeeeeeeeeeeeeeeffffffff
--- 230:ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
--- 231:ffffffffffffffffffffffffffffffffffffffffffff0fffff000000f0000000
--- 232:ffffffffffffffffffffffffffffffffffffffffffffffff0000000000000000
--- 233:fffffffffffffffffffffffffffffffffffffffffffff0ff000000ff0000000f
--- 237:00000000000000dd000dddef0ddeefffdeeffeeedffeeeeedfeeeeeedfeeeeee
--- 238:00000000ddddddddffffffffffffffffeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
--- 239:00000000dd000000feddd000fffeedd0eeeffeedeeeeeffdeeeeeefdeeeeeefd
--- 240:04cccccc0444cccc044ccccc044ccccc0044cccc004ccccc04cccccc044ccccc
--- 241:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
--- 242:ccccc400cccc4440cccc4400ccccc400cccc4400ccccc440cccccc40cccc4440
--- 243:cccccccccccccccccfffffffccfcfcfcccfffffcccfcccfcccfffffccccccccc
--- 244:fccccccfffccccffffffffffcfcffcfccffffffccfccccfccffffffccccccccc
--- 245:cccffcccccffffccccffcfcccffcfffcffffffffcfffffccffcfcffccccfccfc
--- 246:cccccccccffffffcfccccccffcffffcffffccffffcffffcffccccccfcffffffc
--- 247:cffffffccffffffccffccffcccccfffccccfffcccccffccccccccccccccffccc
--- 248:ccfffccccfffffccffffcfcccffcccfcffcfcffffffcccffcfffcffcccffffcc
--- 249:cccccccccccfccccccccccccccccfccccccccccccccfccccccccccccccccfccc
--- 250:cccccccccccccfcfcccccccccccccfcccccfccccccccccccccfcccccfccccccc
--- 251:2cccccc222cccc2222222222cf4ff4fccffffffccfccccfccffffffccccccccc
--- 252:cccccccfccccccffcccccffcffccffecffffffcccffffcccccffcccccccccccc
--- 253:dfeeeeeedfeeeeeedffeeeeedfffffee0ddfffff000dddff000000dd00000000
--- 254:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeffffffffffffffffdddddddd00000000
--- 255:eeeeeefdeeeeeefdeeeeeffdeefffffdfffffdd0ffddd000dd00000000000000
+-- 208:00fffff00fffffff0feeeeef0feddeef0fedddef0fedeeef0feeeeef00fffff0
+-- 209:0011111001444441013333310132233101322231013233310133333100111110
+-- 210:0000044000004224000042420044442004242200420400004242000024200000
+-- 211:0000500000056700005666700566665707666667007666700076667000077700
+-- 212:0000000000a00f000a9aa9f0a99999f0a99999f00fa9999f0099999f00fffff0
+-- 213:ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+-- 214:0000000000eeeeee0eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
+-- 215:ffffffffffffffffffffffffeeddedeefffeeffffffffffffffff0ffffffffff
+-- 216:ffffffffffffffffffffffffeeeeeeeeffffffffffffffffffffffffffffffff
+-- 224:0000000000000000000000000000000000000000000000004444000334444443
+-- 225:0000000000000000000000000000000000000000444444444444444344444444
+-- 226:0000444400044444000444440034444403344444333444444334444433344444
+-- 227:00000000000000dd000dddef0ddeefffdeeffeeedffeeeeedfeeeeeedfeeeeee
+-- 228:00000000ddddddddffffffffffffffffeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
+-- 229:0111111101111111001111110011111100111111001111110011111100111111
+-- 230:1111111111111111111111111111111111111111111111111111111111111111
+-- 231:1110011011110000111001101111110011111110111111101111110011111000
+-- 232:00000000f00ff000ff00f00ff0fff0fffff0ff0fffffffffffffffffffffffff
+-- 240:0444443303444343003444340003334300000333000000030000000000000000
+-- 241:4444444334444444344444433444444434444443333333340033443300003340
+-- 242:4334444433344444433444443334333343334444344333343333000000000000
+-- 243:dfeeeeeedfeeeeeedffeeeeedfffffee0ddfffff000dddff000000dd00000000
+-- 244:ffffffffffffffffffffffffffffffffffffffffffff0fffff000000f0000000
+-- 245:0111111101111111011111110011111100111111010110100000111100000000
+-- 246:1111111111111111111111111111111111111101111111110110110100000000
+-- 247:1111100011101000111111001110110011111100111110000110000000000000
+-- 248:eeeeeeeeeddddddeffffeefffffeedffffeddffffedfffffedffffffffffffff
+-- 249:ffffffffffffffffffffffffeeeeeeeeffffeefffffeefffffeefeffffffffff
 -- </SPRITES>
 
 -- <SPRITES1>
+-- 001:000000000000000000000000000000000000000000000000990bcc009abbbcc0
+-- 002:0020000000020000000020000200200002220000002000000020000000dd0000
+-- 003:2220000000220000000200000002000020200000220000000200000002000000
+-- 004:00000000000000000000000000000000000000000099000a090000a09000aaaa
+-- 005:000000000000000000000000000000000000000000000000aaa0000000000000
+-- 016:00ddd009002dddd9000000dd0000009d0000099b0000999b0090999f00999ff9
+-- 017:99bbbbb09bbfbbb09bbbbbbbbb2bb999b2bb999992bd99999bb999a9f9f99f99
+-- 018:0000000000000000b0000000000000dd9900dddda99ddd9a9dddd99a9dd99aaa
+-- 019:020000000d000000d2da0000d2d990009299990099aaa990a9aa9a909aa9aaa0
+-- 020:900a000090a0444490a24444092a2444022a224422a224422222244200022044
+-- 021:0000000042222000222240004222444042444400224422202244222202244000
+-- 032:0009fff900099ff0000090900000000000000000000000000000000000000000
+-- 033:90099f9a00099999009999ff0009f999099999990099f9990999999909999f99
+-- 034:9999999aa9a00999999000099a900000f99900009990000099a9000099900000
+-- 035:a9a9999099999900f9f99f000909090000000000000000000000000000000000
+-- 048:1000000012005555120255551222655516266655662665566666655600066055
+-- 049:9f99999f9999f9f9900ddf0d000dd00d000dd00d0000d00d0000d000000dd00d
+-- 050:9999a000ff99999ad00f9999d00fffffc0000000dc000000d0c00000d0000000
+-- 051:00000000099000009f000000f000000000000000000000000000000000000000
+-- 192:00ccbb0009bbb990ba9a9bbb9999999abbb99bb90bb9b9ba0a9ab9a0000aa900
+-- 208:00fffff00fffffff0feeeeef0feddeef0fedddef0fedeeef0feeeeef00fffff0
+-- 209:0011111001444441013333310132233101322231013233310133333100111110
+-- 210:0000044000004224000042420044442004242200420400004242000024200000
+-- 211:0000500000056700005666700566665707666667007666700076667000077700
+-- 212:0000000000a00f000a9aa9f0a99999f0a99999f00fa9999f0099999f00fffff0
+-- 213:ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+-- 214:0000000000eeeeee0eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
+-- 215:ffffffffffffffffffffffffeeddedeefffeeffffffffffffffff0ffffffffff
+-- 216:ffffffffffffffffffffffffeeeeeeeeffffffffffffffffffffffffffffffff
+-- 224:0000000000000000000000000000000000000000000000004444000334444443
+-- 225:0000000000000000000000000000000000000000444444444444444344444444
+-- 226:0000444400044444000444440034444403344444333444444334444433344444
+-- 227:00000000000000dd000dddef0ddeefffdeeffeeedffeeeeedfeeeeeedfeeeeee
+-- 228:00000000ddddddddffffffffffffffffeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
+-- 229:0111111101111111001111110011111100111111001111110011111100111111
+-- 230:1111111111111111111111111111111111111111111111111111111111111111
+-- 231:1110011011110000111001101111110011111110111111101111110011111000
+-- 232:00000000f00ff000ff00f00ff0fff0fffff0ff0fffffffffffffffffffffffff
+-- 240:0444443303444343003444340003334300000333000000030000000000000000
+-- 241:4444444334444444344444433444444434444443333333340033443300003340
+-- 242:4334444433344444433444443334333343334444344333343333000000000000
+-- 243:dfeeeeeedfeeeeeedffeeeeedfffffee0ddfffff000dddff000000dd00000000
+-- 244:ffffffffffffffffffffffffffffffffffffffffffff0fffff000000f0000000
+-- 245:0111111101111111011111110011111100111111010110100000111100000000
+-- 246:1111111111111111111111111111111111111101111111110110110100000000
+-- 247:1111100011101000111111001110110011111100111110000110000000000000
+-- 248:eeeeeeeeeddddddeffffeefffffeedffffeddffffedfffffedffffffffffffff
+-- 249:ffffffffffffffffffffffffeeeeeeeeffffeefffffeefffffeefeffffffffff
+-- </SPRITES1>
+
+-- <SPRITES2>
+-- 001:0002200200023002002330020023302200233332003323220234432202344233
+-- 002:0020200040202000002233000422330202223320023343204223443042344432
+-- 003:0000000000000000000000000002000004220000224000004044000000420000
+-- 004:888888888888888888888888888888ee88888e008888eee088eee0088eeee088
+-- 005:8888800080000000e0000000ee0000e00000000000000ee0000eee00008ee000
+-- 006:0000000e000000eeeee000000000000e0ee000000eee000800eee00800eee888
+-- 007:88888888f8888888e8888888ee888888eee88888000ee8888000ee88880000e8
+-- 008:0000000000000000000000000000000d00000ddd00000dee0000deee0000deee
+-- 009:000000000000000000000000ddddddddeeeeffffeeeeeeeefffffefeeeeeeeee
+-- 010:000000000000000000000000ddddddddffffeeeeeeeeeeeeffffffffeeeeeeed
+-- 011:000000000000000000000000dddd0000eeddd000edeefd00defffd00efffffd0
+-- 012:000000000000000c0000000c0000000c000000cd000000cd000000cd00000ccd
+-- 013:00000000ccccccccccdddddddcdddddddddddddddddddddddddddddddddddddd
+-- 014:00000000ccccccccdddddddcddddddcddddddddddddddddddddddddddddddddd
+-- 015:00000000cc000000cc000000dc000000dcc00000dcc00000dcec0000cdec0000
+-- 016:0000000000000040000000020000002000000000000000020000002300000034
+-- 017:0334433300444334034c43442344c444334cc4443334cc444444cc4344444443
+-- 018:42324c334334443343444443434cc443444cc434344c44434c4c4443cc444444
+-- 019:0040000040400000400000002020000020400000300000003200000032000000
+-- 020:8ee0088888000888880088888888888888888888888888888888888888888888
+-- 021:00eee00088eee0008eee00088eee00888ee00888ee008888e000888880088888
+-- 022:000eee88080eee888880eee888800eee8888000e888880088888888888888888
+-- 023:8888000e88888888888888888888888888888888888888888888888888888888
+-- 024:000ddeff000deeee000deeee000ddddd000effff00deeeee00deefff000deeee
+-- 025:ffffffffeeeeeeeeeeedddddddddeeeefffdddddeeeeeeeeffffffffeeeeeeee
+-- 026:fffffffdeeeeeeeddeeeeeeddddddddddffffffdeeeeeeedfffffffdeeeeeeed
+-- 027:efffffd0effffdd0efffded0efddefd0ddeeffd0eeffffd0efffffd0efffffd0
+-- 028:00000cdd00000cdd0000cddd0000cddd0000cddd0000cddd000cdcdd000cddcd
+-- 029:dddddddddddddddddddddddddddddddddddddddddddddcdddddddcddddddcccd
+-- 030:dddddddddddddddddddddddddddddddddddddddddddddddddddddcdcddddcddc
+-- 031:cddc0000cddec000cddec000cdddc000cdddec00cdddec00ddddcc00ddccec00
+-- 032:000000340000034400000443000032df000d3dee00ddeeef0ddeefff0eeeff00
+-- 033:444334344334444cde444444fd4d4442ddd3444edfee44e0ff0ddeeeffddeeee
+-- 034:c4442244444444d44444ddd42ddddddeeeeeeeeeedddeef0efeed000ffeedd00
+-- 035:430000004330000044330000dd440000eddddd0000eeddd000ffeee0000ffeee
+-- 036:00000000222222222333333e2333333323334333233334332233333322333333
+-- 037:0000000022222222eee33333eeeee33333eeeee33333eeee3333333e34333333
+-- 038:00000000222222003332222233343ff33333fff3eeeefff3eeeeef34333fff33
+-- 039:0000000002222222222222223333333233334332433433323333332233333322
+-- 040:000deeee000deeff000ddeee0000deee0000deee00000ddd0000000000000000
+-- 041:eeeeeeeeefffffffeeeeeeeefffffeefeeeeeeeedddddddd0000000000000000
+-- 042:eeeeeeedfffffffdeeeeeeedfffffffdeeeeeeeddddddddd0000000000000000
+-- 043:efffffd0efffffd0efffeed0efeedd00eedd0000dd0000000000000000000000
+-- 044:000cccdd000ccccc000cccdd000cddcd000cdcdd0000cddd0000cddd0000cddd
+-- 045:ddddcccdccccceecddddceeddddddedddddddedddddddddddddddddddddddddd
+-- 046:dddddcccccccccccdddddcdcddddcddcdddddcdcdddddddcdddddddcdddddddc
+-- 047:dceeec00ceddec00edddec00ddddec00ddddec00ddddec00ddddec00ddddec00
+-- 048:00eff00000f00000000000000000000000000000000000000000000000000000
+-- 049:00deeeef0deeeef0ddeeff00deeef000eeff0000efe000000000000000000000
+-- 050:f00eedd000feeedd000feedd0000ffee00000f00000000000000000000000000
+-- 051:0000000000000003000000030000003300000033000000000000000200000000
+-- 052:2233333322333334224433332233333322333443223333332233333322333333
+-- 053:3333333344444333444444423334444433333dff333fffdf33fffffdfffffdff
+-- 054:333ff3333333333fccfffdff33ccccdf44333324fffff444fffdddfddddffffd
+-- 055:33333322ffffff22fffef322ffeff42244ff4422444443224444442233344422
+-- 060:0000cddd0000cdcd0000ccdd0000cccc0000ccd00000ccd000000c0000000c00
+-- 061:ddddddddddddddddddddddddcccccccc00000000000000000000000000000000
+-- 062:dddddddcdddddcdcddddddcccccccccc000000cc000000cc0000000c0000000c
+-- 063:dddded00ddeeed00de00ed00e0000d00d0000000d00000000000000000000000
+-- 064:0000000077777777766666667666666676666666766644447766664477666446
+-- 065:0000000077777777666666666666666666666666466666666644446666644664
+-- 066:0000000077777700666777776666666666666666666666666666666644666666
+-- 067:0000000007777777777777776666666766666667666666676666667766666677
+-- 068:2233333f22333433223333332234333422333333222222222222222200000000
+-- 069:fffdddffffffffff333333ff33333fff3333fffd222222222000000000000000
+-- 070:dffffffddffffddddffeeefffeefffffdfffffff222222220000002200000000
+-- 071:33343322ff343322dff33322fdf33322ff333322222222222222220000000000
+-- 072:888888888888888888888888888888338888444488883000888300f088830f0f
+-- 073:888888888844443333000000000000003333333300000000f0ffffff0fff000f
+-- 074:888888883333333300000000000000003333333300000000ffffffffff000fff
+-- 075:888888883333333300000000000000003333333300000000ff0f0f00fff0f003
+-- 076:888888883333488800033488033004883000003830fff03830fff03800fff003
+-- 080:7766446677664444776666667766666677666666776666667766666677666666
+-- 081:66446666464444646666666666666666666666666666666666666ccc6666cccc
+-- 082:466666664464646466666666666666666666666666666666cccccccdcccccccc
+-- 083:66666677666666776f6666776ff666776cfff677ccccf677ccccf677dccff677
+-- 084:00000000fffffffffefddefffffdeffeffdeffedfdeffedefffffeeffffeffff
+-- 085:00000000ffffffffedeffeefdeffeeeeeffeecccffeecc1cfeecc131eecc1333
+-- 086:00000000ffffff00ffffffffeeeeeeeeeecccceeccc13cce111323cc3332223c
+-- 087:000000000fffffffffffffffffedffefeffedfffeeffeddfeeeffeffceeefeff
+-- 088:883000ff8830ffff8400ffff8400000084333333830000008300ffff8840ffff
+-- 089:ffff0400ffff0340ffff0344000003343333333300000333ffff0033fffff003
+-- 090:f0030fff00330fff43330fff33330000333333333322000022200fff2200ffff
+-- 091:ffff0003fffff030fffff040000000403333344400000040fffff030fffff003
+-- 092:0fff00030f00033300033003043000033000f00300fff0380f0ff03800fff038
+-- 096:7766666677666666776666667766666677666666777777777777777700000000
+-- 097:66666ccc66666fcd666666cf6666666f66666666777777777000000000000000
+-- 098:ccccccccddddddddffffffff6666666666666666777777770000007700000000
+-- 099:cddff677ddddf677fffff6776666f67766666677777777777777770000000000
+-- 100:ffeeeeffffddeffeffdeffeeffdefeeeffeffeecffffeeccffffeec1ffffeec2
+-- 101:eec13322ecc13222cc133222c1332222c1322222133222223322222211333332
+-- 102:22222223222222222222222222222222222222232222223322223311222311cc
+-- 103:cceefeff3ceefeff3ceefeff3ceefeffcceffeffceefedffceefedffceefedff
+-- 104:88300fff88400fff88830f0f888400f088883000888833338888832888888328
+-- 105:ffffff00fffffff0ffffffffffffffff00000000333333338888888888888888
+-- 106:200fffff00fffffff0ffffffffffffff00000000333333338888888888888888
+-- 107:ffffff03fffff003ffff0f00fffff00000000000333333338888888888888888
+-- 108:0ffff038000f003830f000383000333830038228333882883288888832888888
+-- 112:0000000077777777766666667666666676666666766644447766664477666446
+-- 113:0000000077777777666666666666666666666666466666666644446666644664
+-- 114:0000000077777700666777776666666666666666666666666666666644666666
+-- 115:0000000007777777777777776666666766666667666666676666667766666677
+-- 116:ffffeeccffffeeeeffefffffffdeeeffffddddeeffffffffffffffff00000000
+-- 117:cc112113ecccccc2eeeeeeccfffffeeeeefffffffffffffff000000000000000
+-- 118:3331ccce1111ceeeccccceefeeeeeeffeefffffeffffffff000000ff00000000
+-- 119:eeffedfffffedfffffedffffeedffeffddffedffffffffffffffff0000000000
+-- 128:7766446677664444776666667766666677666666776666667766666677666666
+-- 129:66446666464444646666666666666666666666666666666666666ccc6666cccc
+-- 130:466666664464646466666666666666666666666666666666cccccccdcccccccc
+-- 131:66666677666666776f6666776ff666776cfff677ccccf677ccccf677dccff677
+-- 132:0000000077777777766666667666666676666666766644447766664477666446
+-- 133:0000000077777777666666666666666666666666466666666644446666644664
+-- 134:0000000077777700666777776666666666666666666666666666666644666666
+-- 135:0000000007777777777777776666666766666667666666676666667766666677
+-- 144:7766666677666666776666667766666677666666777777777777777700000000
+-- 145:66666ccc66666fcd666666cf6666666f66666666777777777000000000000000
+-- 146:ccccccccddddddddffffffff6666666666666666777777770000007700000000
+-- 147:cddff677ddddf677fffff6776666f67766666677777777777777770000000000
+-- 148:7766446677664444776666667766666677666666776666667766666677666666
+-- 149:66446666464444646666666666666666666666666666666666666ccc6666cccc
+-- 150:466666664464646466666666666666666666666666666666cccccccdcccccccc
+-- 151:66666677666666776f6666776ff666776cfff677ccccf677ccccf677dccff677
+-- 160:0000000077777777766666667666666676666666766644447766664477666446
+-- 161:0000000077777777666666666666666666666666466666666644446666644664
+-- 162:0000000077777700666777776666666666666666666666666666666644666666
+-- 163:0000000007777777777777776666666766666667666666676666667766666677
+-- 164:7766666677666666776666667766666677666666777777777777777700000000
+-- 165:66666ccc66666fcd666666cf6666666f66666666777777777000000000000000
+-- 166:ccccccccddddddddffffffff6666666666666666777777770000007700000000
+-- 167:cddff677ddddf677fffff6776666f67766666677777777777777770000000000
+-- 176:7766446677664444776666667766666677666666776666667766666677666666
+-- 177:66446666464444646666666666666666666666666666666666666ccc6666cccc
+-- 178:466666664464646466666666666666666666666666666666cccccccdcccccccc
+-- 179:66666677666666776f6666776ff666776cfff677ccccf677ccccf677dccff677
+-- 192:7766666677666666776666667766666677666666777777777777777700000000
+-- 193:66666ccc66666fcd666666cf6666666f66666666777777777000000000000000
+-- 194:ccccccccddddddddffffffff6666666666666666777777770000007700000000
+-- 195:cddff677ddddf677fffff6776666f67766666677777777777777770000000000
+-- 208:00fffff00fffffff0feeeeef0feddeef0fedddef0fedeeef0feeeeef00fffff0
+-- 209:0011111001444441013333310132233101322231013233310133333100111110
+-- 210:0000044000004224000042420044442004242200420400004242000024200000
+-- 211:0000500000056700005666700566665707666667007666700076667000077700
+-- 212:0000000000a00f000a9aa9f0a99999f0a99999f00fa9999f0099999f00fffff0
+-- 213:ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+-- 214:0000000000eeeeee0eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
+-- 215:ffffffffffffffffffffffffeeddedeefffeeffffffffffffffff0ffffffffff
+-- 216:ffffffffffffffffffffffffeeeeeeeeffffffffffffffffffffffffffffffff
+-- 224:0000000000000000000000000000000000000000000000004444000334444443
+-- 225:0000000000000000000000000000000000000000444444444444444344444444
+-- 226:0000444400044444000444440034444403344444333444444334444433344444
+-- 227:00000000000000dd000dddef0ddeefffdeeffeeedffeeeeedfeeeeeedfeeeeee
+-- 228:00000000ddddddddffffffffffffffffeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
+-- 229:0111111101111111001111110011111100111111001111110011111100111111
+-- 230:1111111111111111111111111111111111111111111111111111111111111111
+-- 231:1110011011110000111001101111110011111110111111101111110011111000
+-- 232:00000000f00ff000ff00f00ff0fff0fffff0ff0fffffffffffffffffffffffff
+-- 240:0444443303444343003444340003334300000333000000030000000000000000
+-- 241:4444444334444444344444433444444434444443333333340033443300003340
+-- 242:4334444433344444433444443334333343334444344333343333000000000000
+-- 243:dfeeeeeedfeeeeeedffeeeeedfffffee0ddfffff000dddff000000dd00000000
+-- 244:ffffffffffffffffffffffffffffffffffffffffffff0fffff000000f0000000
+-- 245:0111111101111111011111110011111100111111010110100000111100000000
+-- 246:1111111111111111111111111111111111111101111111110110110100000000
+-- 247:1111100011101000111111001110110011111100111110000110000000000000
+-- 248:eeeeeeeeeddddddeffffeefffffeedffffeddffffedfffffedffffffffffffff
+-- 249:ffffffffffffffffffffffffeeeeeeeeffffeefffffeefffffeefeffffffffff
+-- </SPRITES2>
+
+-- <SPRITES3>
+-- 001:000000000000000000000000000000000000000000000000000000cc0000ccdd
+-- 002:000000000000000000000000000000000000cccc0cccddcdcddddcdcdddddddd
+-- 003:00000000000000000000ccccccccddddddddddddcdddddddddddddddcdddddde
+-- 004:0000ccccccccdddddddddddddddddddddddddddddddddddddddddddddddddddd
+-- 005:ccccdddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd
+-- 016:000000000000000000000000000000000000000c000000cd00000cdd00000ccd
+-- 017:000cdddd00cdddee0cdddeeecddeeeefdddeeeffddeeeeffdddeefffddeeefff
+-- 018:deeeddddedeeedddeeeeedddfffffdddffffddddffffddddffffddddfffddddd
+-- 019:dddddeeeddddeeffddddefffddddefffddddfffddddddddddddddddddddddddd
+-- 020:edddddddfdddddddfddddddddddddddddddddddddddddddddddddddddddddddd
+-- 021:ddddddeedddddededdddddeedddddededdddedeedddddededdddddeeddddddde
+-- 032:0000cddc0000cdcd000cdddd000cdddd00cddddd00cddddd0cdddddd0cdddddd
+-- 033:ddeeffffddeeffffdddeffffdddeffdddddddddddddddddddddddddeddddddde
+-- 034:ffddddddfdddddddfddddddddddddddddeeeddddeeffddddeffdddddffdddddd
+-- 035:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd
+-- 036:eeeeeeeedddddddddddddddddddddddddddddddddddddddddddddddddddddddd
+-- 037:eeeeeeeeeeeeeeeedddddddddddddddddddddddddddddddddddddddddddddddd
+-- 048:0cdcdddd0ccdddddccddcdddcdcdddcdccddcdddcdcdddcdccddcdddcdcddddd
+-- 049:ddddddddddddddfdddddddfdddddddfddddddddfdddddfffdddcffdddcddddfd
+-- 050:ddddddddddddddddddddffddddffddddffdddddddddddddfddddfffdddffdcdd
+-- 051:dddddddddddddddddddddddddffdddddfddddddddddddddddcdddddddddddddd
+-- 052:dddddddddddddddddddddddddddddddddddddddddddddddd1d1d1ddd1111111d
+-- 053:ddddddddddddddddddddddddddddddddedddddddeeeedddd0feeeeee00ffffff
+-- 064:cdcdddddccdcddddcdcddddd0cdcdddd0ccddddd0cdddddd00cddddd00cddddd
+-- 065:ddddddfdddddddffddddfffddddfddfddddddffdddddddfeddddddfdddddddfd
+-- 066:dfdddddcfddddcddddddddddddddddddddddddddeddddddddddddddddddddddd
+-- 067:ddddddddddddddddddddddddddddddddddddddddddc44cdddf4444ffddffffdd
+-- 068:111111ddd11d1ddddddddddddddddddddddddddddddddccdddccdddddddddddd
+-- 069:dddddddddddccddddcdddddddddddddddddddddddddddddddddddddddddddddd
+-- 080:000cdddd000ddddd000ddddd0000dddd0000dddd00000ddd00000ddd000000dd
+-- 081:0ddddddd0ddddddd00dddddd00dddddd00d0dd0d00d000000000000e000eeee2
+-- 082:ddddddddddddddddddddddddddddddddd0d0ddeedede22222e22222222222222
+-- 083:ddddddddddddddddddddddddddddddddddd2dddd2d22d2d22222222222222222
+-- 084:ddddddddddddddddddddddddddddddddddddd2dd2d2d22d2222d222222222222
+-- 085:ddddddddddddddddddddddddddddddddddddddddddddddddeeeeeeeeffffffff
+-- 096:000000dd0000000d0000000d0000000d0000000d000000000000000000000000
+-- 097:000e222200e2222100d2d2d100dddddd00dddddd0cdddddd0dcccdcd0ddddddd
+-- 098:222221111111111111d11d11d1dddd1ddddddddddddddddddddddddddddddddd
+-- 099:1111111111111111111111111d111d11dd1d1d1ddddddddddddddddddddddddd
+-- 100:11111111111111d1dd11d1d1dd1ddddddddddddddddddddddddddddddddddddd
+-- 101:dddddddddddddddddddddddddddddddeddddeeeeeeeeeeeeeeeeeeeeffffffff
+-- 208:00fffff00fffffff0feeeeef0feddeef0fedddef0fedeeef0feeeeef00fffff0
+-- 209:0011111001444441013333310132233101322231013233310133333100111110
+-- 210:0000044000004224000042420044442004242200420400004242000024200000
+-- 211:0000500000056700005666700566665707666667007666700076667000077700
+-- 212:0000000000a00f000a9aa9f0a99999f0a99999f00fa9999f0099999f00fffff0
+-- 213:ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+-- 214:0000000000eeeeee0eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
+-- 215:ffffffffffffffffffffffffeeddedeefffeeffffffffffffffff0ffffffffff
+-- 216:ffffffffffffffffffffffffeeeeeeeeffffffffffffffffffffffffffffffff
+-- 224:0000000000000000000000000000000000000000000000004444000334444443
+-- 225:0000000000000000000000000000000000000000444444444444444344444444
+-- 226:0000444400044444000444440034444403344444333444444334444433344444
+-- 227:00000000000000dd000dddef0ddeefffdeeffeeedffeeeeedfeeeeeedfeeeeee
+-- 228:00000000ddddddddffffffffffffffffeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
+-- 229:0111111101111111001111110011111100111111001111110011111100111111
+-- 230:1111111111111111111111111111111111111111111111111111111111111111
+-- 231:1110011011110000111001101111110011111110111111101111110011111000
+-- 232:00000000f00ff000ff00f00ff0fff0fffff0ff0fffffffffffffffffffffffff
+-- 240:0444443303444343003444340003334300000333000000030000000000000000
+-- 241:4444444334444444344444433444444434444443333333340033443300003340
+-- 242:4334444433344444433444443334333343334444344333343333000000000000
+-- 243:dfeeeeeedfeeeeeedffeeeeedfffffee0ddfffff000dddff000000dd00000000
+-- 244:ffffffffffffffffffffffffffffffffffffffffffff0fffff000000f0000000
+-- 245:0111111101111111011111110011111100111111010110100000111100000000
+-- 246:1111111111111111111111111111111111111101111111110110110100000000
+-- 247:1111100011101000111111001110110011111100111110000110000000000000
+-- 248:eeeeeeeeeddddddeffffeefffffeedffffeddffffedfffffedffffffffffffff
+-- 249:ffffffffffffffffffffffffeeeeeeeeffffeefffffeefffffeefeffffffffff
+-- </SPRITES3>
+
+-- <SPRITES7>
 -- 001:000000000000000000000000000000000000000000000000990bcc009abbbcc0
 -- 002:0020000000020000000020000200200002220000002000000020000000dd0000
 -- 003:2220000000220000000200000002000020200000220000000200000002000000
@@ -887,148 +1162,7 @@ window:onOpen()
 -- 239:00000000000000000000000000000000aa000000aa0000000000000000000000
 -- 240:0300000003000000003000000030000000300000033300003330300030300000
 -- 244:0030000000300000003000000030000000333000033303003003030000000000
--- </SPRITES1>
-
--- <SPRITES2>
--- 001:0002200200023002002330020023302200233332003323220234432202344233
--- 002:0020200040202000002233000422330202223320023343204223443042344432
--- 003:0000000000000000000000000002000004220000224000004044000000420000
--- 004:888888888888888888888888888888ee88888e008888eee088eee0088eeee088
--- 005:8888800080000000e0000000ee0000e00000000000000ee0000eee00008ee000
--- 006:0000000e000000eeeee000000000000e0ee000000eee000800eee00800eee888
--- 007:88888888f8888888e8888888ee888888eee88888000ee8888000ee88880000e8
--- 008:0000000000000000000000000000000d00000ddd00000dee0000deee0000deee
--- 009:000000000000000000000000ddddddddeeeeffffeeeeeeeefffffefeeeeeeeee
--- 010:000000000000000000000000ddddddddffffeeeeeeeeeeeeffffffffeeeeeeed
--- 011:000000000000000000000000dddd0000eeddd000edeefd00defffd00efffffd0
--- 012:000000000000000c0000000c0000000c000000cd000000cd000000cd00000ccd
--- 013:00000000ccccccccccdddddddcdddddddddddddddddddddddddddddddddddddd
--- 014:00000000ccccccccdddddddcddddddcddddddddddddddddddddddddddddddddd
--- 015:00000000cc000000cc000000dc000000dcc00000dcc00000dcec0000cdec0000
--- 016:0000000000000040000000020000002000000000000000020000002300000034
--- 017:0334433300444334034c43442344c444334cc4443334cc444444cc4344444443
--- 018:42324c334334443343444443434cc443444cc434344c44434c4c4443cc444444
--- 019:0040000040400000400000002020000020400000300000003200000032000000
--- 020:8ee0088888000888880088888888888888888888888888888888888888888888
--- 021:00eee00088eee0008eee00088eee00888ee00888ee008888e000888880088888
--- 022:000eee88080eee888880eee888800eee8888000e888880088888888888888888
--- 023:8888000e88888888888888888888888888888888888888888888888888888888
--- 024:000ddeff000deeee000deeee000ddddd000effff00deeeee00deefff000deeee
--- 025:ffffffffeeeeeeeeeeedddddddddeeeefffdddddeeeeeeeeffffffffeeeeeeee
--- 026:fffffffdeeeeeeeddeeeeeeddddddddddffffffdeeeeeeedfffffffdeeeeeeed
--- 027:efffffd0effffdd0efffded0efddefd0ddeeffd0eeffffd0efffffd0efffffd0
--- 028:00000cdd00000cdd0000cddd0000cddd0000cddd0000cddd000cdcdd000cddcd
--- 029:dddddddddddddddddddddddddddddddddddddddddddddcdddddddcddddddcccd
--- 030:dddddddddddddddddddddddddddddddddddddddddddddddddddddcdcddddcddc
--- 031:cddc0000cddec000cddec000cdddc000cdddec00cdddec00ddddcc00ddccec00
--- 032:000000340000034400000443000032df000d3dee00ddeeef0ddeefff0eeeff00
--- 033:444334344334444cde444444fd4d4442ddd3444edfee44e0ff0ddeeeffddeeee
--- 034:c4442244444444d44444ddd42ddddddeeeeeeeeeedddeef0efeed000ffeedd00
--- 035:430000004330000044330000dd440000eddddd0000eeddd000ffeee0000ffeee
--- 036:00000000222222222333333e2333333323334333233334332233333322333333
--- 037:0000000022222222eee33333eeeee33333eeeee33333eeee3333333e34333333
--- 038:00000000222222003332222233343ff33333fff3eeeefff3eeeeef34333fff33
--- 039:0000000002222222222222223333333233334332433433323333332233333322
--- 040:000deeee000deeff000ddeee0000deee0000deee00000ddd0000000000000000
--- 041:eeeeeeeeefffffffeeeeeeeefffffeefeeeeeeeedddddddd0000000000000000
--- 042:eeeeeeedfffffffdeeeeeeedfffffffdeeeeeeeddddddddd0000000000000000
--- 043:efffffd0efffffd0efffeed0efeedd00eedd0000dd0000000000000000000000
--- 044:000cccdd000ccccc000cccdd000cddcd000cdcdd0000cddd0000cddd0000cddd
--- 045:ddddcccdccccceecddddceeddddddedddddddedddddddddddddddddddddddddd
--- 046:dddddcccccccccccdddddcdcddddcddcdddddcdcdddddddcdddddddcdddddddc
--- 047:dceeec00ceddec00edddec00ddddec00ddddec00ddddec00ddddec00ddddec00
--- 048:00eff00000f00000000000000000000000000000000000000000000000000000
--- 049:00deeeef0deeeef0ddeeff00deeef000eeff0000efe000000000000000000000
--- 050:f00eedd000feeedd000feedd0000ffee00000f00000000000000000000000000
--- 051:0000000000000003000000030000003300000033000000000000000200000000
--- 052:2233333322333334224433332233333322333443223333332233333322333333
--- 053:3333333344444333444444423334444433333dff333fffdf33fffffdfffffdff
--- 054:333ff3333333333fccfffdff33ccccdf44333324fffff444fffdddfddddffffd
--- 055:33333322ffffff22fffef322ffeff42244ff4422444443224444442233344422
--- 060:0000cddd0000cdcd0000ccdd0000cccc0000ccd00000ccd000000c0000000c00
--- 061:ddddddddddddddddddddddddcccccccc00000000000000000000000000000000
--- 062:dddddddcdddddcdcddddddcccccccccc000000cc000000cc0000000c0000000c
--- 063:dddded00ddeeed00de00ed00e0000d00d0000000d00000000000000000000000
--- 064:0000000077777777766666667666666676666666766644447766664477666446
--- 065:0000000077777777666666666666666666666666466666666644446666644664
--- 066:0000000077777700666777776666666666666666666666666666666644666666
--- 067:0000000007777777777777776666666766666667666666676666667766666677
--- 068:2233333f22333433223333332234333422333333222222222222222200000000
--- 069:fffdddffffffffff333333ff33333fff3333fffd222222222000000000000000
--- 070:dffffffddffffddddffeeefffeefffffdfffffff222222220000002200000000
--- 071:33343322ff343322dff33322fdf33322ff333322222222222222220000000000
--- 072:888888888888888888888888888888338888444488883000888300f088830f0f
--- 073:888888888844443333000000000000003333333300000000f0ffffff0fff000f
--- 074:888888883333333300000000000000003333333300000000ffffffffff000fff
--- 075:888888883333333300000000000000003333333300000000ff0f0f00fff0f003
--- 076:888888883333488800033488033004883000003830fff03830fff03800fff003
--- 080:7766446677664444776666667766666677666666776666667766666677666666
--- 081:66446666464444646666666666666666666666666666666666666ccc6666cccc
--- 082:466666664464646466666666666666666666666666666666cccccccdcccccccc
--- 083:66666677666666776f6666776ff666776cfff677ccccf677ccccf677dccff677
--- 084:00000000fffffffffefddefffffdeffeffdeffedfdeffedefffffeeffffeffff
--- 085:00000000ffffffffedeffeefdeffeeeeeffeecccffeecc1cfeecc131eecc1333
--- 086:00000000ffffff00ffffffffeeeeeeeeeecccceeccc13cce111323cc3332223c
--- 087:000000000fffffffffffffffffedffefeffedfffeeffeddfeeeffeffceeefeff
--- 088:883000ff8830ffff8400ffff8400000084333333830000008300ffff8840ffff
--- 089:ffff0400ffff0340ffff0344000003343333333300000333ffff0033fffff003
--- 090:f0030fff00330fff43330fff33330000333333333322000022200fff2200ffff
--- 091:ffff0003fffff030fffff040000000403333344400000040fffff030fffff003
--- 092:0fff00030f00033300033003043000033000f00300fff0380f0ff03800fff038
--- 096:7766666677666666776666667766666677666666777777777777777700000000
--- 097:66666ccc66666fcd666666cf6666666f66666666777777777000000000000000
--- 098:ccccccccddddddddffffffff6666666666666666777777770000007700000000
--- 099:cddff677ddddf677fffff6776666f67766666677777777777777770000000000
--- 100:ffeeeeffffddeffeffdeffeeffdefeeeffeffeecffffeeccffffeec1ffffeec2
--- 101:eec13322ecc13222cc133222c1332222c1322222133222223322222211333332
--- 102:22222223222222222222222222222222222222232222223322223311222311cc
--- 103:cceefeff3ceefeff3ceefeff3ceefeffcceffeffceefedffceefedffceefedff
--- 104:88300fff88400fff88830f0f888400f088883000888833338888832888888328
--- 105:ffffff00fffffff0ffffffffffffffff00000000333333338888888888888888
--- 106:200fffff00fffffff0ffffffffffffff00000000333333338888888888888888
--- 107:ffffff03fffff003ffff0f00fffff00000000000333333338888888888888888
--- 108:0ffff038000f003830f000383000333830038228333882883288888832888888
--- 112:0000000077777777766666667666666676666666766644447766664477666446
--- 113:0000000077777777666666666666666666666666466666666644446666644664
--- 114:0000000077777700666777776666666666666666666666666666666644666666
--- 115:0000000007777777777777776666666766666667666666676666667766666677
--- 116:ffffeeccffffeeeeffefffffffdeeeffffddddeeffffffffffffffff00000000
--- 117:cc112113ecccccc2eeeeeeccfffffeeeeefffffffffffffff000000000000000
--- 118:3331ccce1111ceeeccccceefeeeeeeffeefffffeffffffff000000ff00000000
--- 119:eeffedfffffedfffffedffffeedffeffddffedffffffffffffffff0000000000
--- 128:7766446677664444776666667766666677666666776666667766666677666666
--- 129:66446666464444646666666666666666666666666666666666666ccc6666cccc
--- 130:466666664464646466666666666666666666666666666666cccccccdcccccccc
--- 131:66666677666666776f6666776ff666776cfff677ccccf677ccccf677dccff677
--- 144:7766666677666666776666667766666677666666777777777777777700000000
--- 145:66666ccc66666fcd666666cf6666666f66666666777777777000000000000000
--- 146:ccccccccddddddddffffffff6666666666666666777777770000007700000000
--- 147:cddff677ddddf677fffff6776666f67766666677777777777777770000000000
--- 160:0000000077777777766666667666666676666666766644447766664477666446
--- 161:0000000077777777666666666666666666666666466666666644446666644664
--- 162:0000000077777700666777776666666666666666666666666666666644666666
--- 163:0000000007777777777777776666666766666667666666676666667766666677
--- 176:7766446677664444776666667766666677666666776666667766666677666666
--- 177:66446666464444646666666666666666666666666666666666666ccc6666cccc
--- 178:466666664464646466666666666666666666666666666666cccccccdcccccccc
--- 179:66666677666666776f6666776ff666776cfff677ccccf677ccccf677dccff677
--- 192:7766666677666666776666667766666677666666777777777777777700000000
--- 193:66666ccc66666fcd666666cf6666666f66666666777777777000000000000000
--- 194:ccccccccddddddddffffffff6666666666666666777777770000007700000000
--- 195:cddff677ddddf677fffff6776666f67766666677777777777777770000000000
--- 208:0000000077777777766666667666666676666666766644447766664477666446
--- 209:0000000077777777666666666666666666666666466666666644446666644664
--- 210:0000000077777700666777776666666666666666666666666666666644666666
--- 211:0000000007777777777777776666666766666667666666676666667766666677
--- 224:7766446677664444776666667766666677666666776666667766666677666666
--- 225:66446666464444646666666666666666666666666666666666666ccc6666cccc
--- 226:466666664464646466666666666666666666666666666666cccccccdcccccccc
--- 227:66666677666666776f6666776ff666776cfff677ccccf677ccccf677dccff677
--- 240:7766666677666666776666667766666677666666777777777777777700000000
--- 241:66666ccc66666fcd666666cf6666666f66666666777777777000000000000000
--- 242:ccccccccddddddddffffffff6666666666666666777777770000007700000000
--- 243:cddff677ddddf677fffff6776666f67766666677777777777777770000000000
--- </SPRITES2>
+-- </SPRITES7>
 
 -- <MAP>
 -- 000:203020302030203020302030203020302030203020302030203020302030000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
@@ -1051,37 +1185,37 @@ window:onOpen()
 -- </MAP>
 
 -- <MAP1>
--- 000:2060000000000000700000000000000000008000000000000000a0b00000b1b1b1b1b1a1b1c1a1b1c1b1b1b1b1c1b1b1b1b1b1b1b1b1c10000a1b1b1000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
--- 001:000f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f2f00b1b1b1b1b1a1b1c100a1c1b1b1b1b1c1000000a1b1b1b1b1c10000a1b1b1000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
--- 002:031323334343434343533343435300000000000000000000000000000000b1b1c1b1b1a1b1c100a1c1b1c1a1b1c1000000a1b1b1b1b1c10000a1b1b1000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
--- 003:041424340000000000543400005400000000000000000000000000000000b1b1c1b1b1a1b1c100a2c1b1c1a1b1c1000000a1b1b1c100a1c100a1b1b1000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
--- 004:051525340000000000543400005400000000000000000000000000000000b1b1c1b1b1a1b1b1b1b1c1b1c1a1b1c1000000a1b1b1c100a1c100a2b1b1000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
--- 005:000000340000000000543400005400000000000000000000000000000000b1b1c10000a1b1b1b2b2c2b1c1a1b1c1b1b1b1a1b2b2c200a2c2b1b1b1b1000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
--- 006:000000340000000000543545455500000000000000000000000000000000b1b1c10000a2b2c2000000b1c1a2b1c1b2b2b2c2000000000000b2b2b2b2000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
--- 007:000000340000000000540000000000000000000000000000000000000000b2b2c21212000000000000b1b1b1b1c10000000000000012000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
--- 008:0000003545454545455500000000000000000000000000000000000000001212121010121212121212b2b2b2b2c21212121212121210121212121212000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
--- 009:0000000000000000000000000000000000000000000000000000000000001002e10202f102020202021212121212020202e102021010101002f1e110000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
--- 010:000000000000000000000000000000000000000000000000000000000000020202020202e10202e102020202e10202e10202f1020202020202020202000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
--- 011:000000000000000000000000000000000000000000000000000000000000101010101010101010101010101010102210101010020202021010101010000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
--- 012:00000000000000000000000000000000000000000000000000000000000002020202e10202f1020202f102e10202020202f10202020202e102f10202000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
--- 013:000000000000000000000000000000000000000000000000000000000000101010101010101010101010101010101010101010101010101010101010000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
--- 014:0000000000000000000000000000000000000000000000000000000000001002f10202e102020210020202f1020210020202020202f1020202020202000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
--- 015:00000000000000000000000000000000000000000000000000000000000010101002f10202021002100202021002e102021010e11010102210101010000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
--- 016:000000000000000000000000000000000000000000000000000000000000101010101010101010101010101010101010101010101010101010101010000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
--- 017:0000001c0020100030000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
--- 018:0c2c0d1d2d01112131000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
--- 019:00000e1e2e02122232000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+-- 000:2060000000000000700000000000000000008000000000000000a0b000006e6e6e6e6e5e6e7e5e6e7e6e6e6e6e7e6e6e6e6e6e6e6e6e7e00005e6e6e000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+-- 001:00d0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0f0006e6e6e6e6e5e6e7e005e7e6e6e6e6e7e0000005e6e6e6e6e7e00005e6e6e000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+-- 002:0313233343434343435333434353000000000000000000000000000000006e6e7e6e6e5e6e7e005e7e6e7e5e6e7e0000005e6e6e6e6e7e00005e6e6e000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+-- 003:0414243400000000005434000054000000000000000000000000000000006e6e7e6e6e5e6e7e005f7e6e7e5e6e7e0000005e6e6e7e005e7e005e6e6e000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+-- 004:0515253400000000005434000054000000000000000000000000000000006e6e7e6e6e5e6e6e6e6e7e6e7e5e6e7e0000005e6e6e7e005e7e005f6e6e000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+-- 005:0000003400000000005434000054000000000000000000000000000000006e6e7e00005e6e6e6f6f7f6e7e5e6e7e6e6e6e5e6f6f7f005f7f6e6e6e6e000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+-- 006:0000003400000000005435454555000000000000000000000000000000006e6e7e00005f6f7f0000006e7e5f6e7e6f6f6f7f0000000000006f6f6f6f000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+-- 007:0000003400000000005400000000000000000000000000000000000000006f6f7f8e8e0000000000006e6e6e6e7e000000000000008e000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+-- 008:0000003545454545455500000000000000000000000000000000000000008e8e8e5d5d8e8e8e8e8e8e6f6f6f6f7f8e8e8e8e8e8e8e5d8e8e8e8e8e8e000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+-- 009:0000000000000000000000000000000000000000000000000000000000005d8d9f8d8d7d8d8d8d8d8d8e8e8e8e8e8d8d8d9f8d8d5d5d5d5d8d7d9f5d000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+-- 010:0000000000000000000000000000000000000000000000000000000000008d8d8d8d8d8d9f8d8d9f8d8d8d8d9f8d8d9f8d8d7d8d8d8d8d8d8d8d8d8d000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+-- 011:0000000000000000000000000000000000000000000000000000000000005d5d5d5d5d5d5d5d5d5d5d5d5d5d5d5d8f5d5d5d5d8d8d8d8d5d5d5d5d5d000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+-- 012:0000000000000000000000000000000000000000000000000000000000008d8d8d8d9f8d8d7d8d8d8d7d8d9f8d8d8d8d8d7d8d8d8d8d8d9f8d7d8d8d000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+-- 013:0000000000000000000000000000000000000000000000000000000000005d5d5d5d5d5d5d5d5d5d5d5d5d5d5d5d5d5d5d5d5d5d5d5d5d5d5d5d5d5d000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+-- 014:0000000000000000000000000000000000000000000000000000000000005d8d7d8d8d9f8d8d8d5d8d8d8d7d8d8d5d8d8d8d8d8d8d7d8d8d8d8d8d8d000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+-- 015:0000000000000000000000000000000000000000000000000000000000005d5d5d8d7d8d8d8d5d8d5d8d8d8d5d8d9f8d8d5d5d9f5d5d5d8f5d5d5d5d000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+-- 016:0000000000000000000000000000000000000000000000000000000000005d5d5d5d5d5d5d5d5d5d5d5d5d5d5d5d5d5d5d5d5d5d5d5d5d5d5d5d5d5d000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+-- 017:0000001c0020100030405000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+-- 018:0c2c0d1d2d01112131415100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+-- 019:00000e1e2e02122232035100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 -- 020:00000f1f2f00132333000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
--- 034:6c7c8c9c9c9c9c9c9c9c9c9c9cacbccc001c2c3c4c0301010102025d5d00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
--- 035:6d7d8d9d9d9d9d9d9d9d9d9d9dadbdcd0c1d2d3d4d010101010101010100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
--- 036:6e6e6e6e6e6e6e6e6e6e6e6e000000000d1e2e010101010101d2e2f30100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
--- 037:6e6e6e6e6e6e6e6e6e6e6e6e331020300e0101010101010101d3e3010100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
--- 038:6e6e6e6e6e6e6e6e6e6e6e6e01112131f001010101010101010101015c00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
--- 039:6e6e6e6e6e6e6e6e6e6e6e6e02122232f101010101010101010101015c00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
--- 040:6e6e6e6e6e6e6e6e6e6e6e6e03132300f20101e001e001e0010101010100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
--- 041:6e6e6e6e6e6e6e6e6e6e6e6e4050607000c8d8e8e8e8e8e8d0f801010100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
--- 042:6e6e6e6e6e6e6e6e6e6e6e6e4151617100c9d9e9e9e9e9e9d1f9e1010100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
--- 043:6e6e6e6e6e6e6e6e6e6e6e6e00000000003e4e4e4e4e4e4e4e4e4e4e5e00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+-- 034:6c7c8c9c9c9c9c9c9c9c9c9c9cacbccc0010203040503232324242525200000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+-- 035:6d7d8d9d9d9d9d9d9d9d9d9d9dadbdcd0111213141323232323232323200000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+-- 036:6e6e6e6e6e6e6e6e6e6e6e6e000000000212223232323232321323333200000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+-- 037:6e6e6e6e6e6e6e6e6e6e6e6e331020300332323232323232321424323200000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+-- 038:6e6e6e6e6e6e6e6e6e6e6e6e011121310432323232323232323232325100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+-- 039:6e6e6e6e6e6e6e6e6e6e6e6e021222320532323232323232323232325100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+-- 040:6e6e6e6e6e6e6e6e6e6e6e6e031323000632323432343234323232323200000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+-- 041:6e6e6e6e6e6e6e6e6e6e6e6e405060700015253535353535454332323200000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+-- 042:6e6e6e6e6e6e6e6e6e6e6e6e415161710016263636363636464454323200000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+-- 043:6e6e6e6e6e6e6e6e6e6e6e6e000000000053555555555555555555555600000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 -- 044:6e6e6e6e6e6e6e6e6e6e6e6e000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 -- 045:6e6e6e6e6e6e6e6e6e6e6e6e00000000c0d0e0f000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 -- 046:6e6e6e6e6e6e6e6e6e6e6e6e8090a0b0c1d1e1f18494a4b4c40000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
@@ -1116,4 +1250,12 @@ window:onOpen()
 -- <PALETTE2>
 -- 000:1a1c2c5d275db13e53ef7d57ffcd75a7f07038b764257179c259ae3b5dc941a6f673eff7f4f4f494b0c2566c86333c5d
 -- </PALETTE2>
+
+-- <PALETTE3>
+-- 000:1a1c2c5d275db13e53ef7d57ffcd75a7f07038b764257179c259ae3b5dc941a6f673eff7f4f4f494b0c2566c86333c5d
+-- </PALETTE3>
+
+-- <PALETTE7>
+-- 000:1a1c2c5d275db13e53ef7d57ffcd75a7f07038b764257179c259ae3b5dc941a6f673eff7f4f4f494b0c2566c86333c5d
+-- </PALETTE7>
 

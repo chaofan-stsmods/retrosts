@@ -3,9 +3,16 @@
 
 Monster = Creature:new{
 	intent='takeTurn',intentType='attack',intentBaseDamage=0,intentDamage=0,intentAttackCount=1,showIntent=false,lockIntentDamage=false,
-	takeTurn=noop,
-	nextIntent=function(self,firstTurn) end,
+	takeTurn=noop,createRandom=nil,init=noop,lastIntent=nil,lastSecondIntent=nil,
 }
+function Monster:new(o)
+    local r = Creature.new(self,o)
+    if r.createRandom then
+		r:init(r.createRandom)
+		r.hp = r.maxHp
+	end
+    return r
+end
 
 function Monster:applyPowers()
 	if self.lockIntentDamage or not self.alive then
@@ -32,6 +39,8 @@ end
 function Monster:enemyTurn()
 	self.lockIntentDamage = true
 	self[self.intent](self)
+	self.lastSecondIntent = self.lastIntent
+	self.lastIntent = self.intent
 	addAction(EnemyTurnEndAction:new(self))
 end
 
@@ -55,6 +64,14 @@ end
 function Monster:die()
 	Creature.die(self)
 	checkCombatEnd()
+end
+
+function Monster:lastIntentIs(intent)
+	return self.lastIntent == intent
+end
+
+function Monster:lastTwoIntentsAre(intent)
+	return self.lastIntent == intent and self.lastSecondIntent == intent
 end
 
 intentSpriteMap = {
@@ -89,6 +106,9 @@ function Monster:drawIntent()
 		local width = strWidth(damageStr,false,true)
 		print(damageStr,intentX-width/2,intentY+5,12,false,1,true)
 	end
+end
+
+function Monster:nextIntent(firstTurn)
 end
 
 -- actions
@@ -152,27 +172,3 @@ function SetIntentAction:tick()
 	end
 	Action.tick(self)
 end
-
--- instances
-
-Cultist = Monster:new{ maxHp=51,x=160,y=48,width=4,height=4 }
-function Cultist:drawImage()
-	sprmap(5,17,self.width,self.height,self.x,self.y,0)
-end
-
-function Cultist:buff()
-	local power = RitualPower:new(self,3)
-	power.skipFirst = true
-	addAction(ApplyPowerAction:new(power))
-	addAction(SetIntentAction:new(self,'attack','attack',6,1))
-end
-
-function Cultist:attack()
-	addAction(DamageAction:new{target=player,source=self,value=self.intentDamage})
-	addAction(SetIntentAction:new(self,'attack','attack',6,1))
-end
-
-function Cultist:nextIntent()
-	self:setIntent('buff','buff')
-end
-

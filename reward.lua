@@ -3,14 +3,16 @@
 
 RewardWindow = Window:new{rewards=nil,selection=0,title='Rewards',canClose=false,name='RewardWindow'}
 function RewardWindow:onOpen()
-	queueSync(2,0)
 	queueSync(4,1)
 	queueSync(1,player.tileBank)
 end
 
 function RewardWindow:tick()
-	sprmap(0,36,12,13,72,26,0)
-	sprmap(0,34,16,2,56,18,0)
+	rect(72,26,96,96,15)
+	rect(80,122,80,6,15)
+	spr(500,72,122,0)
+	spr(500,160,122,0,1,1)
+	drawBanner(56,18,16)
 	printGlowed(self.title,120-strWidth(self.title)/2,21,12)
 	self:drawRewards()
 	self:rewardControls()
@@ -24,6 +26,11 @@ function RewardWindow:drawRewards()
 		if self.selection == i then
 			mapColor(14,13)
 		end
+		spr(470,76,y,0)
+		spr(470,76,y+8,0,1,2)
+		spr(470,156,y,0,1,1)
+		spr(470,156,y+8,0,1,3)
+		rect(84,y+1,72,14,14)
 		sprmap(0,49,11,2,76,y,0)
 		if self.selection == i then
 			resetColor(14)
@@ -35,7 +42,7 @@ function RewardWindow:drawRewards()
 		end
 		print(reward.title,90,y+5,12,false,1,true)
 		if reward.showLink then
-			spr(477,116,y-5,0)
+			spr(466,116,y-5,0)
 		end
 	end
 end
@@ -141,6 +148,9 @@ function generateGoldReward(rewards,random)
 		gold = random:randInt(25,35)
 	elseif room.type == 'boss' then
 		gold = random:randInt(95,105)
+		if ascension >= 13 then
+			gold = math.floor(gold*0.75+0.5)
+		end
 	end
 	if gold then
 		addGoldReward(rewards,gold)
@@ -203,14 +213,14 @@ function generateCardRewards(rewards,random)
 
 	local reward = {
 		title='Add a card to deck',
-		icon=room.type == 'boss' and 447 or 431,
+		icon=room.type == 'boss' and 465 or 464,
 		type='card',
 		value={}
 	}
 	for i, cardType in ipairs(cardTypes) do
 		local card = cardType:new()
 		reward.value[i] = card
-		if card.rarity ~= 'rare' and card:canUpgrade() and random:rand() < act.cardUpgradedChance then
+		if card.rarity ~= 'rare' and card:canUpgrade() and random:rand() < act.cardUpgradedChance * (ascension >= 12 and 0.5 or 1) then
 			card:upgrade()
 			card:resetPowers()
 		end
@@ -258,7 +268,7 @@ function generateRelicRewards(rewards,random)
 	addRelicReward(rewards,relic)
 
 	if room.hasKey then
-		table.insert(rewards,{title='Emerald key',icon=462,type='key',value='emeraldKeyObtained'})
+		table.insert(rewards,{title='Emerald key',icon=467,type='key',value='emeraldKeyObtained'})
 	end
 end
 
@@ -318,7 +328,6 @@ end
 -- cardselect
 CardRewardWindow = Window:new{name='CardRewardWindow',cards=nil,selection=0,single=false,canClose=true}
 function CardRewardWindow:onOpen()
-	queueSync(2,0)
 	queueSync(4,1)
 	queueSync(1,player.tileBank)
 	local replace = false
@@ -334,7 +343,7 @@ function CardRewardWindow:onOpen()
 end
 
 function CardRewardWindow:tick()
-	sprmap(0,34,16,2,56,18,0)
+	drawBanner(56,18,16)
 	local title = 'Choose a Card'
 	local width = strWidth(title)
 	printGlowed(title,120-width/2,21,12)

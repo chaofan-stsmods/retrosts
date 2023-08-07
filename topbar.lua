@@ -21,6 +21,10 @@ function drawTopBar()
 	printShadowed(tostring(gold),73,1,4)
 	printShadowed(tostring(floor),153,1,12)
 	printShadowed(#deck,225,1,12)
+	if ascension > 0 then
+		spr(9,168,0,0)
+		printShadowed(tostring(ascension),177,1,12)
+	end
 	for i = 1,#potions do
 		potions[i]:drawImage(96+i*8,0)
 	end

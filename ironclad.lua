@@ -32,6 +32,10 @@ function Ironclad:getStartRelics()
 	return { BurningBlood:new() }
 end
 
+function Ironclad:getAscensionMaxHPLoss()
+	return 5
+end
+
 -- cards
 
 RedCard = Card:new{color={2,1},costIcon=45,typeIconColor=4,colorName='red'}

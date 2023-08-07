@@ -1,7 +1,7 @@
 -- neow
 ---@diagnostic disable: lowercase-global
 
-NeowEvent = Event:new{screen='entry',spritebank=0,words='Greetings...',random=nil}
+NeowEvent = Event:new{screen='entry',spritebank=3,words='Greetings...',random=nil}
 function NeowEvent:new(random)
 	local o = Event.new(self)
 	o.random = random

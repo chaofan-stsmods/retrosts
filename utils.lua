@@ -129,6 +129,13 @@ function drawTooltipBox(x,y,w,h)
 	line(x+w,y+h*8-1,x+w*8-9,y+h*8-1,15)
 end
 
+function drawBanner(x,y,w)
+	spr(480,x,y,0,1,0,0,3,2)
+	spr(480,x+(w-3)*8,y,0,1,1,0,3,2)
+	rect(x+24,y,(w-6)*8,11,4)
+	rect(x+24,y+11,(w-6)*8,1,3)
+end
+
 function sprmap(x, y, w, h, sx, sy, colorkey, scale, remap)
 	poke4(2*0x03FFC,3)
 	map(x, y, w, h, sx, sy, colorkey or -1, scale or 1, remap or nil)

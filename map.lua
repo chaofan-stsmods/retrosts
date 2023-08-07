@@ -19,13 +19,14 @@ function MapWindow:onOpen()
 end
 
 function MapWindow:tick()
+	cls(0)
 	self:drawMap(self.scroll)
 	tickEffects()
 	self:mapControls()
 	tickTopBar(true)
 end
 
-local roomIconMap = {event=503,monster=499,rest=501,treasure=502,shop=504,elite=500,strongElite=507}
+local roomIconMap = {event=303,monster=285,rest=301,treasure=302,shop=317,elite=286,strongElite=287}
 local bossIconMap = {Slime=257,Hexaghost=261,Guardian=265,Champ=320,Collector=324,Automation=328,Donu=392,TimeEater=388,Awakened=384,Heart=332}
 function MapWindow:drawMap(y)
 	local backgroundOffset = y % 8
@@ -119,18 +120,18 @@ function MapWindow:selectMapControl()
 end
 
 local function rightEdge(rx,ry)
-	spr(506,rx+12,ry-12,12)
-	spr(506,rx+20,ry-20,12)
+	spr(288,rx+12,ry-12,12)
+	spr(288,rx+20,ry-20,12)
 end
 
 local function leftEdge(rx,ry)
-	spr(506,rx-12,ry-12,12,1,1)
-	spr(506,rx-20,ry-20,12,1,1)
+	spr(288,rx-12,ry-12,12,1,1)
+	spr(288,rx-20,ry-20,12,1,1)
 end
 
 local function middleEdge(rx,ry)
-	spr(505,rx,ry-12,12)
-	spr(505,rx,ry-20,12)
+	spr(272,rx,ry-12,12)
+	spr(272,rx,ry-20,12)
 end
 
 function MapWindow:drawRoom(room,rx,ry)
@@ -142,7 +143,7 @@ function MapWindow:drawRoom(room,rx,ry)
 			mapColor(15,13)
 		end
 		if room.hasKey and room.type == 'elite' then
-			spr(507,rx,ry,12)
+			spr(roomIconMap.strongElite,rx,ry,12)
 		else
 			spr(roomIconMap[room.type] or 503,rx,ry,12)
 		end
@@ -151,7 +152,7 @@ function MapWindow:drawRoom(room,rx,ry)
 			drawSelectionBox(rx-2,ry-2,12,12,15)
 		end
 		if room.completed then
-			spr(508,rx+4,ry+6,12)
+			spr(304,rx+4,ry+6,12)
 		end
 		if room.y == 15 then
 			if room.x <= 2 then
@@ -225,7 +226,7 @@ function generateMap(random,width,height,count)
 
 	local shopCount = math.floor(#unassignedRooms*0.05+0.5)
 	local restCount = math.floor(#unassignedRooms*0.12+0.5)
-	local eliteCount = math.floor(#unassignedRooms*0.08+0.5)
+	local eliteCount = math.floor(#unassignedRooms*0.08*(ascension>=1 and 1.6 or 1)+0.5)
 	local eventCount = math.floor(#unassignedRooms*0.22+0.5)
 	local monsterCount = #unassignedRooms-shopCount-restCount-eliteCount-eventCount
 

@@ -11,6 +11,10 @@ function Player:applyPowers()
 	end
 end
 
+function Player:getAscensionMaxHPLoss()
+	return 0
+end
+
 function Player:onCombatStart()
 	self:triggerEvent('onCombatStart')
 	Creature.onCombatStart(self)

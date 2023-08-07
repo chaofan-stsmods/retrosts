@@ -20,7 +20,7 @@ else
 return tree:sub(s+1,s+c),s+c+1
 end
 end
-tree=parseTree(0)
+tree=parseTree(1)
 local r,p={},tree
 for i=1,#base64 do
 local b,v=base64:byte(i),0
