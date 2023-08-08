@@ -14,13 +14,15 @@ end
 
 ColorlessCard = Card:new{color={14,15},costIcon=46,typeIconColor=13,colorName='colorless'}
 
-Wound = ColorlessCard:new{ name='Wound',description='Unplayable.',rarity='special',baseCost=-2,type='status',canUse=false,canUpgrade=false }
+Wound = ColorlessCard:new{ name='Wound',description='Unplayable.',rarity='special',baseCost=-2,type='status',canUse=false,canUpgrade=false,playerTarget=true }
 
-Dazed = ColorlessCard:new{ name='Dazed',description='Unplayable. NL Ethereal.',rarity='special',baseCost=-2,type='status',canUse=false,canUpgrade=false,ethereal=true }
+Dazed = ColorlessCard:new{ name='Dazed',description='Unplayable. NL Ethereal.',rarity='special',baseCost=-2,type='status',canUse=false,canUpgrade=false,ethereal=true,playerTarget=true }
+
+Slimed = ColorlessCard:new{ name='Slimed',description='Exhaust.',rarity='special',baseCost=1,type='status',canUpgrade=false,exhaust=true,playerTarget=true }
 
 Burn = ColorlessCard:new{
 	name='Burn',description='Unplayable. NL At the end of turn, {63} !M! to you.',rarity='special',baseCost=-2,type='status',
-	canUse=false,canUpgrade=false,baseMagic=2,upgrade={baseMagic=4},autoPlayOnEndTurn=true
+	canUse=false,canUpgrade=false,baseMagic=2,upgrade={baseMagic=4},autoPlayOnEndTurn=true,playerTarget=true
 }
 function Burn:use()
 	return { DamageAction:new{source=player,target=player,value=self.magic,type='power'} }
@@ -107,7 +109,7 @@ function ThinkingAhead:use()
 end
 
 colorlessCards = {
-	Wound,Dazed,Burn,BandageUp,Blind,Finesse,MasterOfStrategy,HandOfGreed,ThinkingAhead
+	Wound,Dazed,Burn,Slimed,BandageUp,Blind,Finesse,MasterOfStrategy,HandOfGreed,ThinkingAhead
 }
 
 CurseCard = Card:new{color={15,0},costIcon=46,typeIconColor=13,colorName='curse',type='curse',rarity='common',baseCost=-2,canUse=false,canUpgrade=false}

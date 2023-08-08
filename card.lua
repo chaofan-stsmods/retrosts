@@ -74,7 +74,10 @@ function Card:applyPowers(target)
 
 	self.damage = math.floor(damage)
 
-	self.block = self.baseBlock
+	local block = self.baseBlock
+	block = player:triggerReducerEvent('onModifyBlock',block,self)
+	self.block = math.floor(block)
+
 	self.magic = self.baseMagic
 
 	local cost = self.baseCost

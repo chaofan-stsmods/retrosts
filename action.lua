@@ -378,6 +378,7 @@ function DiscardAllCardsAction:tick()
 		if self.isDone or (math.abs(cardItem.tx - cardItem.x) < 2 and math.abs(cardItem.ty - cardItem.y) < 2) then
 			removeHand(i)
 			table.insert(discardPile,cardItem.card)
+			cardItem.card:resetPowers()
 			cardItem.card.costForOneTurnPlay = nil
 		end
 	end
@@ -527,7 +528,7 @@ function MakeTempCardToDiscardPileAction:tick()
 			local card = self.card:copy()
 			table.insert(discardPile,card)
 			card:resetPowers()
-			local cardItem = CardItem:new{card=card,x=0,y=136}
+			local cardItem = CardItem:new{card=card,x=0,y=136,isNotInHand=true}
 			local effect = CardEffect:new{cardItem=cardItem,pauseDuration=30,duration=50,tx=240,ty=136}
 			effect.useCardPosition = fillCardPosition(cardItem)
 			addEffect(effect)
@@ -575,7 +576,7 @@ function MakeTempCardToDrawPileAction:tick()
 			local card = self.card:copy()
 			table.insert(drawPile,miscRand:randInt(#drawPile+1),card)
 			card:resetPowers()
-			local cardItem = CardItem:new{card=card,x=0,y=136}
+			local cardItem = CardItem:new{card=card,x=0,y=136,isNotInHand=true}
 			local effect = CardEffect:new{cardItem=cardItem,pauseDuration=30,duration=50,tx=0,ty=136}
 			effect.useCardPosition = fillCardPosition(cardItem)
 			addEffect(effect)

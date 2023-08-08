@@ -313,7 +313,7 @@ function checkCombatEnd()
 		end
 	end
 	if not hasAlive then
-		table.retainIf(secondaryActions,function (a) return getmetatable(a) ~= UseCardAction and getmetatable(a) ~= UsePotionAction end)
+		secondaryActions = {}
 		addAction(EndCombatAction:new())
 	end
 end

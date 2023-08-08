@@ -236,6 +236,30 @@ function placeCardsInARow(amount)
 	return startX,stepX
 end
 
+function normalize(list,key)
+	key = key or 'power'
+	local sum = 0
+	for _, item in ipairs(list) do
+		sum = sum + item[key]
+	end
+	for _, item in ipairs(list) do
+		item[key] = item[key]/sum
+	end
+end
+
+function rollList(random,list,key)
+	key = key or 'power'
+	local sum = 0
+	local roll = random:rand()
+	for i,item in ipairs(list) do
+		sum = sum + item[key]
+		if sum >= roll then
+			return i,item
+		end
+	end
+	return #list,list[#list]
+end
+
 function noop() end
 
 -- table

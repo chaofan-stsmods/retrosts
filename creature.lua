@@ -27,39 +27,44 @@ function Creature:tick()
 end
 
 function Creature:drawHealthBar()
-	local healthWidth = self.hp*(self.width*8-2)//self.maxHp
-	rect(self.x+1,self.y+8*self.height+1,healthWidth,6,2)
-	local damageWidth = self.width*8-2-healthWidth
-	rect(self.x+1+healthWidth,self.y+8*self.height+1,damageWidth,6,0)
+	local width = math.max(5,self.width)
+	local x = self.x-(width-self.width)*4
+	local y = self.y+1
+	local healthWidth = self.hp*(width*8-2)//self.maxHp
+	rect(x+1,y+8*self.height+1,healthWidth,6,2)
+	local damageWidth = width*8-2-healthWidth
+	rect(x+1+healthWidth,y+8*self.height+1,damageWidth,6,0)
 
 	if self.block > 0 then
 		mapColor(1,10)
 	end
-	spr(35,self.x,self.y+8*self.height,0)
-	for i = 1,self.width-2 do
-		spr(36,self.x+8*i,self.y+8*self.height,0)
+	spr(35,x,y+8*self.height,0)
+	for i = 1,width-2 do
+		spr(36,x+8*i,y+8*self.height,0)
 	end
-	spr(37,self.x+8*self.width-8,self.y+8*self.height,0)
+	spr(37,x+8*width-8,y+8*self.height,0)
 	if self.block > 0 then
 		resetColor(1)
-		spr(47,self.x-4,self.y+8*self.height,0)
+		spr(47,x-4,y+8*self.height,0)
 		local blockStr = tostring(self.block)
 		local strWidth = strWidth(blockStr)
-		printShadowed(blockStr,self.x-4-strWidth,self.y+8*self.height+1,11)
+		printShadowed(blockStr,x-strWidth/2+1,y+8*self.height-7,11)
 	end
 
 	local hpStr = self.hp .. '/' .. self.maxHp
 	local strWidth = strWidth(hpStr)
-	printShadowed(hpStr,self.x+4*self.width-strWidth/2,self.y+8*self.height+1,12)
+	printShadowed(hpStr,x+4*width-strWidth/2,y+8*self.height+1,12)
 end
 
 function Creature:drawPowers()
-	local x = self.x
-	local y = self.y+8*self.height+8
+	local width = math.max(5,self.width)
+	local startX = self.x-(width-self.width)*4
+	local x = startX
+	local y = self.y+8*self.height+9
 	for _, power in ipairs(self.powers) do
 		x = x + power:drawImage(x,y)
-		if x>self.x+self.width*8 then
-			x = self.x
+		if x>self.x+width*8 then
+			x = startX
 			y = y + 9
 		end
 	end
@@ -118,6 +123,7 @@ function Creature:damage(source,value,type,action)
 end
 
 function Creature:die()
+	self:triggerEvent('onDeath')
 	self.alive = false
 	self.visible = false
 end

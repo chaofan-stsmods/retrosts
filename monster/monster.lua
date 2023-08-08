@@ -6,12 +6,12 @@ Monster = Creature:new{
 	takeTurn=noop,createRandom=nil,init=noop,lastIntent=nil,lastSecondIntent=nil,
 }
 function Monster:new(o)
-    local r = Creature.new(self,o)
-    if r.createRandom then
+	local r = Creature.new(self,o)
+	if r.createRandom then
 		r:init(r.createRandom)
 		r.hp = r.maxHp
 	end
-    return r
+	return r
 end
 
 function Monster:applyPowers()
@@ -75,7 +75,7 @@ function Monster:lastTwoIntentsAre(intent)
 end
 
 intentSpriteMap = {
-	attack={76},defend={47},attackDefend={76,47},buff={77},attackBuff={76,77},defendBuff={79},debuff={78},attackDebuff={76,78},
+	attack={76},defend={47},attackDefend={47,76},buff={77},attackBuff={77,76},defendBuff={79},debuff={78},attackDebuff={78,76},
 	strongDebuff={77}
 }
 function Monster:drawIntent()
@@ -91,8 +91,8 @@ function Monster:drawIntent()
 			mapColor(6,2)
 			mapColor(5,3)
 		end
-		for _, intentSprite in ipairs(intentSprites) do
-			spr(intentSprite,intentX,intentY,0)
+		for i, intentSprite in ipairs(intentSprites) do
+			spr(intentSprite,intentX+(#intentSprites-i)*2,intentY-(#intentSprites-i)*2,0)
 		end
 		if self.intentType == 'strongDebuff' then
 			resetColors{5,6,7}
@@ -109,6 +109,18 @@ function Monster:drawIntent()
 end
 
 function Monster:nextIntent(firstTurn)
+end
+
+function Monster:rollIntent(intentDefinition)
+	local random = aiRand
+	normalize(intentDefinition)
+	local i,def = rollList(random,intentDefinition)
+	if (def.limit == 1 and self:lastIntentIs(def[1])) or (def.limit == 2 and self:lastTwoIntentsAre(def[1])) then
+		table.remove(intentDefinition,i)
+		normalize(intentDefinition)
+		_,def = rollList(random,intentDefinition)
+	end
+	self:setIntent(table.unpack(def))
 end
 
 -- actions

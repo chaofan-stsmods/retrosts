@@ -16,5 +16,7 @@ function Encounter:setupEnemies(random)
 end
 
 function encItem(monsterType,xOffset,yOffset)
+	xOffset = xOffset or 0
+	yOffset = yOffset or 0
 	return {type=monsterType,x=166+xOffset-monsterType.width*4,y=80+yOffset-monsterType.height*8}
 end

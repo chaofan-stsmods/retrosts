@@ -108,6 +108,11 @@ function WeakPower:onAttack(damage)
 	return damage * 0.75
 end
 
+FrailPower = TurnBasedPower:new{debuff=true,icon=75,priority=150}
+function FrailPower:onModifyBlock(block)
+	return block * 0.75
+end
+
 LoseStrengthPower = Power:new{debuff=true,icon=14}
 function LoseStrengthPower:onTurnEnd()
 	addAction(ApplyPowerAction:new(StrengthPower:new(self.owner,-self.amount)))
