@@ -50,6 +50,7 @@ end
 
 function LouseNormal:drawImage()
 	sprmap(9,17,2,self.height,self.x+8,self.y,0)
+	rect(self.x+16,self.y+6,3,1,10)
 end
 
 function LouseNormal:buff()
@@ -99,10 +100,13 @@ function LouseDefensive:nextIntent()
 	})
 end
 
-CurlUpPower = Power:new{icon=448}
+CurlUpPower = Power:new{icon=448,triggered=false}
 function CurlUpPower:onHpLoss()
-	addAction(GainBlockAction:new{target=self.owner,value=self.amount})
-	addAction(ReducePowerAction:new(self,self.amount))
+	if not self.triggered then
+		self.triggered = true
+		addAction(GainBlockAction:new{target=self.owner,value=self.amount})
+		addAction(ReducePowerAction:new(self,self.amount))
+	end
 end
 
 JawWorm = Monster:new{ maxHp=10,width=4,height=3,bellowStr=3,bellowBlock=6,chompDmg=11,thrashDmg=7,thrashBlock=5 }
@@ -127,6 +131,7 @@ end
 
 function JawWorm:drawImage()
 	sprmap(11,17,self.width,self.height,self.x,self.y,0)
+	pix(self.x+16,self.y+6,10)
 end
 
 function JawWorm:thrash()
@@ -206,6 +211,55 @@ function SpikeSlimeM:nextIntent()
 	})
 end
 
+SpikeSlimeL = Monster:new{ maxHp=70,width=5,height=3,dmg=18,splitting=false }
+function SpikeSlimeL:init(random)
+	self.maxHp = ascension >= 7 and random:randInt(67,73) or random:randInt(64,70)
+	self.dmg = ascension >= 2 and 18 or 16
+	self:addPower(SplitPower:new(self))
+end
+
+function SpikeSlimeL:drawImage()
+	sprmap(24,17,self.width,self.height,self.x,self.y,0)
+end
+
+function SpikeSlimeL:attack()
+	addAction(DamageAction:new{target=player,source=self,value=self.intentDamage})
+	addAction(MakeTempCardToDiscardPileAction:new(Slimed:new(),2))
+	addAction(NextIntentAction:new(self))
+end
+
+function SpikeSlimeL:debuff()
+	addAction(ApplyPowerAction:new(FrailPower:new(player,ascension >= 17 and 3 or 2,true)))
+	addAction(NextIntentAction:new(self))
+end
+
+function SpikeSlimeL:split()
+	addAction(HideMonsterAction:new{target=self})
+	local splitted1 = SpikeSlimeM:new{createRandom=self.createRandom,x=self.x-24,y=self.y+8}
+	local splitted2 = SpikeSlimeM:new{createRandom=self.createRandom,x=self.x+24,y=self.y+8}
+	splitted1.maxHp,splitted1.hp = self.hp,self.hp
+	splitted2.maxHp,splitted2.hp = self.hp,self.hp
+	addAction(SpawnMonsterAction:new{target=splitted1})
+	addAction(SpawnMonsterAction:new{target=splitted2})
+	addAction(SuicideAction:new{target=self})
+end
+
+function SpikeSlimeL:nextIntent()
+	self:rollIntent({
+		{'attack','attackDebuff',self.dmg,power=30,limit=2},
+		{'debuff','debuff',power=70,limit=ascension >= 17 and 1 or 2},
+	})
+end
+
+SplitPower = Power:new{icon=450,stackable=false}
+function SplitPower:onDamaged()
+	local owner = self.owner
+	if owner.alive and not owner.splitting and owner.hp <= math.floor(owner.maxHp/2) then
+		addAction(SetIntentAction:new(owner,'split','unknown',0,0,false))
+		owner.splitting = true
+	end
+end
+
 AcidSlimeS = Monster:new{ maxHp=10,width=4,height=2,dmg=3 }
 function AcidSlimeS:init(random)
 	self.maxHp = ascension >= 7 and random:randInt(9,13) or random:randInt(8,12)
@@ -280,6 +334,64 @@ function AcidSlimeM:nextIntent()
 	end
 end
 
+AcidSlimeL = Monster:new{ maxHp=10,width=5,height=3,attackDmg=10,woundDmg=7 }
+function AcidSlimeL:init(random)
+	self.maxHp = ascension >= 7 and random:randInt(68,72) or random:randInt(65,69)
+	self.woundDmg = ascension >= 2 and 12 or 11
+	self.attackDmg = ascension >= 2 and 18 or 16
+	self:addPower(SplitPower:new(self))
+end
+
+function AcidSlimeL:drawImage()
+	mapColor(13,5)
+	mapColor(14,6)
+	sprmap(24,20,self.width,self.height,self.x,self.y,0)
+	resetColors{13,14}
+end
+
+function AcidSlimeL:attack()
+	addAction(DamageAction:new{target=player,source=self,value=self.intentDamage})
+	addAction(NextIntentAction:new(self))
+end
+
+function AcidSlimeL:wound()
+	addAction(DamageAction:new{target=player,source=self,value=self.intentDamage})
+	addAction(MakeTempCardToDiscardPileAction:new(Slimed:new(),2))
+	addAction(NextIntentAction:new(self))
+end
+
+function AcidSlimeL:debuff()
+	addAction(ApplyPowerAction:new(WeakPower:new(player,2,true)))
+	addAction(NextIntentAction:new(self))
+end
+
+function AcidSlimeL:split()
+	addAction(HideMonsterAction:new{target=self})
+	local splitted1 = AcidSlimeM:new{createRandom=self.createRandom,x=self.x-24,y=self.y+8}
+	local splitted2 = AcidSlimeM:new{createRandom=self.createRandom,x=self.x+24,y=self.y+8}
+	splitted1.maxHp,splitted1.hp = self.hp,self.hp
+	splitted2.maxHp,splitted2.hp = self.hp,self.hp
+	addAction(SpawnMonsterAction:new{target=splitted1})
+	addAction(SpawnMonsterAction:new{target=splitted2})
+	addAction(SuicideAction:new{target=self})
+end
+
+function AcidSlimeL:nextIntent()
+	if ascension >= 17 then
+		self:rollIntent({
+			{'wound','attackDebuff',self.woundDmg,power=40,limit=2},
+			{'attack','attack',self.attackDmg,power=30,limit=2},
+			{'debuff','debuff',power=30,limit=1},
+		})
+	else
+		self:rollIntent({
+			{'wound','attackDebuff',self.woundDmg,power=30,limit=2},
+			{'attack','attack',self.attackDmg,power=40,limit=1},
+			{'debuff','debuff',power=30,limit=2},
+		})
+	end
+end
+
 FungiBeast = Monster:new{ maxHp=24,width=4,height=3,dmg=6,strAmt=3 }
 function FungiBeast:init(random)
 	self.maxHp = ascension >= 7 and random:randInt(24,28) or random:randInt(22,28)
@@ -318,9 +430,217 @@ end
 
 SporeCloudPower = Power:new{icon=449}
 function SporeCloudPower:onDeath()
-	addAction(ApplyPowerAction:new(VulnerablePower:new(player,self.amount)))
+	addAction(ApplyPowerAction:new(VulnerablePower:new(player,self.amount,inEnemyTurn)))
 end
 
+SlaverBlue = Monster:new{ maxHp=50,width=4,height=4,stabDmg=12,rakeDmg=7 }
+function SlaverBlue:init(random)
+	self.maxHp = ascension >= 7 and random:randInt(48,52) or random:randInt(46,50)
+	if ascension >= 2 then
+		self.stabDmg,self.rakeDmg = 13,8
+	end
+end
+
+function SlaverBlue:drawImage()
+	sprmap(0,21,6,self.height,self.x-16,self.y,0)
+	rect(self.x,self.y+21,8,1,13)
+end
+
+function SlaverBlue:stab()
+	addAction(DamageAction:new{target=player,source=self,value=self.intentDamage})
+	addAction(NextIntentAction:new(self))
+end
+
+function SlaverBlue:rake()
+	addAction(DamageAction:new{target=player,source=self,value=self.intentDamage})
+	addAction(ApplyPowerAction:new(WeakPower:new(player,ascension>=17 and 2 or 1,true)))
+	addAction(NextIntentAction:new(self))
+end
+
+function SlaverBlue:nextIntent()
+	self:rollIntent({
+		{'stab','attack',self.stabDmg,power=60,limit=2},
+		{'rake','attackDebuff',self.rakeDmg,power=40,limit=ascension>=17 and 1 or 2},
+	})
+end
+
+SlaverRed = Monster:new{ maxHp=50,width=4,height=4,stabDmg=13,scrapeDmg=8,usedEntangle=false }
+function SlaverRed:init(random)
+	self.maxHp = ascension >= 7 and random:randInt(48,52) or random:randInt(46,50)
+	if ascension >= 2 then
+		self.stabDmg,self.scrapeDmg = 14,9
+	end
+end
+
+function SlaverRed:drawImage()
+	mapColor(9,2)
+	mapColor(15,1)
+	sprmap(6,21,7,self.height,self.x-16,self.y,0)
+	rect(self.x-12,self.y+21,4,1,13)
+	resetColors{9,15}
+end
+
+function SlaverRed:stab()
+	addAction(DamageAction:new{target=player,source=self,value=self.intentDamage})
+	addAction(NextIntentAction:new(self))
+end
+
+function SlaverRed:scrape()
+	addAction(DamageAction:new{target=player,source=self,value=self.intentDamage})
+	addAction(ApplyPowerAction:new(VulnerablePower:new(player,ascension>=17 and 2 or 1,true)))
+	addAction(NextIntentAction:new(self))
+end
+
+function SlaverRed:entangle()
+	self.usedEntangle = true
+	addAction(ApplyPowerAction:new(EntanglePower:new(player,1,true)))
+	addAction(NextIntentAction:new(self))
+end
+
+function SlaverRed:nextIntent(firstTurn)
+	if firstTurn then
+		self:setIntent('stab','attack',self.stabDmg)
+	elseif not self.usedEntangle then
+		if aiRand:randInt(0,99) < 25 then
+			self:setIntent('entangle','strongDebuff')
+		elseif not self:lastIntentIs('scrape') and (ascension < 17 or not self:lastTwoIntentsAre('scrape')) then
+			self:setIntent('scrape','attackDebuff',self.scrapeDmg)
+		else
+			self:setIntent('stab','attack',self.stabDmg)
+		end
+	else
+		self:rollIntent({
+			{'stab','attack',self.stabDmg,power=55,limit=2},
+			{'scrape','attackDebuff',self.scrapeDmg,power=45,limit=ascension>=17 and 1 or 2},
+		})
+	end
+end
+
+EntanglePower = TurnBasedPower:new{icon=451,debuff=true}
+function EntanglePower:canUseCard(card)
+	if card.type == 'attack' then
+		return false
+	end
+end
+
+Looter = Monster:new{ maxHp=50,width=4,height=4,swipeDmg=10,lungeDmg=12,goldAmt=15,swipeCount=0,blockAmt=6,goldStolen=0 }
+function Looter:init(random)
+	self.maxHp = ascension >= 7 and random:randInt(46,50) or random:randInt(44,48)
+	if ascension >= 2 then
+		self.swipeDmg,self.lungeDmg = 11,14
+	end
+	self.goldAmt = ascension >= 17 and 20 or 15
+end
+
+function Looter:onCombatStart()
+	addAction(ApplyPowerAction:new(ThieveryPower:new(self,self.goldAmt)))
+	Monster.onCombatStart(self)
+end
+
+function Looter:drawImage()
+	if self.flipped then
+		sprmap(16,21,3,self.height,self.x+8,self.y,0,1,function(t) return t,1 end)
+	else
+		sprmap(13,21,3,self.height,self.x,self.y,0)
+	end
+end
+
+function Looter:swipe()
+	self.swipeCount = self.swipeCount+1
+	addAction(DamageAction:new{target=player,source=self,value=self.intentDamage})
+	addAction(ThieveryAction:new{owner=self,amount=self.goldAmt})
+	if self.swipeCount == 2 then
+		if aiRand:rand() < 0.5 then
+			addAction(SetIntentAction:new(self,'defend','defend'))
+		else
+			addAction(SetIntentAction:new(self,'lunge','attack',self.lungeDmg))
+		end
+	else
+		addAction(SetIntentAction:new(self,'swipe','attack',self.swipeDmg))
+	end
+end
+
+function Looter:lunge()
+	addAction(DamageAction:new{target=player,source=self,value=self.intentDamage})
+	addAction(ThieveryAction:new{owner=self,amount=self.goldAmt})
+	addAction(SetIntentAction:new(self,'defend','defend'))
+end
+
+function Looter:defend()
+	addAction(GainBlockAction:new{target=self,value=self.blockAmt})
+	addAction(SetIntentAction:new(self,'escape','escape'))
+end
+
+function Looter:escape()
+	self.goldStolen = 0
+	addAction(EscapeAction:new{target=self})
+end
+
+function Looter:nextIntent()
+	self:setIntent('swipe','attack',self.swipeDmg)
+end
+
+ThieveryPower = Power:new{icon=418}
+ThieveryAction = Action:new{owner=nil,amount=15}
+function ThieveryAction:tick()
+	local amount = math.min(gold,self.amount)
+	gold = gold - amount
+	self.owner.goldStolen = self.owner.goldStolen + amount
+	self.isDone = true
+end
+
+GremlinNob = Monster:new{ maxHp=90,width=5,height=6,bashDmg=6,rushDmg=14,usedBellow=false }
+function GremlinNob:init(random)
+	self.maxHp = ascension >= 8 and random:randInt(85,90) or random:randInt(82,86)
+	if ascension >= 3 then
+		self.bashDmg,self.rushDmg = 8,16
+	end
+end
+
+function GremlinNob:drawImage()
+	sprmap(19,21,self.width,self.height,self.x+10,self.y,0)
+end
+
+function GremlinNob:bellow()
+	self.usedBellow = true
+	addAction(ApplyPowerAction:new(AngerPower:new(self,ascension>=18 and 3 or 2)))
+	addAction(NextIntentAction:new(self))
+end
+
+function GremlinNob:bash()
+	addAction(DamageAction:new{target=player,source=self,value=self.intentDamage})
+	addAction(ApplyPowerAction:new(VulnerablePower:new(player,2,true)))
+	addAction(NextIntentAction:new(self))
+end
+
+function GremlinNob:rush()
+	addAction(DamageAction:new{target=player,source=self,value=self.intentDamage})
+	addAction(NextIntentAction:new(self))
+end
+
+function GremlinNob:nextIntent()
+	if not self.usedBellow then
+		self:setIntent('bellow','buff')
+	elseif ascension >= 18 then
+		if not self:oneOfLastTwoIntentsIs('bash') then
+			self:setIntent('bash','attackDebuff',self.bashDmg)
+		else
+			self:setIntent('rush','attack',self.rushDmg)
+		end
+	else
+		self:rollIntent({
+			{'bash','attackDebuff',self.bashDmg,power=33},
+			{'rush','attack',self.rushDmg,power=67,limit=2},
+		})
+	end
+end
+
+AngerPower = Power:new{icon=17}
+function AngerPower:onUseCard(card)
+	if card.type == 'skill' then
+		addAction(ApplyPowerAction:new(StrengthPower:new(self.owner,self.amount)))
+	end
+end
 
 -- encounters
 CultistEncounter = Encounter:new{spriteBank=1,name='Cultist',enemyInfo={encItem(Cultist)}}
@@ -362,3 +682,36 @@ function ThreeLouseEncounter:setupEnemies(random)
 	Encounter.setupEnemies(self,random)
 end
 TwoFungiBeastEncounter = Encounter:new{spriteBank=1,name='TwoFungiBeast',enemyInfo={encItem(FungiBeast,-24,0),encItem(FungiBeast,24,0)}}
+LargeSlimeEncounter = Encounter:new{spriteBank=1,name='LargeSlime',enemyInfo={}}
+function LargeSlimeEncounter:setupEnemies(random)
+	self.enemyInfo = {}
+	self.enemyInfo[1] = random:randBool() and encItem(SpikeSlimeL) or encItem(AcidSlimeL)
+	Encounter.setupEnemies(self,random)
+end
+SlaverBlueEncounter = Encounter:new{spriteBank=1,name='SlaverBlue',enemyInfo={encItem(SlaverBlue)}}
+SlaverRedEncounter = Encounter:new{spriteBank=1,name='SlaverRed',enemyInfo={encItem(SlaverRed)}}
+LooterEncounter = Encounter:new{spriteBank=1,name='Looter',enemyInfo={encItem(Looter)}}
+
+local weakWildlife = {{item=LouseNormal,power=0.5},{item=LouseDefensive,power=0.5},{item=SpikeSlimeM,power=1},{item=AcidSlimeM,power=1}}
+local strongHumanoid = {{item=SlaverBlue,power=0.5},{item=SlaverRed,power=0.5},{item=Cultist,power=1},{item=Looter,power=1}}
+local strongWildlife = {{item=FungiBeast,power=1},{item=JawWorm,power=1}}
+normalize(weakWildlife)
+normalize(strongHumanoid)
+normalize(strongWildlife)
+ExordiumThugsEncounter = Encounter:new{spriteBank=1,name='ExordiumThugs',enemyInfo={}}
+function ExordiumThugsEncounter:setupEnemies(random)
+	self.enemyInfo = {}
+	self.enemyInfo[1] = encItem(rollList(random,weakWildlife).item,-24,0)
+	self.enemyInfo[2] = encItem(rollList(random,strongHumanoid).item,24,0)
+	Encounter.setupEnemies(self,random)
+end
+ExordiumWildlifeEncounter = Encounter:new{spriteBank=1,name='ExordiumWildlife',enemyInfo={}}
+function ExordiumWildlifeEncounter:setupEnemies(random)
+	self.enemyInfo = {}
+	self.enemyInfo[1] = encItem(rollList(random,strongWildlife).item,-24,0)
+	self.enemyInfo[2] = encItem(rollList(random,weakWildlife).item,24,0)
+	Encounter.setupEnemies(self,random)
+end
+
+-- elite encounters
+GremlinNobEncounter = Encounter:new{spriteBank=1,name='GremlinNob',enemyInfo={encItem(GremlinNob)}}

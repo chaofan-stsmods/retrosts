@@ -74,9 +74,13 @@ function Monster:lastTwoIntentsAre(intent)
 	return self.lastIntent == intent and self.lastSecondIntent == intent
 end
 
+function Monster:oneOfLastTwoIntentsIs(intent)
+	return self.lastIntent == intent or self.lastSecondIntent == intent
+end
+
 intentSpriteMap = {
 	attack={76},defend={47},attackDefend={47,76},buff={77},attackBuff={77,76},defendBuff={79},debuff={78},attackDebuff={78,76},
-	strongDebuff={77}
+	strongDebuff={78},escape={72}
 }
 function Monster:drawIntent()
 	if not self.showIntent then
@@ -89,7 +93,7 @@ function Monster:drawIntent()
 		if self.intentType == 'strongDebuff' then
 			mapColor(7,1)
 			mapColor(6,2)
-			mapColor(5,3)
+			mapColor(5,8)
 		end
 		for i, intentSprite in ipairs(intentSprites) do
 			spr(intentSprite,intentX+(#intentSprites-i)*2,intentY-(#intentSprites-i)*2,0)
@@ -97,6 +101,8 @@ function Monster:drawIntent()
 		if self.intentType == 'strongDebuff' then
 			resetColors{5,6,7}
 		end
+	elseif self.intentType == 'unknown' then
+		printShadowed('?',intentX+1,intentY+1,4)
 	end
 	if self.intentType:sub(1,6) == 'attack' then
 		local damageStr = tostring(self.intentDamage)
@@ -114,11 +120,11 @@ end
 function Monster:rollIntent(intentDefinition)
 	local random = aiRand
 	normalize(intentDefinition)
-	local i,def = rollList(random,intentDefinition)
+	local def,i = rollList(random,intentDefinition)
 	if (def.limit == 1 and self:lastIntentIs(def[1])) or (def.limit == 2 and self:lastTwoIntentsAre(def[1])) then
 		table.remove(intentDefinition,i)
 		normalize(intentDefinition)
-		_,def = rollList(random,intentDefinition)
+		def = rollList(random,intentDefinition)
 	end
 	self:setIntent(table.unpack(def))
 end
@@ -181,6 +187,46 @@ function SetIntentAction:tick()
 		if self.hideIntent then
 			owner.showIntent = false
 		end
+	end
+	Action.tick(self)
+end
+
+HideMonsterAction = Action:new{target=nil,duration=10}
+function HideMonsterAction:tick()
+	if self.duration == self.startDuration then
+		self.target.visible = false
+	end
+	Action.tick(self)
+end
+
+SpawnMonsterAction = Action:new{target=nil,index=nil,duration=20}
+function SpawnMonsterAction:tick()
+	if self.duration == self.startDuration then
+		if self.index == nil then
+			table.insert(enemies,self.target)
+		else
+			enemies[self.index] = self.target
+		end
+		self.target:onCombatStart()
+	end
+	Action.tick(self)
+end
+
+SuicideAction = Action:new{target=nil,duration=10}
+function SuicideAction:tick()
+	if self.duration == self.startDuration then
+		self.target:die()
+	end
+	Action.tick(self)
+end
+
+EscapeAction = Action:new{target=nil,duration=30}
+function EscapeAction:tick()
+	if self.duration == self.startDuration then
+		local target = self.target
+		target:die()
+		target.flipped = true
+		addEffect(CreatureEffect:new{target=target,x=target.x,y=target.y,xSpeed=1})
 	end
 	Action.tick(self)
 end

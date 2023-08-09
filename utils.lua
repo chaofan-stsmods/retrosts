@@ -143,7 +143,14 @@ function sprmap(x, y, w, h, sx, sy, colorkey, scale, remap)
 end
 
 function mapColor(from,to)
-	poke4(PALETTE_MAP * 2 + from, to)
+	poke4(PALETTE_MAP*2+from,to)
+end
+
+function mapColors(...)
+	local args = {...}
+	for i = 0,15 do
+		poke4(PALETTE_MAP*2+i,args[i+1])
+	end
 end
 
 function darkenColors()
@@ -254,10 +261,10 @@ function rollList(random,list,key)
 	for i,item in ipairs(list) do
 		sum = sum + item[key]
 		if sum >= roll then
-			return i,item
+			return item,i
 		end
 	end
-	return #list,list[#list]
+	return list[#list],#list
 end
 
 function noop() end

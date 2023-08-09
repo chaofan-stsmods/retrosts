@@ -78,8 +78,8 @@ Clash = RedCard:new{
 	name='Clash',description='Can only be played if every card in hand is {57}. NL {63} !D!.',rarity='common',
 	baseCost=0,enemyTarget=true,baseDamage=14,upgrade={baseDamage=18}
 }
-function Clash:canUse()
-	return RedCard.canUse(self) and table.allMatch(hand,function (cardItem) return cardItem.card.type == 'attack' end)
+function Clash:baseCanUse()
+	return RedCard.baseCanUse(self) and table.allMatch(hand,function (cardItem) return cardItem.card.type == 'attack' end)
 end
 
 function Clash:use(target)

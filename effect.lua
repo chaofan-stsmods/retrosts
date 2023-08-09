@@ -55,6 +55,16 @@ function CardEffect:tick()
 	end
 end
 
+CreatureEffect = Effect:new{target=nil,duration=120,xSpeed=0,ySpeed=0,x=120,y=68}
+function CreatureEffect:tick()
+	self.target.x = self.x
+	self.target.y = self.y
+	self.target:drawImage()
+	self.x = self.x + self.xSpeed
+	self.y = self.y + self.ySpeed
+	Effect.tick(self)
+end
+
 AnonymousEffect = Effect:new{duration=30,callback=nil}
 function AnonymousEffect:tick()
 	if self.callback then

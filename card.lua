@@ -18,9 +18,9 @@ function Card:new(o)
 			self:upgradeValues(upgradeTable)
 		end
 	end
-	if type(r.canUse) == 'boolean' then
-		local canUseValue = r.canUse
-		r.canUse = function (self) return canUseValue end
+	if type(r.baseCanUse) == 'boolean' then
+		local canUseValue = r.baseCanUse
+		r.baseCanUse = function (self) return canUseValue end
 	end
 	if type(r.canUpgrade) == 'boolean' then
 		local canUpgradeValue = r.canUpgrade
@@ -34,8 +34,12 @@ function Card:use(target,energyOnUse,free)
 	return {}
 end
 
+function Card:baseCanUse(free)
+	return self:getCost() <= energy or free
+end
+
 function Card:canUse(free)
-	return (self:getCost() <= energy or free) and not inEnemyTurn
+	return player:triggerConditionEvent('canUseCard',self:baseCanUse(free),self) and not inEnemyTurn
 end
 
 function Card:getCost()

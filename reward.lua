@@ -4,6 +4,11 @@
 RewardWindow = Window:new{rewards=nil,selection=0,title='Rewards',canClose=false,name='RewardWindow'}
 function RewardWindow:onOpen()
 	queueSync(4,1)
+	if roomType == 'combat' then
+		queueSync(2,combatSpriteBank)
+	else
+		queueSync(2,currentEvent.spritebank)
+	end
 	queueSync(1,player.tileBank)
 end
 
@@ -134,6 +139,7 @@ end
 function generateRewards(random)
 	local rewards = {}
 	generateGoldReward(rewards,random)
+	generateStolenGoldReward(rewards)
 	generateCardRewards(rewards,random)
 	generateRelicRewards(rewards,random)
 	generatePotionRewards(rewards,random)
@@ -157,8 +163,20 @@ function generateGoldReward(rewards,random)
 	end
 end
 
-function addGoldReward(rewards,amount)
-	table.insert(rewards,{title=amount..' Gold',icon=7,type='gold',value=amount})
+function generateStolenGoldReward(rewards)
+	local stolenGold = 0
+	for _, enemy in ipairs(enemies) do
+		if enemy.goldStolen then
+			stolenGold = stolenGold + enemy.goldStolen
+		end
+	end
+	if stolenGold > 0 then
+		addGoldReward(rewards,stolenGold,' (Stolen)')
+	end
+end
+
+function addGoldReward(rewards,amount,suffix)
+	table.insert(rewards,{title=amount..' Gold'..(suffix or ''),icon=7,type='gold',value=amount})
 end
 
 local rareCardRandOffset = 5
@@ -329,6 +347,11 @@ end
 CardRewardWindow = Window:new{name='CardRewardWindow',cards=nil,selection=0,single=false,canClose=true}
 function CardRewardWindow:onOpen()
 	queueSync(4,1)
+	if roomType == 'combat' then
+		queueSync(2,combatSpriteBank)
+	else
+		queueSync(2,currentEvent.spritebank)
+	end
 	queueSync(1,player.tileBank)
 	local replace = false
 	for i, card in ipairs(self.cards) do

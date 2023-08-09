@@ -48,7 +48,7 @@ function Act:exclusiveListCheck(candidate,encounters)
 end
 
 function rollEncounters(encounters,random)
-	local _,item = rollList(random,encounters)
+	local item = rollList(random,encounters)
 	return item and item.item or CultistEncounter
 end
 
@@ -96,11 +96,20 @@ Exordium = Act:new{
 		{item=LotsOfSlimesEncounter,power=1},
 		{item=ThreeLouseEncounter,power=2},
 		{item=TwoFungiBeastEncounter,power=2},
+		{item=LargeSlimeEncounter,power=2},
+		{item=SlaverBlueEncounter,power=2},
+		{item=SlaverRedEncounter,power=1},
+		{item=LooterEncounter,power=2},
+		{item=ExordiumThugsEncounter,power=1.5},
+		{item=ExordiumWildlifeEncounter,power=1.5},
 	},
 	exclusiveEncounters={
 		[TwoLouseEncounter]={ThreeLouseEncounter},
-		[SmallSlimesEncounter]={LotsOfSlimesEncounter},
+		[SmallSlimesEncounter]={LotsOfSlimesEncounter,LargeSlimeEncounter},
 	},
+	eliteEncounters={
+		{item=GremlinNobEncounter,power=1}
+	}
 }
 function Exordium:drawBackground()
 	sprmap(30,0,30,17,0,0)

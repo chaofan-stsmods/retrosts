@@ -14,15 +14,15 @@ end
 
 ColorlessCard = Card:new{color={14,15},costIcon=46,typeIconColor=13,colorName='colorless'}
 
-Wound = ColorlessCard:new{ name='Wound',description='Unplayable.',rarity='special',baseCost=-2,type='status',canUse=false,canUpgrade=false,playerTarget=true }
+Wound = ColorlessCard:new{ name='Wound',description='Unplayable.',rarity='special',baseCost=-2,type='status',baseCanUse=false,canUpgrade=false,playerTarget=true }
 
-Dazed = ColorlessCard:new{ name='Dazed',description='Unplayable. NL Ethereal.',rarity='special',baseCost=-2,type='status',canUse=false,canUpgrade=false,ethereal=true,playerTarget=true }
+Dazed = ColorlessCard:new{ name='Dazed',description='Unplayable. NL Ethereal.',rarity='special',baseCost=-2,type='status',baseCanUse=false,canUpgrade=false,ethereal=true,playerTarget=true }
 
 Slimed = ColorlessCard:new{ name='Slimed',description='Exhaust.',rarity='special',baseCost=1,type='status',canUpgrade=false,exhaust=true,playerTarget=true }
 
 Burn = ColorlessCard:new{
 	name='Burn',description='Unplayable. NL At the end of turn, {63} !M! to you.',rarity='special',baseCost=-2,type='status',
-	canUse=false,canUpgrade=false,baseMagic=2,upgrade={baseMagic=4},autoPlayOnEndTurn=true,playerTarget=true
+	baseCanUse=false,canUpgrade=false,baseMagic=2,upgrade={baseMagic=4},autoPlayOnEndTurn=true,playerTarget=true
 }
 function Burn:use()
 	return { DamageAction:new{source=player,target=player,value=self.magic,type='power'} }
@@ -112,7 +112,7 @@ colorlessCards = {
 	Wound,Dazed,Burn,Slimed,BandageUp,Blind,Finesse,MasterOfStrategy,HandOfGreed,ThinkingAhead
 }
 
-CurseCard = Card:new{color={15,0},costIcon=46,typeIconColor=13,colorName='curse',type='curse',rarity='common',baseCost=-2,canUse=false,canUpgrade=false}
+CurseCard = Card:new{color={15,0},costIcon=46,typeIconColor=13,colorName='curse',type='curse',rarity='common',baseCost=-2,baseCanUse=false,canUpgrade=false}
 
 AscendersBane = CurseCard:new{
 	name='Ascender\'s Bane',description='Unplayable. NL Ethereal. NL Cannot be removed from deck.',

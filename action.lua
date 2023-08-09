@@ -497,10 +497,11 @@ function AnonymousAction:tick()
 	self.isDone = true
 end
 
-local cardPositionCandidates = {{80,68},{160,68},{40,68},{200,68},{100,28},{140,28},{60,28},{180,28}}
+local cardPositionCandidates = {{120,68},{80,68},{160,68},{40,68},{200,68},{100,28},{140,28},{60,28},{180,28}}
 function fillCardPosition(cardItem)
 	local useCandidates = false
-	for j = 1,#cardPositionCandidates do
+	local start = inEnemyTurn and 1 or 2
+	for j = start,#cardPositionCandidates do
 		if table.allMatch(effects,function (e) return e.useCardPosition ~= j end) and 
 			table.allMatch(actions,function (e) return e.useCardPosition ~= j end) and
 			table.allMatch(secondaryActions,function (e) return e.useCardPosition ~= j end) and

@@ -2,7 +2,7 @@
 ---@diagnostic disable: lowercase-global
 
 Creature = Object:new{
-	hp=100,maxHp=100,x=0,y=0,width=3,height=3,block=0,powerIndex=0,powers={},alive=true,visible=true,
+	hp=100,maxHp=100,x=0,y=0,width=3,height=3,block=0,powerIndex=0,powers={},alive=true,visible=true,flipped=false,
 	applyPowers=noop,
 	onCombatStart=noop,
 	drawImage=noop,
@@ -120,6 +120,7 @@ function Creature:damage(source,value,type,action)
 			action.numKilled = (action.numKilled or 0) + 1
 		end
 	end
+	self:triggerEvent('onDamaged',value,source,type,action)
 end
 
 function Creature:die()
