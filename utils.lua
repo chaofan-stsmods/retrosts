@@ -142,26 +142,22 @@ function sprmap(x, y, w, h, sx, sy, colorkey, scale, remap)
 	poke4(2*0x03FFC,2)
 end
 
+local isDarken = false
+local darkenColorList = {0,0,1,2,3,6,7,0,1,15,9,10,13,14,15,0}
 function mapColor(from,to)
-	poke4(PALETTE_MAP*2+from,to)
+	poke4(PALETTE_MAP*2+from,isDarken and darkenColorList[to+1] or to)
 end
 
 function mapColors(...)
 	local args = {...}
 	for i = 0,15 do
-		poke4(PALETTE_MAP*2+i,args[i+1])
+		poke4(PALETTE_MAP*2+i,isDarken and darkenColorList[args[i+1]+1] or args[i+1])
 	end
 end
 
 function darkenColors()
-	poke(PALETTE_MAP+0,0)
-	poke(PALETTE_MAP+1,14*16+15)
-	poke(PALETTE_MAP+2,13*16+13)
-	poke(PALETTE_MAP+3,15*16+14)
-	poke(PALETTE_MAP+4,15*16)
-	poke(PALETTE_MAP+5,13*16+14)
-	poke(PALETTE_MAP+6,14*16+13)
-	poke(PALETTE_MAP+7,15)
+	mapColors(table.unpack(darkenColorList))
+	isDarken = true
 end
 
 function resetColor(color)
@@ -170,6 +166,7 @@ end
 
 function resetColors(colors)
 	if colors == nil then
+		isDarken = false
 		for i = 0,8 do
 			poke(PALETTE_MAP+i,i*2+(i*2+1)*16)
 		end
@@ -303,6 +300,16 @@ function table:map(func)
 		table.insert(r,func(value))
 	end
 	return r
+end
+
+function table:count(condition)
+	local count = 0
+	for _, value in ipairs(self) do
+		if condition(value) then
+			count = count + 1
+		end
+	end
+	return count
 end
 
 -- selection

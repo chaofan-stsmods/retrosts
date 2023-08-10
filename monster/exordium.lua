@@ -642,6 +642,164 @@ function AngerPower:onUseCard(card)
 	end
 end
 
+GremlinThief = Monster:new{ maxHp=15,width=4,height=2,dmg=9 }
+function GremlinThief:init(random)
+	self.maxHp = ascension >= 7 and random:randInt(11,15) or random:randInt(10,14)
+	if ascension >= 2 then
+		self.dmg = 10
+	end
+end
+
+function GremlinThief:drawImage()
+	sprmap(0,29,2,2,self.x+8,self.y,0)
+end
+
+function GremlinThief:attack()
+	addAction(DamageAction:new{target=player,source=self,value=self.intentDamage})
+	addAction(NextIntentAction:new(self))
+end
+
+function GremlinThief:nextIntent()
+	self:setIntent('attack','attack',self.dmg)
+end
+
+GremlinFat = Monster:new{ maxHp=15,width=4,height=6,dmg=4 }
+function GremlinFat:init(random)
+	self.maxHp = ascension >= 7 and random:randInt(14,18) or random:randInt(13,17)
+	if ascension >= 2 then
+		self.dmg = 5
+	end
+end
+
+function GremlinFat:drawImage()
+	sprmap(11,28,2,6,self.x+8,self.y,0)
+end
+
+function GremlinFat:attack()
+	addAction(DamageAction:new{target=player,source=self,value=self.intentDamage})
+	addAction(ApplyPowerAction:new(WeakPower:new(player,1,true)))
+	if ascension >= 17 then
+		addAction(ApplyPowerAction:new(FrailPower:new(player,1,true)))
+	end
+	addAction(NextIntentAction:new(self))
+end
+
+function GremlinFat:nextIntent()
+	self:setIntent('attack','attackDebuff',self.dmg)
+end
+
+GremlinWarrior = Monster:new{ maxHp=15,width=4,height=3,dmg=4 }
+function GremlinWarrior:init(random)
+	self.maxHp = ascension >= 7 and random:randInt(21,25) or random:randInt(20,24)
+	if ascension >= 2 then
+		self.dmg = 5
+	end
+end
+
+function GremlinWarrior:onCombatStart()
+	addAction(ApplyPowerAction:new(AngryPower:new(self,ascension >= 17 and 2 or 1)))
+	Monster.onCombatStart(self)
+end
+
+function GremlinWarrior:drawImage()
+	sprmap(6,28,3,3,self.x+4,self.y,0)
+end
+
+function GremlinWarrior:attack()
+	addAction(DamageAction:new{target=player,source=self,value=self.intentDamage})
+	addAction(NextIntentAction:new(self))
+end
+
+function GremlinWarrior:nextIntent()
+	self:setIntent('attack','attack',self.dmg)
+end
+
+AngryPower = Power:new{icon=17}
+function AngryPower:onDamaged(value,source,type)
+	if value > 0 and source == player and type == 'attack' then
+		addAction(1,ApplyPowerAction:new(StrengthPower:new(self.owner,self.amount)))
+	end
+end
+
+GremlinWizard = Monster:new{ maxHp=22,width=4,height=3,dmg=25,numCharged=1 }
+function GremlinWizard:init(random)
+	self.maxHp = ascension >= 7 and random:randInt(22,26) or random:randInt(21,25)
+	if ascension >= 2 then
+		self.dmg = 30
+	end
+end
+
+function GremlinWizard:drawImage()
+	sprmap(2,29,4,3,self.x-4,self.y,0)
+end
+
+function GremlinWizard:charge()
+	self.numCharged = self.numCharged + 1
+	if self.numCharged == 3 then
+		addAction(SetIntentAction:new(self,'attack','attack',self.dmg))
+	else
+		addAction(SetIntentAction:new(self,'charge','unknown'))
+	end
+end
+
+function GremlinWizard:attack()
+	self.numCharged = 0
+	addAction(DamageAction:new{target=player,source=self,value=self.intentDamage})
+	if ascension >= 17 then
+		addAction(SetIntentAction:new(self,'attack','attack',self.dmg))
+	else
+		addAction(SetIntentAction:new(self,'charge','unknown'))
+	end
+end
+
+function GremlinWizard:nextIntent()
+	self:setIntent('charge','unknown')
+end
+
+GremlinTsundere = Monster:new{ maxHp=15,width=4,height=4,dmg=6,blockAmt=7 }
+function GremlinTsundere:init(random)
+	self.maxHp = ascension >= 7 and random:randInt(13,17) or random:randInt(12,15)
+	if ascension >= 17 then
+		self.dmg = 8
+		self.blockAmt = 11
+	elseif ascension >= 2 then
+		self.dmg = 8
+		self.blockAmt = 8
+	end
+end
+
+function GremlinTsundere:drawImage()
+	sprmap(9,28,2,4,self.x+8,self.y,0)
+end
+
+function GremlinTsundere:defend()
+	addAction(AnonymousAction:new(function ()
+		local targets = shallowcopy(enemies)
+		table.retainIf(targets,function(e) return e.alive and e ~= self end)
+		local target
+		if #targets > 0 then
+			target = targets[aiRand:randInt(#targets)]
+		else
+			target = self
+		end
+		addAction(1,GainBlockAction:new{target=target,value=self.blockAmt})
+	end))
+	addAction(NextIntentAction:new(self))
+end
+
+function GremlinTsundere:attack()
+	addAction(DamageAction:new{target=player,source=self,value=self.intentDamage})
+	addAction(NextIntentAction:new(self))
+end
+
+function GremlinTsundere:nextIntent()
+	if table.count(enemies,function(e) return e.alive end) > 1 then
+		self:setIntent('defend','defend')
+	else
+		self:setIntent('attack','attack',self.dmg)
+	end
+end
+
 -- encounters
 CultistEncounter = Encounter:new{spriteBank=1,name='Cultist',enemyInfo={encItem(Cultist)}}
 TwoLouseEncounter = Encounter:new{spriteBank=1,name='TwoLouse',enemyInfo={}}
@@ -710,6 +868,23 @@ function ExordiumWildlifeEncounter:setupEnemies(random)
 	self.enemyInfo = {}
 	self.enemyInfo[1] = encItem(rollList(random,strongWildlife).item,-24,0)
 	self.enemyInfo[2] = encItem(rollList(random,weakWildlife).item,24,0)
+	Encounter.setupEnemies(self,random)
+end
+GremlinGangEncounter = Encounter:new{spriteBank=3,name='GremlinGang',enemyInfo={}}
+function GremlinGangEncounter:setupEnemies(random)
+	local targets = {
+		GremlinWarrior,GremlinWarrior,
+		GremlinThief,GremlinThief,
+		GremlinFat,GremlinFat,
+		GremlinTsundere,
+		GremlinWizard,
+	}
+	random:shuffle(targets)
+	self.enemyInfo = {}
+	self.enemyInfo[1] = encItem(targets[1],-62,2)
+	self.enemyInfo[2] = encItem(targets[2],-20,-3)
+	self.enemyInfo[3] = encItem(targets[3],22,-8)
+	self.enemyInfo[4] = encItem(targets[4],52,8)
 	Encounter.setupEnemies(self,random)
 end
 

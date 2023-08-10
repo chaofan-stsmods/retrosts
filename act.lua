@@ -102,6 +102,7 @@ Exordium = Act:new{
 		{item=LooterEncounter,power=2},
 		{item=ExordiumThugsEncounter,power=1.5},
 		{item=ExordiumWildlifeEncounter,power=1.5},
+		{item=GremlinGangEncounter,power=1},
 	},
 	exclusiveEncounters={
 		[TwoLouseEncounter]={ThreeLouseEncounter},

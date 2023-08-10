@@ -794,6 +794,16 @@ CardGridSelectWindow = Window:new{
 	name='CardGridSelectWindow',selectedCards=nil,title='Choose a card',cardItems=nil,single=false,
 	max=999,min=1,canClose=false,
 }
+function CardGridSelectWindow:onOpen()
+	queueSync(4,1)
+	if roomType == 'combat' then
+		queueSync(2,combatSpriteBank)
+	else
+		queueSync(2,currentEvent.spritebank)
+	end
+	queueSync(1,player.tileBank)
+end
+
 function CardGridSelectWindow:new(o)
 	local gridUI = CardGridUI:new(o.cardItems)
 	gridUI.cursorOnSelf = true

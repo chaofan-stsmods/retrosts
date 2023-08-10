@@ -505,7 +505,7 @@ function BattleTrance:use()
 end
 
 BloodForBlood = RedCard:new{
-	name='Blood for Blood',description='costs 1 less {62} each time you lose HP this combat. NL {63} !D!.',rarity='uncommon',
+	name='Blood for Blood',description='Costs 1 less {62} each time you lose HP this combat. NL {63} !D!.',rarity='uncommon',
 	baseCost=4,baseDamage=18,enemyTarget=true
 }
 function BloodForBlood:use(target)
