@@ -439,6 +439,10 @@ function Random:randInt(from,to)
 	return math.floor(self:rand() * (to-from+1)) + from
 end
 
+function Random:randFloat(from,to)
+	return self:rand() * (to-from) + from
+end
+
 function Random:randBool()
 	return self:rand() > 0.5
 end

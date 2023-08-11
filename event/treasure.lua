@@ -36,7 +36,6 @@ function TreasureEvent:onOption(selection)
 	elseif selection == 2 then
 		completeRoom()
 		openWindowAbove(MapWindow:new())
-		return
 	end
 end
 

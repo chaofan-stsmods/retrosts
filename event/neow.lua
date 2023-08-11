@@ -52,7 +52,7 @@ function generateNeowRewards(options,random)
 		end}
 	elseif oid == 2 then
 		option = {description='[ #5#Obtain a random rare card #12#]',onSelect=function ()
-			local card = getPlayerCardTypeByRarity('rare',random):new()
+			local card = getPlayerCardType(random,'rare'):new()
 			local cardItem = CardItem:new{card=card,x=0,y=136,tx=120,ty=68,isNotInHand=true}
 			addEffect(CardEffect:new{cardItem=cardItem,pauseDuration=30,duration=50,tx=240,ty=0})
 			table.insert(deck,cardItem.card)

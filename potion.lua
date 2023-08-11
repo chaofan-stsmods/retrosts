@@ -10,6 +10,21 @@ function getTrueRandomPotionType(random)
 	return allPotions[random:randInt(#allPotions)]
 end
 
+function getRandomPotionType(random,noFruit)
+	local roll = random:randInt(0,99)
+	local rarity
+	if roll < 65 then
+		rarity = 'common'
+	elseif roll < 90 then
+		rarity = 'uncommon'
+	else
+		rarity = 'rare'
+	end
+	local allPotions = shallowcopy(getAllPotions())
+	table.retainIf(allPotions,function (p) return p.rarity == rarity and (not noFruit or p == FruitJuice) end)
+	return allPotions[random:randInt(#allPotions)]
+end
+
 function obtainPotion(potion)
 	for i,v in ipairs(potions) do
 		if v == Slot then

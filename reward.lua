@@ -189,9 +189,21 @@ function resetRewardGenerator()
 	potionRandOffset = 0
 end
 
-function getPlayerCardTypeByRarity(rarity,random)
+function getPlayerCardType(random,rarity,type)
 	local allCardTypes = shallowcopy(player:getCards())
-	table.retainIf(allCardTypes,function (cardType) return cardType.rarity == rarity end)
+	table.retainIf(allCardTypes,function (cardType)
+		return (rarity == nil or cardType.rarity == rarity) and
+			(type == nil or cardType.type == type)
+	end)
+	return allCardTypes[random:randInt(#allCardTypes)]
+end
+
+function getColorlessCardType(random,rarity,type)
+	local allCardTypes = shallowcopy(getColorlessCards())
+	table.retainIf(allCardTypes,function (cardType)
+		return (rarity == nil or cardType.rarity == rarity) and
+			(type == nil or cardType.type == type)
+	end)
 	return allCardTypes[random:randInt(#allCardTypes)]
 end
 
@@ -328,21 +340,6 @@ function addPotionReward(rewards,potion)
 	table.insert(rewards,{title=potion.name,type='potion',value=potion})
 end
 
-function getRandomPotionType(random)
-	local roll = random:randInt(0,99)
-	local rarity
-	if roll < 65 then
-		rarity = 'common'
-	elseif roll < 90 then
-		rarity = 'uncommon'
-	else
-		rarity = 'rare'
-	end
-	local allPotions = shallowcopy(getAllPotions())
-	table.retainIf(allPotions,function (p) return p.rarity == rarity end)
-	return allPotions[random:randInt(#allPotions)]
-end
-
 -- cardselect
 CardRewardWindow = Window:new{name='CardRewardWindow',cards=nil,selection=0,single=false,canClose=true}
 function CardRewardWindow:onOpen()
@@ -381,7 +378,14 @@ function CardRewardWindow:drawCards()
 	for i, cardItem in ipairs(self.cards) do
 		local x = startX-48+i*48
 		cardItem.tx = x
-		cardItem.large = self.selection==i
+		if self.selection ~= i then
+			cardItem.large = false
+			cardItem:tick()
+		end
+	end
+	if self.selection <= #self.cards and self.selection > 0 then
+		local cardItem = self.cards[self.selection]
+		cardItem.large = true
 		cardItem:tick()
 	end
 end

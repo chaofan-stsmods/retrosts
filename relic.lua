@@ -9,9 +9,9 @@ function Relic:canSpwan()
 	return true
 end
 
-function Relic:drawImage(x,y)
+function Relic:drawImage(x,y,hideCounter)
 	spr(self.icon,x,y,0)
-	if self.counter ~= nil then
+	if self.counter ~= nil and not hideCounter then
 		local counterStr = tostring(self.counter)
 		local width = strWidth(counterStr,false,true)
 		printGlowed(counterStr,math.min(x+5,x+12-width),y+3,12,15,1,true)

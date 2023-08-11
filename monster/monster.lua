@@ -102,7 +102,13 @@ function Monster:drawIntent()
 			resetColors{5,6,7}
 		end
 	elseif self.intentType == 'unknown' then
+		printShadowed('?',intentX-3,intentY+2,4)
+		printShadowed('?',intentX+5,intentY+2,4)
 		printShadowed('?',intentX+1,intentY+1,4)
+	elseif self.intentType == 'sleep' then
+		printShadowed('z',intentX+6,intentY+4,3)
+		printShadowed('z',intentX+2,intentY+2,4)
+		printShadowed('Z',intentX-2,intentY,4)
 	end
 	if self.intentType:sub(1,6) == 'attack' then
 		local damageStr = tostring(self.intentDamage)
