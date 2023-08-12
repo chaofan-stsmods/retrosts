@@ -15,6 +15,7 @@ function MerchantEvent:drawBackground()
 	act:drawBackground()
 	player:drawImage()
 	sprmap(25,45,7,4,130,64,0)
+	spr(7,170,73,0,1,1)
 	drawTalkBubble('Welcome!',95,32,50,31,152,64,12,15)
 end
 
@@ -50,7 +51,7 @@ function MerchantEvent:generateGoods()
 
 	for i,playerCardType in ipairs(card1) do
 		local card = playerCardType:new()
-		card1[i] = CardItem:new({card=card,isNotInHand=true,basePrice=cardPrice[card.rarity]*random:randFloat(0.9,1.1)})
+		card1[i] = CardItem:new({card=card,x=120,y=-40,isNotInHand=true,basePrice=cardPrice[card.rarity]*random:randFloat(0.9,1.1)})
 	end
 
 	local saleCardItem = card1[random:randInt(#card1)]
@@ -59,7 +60,7 @@ function MerchantEvent:generateGoods()
 
 	for i,playerCardType in ipairs(card2) do
 		local card = playerCardType:new()
-		card2[i] = CardItem:new({card=card,isNotInHand=true,basePrice=cardPrice[card.rarity]*random:randFloat(0.9,1.1)*1.2})
+		card2[i] = CardItem:new({card=card,x=120,y=-40,isNotInHand=true,basePrice=cardPrice[card.rarity]*random:randFloat(0.9,1.1)*1.2})
 	end
 
 	for i=1,3 do
@@ -76,7 +77,7 @@ function MerchantEvent:generateGoods()
 	end
 
 	for i=1,3 do
-		potion = getRandomPotionType(random)
+		potion = getRandomPotionType(random):new()
 		potion.basePrice = potionPrice[potion.rarity]*random:randFloat(0.95,1.05)
 		potions[i] = potion
 	end
@@ -120,59 +121,313 @@ function MerchantEvent:showMerchant()
 end
 
 -- window
-MerchantWindow = Window:new{name='MerchantWindow',goods=nil,cardRemoval=nil}
+MerchantWindow = Window:new{name='MerchantWindow',goods=nil,cardRemoval=nil,selectionType='card1',selection=0,yOffset=-136}
 function MerchantWindow:onOpen()
-	queueSync(4,1)
 	queueSync(2,currentEvent.spritebank)
 	queueSync(1,player.tileBank)
 end
 
 function MerchantWindow:tick()
-	sprmap(32,34,28,17,16,0,0)
+	sprmap(32,34,28,17,16,self.yOffset,0)
+	self:drawGoods()
+	self.yOffset = lerp(self.yOffset,0,0.2)
+	self:merchantControls()
+	tickEffects()
+	tickTopBar(true)
+end
 
+local function drawPrice(x,y,price)
+	local str = tostring(price)
+	printGlowed(str,x-strWidth(str)/2,y,price > gold and 2 or 4)
+end
+
+function MerchantWindow:drawGoods()
 	for i,cardItem in ipairs(self.goods.card1) do
-		cardItem.tx = -6+i*42
-		cardItem.ty = 44
-		cardItem:tick()
-		local str = tostring(cardItem.price)
-		printGlowed(str,cardItem.tx-strWidth(str)/2,66,4)
+		if not cardItem.sold then
+			cardItem.tx = -6+i*42
+			cardItem.ty = 44+self.yOffset
+			if self.selectionType ~= 'card1' or i ~= self.selection then
+				cardItem.large = false
+				cardItem:tick()
+				if cardItem.sale then
+					spr(411,cardItem.x+10,cardItem.y-18,0,1,0,0,2,2)
+				end
+				drawPrice(cardItem.tx,cardItem.ty+22,cardItem.price)
+			end
+		end
 	end
 
 	for i,cardItem in ipairs(self.goods.card2) do
-		cardItem.tx = -6+i*42
-		cardItem.ty = 100
-		cardItem:tick()
-		local str = tostring(cardItem.price)
-		printGlowed(str,cardItem.tx-strWidth(str)/2,122,4)
+		if not cardItem.sold then
+			cardItem.tx = -6+i*42
+			cardItem.ty = 100+self.yOffset
+			if self.selectionType ~= 'card2' or i ~= self.selection then
+				cardItem.large = false
+				cardItem:tick()
+				drawPrice(cardItem.tx,cardItem.ty+22,cardItem.price)
+			end
+		end
 	end
 
 	for i,relic in ipairs(self.goods.relics) do
-		local x = 90+24*i
-		local y = 80
-		relic:drawImage(x,y,true)
-		local str = tostring(relic.price)
-		printGlowed(str,x+4-strWidth(str)/2,y+10,4)
+		if not relic.sold then
+			local x = 90+24*i
+			local y = 80+self.yOffset
+			relic:drawImage(x,y,true)
+			drawPrice(x+4,y+10,relic.price)
+		end
 	end
 
 	for i,potion in ipairs(self.goods.potions) do
-		local x = 90+24*i
-		local y = 108
-		potion:drawImage(90+24*i,y)
-		local str = tostring(potion.price)
-		printGlowed(str,x+4-strWidth(str)/2,y+10,4)
+		if not potion.sold then
+			local x = 90+24*i
+			local y = 108+self.yOffset
+			potion:drawImage(90+24*i,y)
+			drawPrice(x+4,y+10,potion.price)
+		end
 	end
 
-	sprmap(0,34,4,5,188,80)
-	printShadowed('Card',204-strWidth('Card',false,true)/2,86,12,nil,1,true)
-	printShadowed('Removal',204-strWidth('Removal',false,true)/2,96,12,nil,1,true)
-	printShadowed('Service',204-strWidth('Service',false,true)/2,106,12,nil,1,true)
-	local str = tostring(self.cardRemoval.price)
-	printGlowed(str,204-strWidth(str)/2,122,4)
+	local cardRemovalY = 80+self.yOffset
+	sprmap(0,34,4,5,188,cardRemovalY)
+	if self.cardRemoval.sold then
+		printShadowed('Sold',204-strWidth('Sold')/2,cardRemovalY+10,4)
+		printShadowed('Out',204-strWidth('Out')/2,cardRemovalY+20,4)
+	else
+		printShadowed('Card',204-strWidth('Card',false,true)/2,cardRemovalY+6,4,nil,1,true)
+		printShadowed('Removal',204-strWidth('Removal',false,true)/2,cardRemovalY+16,4,nil,1,true)
+		printShadowed('Service',204-strWidth('Service',false,true)/2,cardRemovalY+26,4,nil,1,true)
+		drawPrice(204,cardRemovalY+42,self.cardRemoval.price)
+	end
+
+	if self.selectionType == 'card1' and self.selection > 0 and self.selection <= #self.goods.card1 then
+		local cardItem = self.goods.card1[self.selection]
+		if not cardItem.sold then
+			cardItem.large = true
+			cardItem:tick()
+			if cardItem.sale then
+				spr(411,cardItem.x+22,cardItem.y-26,0,1,0,0,2,2)
+			end
+			drawPrice(cardItem.tx,cardItem.ty+22,cardItem.price)
+		end
+	elseif self.selectionType == 'card2' and self.selection > 0 and self.selection <= #self.goods.card2 then
+		local cardItem = self.goods.card2[self.selection]
+		if not cardItem.sold then
+			cardItem.large = true
+			cardItem:tick()
+			drawPrice(cardItem.tx,cardItem.ty+22,cardItem.price)
+		end
+	elseif self.selectionType == 'relic' and self.selection > 0 then
+		local x = 90+24*self.selection
+		local y = 80+self.yOffset
+		drawSelectionBox(x-2,y-2,12,12,12)
+	elseif self.selectionType == 'potion' and self.selection > 0 then
+		local x = 90+24*self.selection
+		local y = 108+self.yOffset
+		drawSelectionBox(x-2,y-2,12,12,12)
+	elseif self.selectionType == 'cardRemoval' and not self.cardRemoval.sold then
+		drawSelectionBox(186,cardRemovalY-2,36,44,12)
+	end
+end
+
+function MerchantWindow:merchantControls()
+	if cursorOnTopBar then
+		if self.selectionType ~= 'topbar' then
+			self.selectionType = 'topbar'
+		end
+		return
+	elseif self.selectionType == 'topbar' then
+		self.selectionType = 'card1'
+	end
 
 	if btnp(5) then
 		self:close()
+		return
 	end
-	
-	tickEffects()
-	tickTopBar(true)
+
+	local function isNotSold(i,t) return t[i] and not t[i].sold end
+	if self.selectionType == 'card1' then
+		if self.selection == 0 and #self.goods.card1 > 0 then
+			self.selection = nextOrOtherIndexInTableIf(self.goods.card1,self.selection,isNotSold)
+			if self.selection == 0 then
+				self.selectionType = 'card2'
+				return
+			end
+		end
+		
+		if btnp(1) then
+			if self.selection < 3 then
+				self.selectionType = 'card2'
+				if not isNotSold(self.selection,self.goods.card2) then
+					self.selection = 0
+				end
+			elseif self.selection < 5 then
+				self.selectionType = 'relic'
+				self.selection = self.selection == 3 and 1 or 3
+				if not isNotSold(self.selection,self.goods.relics) then
+					self.selection = 0
+				end
+			else
+				if not self.cardRemoval.sold then
+					self.selectionType = 'cardRemoval'
+				end
+			end
+		elseif btnp(2) then
+			self.selection = previousOrOtherIndexInTableIf(self.goods.card1,self.selection,isNotSold)
+		elseif btnp(3) then
+			self.selection = nextOrOtherIndexInTableIf(self.goods.card1,self.selection,isNotSold)
+		elseif btnp(4) then
+			local cardItem = self.goods.card1[self.selection]
+			if not cardItem.sold and cardItem.price <= gold then
+				gold = gold - cardItem.price
+				cardItem.large = false
+				addEffect(CardEffect:new{cardItem=cardItem,pauseDuration=1,duration=20,tx=240,ty=0})
+				table.insert(deck,cardItem.card)
+				cardItem.sold = true
+				self.selection = 0
+			end
+		end
+	elseif self.selectionType == 'card2' then
+		if self.selection == 0 and #self.goods.card2 > 0 then
+			self.selection = nextOrOtherIndexInTableIf(self.goods.card2,self.selection,isNotSold)
+			if self.selection == 0 then
+				self.selectionType = 'relic'
+				return
+			end
+		end
+		
+		if btnp(0) then
+			self.selectionType = 'card1'
+			if not isNotSold(self.selection,self.goods.card1) then
+				self.selection = 0
+			end
+		elseif btnp(2) then
+			self.selection = previousOrOtherIndexInTableIf(self.goods.card2,self.selection,isNotSold)
+		elseif btnp(3) then
+			local oldSelection = self.selection
+			self.selection = nextOrOtherIndexInTableIf(self.goods.card2,self.selection,isNotSold)
+			if oldSelection == self.selection then
+				self.selectionType = 'relic'
+				self.selection = 0
+			end
+		elseif btnp(4) then
+			local cardItem = self.goods.card2[self.selection]
+			if not cardItem.sold and cardItem.price <= gold then
+				gold = gold - cardItem.price
+				cardItem.large = false
+				addEffect(CardEffect:new{cardItem=cardItem,pauseDuration=1,duration=20,tx=240,ty=0})
+				table.insert(deck,cardItem.card)
+				cardItem.sold = true
+				self.selection = 0
+			end
+		end
+	elseif self.selectionType == 'relic' then
+		if self.selection == 0 and #self.goods.relics > 0 then
+			self.selection = nextOrOtherIndexInTableIf(self.goods.relics,self.selection,isNotSold)
+			if self.selection == 0 then
+				self.selectionType = 'potion'
+				return
+			end
+		end
+		
+		if btnp(0) then
+			self.selectionType = 'card1'
+			self.selection = self.selection < 3 and 3 or 4
+			if not isNotSold(self.selection,self.goods.card1) then
+				self.selection = 0
+			end
+		elseif btnp(1) then
+			self.selectionType = 'potion'
+			if not isNotSold(self.selection,self.goods.potions) then
+				self.selection = 0
+			end
+		elseif btnp(2) then
+			local oldSelection = self.selection
+			self.selection = previousOrOtherIndexInTableIf(self.goods.relics,self.selection,isNotSold)
+			if oldSelection == self.selection then
+				self.selectionType = 'card2'
+				self.selection = nextOrOtherIndexInTableIf(self.goods.card2,#self.goods.card2,isNotSold)
+			end
+		elseif btnp(3) then
+			local oldSelection = self.selection
+			self.selection = nextOrOtherIndexInTableIf(self.goods.relics,self.selection,isNotSold)
+			if oldSelection == self.selection then
+				self.selectionType = 'cardRemoval'
+			end
+		elseif btnp(4) then
+			local relic = self.goods.relics[self.selection]
+			if not relic.sold and relic.price <= gold then
+				gold = gold - relic.price
+				relic.price = nil
+				relic.basePrice = nil
+				obtainRelic(relic)
+				self.goods.relics[self.selection] = {sold=true}
+				self.selection = 0
+			end
+		end
+	elseif self.selectionType == 'potion' then
+		if self.selection == 0 and #self.goods.potions > 0 then
+			self.selection = nextOrOtherIndexInTableIf(self.goods.potions,self.selection,isNotSold)
+			if self.selection == 0 then
+				self.selectionType = 'cardRemoval'
+				return
+			end
+		end
+
+		if btnp(0) then
+			self.selectionType = 'relic'
+			if not isNotSold(self.selection,self.goods.relics) then
+				self.selection = 0
+			end
+		elseif btnp(2) then
+			local oldSelection = self.selection
+			self.selection = previousOrOtherIndexInTableIf(self.goods.potions,self.selection,isNotSold)
+			if oldSelection == self.selection then
+				self.selectionType = 'card2'
+				self.selection = nextOrOtherIndexInTableIf(self.goods.card2,#self.goods.card2,isNotSold)
+			end
+		elseif btnp(3) then
+			local oldSelection = self.selection
+			self.selection = nextOrOtherIndexInTableIf(self.goods.potions,self.selection,isNotSold)
+			if oldSelection == self.selection then
+				self.selectionType = 'cardRemoval'
+			end
+		elseif btnp(4) then
+			local potion = self.goods.potions[self.selection]
+			if not potion.sold and potion.price <= gold and obtainPotion(potion) then
+				gold = gold - potion.price
+				potion.price = nil
+				potion.basePrice = nil
+				self.goods.potions[self.selection] = {sold=true}
+				self.selection = 0
+			end
+		end
+	elseif self.selectionType == 'cardRemoval' then
+		if self.cardRemoval.sold then
+			self.selectionType = 'card1'
+			self.selection = 0
+			return
+		end
+
+		if btnp(0) then
+			self.selectionType = 'card1'
+			self.selection = 5
+			if not isNotSold(self.selection,self.goods.card1) then
+				self.selection = 0
+			end
+		elseif btnp(2) then
+			self.selectionType = 'relic'
+			self.selection = nextOrOtherIndexInTableIf(self.goods.relics,#self.goods.relics,isNotSold)
+		elseif btnp(4) then
+			if not self.cardRemoval.sold and self.cardRemoval.price <= gold then
+				removeCardFromDeck(1,true,function (completed)
+					if completed then
+						gold = gold - self.cardRemoval.price
+						self.cardRemoval.sold = true
+						self.selection = 0
+					end
+				end)
+			end
+		end
+
+	end
 end

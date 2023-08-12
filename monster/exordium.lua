@@ -539,7 +539,7 @@ end
 
 function Looter:drawImage()
 	if self.flipped then
-		sprmap(16,21,3,self.height,self.x+8,self.y,0,1,function(t) return t,1 end)
+		sprmap(13,21,3,self.height,self.x+8,self.y,0,1,flipRemap(13,3))
 	else
 		sprmap(13,21,3,self.height,self.x,self.y,0)
 	end

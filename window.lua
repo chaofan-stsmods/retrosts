@@ -98,7 +98,7 @@ end
 -- instance
 TitleSelectionWindow = Window:new{selection=1,options={},onOption=noop}
 function TitleSelectionWindow:onOpen()
-	queueSync(1|4,0)
+	queueSync(1,0)
 end
 
 function TitleSelectionWindow:tick()
@@ -115,7 +115,7 @@ function TitleSelectionWindow:tick()
 		self:close()
 	end
 
-	map(0,0,30,17,0,0)
+	map(0,51,30,17,0,0)
 	local startY = 128-#self.options*8
 	for i=1,#self.options do
 		local color = i == self.selection and 4 or 12
@@ -173,7 +173,7 @@ function CardListWindow:new()
 end
 
 function CardListWindow:onOpen()
-	queueSync(1|4,1)
+	queueSync(1,1)
 end
 
 function CardListWindow:tick()
@@ -196,7 +196,6 @@ end
 
 LoseWindow = Window:new{name='LoseWindow'}
 function LoseWindow:onOpen()
-	queueSync(4,1)
 	queueSync(1,player.tileBank)
 end
 
@@ -219,7 +218,6 @@ end
 GameWindow = Window:new{name='GameWindow'}
 function GameWindow:onOpen()
 	if self.child == nil then
-		queueSync(4,1)
 		queueSync(1,player.tileBank)
 		if roomType == 'combat' then
 			queueSync(2,combatSpriteBank)

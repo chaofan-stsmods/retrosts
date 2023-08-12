@@ -142,6 +142,12 @@ function sprmap(x, y, w, h, sx, sy, colorkey, scale, remap)
 	poke4(2*0x03FFC,2)
 end
 
+function flipRemap(x,w)
+	return function (_,x0,y)
+		return mget(x+w-1-(x0-x),y),1
+	end
+end
+
 local isDarken = false
 local darkenColorList = {0,0,1,2,3,6,7,0,1,15,9,10,13,14,15,0}
 function mapColor(from,to)
@@ -350,9 +356,9 @@ function previousIndexInTableIf(table,currentIndex,condition)
 	local previousIndex = currentIndex
 	repeat
 		previousIndex = previousIndex - 1
-	until previousIndex < 1 or condition(previousIndex)
+	until previousIndex < 1 or condition(previousIndex,table)
 	if previousIndex < 1 then
-		if not condition(currentIndex) then
+		if not condition(currentIndex,table) then
 			return 0
 		end
 		return currentIndex
@@ -361,7 +367,7 @@ function previousIndexInTableIf(table,currentIndex,condition)
 end
 
 function nextIndexInTableIf(table,currentIndex,condition)
-	if currentIndex == 0 and #table > 0 and condition(1) then
+	if currentIndex == 0 and #table > 0 and condition(1,table) then
 		return 1
 	end
 	currentIndex = limit(currentIndex,1,#table)
@@ -372,9 +378,9 @@ function nextIndexInTableIf(table,currentIndex,condition)
 	local nextIndex = currentIndex
 	repeat
 		nextIndex = nextIndex + 1
-	until nextIndex > #table or condition(nextIndex)
+	until nextIndex > #table or condition(nextIndex,table)
 	if nextIndex > #table then
-		if not condition(currentIndex) then
+		if not condition(currentIndex,table) then
 			return 0
 		end
 		return currentIndex

@@ -322,19 +322,28 @@ function moveLimitLineWidthAndPrint(str,currentX,currentY,x,lineWidth,maxY,color
 	return currentX,currentY
 end
 
-function removeCardFromDeck(amount)
+function removeCardFromDeck(amount,canClose,onClose)
 	local cardItems = table.map(deck, function (card) return CardItem:new{card=card,x=240,y=0,isNotInHand=true} end)
 	table.retainIf(cardItems,function (cardItem) return cardItem.card.canRemove end)
 	if #cardItems == 0 then
+		if onClose then
+			onClose(false)
+		end
 		return false
 	end
 	local oldAmount = amount
 	amount = math.min(amount,#cardItems)
-	local gridView = CardGridSelectWindow:new{title='Choose a Card to Remove',cardItems=cardItems,min=amount,max=amount}
+	local gridView = CardGridSelectWindow:new{title='Choose a Card to Remove',cardItems=cardItems,min=amount,max=amount,canClose=canClose or false}
 	if amount > 1 then
 		gridView.title = 'Choose Cards to Remove ({#}/'..oldAmount..')'
 	end
 	openWindowAbove(gridView, function (cards)
+		if not cards then
+			if onClose then
+				onClose(false)
+			end
+			return
+		end
 		local startX,stepX = placeCardsInARow(#cards)
 		for i, cardItem in ipairs(cards) do
 			table.remove(deck,table.indexOf(deck,cardItem.card))
@@ -342,6 +351,9 @@ function removeCardFromDeck(amount)
 			cardItem.ty = 68
 			cardItem.large = false
 			addEffect(CardEffect:new{cardItem=cardItem,pauseDuration=10,duration=30,tx=120,ty=-30})
+		end
+		if onClose then
+			onClose(true)
 		end
 	end)
 	return true
@@ -795,7 +807,6 @@ CardGridSelectWindow = Window:new{
 	max=999,min=1,canClose=false,
 }
 function CardGridSelectWindow:onOpen()
-	queueSync(4,1)
 	if roomType == 'combat' then
 		queueSync(2,combatSpriteBank)
 	else
