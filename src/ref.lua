@@ -1,4 +1,5 @@
 -- defines functions that tic-80 supports
+---@diagnostic disable: lowercase-global
 
 function btn(id)
 	return false

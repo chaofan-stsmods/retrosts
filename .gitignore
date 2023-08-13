@@ -1,4 +1,2 @@
-.local/**
-out.lua
-sts.tic
-compressed.lua
+.local/
+out/**
