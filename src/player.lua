@@ -88,6 +88,10 @@ function Player:getRelics()
 	return {}
 end
 
+function Player:getKeepAndMatchCardType()
+	return Blind
+end
+
 function sortByPriority(...)
 	local result = {}
 	local args = {...}

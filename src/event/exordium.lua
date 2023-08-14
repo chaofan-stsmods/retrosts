@@ -1,0 +1,2 @@
+-- exordium events
+---@diagnostic disable: lowercase-global

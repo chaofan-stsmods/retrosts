@@ -80,7 +80,7 @@ end
 
 intentSpriteMap = {
 	attack={76},defend={47},attackDefend={47,76},buff={77},attackBuff={77,76},defendBuff={79},debuff={78},attackDebuff={78,76},
-	strongDebuff={78},escape={72}
+	strongDebuff={78},escape={72},stun={23}
 }
 function Monster:drawIntent()
 	if not self.showIntent then
@@ -91,9 +91,9 @@ function Monster:drawIntent()
 	local intentSprites = intentSpriteMap[self.intentType]
 	if intentSprites then
 		if self.intentType == 'strongDebuff' then
-			mapColor(7,1)
+			mapColor(7,8)
 			mapColor(6,2)
-			mapColor(5,8)
+			mapColor(5,12)
 		end
 		for i, intentSprite in ipairs(intentSprites) do
 			spr(intentSprite,intentX+(#intentSprites-i)*2,intentY-(#intentSprites-i)*2,0)

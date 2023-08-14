@@ -598,7 +598,11 @@ function GremlinNob:init(random)
 end
 
 function GremlinNob:drawImage()
-	sprmap(19,21,self.width,self.height,self.x+10,self.y,0)
+	if combatSpriteBank == 1 then
+		sprmap(19,21,self.width,self.height,self.x+10,self.y,0)
+	else
+		sprmap(38,17,self.width,self.height,self.x+10,self.y,0)
+	end
 end
 
 function GremlinNob:bellow()
@@ -800,6 +804,115 @@ function GremlinTsundere:nextIntent()
 	end
 end
 
+Sentry = Monster:new{ maxHp=40,width=4,height=5,dmg=9,attackFirst=false }
+function Sentry:init(random)
+	self.maxHp = ascension >= 8 and random:randInt(39,45) or random:randInt(38,42)
+	if ascension >= 3 then
+		self.dmg = 10
+	end
+end
+
+function Sentry:drawImage()
+	sprmap(13,29,2,5,self.x+8,self.y,0)
+end
+
+function Sentry:onCombatStart()
+	addAction(ApplyPowerAction:new(ArtifactPower:new(self,1)))
+	Monster.onCombatStart(self)
+end
+
+function Sentry:debuff()
+	addAction(MakeTempCardToDiscardPileAction:new(Dazed:new(),ascension >= 18 and 3 or 2))
+	addAction(NextIntentAction:new(self))
+end
+
+function Sentry:attack()
+	addAction(DamageAction:new{target=player,source=self,value=self.intentDamage})
+	addAction(NextIntentAction:new(self))
+end
+
+function Sentry:nextIntent(first)
+	if first then
+		if self.attackFirst then
+			self:setIntent('attack','attack',self.dmg)
+		else
+			self:setIntent('debuff','debuff')
+		end
+	elseif self:lastIntentIs('attack') then
+		self:setIntent('debuff','debuff')
+	else
+		self:setIntent('attack','attack',self.dmg)
+	end
+end
+
+Lagavulin = Monster:new{ maxHp=110,width=6,height=5,dmg=18,sleepCooldown=3,debuffAmt=-1,metallicizeAmt=8 }
+function Lagavulin:init(random)
+	self.maxHp = ascension >= 8 and random:randInt(112,115) or random:randInt(109,111)
+	self.dmg = ascension >= 3 and 20 or 18
+	self.debuffAmt = ascension >= 18 and -2 or -1
+end
+
+function Lagavulin:drawImage()
+	if self.sleepCooldown > 0 then
+		sprmap(29,17,4,3,self.x+8,self.y+16,8)
+	else
+		sprmap(33,17,5,5,self.x+2,self.y,8)
+	end
+end
+
+function Lagavulin:onCombatStart()
+	if self.sleepCooldown > 0 then
+		addAction(ApplyPowerAction:new(MetallicizePower:new(self,self.metallicizeAmt)))
+		addAction(GainBlockAction:new{target=self,value=self.metallicizeAmt})
+	end
+	Monster.onCombatStart(self)
+end
+
+function Lagavulin:sleep()
+	self.sleepCooldown = self.sleepCooldown - 1
+	if self.sleepCooldown == 0 then
+		local power = self:getPower(MetallicizePower)
+		addAction(ReducePowerAction:new(power,power.amount))
+	end
+	addAction(NextIntentAction:new(self))
+end
+
+function Lagavulin:attack()
+	addAction(DamageAction:new{target=player,source=self,value=self.intentDamage})
+	addAction(NextIntentAction:new(self))
+end
+
+function Lagavulin:debuff()
+	addAction(ApplyPowerAction:new(DexterityPower:new(player,self.debuffAmt)))
+	addAction(ApplyPowerAction:new(StrengthPower:new(player,self.debuffAmt)))
+	addAction(NextIntentAction:new(self))
+end
+
+function Lagavulin:stun()
+	addAction(NextIntentAction:new(self))
+end
+
+function Lagavulin:nextIntent(first)
+	if self.sleepCooldown > 0 then
+		self:setIntent('sleep','sleep')
+	elseif self:lastTwoIntentsAre('attack') or first then
+		self:setIntent('debuff','strongDebuff')
+	else
+		self:setIntent('attack','attack',self.dmg)
+	end
+end
+
+function Lagavulin:damage(...)
+	local oldHp = self.hp
+	Monster.damage(self,...)
+	if oldHp ~= self.hp and self.alive and self.sleepCooldown > 0 then
+		addAction(SetIntentAction:new(self,'stun','stun',0,1,false))
+		self.sleepCooldown = 0
+		local power = self:getPower(MetallicizePower)
+		addAction(ReducePowerAction:new(power,power.amount))
+	end
+end
+
 -- encounters
 CultistEncounter = Encounter:new{spriteBank=1,name='Cultist',enemyInfo={encItem(Cultist)}}
 TwoLouseEncounter = Encounter:new{spriteBank=1,name='TwoLouse',enemyInfo={}}
@@ -890,3 +1003,7 @@ end
 
 -- elite encounters
 GremlinNobEncounter = Encounter:new{spriteBank=1,name='GremlinNob',enemyInfo={encItem(GremlinNob)}}
+ThreeSentryEncounter = Encounter:new{spriteBank=3,name='ThreeSentry',enemyInfo={encItem(Sentry,-44,0),encItem(Sentry,0,3,{attackFirst=true}),encItem(Sentry,44,-1)}}
+LagavulinEncounter = Encounter:new{spriteBank=3,name='Lagavulin',enemyInfo={encItem(Lagavulin)}}
+LagavulinStrongEncounter = Encounter:new{spriteBank=3,name='Lagavulin',enemyInfo={encItem(Lagavulin,0,0,{sleepCooldown=0})}}
+GremlinNobEventEncounter = Encounter:new{spriteBank=3,name='GremlinNob',enemyInfo={encItem(GremlinNob)}}

@@ -22,11 +22,11 @@ local combatSelection = {type='hand',index=1}
 local pauseControl = false
 
 function startCombat(encounter)
-	shuffleRand = makeRand(act.id,room.id,1)
-	miscRand = makeRand(act.id,room.id,2)
-	rewardRand = makeRand(act.id,room.id,3)
-	aiRand = makeRand(act.id,room.id,4)
-	potionRand = makeRand(act.id,room.id,5)
+	shuffleRand = makeRand(act.id,room.id,2)
+	miscRand = makeRand(act.id,room.id,3)
+	rewardRand = makeRand(act.id,room.id,4)
+	aiRand = makeRand(act.id,room.id,5)
+	potionRand = makeRand(act.id,room.id,6)
 	setupEnemies(encounter)
 	closeChildWindows()
 	resetActions()

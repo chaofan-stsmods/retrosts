@@ -436,6 +436,11 @@ function ApplyPowerAction:tick()
 	if self.duration == self.startDuration then
 		local power = self.power
 		local owner = power.owner
+		if not owner:triggerConditionEvent('onBeforeApplyPower',true,power) then
+			Action.tick(self)
+			return
+		end
+
 		local existingPower = owner:getPower(getmetatable(power))
 		if existingPower then
 			local oldAmount = existingPower.amount

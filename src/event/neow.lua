@@ -2,11 +2,9 @@
 ---@diagnostic disable: lowercase-global
 
 NeowEvent = Event:new{screen='entry',spritebank=3,words='Greetings...',random=nil}
-function NeowEvent:new(random)
-	local o = Event.new(self)
-	o.random = random
-	table.insert(o.options,{description='[Talk]'})
-	return o
+function NeowEvent:init()
+	self.random = self.random or makeRand(1)
+	table.insert(self.options,{description='[Talk]'})
 end
 
 function NeowEvent:drawBackground()

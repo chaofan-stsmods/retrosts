@@ -103,6 +103,11 @@ function StrengthPower:onAttack(damage)
 	return damage + self.amount
 end
 
+DexterityPower = PositiveBuffNegativeDebuffPower:new{icon=1}
+function DexterityPower:onModifyBlock(block)
+	return block + self.amount
+end
+
 WeakPower = TurnBasedPower:new{debuff=true,icon=61,priority=150}
 function WeakPower:onAttack(damage)
 	return damage * 0.75
@@ -134,4 +139,14 @@ function BarricadePower:onBeforeTurnStartLoseBlock(block)
 	return 0
 end
 
-MinionPower = Power:new{icon=32,stackable=false}
+MinionPower = Power:new{icon=21,stackable=false}
+
+ArtifactPower = Power:new{icon=22}
+function ArtifactPower:onBeforeApplyPower(power)
+	if power.debuff then
+		addAction(1,ReducePowerAction:new(self,1))
+		local owner = self.owner
+		addEffect(TextEffect:new{x=owner.x+owner.width*4,y=owner.y,text='Negated',color=12,ySpeed=-0.5})
+		return false
+	end
+end

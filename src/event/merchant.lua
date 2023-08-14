@@ -2,13 +2,11 @@
 ---@diagnostic disable: lowercase-global
 
 MerchantEvent = Event:new{screen='entry',spritebank=2,random=nil,goods=nil,cardRemoval=nil}
-function MerchantEvent:new()
-	local o = Event.new(self)
-	o.random = makeRand(act.id,room.id,1)
-	table.insert(o.options,{description='[Talk]'})
-	table.insert(o.options,{description='[Leave]'})
-	o:generateGoods()
-	return o
+function MerchantEvent:init()
+	self.random = self.random or makeRand(act.id,room.id,1)
+	table.insert(self.options,{description='[Talk]'})
+	table.insert(self.options,{description='[Leave]'})
+	self:generateGoods()
 end
 
 function MerchantEvent:drawBackground()

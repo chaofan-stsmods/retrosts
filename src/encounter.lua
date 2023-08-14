@@ -12,11 +12,16 @@ function Encounter:setupEnemies(random)
 	enemies = {}
 	for i, enemyInfo in ipairs(self.enemyInfo) do
 		enemies[i] = enemyInfo.type:new{x=enemyInfo.x,y=enemyInfo.y,createRandom=random}
+		if enemyInfo.additionalProperties then
+			for key, value in pairs(enemyInfo.additionalProperties) do
+				enemies[i][key] = value
+			end
+		end
 	end
 end
 
-function encItem(monsterType,xOffset,yOffset)
+function encItem(monsterType,xOffset,yOffset,additional)
 	xOffset = xOffset or 0
 	yOffset = yOffset or 0
-	return {type=monsterType,x=166+xOffset-monsterType.width*4,y=80+yOffset-monsterType.height*8}
+	return {type=monsterType,x=166+xOffset-monsterType.width*4,y=80+yOffset-monsterType.height*8,additionalProperties=additional}
 end

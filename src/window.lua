@@ -103,11 +103,10 @@ end
 
 function TitleSelectionWindow:tick()
 	if btnp(0) then
-		self.selection = self.selection - 1
+		self.selection = limit(self.selection-1,1,#self.options)
 	elseif btnp(1) then
-		self.selection = self.selection + 1
+		self.selection = limit(self.selection+1,1,#self.options)
 	end
-	self.selection = limit(self.selection,1,#self.options)
 
 	if btnp(4) then
 		self:onOption(self.selection)
@@ -135,9 +134,56 @@ function TitleWindow:onOption()
 	end
 end
 
-CharacterSelectWindow = TitleSelectionWindow:new{selection=1,options={'Ironclad','Silent','Defect','Watcher'},name='CharacterSelectWindow'}
+CharacterSelectWindow = TitleSelectionWindow:new{selection=1,options={'Ironclad','Silent','Defect','Watcher'},ascension=0,name='CharacterSelectWindow'}
+local ascensionEffects = {
+	'Elites spawn more often',
+	'Normal enemies are deadlier',
+	'Elites are deadlier',
+	'Bosses are deadlier',
+	'Heal less after Boss battles',
+	'Start each run damaged',
+	'Normal enemies are tougher',
+	'Elites are tougher',
+	'Bosses are tougher',
+	'Start each run cursed',
+	'Fewer Potion Slots',
+	'Upgraded cards appear less often',
+	'Poor bosses',
+	'Lower Max HP',
+	'Unfavorable Events',
+	'Shops are more costly',
+	'Normal enemies are more challenging',
+	'Elites are more challenging',
+	'Bosses are more challenging',
+	'Double Boss',
+}
+function CharacterSelectWindow:tick()
+	TitleSelectionWindow.tick(self)
+
+	local ascensionY = 8
+	printShadowed('Ascension Level',120-strWidth('Ascension Level')/2,ascensionY,12)
+	printShadowed(tostring(self.ascension),120-strWidth(tostring(self.ascension))/2,ascensionY+8,12)
+
+	if self.ascension < 20 then
+		tri(132-3,ascensionY+9,132-3,ascensionY+15,132+3,ascensionY+12,15)
+		tri(131-3,ascensionY+8,131-3,ascensionY+14,131+3,ascensionY+11,4)
+	end
+
+	if self.ascension > 0 then
+		tri(109+3,ascensionY+9,109+3,ascensionY+15,109-3,ascensionY+12,15)
+		tri(108+3,ascensionY+8,108+3,ascensionY+14,108-3,ascensionY+11,4)
+		printShadowed(tostring(ascensionEffects[self.ascension]),120-strWidth(tostring(ascensionEffects[self.ascension]))/2,ascensionY+16,12)
+	end
+
+	if btnp(2) then
+		self.ascension = limit(self.ascension-1,0,20)
+	elseif btnp(3) then
+		self.ascension = limit(self.ascension+1,0,20)
+	end
+end
+
 function CharacterSelectWindow:onOption()
-	startGame(self.options[self.selection])
+	startGame(self.options[self.selection],self.ascension)
 end
 
 CardListWindow = Window:new{name='CardListWindow',gridUI=nil,cardItems=nil}

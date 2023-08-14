@@ -177,7 +177,7 @@ function drawCost(card,l,t,isNotInHand,showWhiteCost)
 		spr(card.costIcon,l,t,0)
 		local costStr = cost == -1 and 'X' or tostring(cost)
 		local txtWidth = strWidth(costStr)
-		local color = (card:canUse() or isNotInHand or showWhiteCost) and 12 or 1
+		local color = (isNotInHand or showWhiteCost or card:canUse()) and 12 or 1
 		if color == 12 and cost ~= card.baseCost then
 			color = 5
 		end
@@ -401,19 +401,28 @@ function upgradeCardFromDeck(amount,canClose,onClose)
 	return true
 end
 
-function transformCardFromDeck(amount,random)
+function transformCardFromDeck(amount,random,canClose,onClose)
 	local cardItems = table.map(deck, function (card) return CardItem:new{card=card,x=240,y=0,isNotInHand=true} end)
 	table.retainIf(cardItems,function (cardItem) return cardItem.card.canRemove end)
 	if #cardItems == 0 then
+		if onClose then
+			onClose(false)
+		end
 		return false
 	end
 	local oldAmount = amount
 	amount = math.min(amount,#cardItems)
-	local gridView = CardGridSelectWindow:new{title='Choose a Card to Transform',cardItems=cardItems,min=amount,max=amount}
+	local gridView = CardGridSelectWindow:new{title='Choose a Card to Transform',cardItems=cardItems,min=amount,max=amount,canClose=canClose or false}
 	if amount > 1 then
 		gridView.title = 'Choose Cards to Transform ({#}/'..oldAmount..')'
 	end
 	openWindowAbove(gridView, function (cards)
+		if not cards then
+			if onClose then
+				onClose(false)
+			end
+			return
+		end
 		local startX,stepX = placeCardsInARow(#cards)
 		for i, cardItem in ipairs(cards) do
 			local thisCardTypes
@@ -440,6 +449,9 @@ function transformCardFromDeck(amount,random)
 					cardItem.card = randomCard
 				end
 			end})
+		end
+		if onClose then
+			onClose(true)
 		end
 	end)
 	return true

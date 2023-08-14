@@ -2,20 +2,18 @@
 ---@diagnostic disable: lowercase-global
 
 TreasureEvent = Event:new{screen='entry',spritebank=2,chestType='small',random=nil}
-function TreasureEvent:new()
-	local o = Event.new(self)
-	o.random = makeRand(act.id,room.id,1)
-	local roll = o.random:randInt(0,99)
+function TreasureEvent:init()
+	self.random = self.random or makeRand(act.id,room.id,1)
+	local roll = self.random:randInt(0,99)
 	if roll < 50 then
-		o.type = 'small'
+		self.type = 'small'
 	elseif roll < 83 then
-		o.type = 'medium'
+		self.type = 'medium'
 	else
-		o.type = 'large'
+		self.type = 'large'
 	end
-	table.insert(o.options,{description='[Open]'})
-	table.insert(o.options,{description='[Leave]'})
-	return o
+	table.insert(self.options,{description='[Open]'})
+	table.insert(self.options,{description='[Leave]'})
 end
 
 function TreasureEvent:drawBackground()

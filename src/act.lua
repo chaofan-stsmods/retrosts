@@ -109,7 +109,9 @@ Exordium = Act:new{
 		[SmallSlimesEncounter]={LotsOfSlimesEncounter,LargeSlimeEncounter},
 	},
 	eliteEncounters={
-		{item=GremlinNobEncounter,power=1}
+		{item=GremlinNobEncounter,power=1},
+		{item=ThreeSentryEncounter,power=1},
+		{item=LagavulinEncounter,power=1},
 	}
 }
 function Exordium:drawBackground()

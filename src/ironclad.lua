@@ -4,8 +4,8 @@ local redCards
 
 Ironclad = Player:new{ maxHp=80,width=5,height=4,tileBank=1 }
 function Ironclad:drawImage(x,y)
-	local x = x or self.x
-	local y = y or self.y
+	x = x or self.x
+	y = y or self.y
 	map(0,17,self.width,self.height,x-8,y,0)
 end
 
@@ -34,6 +34,10 @@ end
 
 function Ironclad:getAscensionMaxHPLoss()
 	return 5
+end
+
+function Ironclad:getKeepAndMatchCardType()
+	return Bash
 end
 
 -- cards

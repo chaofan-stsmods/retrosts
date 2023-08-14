@@ -82,8 +82,9 @@ function shallowcopy(orig)
 	return copy
 end
 
-function lerp(from,to,progress)
-	if math.abs(from - to) < 1 then
+function lerp(from,to,progress,threshold)
+	threshold = threshold or 1
+	if math.abs(from - to) < threshold then
 		return to
 	end
 	return from * (1 - progress) + to * progress
@@ -149,7 +150,8 @@ function flipRemap(x,w)
 end
 
 local isDarken = false
-local darkenColorList = {0,0,1,2,3,6,7,0,1,15,9,10,13,14,15,0}
+local darkenColorList = {0,0,15,14,14,14,15,0,15,15,14,14,14,14,15,0}
+--{0,0,1,2,3,6,7,0,1,15,9,10,13,14,15,0}
 function mapColor(from,to)
 	poke4(PALETTE_MAP*2+from,isDarken and darkenColorList[to+1] or to)
 end

@@ -15,7 +15,7 @@ end
 
 function drawTopBar()
 	rect(0,0,240,7,14)
-	line(0,7,250,7,15)
+	rect(0,7,240,1,15)
 	map(0,0,30,1,0,0,0)
 	printShadowed(player.hp .. '/' .. player.maxHp,17,1,3)
 	printShadowed(tostring(gold),73,1,4)

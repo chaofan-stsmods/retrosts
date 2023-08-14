@@ -280,19 +280,25 @@ function generateCardRarity(random)
 end
 
 local fallbackTiers = {common='uncommon',uncommon='rare',shop='uncommon'}
+function getRelicTier(random)
+	local roll = random:randInt(0,99)
+	local tier = 'uncommon'
+	if act ~= TheEnding then
+		if roll < 50 then
+			tier = 'common'
+		elseif roll > 82 then
+			tier = 'rare'
+		end
+	end
+	return tier
+end
+
 function generateRelicRewards(rewards,random)
 	if room.type ~= 'elite' then
 		return
 	end
 
-	local roll = random:randInt(0,99)
-	local tier = 'uncommon'
-	if roll < 50 then
-		tier = 'common'
-	elseif roll > 82 then
-		tier = 'rare'
-	end
-
+	local tier = getRelicTier(random)
 	local relic = getRelicTypeByTier(tier):new()
 	addRelicReward(rewards,relic)
 

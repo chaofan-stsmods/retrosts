@@ -2,15 +2,13 @@
 ---@diagnostic disable: lowercase-global
 
 CampfireEvent = Event:new{screen='entry',spritebank=2,random=nil}
-function CampfireEvent:new()
-	local o = Event.new(self)
-	o.random = makeRand(act.id,room.id,1)
-	table.insert(o.options,{name='Rest',description=function () return o:getRestDescription() end,icon=320,onSelect=function() o:rest() end})
-	table.insert(o.options,{name='Smith',description='Upgrade a card in your deck.',icon=292,onSelect=function() o:smith() end})
+function CampfireEvent:init()
+	self.random = self.random or makeRand(act.id,room.id,1)
+	table.insert(self.options,{name='Rest',description=function () return self:getRestDescription() end,icon=320,onSelect=function() self:rest() end})
+	table.insert(self.options,{name='Smith',description='Upgrade a card in your deck.',icon=292,onSelect=function() self:smith() end})
 	if not rubyKeyObtained then
-		table.insert(o.options,{name='Recall',description='Obtain the ruby key.',icon=340,onSelect=function() o:recall() end})
+		table.insert(self.options,{name='Recall',description='Obtain the ruby key.',icon=340,onSelect=function() self:recall() end})
 	end
-	return o
 end
 
 function CampfireEvent:drawBackground()

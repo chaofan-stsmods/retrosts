@@ -30,7 +30,7 @@ end
 
 BandageUp = ColorlessCard:new{
 	name='Bandage Up',description='Heal !M! HP. NL Exhaust.',baseCost=0,type='skill',rarity='uncommon',
-	playerTarget=true,baseMagic=4,upgrade={baseMagic=6},exhaust=true
+	playerTarget=true,baseMagic=4,upgrade={baseMagic=6},exhaust=true,canGenerateInCombat=false
 }
 function BandageUp:use()
 	return { HealAction:new{target=player,value=self.magic} }
@@ -112,7 +112,7 @@ colorlessCards = {
 	Wound,Dazed,Burn,Slimed,BandageUp,Blind,Finesse,MasterOfStrategy,HandOfGreed,ThinkingAhead
 }
 
-CurseCard = Card:new{color={15,0},costIcon=46,typeIconColor=13,colorName='curse',type='curse',rarity='common',baseCost=-2,baseCanUse=false,canUpgrade=false}
+CurseCard = Card:new{color={15,0},costIcon=46,typeIconColor=13,colorName='curse',type='curse',rarity='common',baseCost=-2,baseCanUse=false,canUpgrade=false,playerTarget=true}
 
 AscendersBane = CurseCard:new{
 	name='Ascender\'s Bane',description='Unplayable. NL Ethereal. NL Cannot be removed from deck.',
@@ -121,7 +121,16 @@ AscendersBane = CurseCard:new{
 Injury = CurseCard:new{ name='Injury',description='Unplayable.' }
 Clumsy = CurseCard:new{ name='Clumsy',description='Unplayable. NL Ethereal.',ethereal=true }
 Writhe = CurseCard:new{ name='Writhe',description='Unplayable. NL Innate.',innate=true }
+Regret = CurseCard:new{ name='Regret',description='Unplayable. NL At the end of turn, lose HP equal to the number of cards in hand.',autoPlayOnEndTurn=true }
+function Regret:use()
+	return { DamageAction:new{source=player,target=player,value=#hand+1,type='hpLoss'} }
+end
+
+Decay = CurseCard:new{ name='Decay',description='Unplayable. NL At the end of turn, {63} 2 to you.',autoPlayOnEndTurn=true }
+function Decay:use()
+	return { DamageAction:new{source=player,target=player,value=2,type='power'} }
+end
 
 curseCards = {
-	AscendersBane,Injury,Clumsy,Writhe
+	AscendersBane,Injury,Clumsy,Writhe,Regret
 }
