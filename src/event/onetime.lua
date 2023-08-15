@@ -3,7 +3,7 @@
 
 local oneTimeEvents
 
-function getCommonEvents()
+function getOneTimeEvents()
 	return oneTimeEvents
 end
 

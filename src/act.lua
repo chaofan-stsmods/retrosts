@@ -115,7 +115,7 @@ Exordium = Act:new{
 		{item=LagavulinEncounter,power=1},
 	},
 	events={
-		BigFish,TheCleric,WingStatue,WorldOfGoop,TheSsssserpent,LivingWall,ScrapOoze,ShiningLight,DeadAdventurer
+		BigFish,TheCleric,WingStatue,WorldOfGoop,TheSsssserpent,LivingWall,ScrapOoze,ShiningLight,DeadAdventurer,Mushrooms,GoldenIdolEvent
 	}
 }
 function Exordium:drawBackground()

@@ -20,6 +20,53 @@ function eventBelow()
 	end
 end
 
+local function getCommonAndOneTimeEvents()
+	local result = {}
+	for _, event in ipairs(commonEvents) do
+		if event:isAvailable() then
+			table.insert(result,event)
+		end
+	end
+	for _, event in ipairs(oneTimeEvents) do
+		if event:isAvailable() then
+			table.insert(result,event)
+		end
+	end
+	return result
+end
+
+local function getActEvents()
+	local result = {}
+	for _, event in ipairs(actEvents) do
+		if event:isAvailable() then
+			table.insert(result,event)
+		end
+	end
+	return result
+end
+
+function rollEventType(random)
+	local list
+	if random:rand() < 0.25 then
+		list = getCommonAndOneTimeEvents()
+		if #list == 0 then
+			list = getActEvents()
+		end
+	else
+		list = getActEvents()
+		if #list == 0 then
+			list = getCommonAndOneTimeEvents()
+		end
+	end
+
+	local eventType = list[random:randInt(#list)]
+	local function isNotThisEvent(e) return e ~= eventType end
+	table.retainIf(actEvents,isNotThisEvent)
+	table.retainIf(commonEvents,isNotThisEvent)
+	table.retainIf(oneTimeEvents,isNotThisEvent)
+	return eventType
+end
+
 -- event generator
 
 local monsterChance = 0.1

@@ -158,7 +158,7 @@ end
 
 function mapColors(...)
 	local args = {...}
-	for i = 0,15 do
+	for i = 0,math.min(#args-1,15) do
 		poke4(PALETTE_MAP*2+i,isDarken and darkenColorList[args[i+1]+1] or args[i+1])
 	end
 end

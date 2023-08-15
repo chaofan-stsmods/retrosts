@@ -87,7 +87,7 @@ end
 
 VulnerablePower = TurnBasedPower:new{debuff=true,icon=60}
 function VulnerablePower:onAttacked(damage)
-	return damage * 1.5
+	return damage * self.owner:triggerReducerEvent('onModifyVulnerableFactor',1.5)
 end
 
 RitualPower = Power:new{icon=73,skipFirst=false}

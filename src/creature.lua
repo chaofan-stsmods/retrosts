@@ -80,6 +80,10 @@ function Creature:decreaseMaxHp(value)
 	if self.hp > self.maxHp then
 		self.hp = self.maxHp
 	end
+	if self.maxHp < 0 then
+		self.maxHp = 0
+		self:die()
+	end
 end
 
 function Creature:heal(value)

@@ -9,6 +9,7 @@ Card = Object:new{
 	enemyTarget=false,playerTarget=false,toAllEnemies=false,
 	exhaust=false,ethereal=false,innate=false,autoPlayOnEndTurn=false,
 	upgrade=noop,upgraded=false,tags={},canGenerateInCombat=true,canRemove=true,
+	onRemoveFromDeck=noop,
 }
 function Card:new(o)
 	local r = Object.new(self,o)
@@ -374,6 +375,7 @@ function removeCardFromDeck(amount,canClose,onClose)
 		local startX,stepX = placeCardsInARow(#cards)
 		for i, cardItem in ipairs(cards) do
 			table.remove(deck,table.indexOf(deck,cardItem.card))
+			cardItem.card:onRemoveFromDeck()
 			cardItem.tx = startX+stepX*i
 			cardItem.ty = 68
 			cardItem.large = false
@@ -470,6 +472,7 @@ function transformCardFromDeck(amount,random,canClose,onClose)
 			table.retainIf(thisCardTypes,function (card) return getmetatable(cardItem.card) ~= card end)
 			local randomCard = thisCardTypes[random:randInt(#thisCardTypes)]:new()
 			table.remove(deck,table.indexOf(deck,cardItem.card))
+			cardItem.card:onRemoveFromDeck()
 			table.insert(deck,randomCard)
 			cardItem.tx = startX+stepX*i
 			cardItem.ty = 68

@@ -136,6 +136,11 @@ function Doubt:use()
 	return { ApplyPowerAction:new(WeakPower:new(player,1,true)) }
 end
 
+Parasite = CurseCard:new{ name='Parasite',description='Unplayable. NL If transformed or removed from deck, lose 3 Max HP.' }
+function Parasite:onRemoveFromDeck()
+	player:decreaseMaxHp(3)
+end
+
 curseCards = {
 	AscendersBane,Injury,Clumsy,Writhe,Regret,Decay,Doubt
 }

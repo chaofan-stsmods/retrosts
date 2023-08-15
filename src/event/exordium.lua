@@ -9,7 +9,7 @@ function BigFish:init()
 	self.options = {
 		{description='[Banana] #5#Heal '..self.healAmt..' HP.'},
 		{description='[Donut] #5#Max HP +5.'},
-		{description='[Box] #5#Obtain a Relic. #2#Become Cursed - Regret.',cardItem=CardItem:new{card=Regret:new()}},
+		{description='[Box] #5#Obtain a Relic. #3#Become Cursed - Regret.',cardItem=CardItem:new{card=Regret:new()}},
 	}
 end
 
@@ -90,7 +90,7 @@ function WingStatue:init()
 	self.random = self.random or makeRand(act.id,room.id,1)
 	self.description = 'Among the stone and boulders, you notice an intricate large blue statue resembling a wing. NL You find #4#gold#12# spilling from its cracks. Maybe there is more inside...'
 	self.options = {
-		{description='[Pray] #5#Remove a card from your deck. #2#Lose '..self.hpLoss..' HP.'},
+		{description='[Pray] #5#Remove a card from your deck. #3#Lose '..self.hpLoss..' HP.'},
 		{description='[Destroy] #5#Gain 50 - 80 Gold.'},
 		{description='[Leave]'},
 	}
@@ -131,8 +131,8 @@ function WorldOfGoop:init()
 	self.goldLoss = math.min(gold,ascension >= 15 and self.random:randInt(35,75) or self.random:randInt(20,50))
 	self.description = 'You fall into a puddle. @IT\'S@ @MADE@ @OF@ @#5#SLIME@ @GOOP!!#12#@ NL Frantically, you claw yourself out over several minutes as you feel the goop starting to burn. NL You can feel goop in your ears, goop in your nose, goop everywhere. NL Climbing out, you notice that some of your #4#gold#12# is missing. Looking back to the puddle you see your missing coins combined with #4#gold#12# from unfortunate adventurers mixed together in the puddle.'
 	self.options = {
-		{description='[Gather Gold] #5#Gain '..self.goldGain..' Gold. #2#Loss '..self.hpLoss..' HP.'},
-		{description='[Leave It] #2#Lose '..self.goldLoss..' Gold.'},
+		{description='[Gather Gold] #5#Gain '..self.goldGain..' Gold. #3#Loss '..self.hpLoss..' HP.'},
+		{description='[Leave It] #3#Lose '..self.goldLoss..' Gold.'},
 	}
 end
 
@@ -159,7 +159,7 @@ function TheSsssserpent:init()
 	self.goldReward = ascension >= 15 and 150 or 175
 	self.description = 'You walk into a room to find a large hole in the ground. As you approach the hole, an enormous serpent creature appears from within. NL NL ~\"Ho~ ~hooo!~ ~Hello~ ~hello!~ ~what~ ~have~ ~we~ ~got~ ~here?~ Hello adventurer, I ask a simple question. NL The most fulfilling of lives is that in which you can ~#4#buy~ ~anything!#12#~ NL Do you agree?\"'
 	self.options = {
-		{description='[Agree] #5#Gain '..self.goldReward..' Gold. #2#Become Cursed - Doubt.',cardItem=CardItem:new{card=Doubt:new()}},
+		{description='[Agree] #5#Gain '..self.goldReward..' Gold. #3#Become Cursed - Doubt.',cardItem=CardItem:new{card=Doubt:new()}},
 		{description='[Disagree]'},
 	}
 end
@@ -238,7 +238,7 @@ function ScrapOoze:init()
 	self.hpLoss = ascension >= 15 and 5 or 3
 	self.description = 'As you walk into the room you hear a ~gurgling~ and the @grinding@ of metals. Before you is a slime-like creature that ate too much scrap for its own good. From the center of the creature you see glints of strange light, perhaps something magical? It looks like you can get some #4#treasure#12# if you just reach inside its... opening. However, the acid and sharp objects may #2#hurt.'
 	self.options = {
-		{description='[Reach Inside] #2#Lose '..self.hpLoss..' HP. #5#'..self.chance..'%: Find a Relic.'},
+		{description='[Reach Inside] #3#Lose '..self.hpLoss..' HP. #5#'..self.chance..'%: Find a Relic.'},
 		{description='[Leave]'},
 	}
 end
@@ -259,7 +259,7 @@ function ScrapOoze:onOption(selection)
 				self.description = '@#2#Ouch!#12#@ NL All you find is corroded metal and a bit of @#2#burning@ @pain.#12#@ NL However, you\'re still convinced there\'s a #4#relic...'
 				self.hpLoss = self.hpLoss + 1
 				self.chance = self.chance + 10
-				self.options[1].description = '[Deeper] #2#Lose '..self.hpLoss..' HP. #5#'..self.chance..'%: Find a Relic.'
+				self.options[1].description = '[Deeper] #3#Lose '..self.hpLoss..' HP. #5#'..self.chance..'%: Find a Relic.'
 			end
 		elseif selection == 2 then
 			self.description = 'You decide to leave the area. NL The slime pays no attention, content with its meal.'
@@ -272,13 +272,13 @@ function ScrapOoze:onOption(selection)
 	end
 end
 
-ShiningLight = TextEvent:new{name='Shining Light',screen='entry',hpLoss=3}
+ShiningLight = TextEvent:new{name='Shining Light',screen='entry',hpLoss=0}
 function ShiningLight:init()
 	self.random = self.random or makeRand(act.id,room.id,1)
 	self.hpLoss = math.floor((ascension >= 15 and 0.3 or 0.2) * player.maxHp)
 	self.description = 'You find a shimmering #4#mass of light#12# encompassing the center of the room. NL NL Its ~warm~ ~glow~ and ~enchanting~ ~patterns~ invite you in.'
 	self.options = {
-		{description='[Enter] #5#Upgrade 2 random cards. #2#Lose '..self.hpLoss..' HP.'},
+		{description='[Enter] #5#Upgrade 2 random cards. #3#Lose '..self.hpLoss..' HP.'},
 		{description='[Leave]'},
 	}
 	if table.allMatch(deck,function(c) return not c:canUpgrade() end) then
@@ -309,6 +309,55 @@ function ShiningLight:onOption(selection)
 	end
 end
 
+GoldenIdolEvent = TextEvent:new{name='Golden Idol',screen='entry',hpLoss=0,maxHpLoss=0}
+function GoldenIdolEvent:init()
+	self.random = self.random or makeRand(act.id,room.id,1)
+	self.hpLoss = math.floor((ascension >= 15 and 0.35 or 0.25) * player.maxHp)
+	self.maxHpLoss = math.max(1,math.floor((ascension >= 15 and 0.1 or 0.08) * player.maxHp))
+	self.description = 'You come across an inconspicuous pedestal with a #4#shining gold idol#12# sitting peacefully atop. It looks incredibly valuable. NL NL You sure don\'t see any traps nearby.'
+	self.options = {
+		{description='[Take] #5#Obtain Golden Idol. #3#Trigger a trap.'},
+		{description='[Leave]'},
+	}
+end
+
+function GoldenIdolEvent:onOption(selection)
+	if self.screen == 'entry' then
+		if selection == 1 then
+			obtainRelic(GoldenIdol:new())
+			self.description = 'As you grab the Idol and stow it away, a giant boulder smashes through the ceiling into the ground next to you. NL You realize that the floor is slanted downwards as the boulder starts to roll towards you.'
+			self.options = {
+				{description='[Outrun] #3#Become Cursed - Injury.',cardItem=CardItem:new{card=Injury:new()}},
+				{description='[Smash] #3#Take '..self.hpLoss..' Damage.'},
+				{description='[Hide] #3#Lose '..self.maxHpLoss..' Max HP.'},
+			}
+			self.screen = 'escape'
+		elseif selection == 2 then
+			self.description = 'If there was ever an obvious trap, this would be it. NL You decide not to interfere with objects placed upon pedestals.'
+			self.options = {self.options[2]}
+			self.screen = 'leave'
+		end
+	elseif self.screen == 'escape' then
+		if selection == 1 then
+			local cardItem = CardItem:new{card=Injury:new(),x=0,y=136,tx=120,ty=68,isNotInHand=true}
+			addEffect(CardEffect:new{cardItem=cardItem,pauseDuration=30,duration=50,tx=240,ty=0})
+			table.insert(deck,cardItem.card)
+			self.description = '@RUUUUUUUUUUN!@ NL You barely leap into a side passageway as the boulder rushes by. Unfortunately it feels like you sprained something however.'
+		elseif selection == 2 then
+			player:damage(player,self.hpLoss)
+			self.description = 'You throw yourself at the boulder with everything you have. When the dust clears, you can make a safe way out.'
+		elseif selection == 3 then
+			player:decreaseMaxHp(self.maxHpLoss)
+			self.description = '@SQUISH!@ NL The boulder flattens you a little as it passes by, but otherwise you can get out of here.'
+		end
+		self.options = {{description='[Leave]'}}
+		self.screen = 'leave'
+	else
+		completeRoom()
+		openWindowAbove(MapWindow:new())
+	end
+end
+
 DeadAdventurer = CombatTextEvent:new{screen='entry',spriteBank=3,encounter=nil,encounterChance=25,rewards=nil,numRewards=0}
 local deadAdventurerEncounters = {ThreeSentryEncounter,GremlinNobEventEncounter,LagavulinStrongEncounter}
 local deadAdventurerDescriptions = {
@@ -329,7 +378,7 @@ function DeadAdventurer:init()
 	self.description = 'You come across a #2#dead adventurer#12# on the floor. NL His #10#pants#12# have been stolen! Also, '..
 		deadAdventurerDescriptions[roll]..'NL Though his #4#possessions are still intact,#12# you\'re in no mind to find out what happened here...'
 	self.options = {
-		{description='[Search] #5#Find Loot. #2#'..self.encounterChance..'%: monster returns.'},
+		{description='[Search] #5#Find Loot. #3#'..self.encounterChance..'%: monster returns.'},
 		{description='[Leave]'},
 	}
 	self.rewards = shallowcopy(deadAdventurerRewards)
@@ -376,7 +425,7 @@ function DeadAdventurer:onOption(selection)
 					self.options = {self.options[2]}
 					self.screen = 'leave'
 				else
-					self.options[1].description = '[Continue] #5#Find Loot. #2#'..self.encounterChance..'%: monster returns.'
+					self.options[1].description = '[Continue] #5#Find Loot. #3#'..self.encounterChance..'%: monster returns.'
 				end
 			end
 		elseif selection == 2 then
@@ -423,6 +472,84 @@ function DeadAdventurer:onCombatEnd()
 		local relic = getRelicTypeByTier(tier):new()
 		addRelicReward(rewards,relic)
 	end
+	generateCardRewards(rewards,random)
+	generatePotionRewards(rewards,random)
+	self.screen = 'leave'
+	self.description = ''
+	self.options = {}
+	completeRoom()
+	openWindowAbove(RewardWindow:new{rewards=rewards})
+end
+
+Mushrooms = CombatTextEvent:new{screen='entry',spriteBank=1,healAmt=0,encounter=nil}
+function Mushrooms:init()
+	self.random = self.random or makeRand(act.id,room.id,1)
+	self.healAmt = math.floor(player.maxHp*0.25)
+	self.description = 'You enter a corridor full of ~#10#hypnotizing~ ~colored~ ~mushrooms.#12#~ NL Due to your lack of specialization in mycology you are unable to identify the specimens. NL You want to escape, but feel oddly compelled to eat a #10#~mushroom...~'
+	self.options = {
+		{description='[Stomp] #3#Anger the Mushrooms.'},
+		{description='[Eat] #5#Heal '..self.healAmt..' HP. #3#Become Cursed - Parasite.',cardItem=CardItem:new{card=Parasite:new()}},
+	}
+	self.encounter = ThreeFungiBeastEncounter
+end
+
+function Mushrooms:isAvailable()
+	return floor > 6
+end
+
+function Mushrooms:drawForeground()
+	spr(449,208,60,0,1)
+	spr(449,98,66,0,1,1)
+	spr(449,65,98,0,1,1)
+	spr(449,182,102,0,1)
+	mapColors(0,1,6,5,4,4,2,3)
+	spr(26,134,62,0,1,1)
+	spr(26,185,57,0,1)
+	spr(26,102,104,0,1)
+	spr(26,154,99,0,1,1)
+	spr(26,233,89,0,1,1)
+	resetColors()
+	if self.screen ~= 'fight' then
+		player:drawImage()
+	end
+	if self.screen == 'beforeFight' then
+		for _, enemy in ipairs(enemies) do
+			enemy:drawImage()
+		end
+	end
+end
+
+function Mushrooms:onOption(selection)
+	if self.screen == 'entry' then
+		if selection == 1 then
+			self.screen = 'beforeFight'
+			self.description = '@#2#Ambushed!!#12#@ NL Rodents infested by the mushrooms appear out of nowhere!'
+			self.options = {{description='[Fight]'}}
+			setupEnemies(self.encounter)
+		elseif selection == 2 then
+			player:heal(self.healAmt)
+			local cardItem = CardItem:new{card=Parasite:new(),x=0,y=136,tx=120,ty=68,isNotInHand=true}
+			addEffect(CardEffect:new{cardItem=cardItem,pauseDuration=30,duration=50,tx=240,ty=0})
+			table.insert(deck,cardItem.card)
+			self.description = 'You give in to the unnatural desire to eat. As you consume mushroom after mushroom, you feel yourself entering into a daze and pass out. As you awake, you feel very odd. NL You #5#Heal #10#25%#12# of your HP, but you also get #2#infected.'
+			self.options = {{description='[Leave]'}}
+			self.screen = 'leave'
+		end
+	elseif self.screen == 'beforeFight' then
+		roomActionType = 'eventCombat'
+		self.screen = 'fight'
+		startCombat(self.encounter)
+	else
+		completeRoom()
+		openWindowAbove(MapWindow:new())
+	end
+end
+
+function Mushrooms:onCombatEnd()
+	local random = self.random
+	local rewards = {}
+	addGoldReward(rewards,random:randInt(20,30))
+	addRelicReward(rewards,OddMushroom:new())
 	generateCardRewards(rewards,random)
 	generatePotionRewards(rewards,random)
 	self.screen = 'leave'

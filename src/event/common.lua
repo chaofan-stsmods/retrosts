@@ -132,9 +132,9 @@ WheelOfChange = TextEvent:new{
 }
 local wheelIcons = {448,7,451,6,450,449}
 local wheelPrizes = {
-	{description='"Uh oh! NL You lose!" NL You spot him readying a shiv...',option='[Prize?] #2#Lose {#} HP.',action='lossHp'},
-	{description='"Ohh, the power of #2#~darkness...~#12# NL Choose a card to remove from your deck!"',option='[Prize!] #5#Remove a card from your deck.',action='remove'},
-	{description='"Looks like you won a #8#Curse!#12# NL That\'s not good. NL Oh well! Better luck next time!"',option='[Prize?] #2#Curse - Decay.',action='curse'},
+	{description='"Uh oh! NL You lose!" NL You spot him readying a shiv...',option='[Prize?] #3#Lose {#} HP.',action='lossHp'},
+	{description='"Ohh, the power of ~#2#darkness...~#12# NL Choose a card to remove from your deck!"',option='[Prize!] #5#Remove a card from your deck.',action='remove'},
+	{description='"Looks like you won a #8#Curse!#12# NL That\'s not good. NL Oh well! Better luck next time!"',option='[Prize?] #3#Curse - Decay.',action='curse'},
 	{description='"Oooh, a free #5#Heal#12# for you!"',option='[Prize!] #5#Heal to full health.',action='heal'},
 	{description='""Ah, a #5#gift!#12# NL Enjoy!"',option='[Prize!] #5#Obtain a Relic.',action='relic'},
 	{description='""You win some #4#GOLD!#12# NL YAY!!!!"',option='[Prize!] YAY!!!!',action='gold'},

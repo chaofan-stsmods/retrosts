@@ -59,7 +59,7 @@ function Circlet:onBeforeObtainRelic(relic)
 	return nil
 end
 
-NeowsLament = Relic:new{name='Neow\'s Lament',description='Enemies in your first 3 combats will have 1 HP.',icon=68,tier='special',counter=3}
+NeowsLament = Relic:new{name='Neow\'s Lament',description='Enemies in your first #10#3#12# combats will have #10#1#12# HP.',icon=68,tier='special',counter=3}
 function NeowsLament:onCombatStart()
 	if self.counter ~= nil then
 		for _, enemy in ipairs(enemies) do
@@ -74,4 +74,16 @@ function NeowsLament:onCombatStart()
 	end
 end
 
-colorlessRelics = { Circlet,NeowsLament }
+GoldenIdol = Relic:new{name='Golden Idol',description='Enemies drop #10#25%#12# more #4#Gold.',icon=24,tier='special'}
+function GoldenIdol:onAddBonusGoldReward(bonusGold,amount)
+	return bonusGold + amount * 0.25
+end
+
+OddMushroom = Relic:new{name='Odd Mushroom',description='When #4#Vulnerable#12#, take #5#25%#12# more attack damage rather than #5#50%.',icon=26,tier='special'}
+function OddMushroom:onModifyVulnerableFactor(factor)
+	return 1.25
+end
+
+colorlessRelics = {
+	Circlet,NeowsLament,GoldenIdol,OddMushroom
+}

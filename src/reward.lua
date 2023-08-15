@@ -170,12 +170,22 @@ function generateStolenGoldReward(rewards)
 		end
 	end
 	if stolenGold > 0 then
-		addGoldReward(rewards,stolenGold,' (Stolen)')
+		addGoldReward(rewards,stolenGold,' (Stolen)',false)
 	end
 end
 
-function addGoldReward(rewards,amount,suffix)
-	table.insert(rewards,{title=amount..' Gold'..(suffix or ''),icon=7,type='gold',value=amount})
+function addGoldReward(rewards,amount,suffix,bonus)
+	bonus = bonus or bonus == nil
+	local bonusGold = 0
+	if bonus then
+		bonusGold = player:triggerReducerEvent('onAddBonusGoldReward',bonusGold,amount)
+	end
+	bonusGold = math.floor(bonusGold+0.5)
+	if bonusGold > 0 then
+		table.insert(rewards,{title=amount..'(+'..bonusGold..') Gold'..(suffix or ''),icon=7,type='gold',value=amount+bonusGold})
+	else
+		table.insert(rewards,{title=amount..' Gold'..(suffix or ''),icon=7,type='gold',value=amount})
+	end
 end
 
 local rareCardRandOffset = 5
