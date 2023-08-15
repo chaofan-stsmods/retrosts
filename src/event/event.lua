@@ -20,6 +20,47 @@ function eventBelow()
 	end
 end
 
+-- event generator
+
+local monsterChance = 0.1
+local shopChance = 0.03
+local treasureChance = 0.02
+function resetEventGenerator()
+	monsterChance = 0.1
+	shopChance = 0.03
+	treasureChance = 0.02
+end
+
+function generateEventRoomType(random)
+	local roll = random:rand()
+	if roll < monsterChance then
+		monsterChance = 0.1
+		return 'monster'
+	else
+		monsterChance = monsterChance + 0.1
+		roll = roll - monsterChance
+	end
+
+	if roll < shopChance then
+		shopChance = 0.03
+		return 'shop'
+	else
+		shopChance = shopChance + 0.03
+		roll = roll - shopChance
+	end
+
+	if roll < treasureChance then
+		treasureChance = 0.02
+		return 'treasure'
+	else
+		treasureChance = treasureChance + 0.02
+		roll = roll - treasureChance
+	end
+
+	return 'event'
+end
+
+
 -- event instance
 
 Event = Object:new{

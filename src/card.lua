@@ -124,7 +124,7 @@ function Card:triggerEvent(name,...)
 	end
 end
 
-CardItem = Object:new{ x=0,y=136,tx=0,ty=136,card=nil,large=false,isNotInHand=false,showWhiteCost=false,glow=nil}
+CardItem = Object:new{ x=0,y=136,tx=0,ty=136,card=nil,large=false,isNotInHand=false,showWhiteCost=false,glow=nil,flipped=false}
 cardTypeToSprIndex = {attack=57,skill=58,power=59,status=55,curse=56}
 cardRarityColor = {basic={14,15},common={14,15},special={14,15},uncommon={10,9},rare={4,3}}
 function CardItem:tick()
@@ -144,10 +144,26 @@ function CardItem:tick()
 	if self.glow ~= nil then
 		rect(l-1,t,self.large and 58 or 34,self.large and 57 or 41,self.glow)
 	end
-	drawCardBack(self.card,self.large,l,t)
-	drawCost(self.card,l,t,self.isNotInHand,self.showWhiteCost)
-	drawTitle(self.card,self.large,l,t)
-	drawDescription(self.card,self.card.description,l+3,t+10,self.large and 51 or 27,self.large and 999 or 3)
+	if self.flipped then
+		drawCardFlipped(self.large,l,t)
+	else	
+		drawCardBack(self.card,self.large,l,t)
+		drawCost(self.card,l,t,self.isNotInHand,self.showWhiteCost)
+		drawTitle(self.card,self.large,l,t)
+		drawDescription(self.card,self.card.description,l+3,t+10,self.large and 51 or 27,self.large and 999 or 3)
+	end
+end
+
+function drawCardFlipped(large,l,t)
+	if large then
+		rect(l+7,t+7,42,42,4)
+		sprmap(14,2,7,7,l,t,0,1,function (tile,x) return tile,x==20 and 1 or 0 end)
+		sprmap(25,2,2,3,l+20,t+16,0,1,function (tile,x) return tile,x==26 and 1 or 0 end)
+	else
+		rect(l+7,t+7,18,26,4)
+		sprmap(21,2,4,5,l,t,0,1,function (tile,x) return tile,x==24 and 1 or 0 end)
+		sprmap(25,2,2,3,l+8,t+8,0,1,function (tile,x) return tile,x==26 and 1 or 0 end)
+	end
 end
 
 function drawCardBack(card,large,l,t)
@@ -311,7 +327,7 @@ function moveLimitLineWidth(currentX,currentY,x,width,lineWidth)
 end
 
 function moveLimitLineWidthAndPrint(str,currentX,currentY,x,lineWidth,maxY,color)
-	color = color or 12
+	color = isDarken and 14 or color or 12
 	local strWidth = strWidth(str,false,true)
 	currentX,currentY = moveLimitLineWidth(currentX,currentY,x,strWidth,lineWidth)
 	if currentY > maxY then
@@ -819,7 +835,7 @@ CardGridSelectWindow = Window:new{
 	max=999,min=1,canClose=false,
 }
 function CardGridSelectWindow:onOpen()
-	if roomType == 'combat' then
+	if roomActionType == 'combat' then
 		queueSync(2,combatSpriteBank)
 	else
 		queueSync(2,currentEvent.spritebank)

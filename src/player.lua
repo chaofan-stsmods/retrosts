@@ -88,7 +88,7 @@ function Player:getRelics()
 	return {}
 end
 
-function Player:getKeepAndMatchCardType()
+function Player:getMatchAndKeepCardType()
 	return Blind
 end
 

@@ -872,7 +872,7 @@ function Lagavulin:sleep()
 	self.sleepCooldown = self.sleepCooldown - 1
 	if self.sleepCooldown == 0 then
 		local power = self:getPower(MetallicizePower)
-		addAction(ReducePowerAction:new(power,power.amount))
+		addAction(ReducePowerAction:new(power,self.metallicizeAmt))
 	end
 	addAction(NextIntentAction:new(self))
 end
@@ -909,7 +909,7 @@ function Lagavulin:damage(...)
 		addAction(SetIntentAction:new(self,'stun','stun',0,1,false))
 		self.sleepCooldown = 0
 		local power = self:getPower(MetallicizePower)
-		addAction(ReducePowerAction:new(power,power.amount))
+		addAction(ReducePowerAction:new(power,self.metallicizeAmt))
 	end
 end
 

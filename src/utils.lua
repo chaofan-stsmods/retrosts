@@ -149,7 +149,7 @@ function flipRemap(x,w)
 	end
 end
 
-local isDarken = false
+isDarken = false
 local darkenColorList = {0,0,15,14,14,14,15,0,15,15,14,14,14,14,15,0}
 --{0,0,1,2,3,6,7,0,1,15,9,10,13,14,15,0}
 function mapColor(from,to)
@@ -304,8 +304,8 @@ end
 
 function table:map(func)
 	local r = {}
-	for _, value in ipairs(self) do
-		table.insert(r,func(value))
+	for index, value in ipairs(self) do
+		table.insert(r,func(value,index))
 	end
 	return r
 end

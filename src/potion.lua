@@ -49,7 +49,7 @@ function Potion:drawImage(x,y)
 end
 
 function Potion:canUse()
-	return self.canUseOutsideCombat or (roomType == 'combat' and getmetatable(nearestWindow) == GameWindow and not inEnemyTurn)
+	return self.canUseOutsideCombat or (roomActionType == 'combat' and getmetatable(nearestWindow) == GameWindow and not inEnemyTurn)
 end
 
 function Potion:realCanUse()

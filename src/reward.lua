@@ -3,7 +3,7 @@
 
 RewardWindow = Window:new{rewards=nil,selection=0,title='Rewards',canClose=false,name='RewardWindow'}
 function RewardWindow:onOpen()
-	if roomType == 'combat' then
+	if roomActionType == 'combat' then
 		queueSync(2,combatSpriteBank)
 	else
 		queueSync(2,currentEvent.spritebank)
@@ -348,7 +348,7 @@ end
 -- cardselect
 CardRewardWindow = Window:new{name='CardRewardWindow',cards=nil,selection=0,single=false,canClose=true}
 function CardRewardWindow:onOpen()
-	if roomType == 'combat' then
+	if roomActionType == 'combat' then
 		queueSync(2,combatSpriteBank)
 	else
 		queueSync(2,currentEvent.spritebank)

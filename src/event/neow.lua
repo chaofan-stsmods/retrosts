@@ -24,7 +24,7 @@ function NeowEvent:onOption(selection)
 	elseif self.screen == 'rewards' then
 		self.words = 'Granted...'
 		self.options[selection].onSelect()
-		self.screen = 'exit'
+		self.screen = 'leave'
 		self.options = {{description='[Leave]'}}
 		self.selectedOption = 0
 	else

@@ -133,11 +133,11 @@ WheelOfChange = TextEvent:new{
 local wheelIcons = {448,7,451,6,450,449}
 local wheelPrizes = {
 	{description='"Uh oh! NL You lose!" NL You spot him readying a shiv...',option='[Prize?] #2#Lose {#} HP.',action='lossHp'},
-	{description='"Ohh, the power of #r~darkness...~ NL Choose a card to remove from your deck!"',option='[Prize!] #5#Remove a card from your deck.',action='remove'},
-	{description='"Looks like you won a #pCurse! NL That\'s not good. NL Oh well! Better luck next time!"',option='[Prize?] #2#Curse - Decay.',action='curse'},
-	{description='"Oooh, a free #gHeal for you!"',option='[Prize!] #5#Heal to full health.',action='heal'},
-	{description='""Ah, a #ggift! NL Enjoy!"',option='[Prize!] #5#Obtain a Relic.',action='relic'},
-	{description='""You win some #yGOLD! NL YAY!!!!"',option='[Prize!] YAY!!!!',action='gold'},
+	{description='"Ohh, the power of #2#darkness...#12# NL Choose a card to remove from your deck!"',option='[Prize!] #5#Remove a card from your deck.',action='remove'},
+	{description='"Looks like you won a #8#Curse!#12# NL That\'s not good. NL Oh well! Better luck next time!"',option='[Prize?] #2#Curse - Decay.',action='curse'},
+	{description='"Oooh, a free #5#Heal#12# for you!"',option='[Prize!] #5#Heal to full health.',action='heal'},
+	{description='""Ah, a #5#gift!#12# NL Enjoy!"',option='[Prize!] #5#Obtain a Relic.',action='relic'},
+	{description='""You win some #4#GOLD!#12# NL YAY!!!!"',option='[Prize!] YAY!!!!',action='gold'},
 }
 function WheelOfChange:init()
 	self.random = self.random or makeRand(act.id,room.id,1)
@@ -184,11 +184,11 @@ function WheelOfChange:tick()
 			self.rolling = true
 			local targetPrize = self.random:randInt(1,6)
 			self.wheelTargetRotation = 3.14159265*10+targetPrize*1.04719755
-			self.description = wheelPrizes[targetPrize].description:gsub('{#}',tostring(self.hpLoss))
-			self.options = {{description=wheelPrizes[targetPrize].option}}
+			self.description = wheelPrizes[targetPrize].description
+			self.options = {{description=wheelPrizes[targetPrize].option:gsub('{#}',tostring(self.hpLoss))}}
 			self.prize = wheelPrizes[targetPrize].action
 		elseif not self.rolling and self.rolled then
-			self.screen = 'prize'
+			self.wheelIn = false
 		end
 	end
 	self.pauseControl = false
@@ -199,6 +199,9 @@ function WheelOfChange:rollWheel()
 		self.wheelYOffset = lerp(self.wheelYOffset,0,0.2)
 	else
 		self.wheelYOffset = lerp(self.wheelYOffset,-130,0.2)
+		if self.wheelYOffset < -120 then
+			self.screen = 'prize'
+		end
 	end
 	local diff = lerp(self.wheelRotation,self.wheelTargetRotation,0.02,0.01)-self.wheelRotation
 	if self.rolling then
@@ -246,7 +249,7 @@ function WheelOfChange:onOption(selection)
 	elseif self.screen == 'roll' then
 	elseif self.screen == 'prize' then
 		self[self.prize](self)
-		self.screen = 'complete'
+		self.screen = 'leave'
 		self.options = {{description='[Leave]'}}
 	else
 		completeRoom()
@@ -287,6 +290,171 @@ function WheelOfChange:remove()
 	removeCardFromDeck(1)
 end
 
+MatchAndKeep = TextEvent:new{
+	name='Match and Keep!',screen='entry',cardItems=nil,pauseControl=false,cursorCard=0,flippedCard=0,flippedCard2=0,resetTimer=0,attempts=5,
+}
+function MatchAndKeep:init()
+	self.random = self.random or makeRand(act.id,room.id,1)
+	self.description = 'A gremlin is madly shuffling cards on a table. This monster seems to be a harmless one. You approach him out of curiosity.'
+	self.options = {{description='[Continue]'}}
+	self.cardItems = self:initCards()
+end
+
+function MatchAndKeep:initCards()
+	local cards = {}
+	local random = self.random
+	local card = getPlayerCardType(random,'common'):new()
+	cards[1],cards[2] = card,card
+	card = getPlayerCardType(random,'uncommon'):new()
+	cards[3],cards[4] = card,card
+	card = getPlayerCardType(random,'rare'):new()
+	cards[5],cards[6] = card,card
+	if ascension >= 15 then
+		card = getCurseCardType(random):new()
+		cards[7],cards[8] = card,card
+	else
+		card = getColorlessCardType(random,'uncommon'):new()
+		cards[7],cards[8] = card,card
+	end
+	card = getCurseCardType(random):new()
+	cards[9],cards[10] = card,card
+	card = player:getMatchAndKeepCardType():new()
+	cards[11],cards[12] = card,card
+	random:shuffle(cards)
+
+	return table.map(cards,function (v,i)
+		local x = (i-1)%4
+		local y = math.floor((i-1)/4)
+		return CardItem:new{card=v,x=120,y=-20,isNotInHand=true,tx=120-60+40*x,ty=35+40*y,flipped=true}
+	end)
+end
+
+function MatchAndKeep:drawBackground(below)
+	if self.screen ~= 'play' then
+		TextEvent.drawBackground(self,below)
+		return
+	end
+	if below then
+		cls(15)
+	else
+		cls(13)
+	end
+	printGlowed('Remaining',2,20,12,15,1,true)
+	printGlowed('Attempts:',2,28,12,15,1,true)
+	printGlowed(tostring(self.attempts),2,36,12,15,1,true)
+	for i,cardItem in ipairs(self.cardItems) do
+		if not cardItem.picked then
+			cardItem.flipped = i ~= self.flippedCard and i ~= self.flippedCard2
+			if i ~= self.cursorCard or self.attempts == 0 then
+				cardItem.large = false
+				cardItem:tick()
+			end
+		end
+	end
+	if self.attempts > 0 and self.cursorCard > 0 and self.cursorCard <= #self.cardItems then
+		local cardItem = self.cardItems[self.cursorCard]
+		if not cardItem.picked then
+			cardItem.large = true
+			cardItem:tick()
+		end
+	end
+end
+
+function MatchAndKeep:drawOptions()
+	if self.screen ~= 'play' then
+		TextEvent.drawOptions(self)
+	end
+end
+
+function MatchAndKeep:tick()
+	TextEvent.tick(self)
+	if self.screen ~= 'play' then
+		return
+	end
+
+	if self.resetTimer > 0 then
+		self.resetTimer = self.resetTimer - 1
+		if self.resetTimer == 0 then
+			self.flippedCard = 0
+			self.flippedCard2 = 0
+			if self.attempts == 0 then
+				self.screen = 'leave'
+				self.description = 'You complete the gremlin\'s game and look up. NL He disappeared?'
+				self.options = {{description='[Leave]'}}
+				self.pauseControl = true
+			end
+		elseif self.resetTimer == 20 and self.attempts == 0 then
+			for _,cardItem in ipairs(self.cardItems) do
+				cardItem.tx,cardItem.ty = 120,-20
+			end
+		end
+	end
+
+	if cursorOnTopBar then
+		return
+	end
+
+	local function cardExist(i) return not self.cardItems[i].picked end
+	if self.cursorCard == 0 or not cardExist(self.cursorCard) then
+		self.cursorCard = nextOrOtherIndexInTableIf(self.cardItems,self.cursorCard,cardExist)
+	end
+
+	if self.pauseControl then
+		self.pauseControl = false
+		return
+	end
+
+	if btnp(0) then
+		self.cursorCard = previousOrOtherIndexInTableIf(self.cardItems,self.cursorCard-3,cardExist)
+	elseif btnp(1) then
+		self.cursorCard = nextOrOtherIndexInTableIf(self.cardItems,self.cursorCard+3,cardExist)
+	elseif btnp(2) then
+		self.cursorCard = previousOrOtherIndexInTableIf(self.cardItems,self.cursorCard,cardExist)
+	elseif btnp(3) then
+		self.cursorCard = nextOrOtherIndexInTableIf(self.cardItems,self.cursorCard,cardExist)
+	elseif btnp(4) then
+		if self.flippedCard == 0 then
+			self.flippedCard = self.cursorCard
+		elseif self.flippedCard2 == 0 and self.flippedCard ~= self.cursorCard then
+			self.flippedCard2 = self.cursorCard
+			self.attempts = self.attempts - 1
+			if getmetatable(self.cardItems[self.flippedCard].card) == getmetatable(self.cardItems[self.flippedCard2].card) then
+				local cardItem1 = self.cardItems[self.flippedCard]
+				local cardItem2 = self.cardItems[self.flippedCard2]
+				cardItem1.tx,cardItem1.ty,cardItem1.large = 120,68,false
+				cardItem2.tx,cardItem2.ty,cardItem2.large = 120,68,false
+				addEffect(CardEffect:new{cardItem=cardItem1,pauseDuration=30,duration=50,tx=240,ty=0})
+				addEffect(CardEffect:new{cardItem=cardItem2,pauseDuration=30,duration=50,tx=240,ty=0})
+				table.insert(deck,cardItem1.card)
+				self.cardItems[self.flippedCard] = {picked=true}
+				self.cardItems[self.flippedCard2] = {picked=true}
+				self.flippedCard = 0
+				self.flippedCard2 = 0
+			else
+				self.resetTimer = 40
+			end
+			if self.attempts == 0 then
+				self.resetTimer = 60
+			end
+		end
+	end
+end
+
+function MatchAndKeep:onOption()
+	if self.screen == 'entry' then
+		self.screen = 'near'
+		self.description = '"#10#Twelve#12# cards! Match them to keep them! #10#Five#12# tries, no do-overs. NL Are you ready? Let\'s start!"'
+		self.options = {{description='[Play]'}}
+	elseif self.screen == 'near' then
+		self.screen = 'play'
+		self.options = {}
+		self.pauseControl = true
+	elseif self.screen == 'leave' then
+		completeRoom()
+		openWindowAbove(MapWindow:new())
+	end
+end
+
 commonEvents = {
-	GoldenShrine,Transmogrifier,UpgradeShrine,Purifier,WheelOfChange
+	GoldenShrine,Transmogrifier,UpgradeShrine,Purifier,WheelOfChange,MatchAndKeep
 }

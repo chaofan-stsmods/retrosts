@@ -36,7 +36,7 @@ function Ironclad:getAscensionMaxHPLoss()
 	return 5
 end
 
-function Ironclad:getKeepAndMatchCardType()
+function Ironclad:getMatchAndKeepCardType()
 	return Bash
 end
 
