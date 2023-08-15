@@ -1,7 +1,7 @@
 -- campfire
 ---@diagnostic disable: lowercase-global
 
-CampfireEvent = Event:new{screen='entry',spritebank=2,random=nil}
+CampfireEvent = Event:new{screen='entry',spriteBank=2,random=nil}
 function CampfireEvent:init()
 	self.random = self.random or makeRand(act.id,room.id,1)
 	table.insert(self.options,{name='Rest',description=function () return self:getRestDescription() end,icon=320,onSelect=function() self:rest() end})

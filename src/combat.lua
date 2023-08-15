@@ -64,6 +64,9 @@ end
 
 function combat()
 	act:drawBackground()
+	if roomActionType == 'eventCombat' then
+		currentEvent:drawForeground()
+	end
 	player:tick()
 	for i=1,#enemies do
 		enemies[i]:tick()
@@ -319,10 +322,14 @@ function checkCombatEnd()
 end
 
 function combatEnd()
-	local rewards = generateRewards(rewardRand)
 	player:onCombatEnd()
-	completeRoom()
-	openWindowAbove(RewardWindow:new{rewards=rewards})
+	if roomActionType == 'eventCombat' then
+		currentEvent:onCombatEnd()
+	else
+		local rewards = generateRewards(rewardRand)
+		completeRoom()
+		openWindowAbove(RewardWindow:new{rewards=rewards})
+	end
 end
 
 -- enemies

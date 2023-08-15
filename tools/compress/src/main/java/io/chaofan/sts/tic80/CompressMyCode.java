@@ -6,7 +6,6 @@ import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -17,8 +16,8 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 public class CompressMyCode {
-    public static void main(String[] args) throws IOException, URISyntaxException {
-        String basePath = args.length > 0 ? args[0] : "C:\\Users\\Chaofan\\AppData\\Roaming\\com.nesbox.tic\\TIC-80\\myproj\\sts";
+    public static void main(String[] args) throws IOException {
+        String basePath = args.length > 0 ? args[0] : "C:\\Users\\Chaofan\\AppData\\Roaming\\com.nesbox.tic\\TIC-80\\myproj\\sts\\out";
         String path = basePath + "\\out.lua";
         List<String> prefixLines = new BufferedReader(new InputStreamReader(CompressMyCode.class.getResourceAsStream("/prefix.lua")))
                 .lines().collect(Collectors.toList());
@@ -55,8 +54,59 @@ public class CompressMyCode {
         lines = lines.stream().filter(l -> l.length() > 0).collect(Collectors.toList());
         String code = String.join("\n",lines);
 
+        TreeNode[] rootContainer = new TreeNode[1];
+        byte[] huffmanResult = huffman(code, rootContainer, false);
+        TreeNode root = rootContainer[0];
+        String base64String = new String(Base64.getEncoder().encode(huffmanResult));
+
+        Map<String, TreeNode> wordCodes = new HashMap<>();
+        root.visit(t -> wordCodes.put(t.name, t));
+
+        StringBuilder sb = new StringBuilder();
+        sb.append(String.join("\n",prefixLines));
+        sb.append("\nloadDecode(\n");
+        /*
+        int lineSize = 200;
+        for (int i = 0, j = Math.min(lineSize, base64String.length());
+             i < base64String.length();
+             i = j, j = Math.min(j + lineSize, base64String.length())) {
+            sb.append("'");
+            sb.append(base64String, i, j);
+            sb.append("'..\n");
+        }
+        sb.setLength(sb.length() - 3);
+        /*/
+        sb.append("'");
+        sb.append(base64String);
+        sb.append("'");
+        //*/
+        sb.append(",\n'");
+        sb.append(root.toCompressedLuaTree());
+        sb.append("')\n");
+        System.out.println("Final code length: " + sb.length());
+        sb.append(String.join("\n",suffixLines));
+
+        System.out.println("Compressed code length: " + huffmanResult.length);
+        System.out.println("Num words: " + wordCodes.size());
+        System.out.println("Num tree nodes: " + root.size());
+        System.out.println("Num tree depth: " + root.depth());
+        System.out.println("Longest word length: " + root.longestWord());
+        System.out.println("Sum word length: " + root.wordSize());
+
+        Files.write(Paths.get(basePath + "\\compressed.lua"), sb.toString().getBytes(StandardCharsets.UTF_8));
+        Files.write(Paths.get(basePath + "\\uncompressed.lua"), code.getBytes(StandardCharsets.UTF_8));
+    }
+
+    public static byte[] huffman(String code, TreeNode[] rootContainer, boolean eachChar) throws IOException {
         Map<String, Integer> words = new HashMap<>();
-        visitCode(code, s -> words.merge(s, 1, Integer::sum));
+        if (eachChar) {
+            for (int i = 0, len = code.length(); i < len; i++) {
+                words.merge(String.valueOf(code.charAt(i)), 1, Integer::sum);
+            }
+        } else {
+            visitCode(code, s -> words.merge(s, 1, Integer::sum));
+        }
+        words.merge(" ", 1, Integer::sum);
 
         List<TreeNode> dict = words.entrySet().stream().map(e -> new TreeNode(e.getKey(), e.getValue())).collect(Collectors.toList());
         TreeSet<TreeNode> treeNodes = new TreeSet<>((a, b) -> {
@@ -85,14 +135,25 @@ public class CompressMyCode {
         ByteArrayOutputStream bout = new ByteArrayOutputStream();
         BigEndianBitOutputStream out = new BigEndianBitOutputStream(bout);
         int[] bitLength = new int[] { 0 };
-        visitCode(code, s -> {
-            TreeNode t = wordCodes.get(s);
-            try {
-                out.write(t.code, t.codeLength);
-                bitLength[0] += t.codeLength;
-            } catch (IOException ignored) {
+        if (eachChar) {
+            for (int i = 0, len = code.length(); i < len; i++) {
+                TreeNode t = wordCodes.get(String.valueOf(code.charAt(i)));
+                try {
+                    out.write(t.code, t.codeLength);
+                    bitLength[0] += t.codeLength;
+                } catch (IOException ignored) {
+                }
             }
-        });
+        } else {
+            visitCode(code, s -> {
+                TreeNode t = wordCodes.get(s);
+                try {
+                    out.write(t.code, t.codeLength);
+                    bitLength[0] += t.codeLength;
+                } catch (IOException ignored) {
+                }
+            });
+        }
 
         TreeNode space = wordCodes.get(" ");
         int byteLength = (bitLength[0] + 23) / 24 * 3;
@@ -102,37 +163,8 @@ public class CompressMyCode {
             remaining -= space.codeLength;
         }
 
-        StringBuilder sb = new StringBuilder();
-        String base64String = new String(Base64.getEncoder().encode(bout.toByteArray()));
-
-        sb.append(String.join("\n",prefixLines));
-        sb.append("\nloadDecode(\n");
-        /*
-        int lineSize = 200;
-        for (int i = 0, j = Math.min(lineSize, base64String.length());
-             i < base64String.length();
-             i = j, j = Math.min(j + lineSize, base64String.length())) {
-            sb.append("'");
-            sb.append(base64String, i, j);
-            sb.append("'..\n");
-        }
-        sb.setLength(sb.length() - 3);
-        /*/
-        sb.append("'");
-        sb.append(base64String);
-        sb.append("'");
-        //*/
-        sb.append(",\n'");
-        sb.append(root.toCompressedLuaTree());
-        sb.append("')\n");
-        System.out.println(sb.length());
-        sb.append(String.join("\n",suffixLines));
-
-        System.out.println(byteLength);
-        System.out.println(wordCodes.size() + " " + root.size() + " " + root.depth() + " " + root.longestWord() + " " + root.wordSize());
-
-        Files.write(Paths.get(basePath + "\\compressed.lua"), sb.toString().getBytes(StandardCharsets.UTF_8));
-        Files.write(Paths.get(basePath + "\\uncompressed.lua"), code.getBytes(StandardCharsets.UTF_8));
+        rootContainer[0] = root;
+        return bout.toByteArray();
     }
 
     public static void visitCode(String code, Consumer<String> callback) {

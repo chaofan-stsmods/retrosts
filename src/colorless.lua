@@ -131,6 +131,11 @@ function Decay:use()
 	return { DamageAction:new{source=player,target=player,value=2,type='power'} }
 end
 
+Doubt = CurseCard:new{ name='Doubt',description='Unplayable. NL At the end of your turn, gain 1 {61}.',autoPlayOnEndTurn=true }
+function Doubt:use()
+	return { ApplyPowerAction:new(WeakPower:new(player,1,true)) }
+end
+
 curseCards = {
-	AscendersBane,Injury,Clumsy,Writhe,Regret
+	AscendersBane,Injury,Clumsy,Writhe,Regret,Decay,Doubt
 }

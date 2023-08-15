@@ -1,7 +1,7 @@
 -- merchant
 ---@diagnostic disable: lowercase-global
 
-MerchantEvent = Event:new{screen='entry',spritebank=2,random=nil,goods=nil,cardRemoval=nil}
+MerchantEvent = Event:new{screen='entry',spriteBank=2,random=nil,goods=nil,cardRemoval=nil}
 function MerchantEvent:init()
 	self.random = self.random or makeRand(act.id,room.id,1)
 	table.insert(self.options,{description='[Talk]'})
@@ -121,7 +121,7 @@ end
 -- window
 MerchantWindow = Window:new{name='MerchantWindow',goods=nil,cardRemoval=nil,selectionType='card1',selection=0,yOffset=-136}
 function MerchantWindow:onOpen()
-	queueSync(2,currentEvent.spritebank)
+	queueSync(2,currentEvent.spriteBank)
 	queueSync(1,player.tileBank)
 end
 

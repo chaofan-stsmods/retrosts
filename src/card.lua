@@ -233,20 +233,31 @@ function drawDescription(card,description,x,y,lineWidth,maxLine,color)
 				return maxX-x,maxY
 			end
 		else
+			local xOffset,yOffset = 0,0
+			if word:sub(1,1) == '~' and word:sub(-1,-1) == '~' then
+				yOffset = math.sin(currentX*173+currentY*31+time()*0.003)*1.2
+				word = word:sub(2,-2)
+			end
+			if word:sub(1,1) == '@' and word:sub(-1,-1) == '@' then
+				xOffset = effectRandom:randInt(-1,1)
+				yOffset = effectRandom:randInt(-1,1)
+				word = word:sub(2,-2)
+			end
+
 			local lastStart = 1
 			local findStart,findEnd,findStr = findMinimal(word,{'({%d+<?})','(!%w!)','(#%d+#)'},lastStart)
 			while findStart and findEnd and findStr do
 				local strBeforeFind = word:sub(lastStart,findStart-1)
 				if #strBeforeFind > 0 then
-					currentX,currentY = moveLimitLineWidthAndPrint(strBeforeFind,currentX,currentY,x,lineWidth,maxY,color)
+					currentX,currentY = moveLimitLineWidthAndPrint(strBeforeFind,currentX,currentY,x,lineWidth,maxY,color,xOffset,yOffset)
 					if currentY > maxY then
 						return maxX-x,maxY
 					end
 					maxX = math.max(maxX,currentX)
 				end
 				if findStr:sub(1,1) == '{' then
-					local flip = findStr:sub(#findStr-1,#findStr-1) == '<'
-					local sprId = tonumber(findStr:sub(2,#findStr-1-(flip and 1 or 0)))
+					local flip = findStr:sub(-2,-2) == '<'
+					local sprId = tonumber(findStr:sub(2,-2-(flip and 1 or 0)))
 					if sprId then
 						currentX,currentY = moveLimitLineWidth(currentX,currentY,x,8,lineWidth)
 						if currentY > maxY then
@@ -254,10 +265,10 @@ function drawDescription(card,description,x,y,lineWidth,maxLine,color)
 						end
 						if sprId >= 55 and sprId <= 59 then
 							mapColor(3,card.typeIconColor)
-							spr(sprId,currentX,currentY-2,0,1,flip and 1 or 0)
+							spr(sprId,currentX+xOffset,currentY+yOffset-2,0,1,flip and 1 or 0)
 							resetColor(3)
 						else
-							spr(sprId,currentX,currentY-2,0,1,flip and 1 or 0)
+							spr(sprId,currentX+xOffset,currentY+yOffset-2,0,1,flip and 1 or 0)
 						end
 						currentX = currentX + 8
 						maxX = math.max(maxX,currentX)
@@ -278,7 +289,7 @@ function drawDescription(card,description,x,y,lineWidth,maxLine,color)
 					end
 					local valueColor = base > value and 3 or (base < value and 5 or 12)
 					if type == 'M' and base > value then valueColor = 5 end
-					currentX,currentY = moveLimitLineWidthAndPrint(tostring(value),currentX,currentY,x,lineWidth,maxY,valueColor)
+					currentX,currentY = moveLimitLineWidthAndPrint(tostring(value),currentX,currentY,x,lineWidth,maxY,valueColor,xOffset,yOffset)
 					if currentY > maxY then
 						return maxX-x,maxY
 					end
@@ -292,7 +303,7 @@ function drawDescription(card,description,x,y,lineWidth,maxLine,color)
 			end
 			local strAfterFind = word:sub(lastStart,#word)
 			if #strAfterFind > 0 then
-				currentX,currentY = moveLimitLineWidthAndPrint(strAfterFind,currentX,currentY,x,lineWidth,maxY,color)
+				currentX,currentY = moveLimitLineWidthAndPrint(strAfterFind,currentX,currentY,x,lineWidth,maxY,color,xOffset,yOffset)
 				if currentY > maxY then
 					return maxX-x,maxY
 				end
@@ -326,14 +337,14 @@ function moveLimitLineWidth(currentX,currentY,x,width,lineWidth)
 	return currentX,currentY
 end
 
-function moveLimitLineWidthAndPrint(str,currentX,currentY,x,lineWidth,maxY,color)
+function moveLimitLineWidthAndPrint(str,currentX,currentY,x,lineWidth,maxY,color,xOffset,yOffset)
 	color = isDarken and 14 or color or 12
 	local strWidth = strWidth(str,false,true)
 	currentX,currentY = moveLimitLineWidth(currentX,currentY,x,strWidth,lineWidth)
 	if currentY > maxY then
 		return currentX,currentY
 	end
-	print(str,currentX,currentY,color,false,1,true)
+	print(str,currentX+xOffset,currentY+yOffset,color,false,1,true)
 	currentX = currentX + strWidth
 	return currentX,currentY
 end
@@ -397,24 +408,28 @@ function upgradeCardFromDeck(amount,canClose,onClose)
 			end
 			return
 		end
-		local startX,stepX = placeCardsInARow(#cards)
-		for i, cardItem in ipairs(cards) do
-			cardItem.tx = startX+stepX*i
-			cardItem.ty = 68
-			cardItem.large = false
-			addEffect(CardEffect:new{cardItem=cardItem,pauseDuration=30,duration=50,tx=120,ty=-30})
-			addEffect(AnonymousEffect:new{duration=10,callback=function (duration)
-				if duration == 1 then
-					cardItem.card:upgrade()
-					cardItem.card:resetPowers()
-				end
-			end})
-		end
+		upgradeCardsWithEffect(cards)
 		if onClose then
 			onClose(true)
 		end
 	end)
 	return true
+end
+
+function upgradeCardsWithEffect(cardItems)
+	local startX,stepX = placeCardsInARow(#cardItems)
+	for i, cardItem in ipairs(cardItems) do
+		cardItem.tx = startX+stepX*i
+		cardItem.ty = 68
+		cardItem.large = false
+		addEffect(CardEffect:new{cardItem=cardItem,pauseDuration=30,duration=50,tx=120,ty=-30})
+		addEffect(AnonymousEffect:new{duration=10,callback=function (duration)
+			if duration == 1 then
+				cardItem.card:upgrade()
+				cardItem.card:resetPowers()
+			end
+		end})
+	end
 end
 
 function transformCardFromDeck(amount,random,canClose,onClose)
@@ -838,7 +853,7 @@ function CardGridSelectWindow:onOpen()
 	if roomActionType == 'combat' then
 		queueSync(2,combatSpriteBank)
 	else
-		queueSync(2,currentEvent.spritebank)
+		queueSync(2,currentEvent.spriteBank)
 	end
 	queueSync(1,player.tileBank)
 end

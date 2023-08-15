@@ -4,6 +4,7 @@
 Act = Object:new{
 	id=0,title='',smallTitle='',cardUpgradedChance=0,drawBackground=noop,
 	weakEncounterCount=2,weakEncounters={},exclusiveEncounters={},strongEncounters={},eliteEncounters={},bossEncounters={},
+	events={}
 }
 function Act:new(o)
 	local r = Object.new(self,o)
@@ -112,6 +113,9 @@ Exordium = Act:new{
 		{item=GremlinNobEncounter,power=1},
 		{item=ThreeSentryEncounter,power=1},
 		{item=LagavulinEncounter,power=1},
+	},
+	events={
+		BigFish,TheCleric,WingStatue,WorldOfGoop,TheSsssserpent,LivingWall,ScrapOoze,ShiningLight,DeadAdventurer
 	}
 }
 function Exordium:drawBackground()

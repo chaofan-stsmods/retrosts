@@ -13,7 +13,7 @@ function GoldenShrine:init()
 	self.description = 'Before you lies an elaborate shrine to an ancient spirit.'
 	self.options = {
 		{description='[Pray] #5#Gain '..self.goldAmt..' Gold.'},
-		{description='[Desecrate] #5#Gain 275 Gold. #3#Become Cursed - Regret.'},
+		{description='[Desecrate] #5#Gain 275 Gold. #3#Become Cursed - Regret.',cardItem=CardItem:new{card=Regret:new()}},
 		{description='[Leave]'},
 	}
 end
@@ -22,7 +22,7 @@ function GoldenShrine:onOption(selection)
 	if self.screen == 'entry' then
 		if selection == 1 then
 			gold = gold + self.goldAmt
-			self.description = 'As your hand touches the shrine, #4#gold#12# rains from the ceiling showering you in riches.'
+			self.description = 'As your hand touches the shrine, #4#gold#12# rains from the ceiling ~showering~ ~you~ ~in~ ~riches.~'
 		elseif selection == 2 then
 			gold = gold + 275
 			local cardItem = CardItem:new{card=Regret:new(),x=0,y=136,tx=120,ty=68,isNotInHand=true}
@@ -133,7 +133,7 @@ WheelOfChange = TextEvent:new{
 local wheelIcons = {448,7,451,6,450,449}
 local wheelPrizes = {
 	{description='"Uh oh! NL You lose!" NL You spot him readying a shiv...',option='[Prize?] #2#Lose {#} HP.',action='lossHp'},
-	{description='"Ohh, the power of #2#darkness...#12# NL Choose a card to remove from your deck!"',option='[Prize!] #5#Remove a card from your deck.',action='remove'},
+	{description='"Ohh, the power of #2#~darkness...~#12# NL Choose a card to remove from your deck!"',option='[Prize!] #5#Remove a card from your deck.',action='remove'},
 	{description='"Looks like you won a #8#Curse!#12# NL That\'s not good. NL Oh well! Better luck next time!"',option='[Prize?] #2#Curse - Decay.',action='curse'},
 	{description='"Oooh, a free #5#Heal#12# for you!"',option='[Prize!] #5#Heal to full health.',action='heal'},
 	{description='""Ah, a #5#gift!#12# NL Enjoy!"',option='[Prize!] #5#Obtain a Relic.',action='relic'},
@@ -141,7 +141,7 @@ local wheelPrizes = {
 }
 function WheelOfChange:init()
 	self.random = self.random or makeRand(act.id,room.id,1)
-	self.description = 'You come upon a dapper looking, cheery gremlin. NL "It\'s time to spin the wheel! Are you R E A D Y ? Of course you are!"'
+	self.description = 'You come upon a dapper looking, cheery gremlin. NL "It\'s time to spin the wheel! Are you ~R~ ~E~ ~A~ ~D~ ~Y~ ~?~ Of course you are!"'
 	self.options = {
 		{description='[Play]'},
 	}
@@ -187,6 +187,9 @@ function WheelOfChange:tick()
 			self.description = wheelPrizes[targetPrize].description
 			self.options = {{description=wheelPrizes[targetPrize].option:gsub('{#}',tostring(self.hpLoss))}}
 			self.prize = wheelPrizes[targetPrize].action
+			if self.prize == 'curse' then
+				self.options[1].cardItem = CardItem:new{card=Decay:new()}
+			end
 		elseif not self.rolling and self.rolled then
 			self.wheelIn = false
 		end

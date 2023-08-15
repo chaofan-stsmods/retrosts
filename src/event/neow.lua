@@ -1,7 +1,7 @@
 -- neow
 ---@diagnostic disable: lowercase-global
 
-NeowEvent = Event:new{screen='entry',spritebank=3,words='Greetings...',random=nil}
+NeowEvent = Event:new{screen='entry',spriteBank=3,words='Greetings...',random=nil}
 function NeowEvent:init()
 	self.random = self.random or makeRand(1)
 	table.insert(self.options,{description='[Talk]'})

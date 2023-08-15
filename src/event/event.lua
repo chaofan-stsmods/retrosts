@@ -60,12 +60,11 @@ function generateEventRoomType(random)
 	return 'event'
 end
 
-
 -- event instance
 
 Event = Object:new{
-	spritebank=nil,options={},selectedOption=0,
-	onOption=noop,init=noop
+	spriteBank=nil,options={},selectedOption=0,
+	onOption=noop,init=noop,drawForeground=noop,onCombatEnd=noop
 }
 function Event:new(o)
 	o = o or {}
@@ -73,6 +72,10 @@ function Event:new(o)
 	local r = Object.new(self,o)
 	r:init()
 	return r
+end
+
+function Event:isAvailable()
+	return true
 end
 
 function Event:drawBackground(below)
@@ -98,6 +101,16 @@ function Event:drawOptions()
 		if self.selectedOption == i or option.locked then
 			resetColors{13,14,15}
 		end
+	end
+	local selectedOption = self.options[self.selectedOption]
+	if selectedOption and selectedOption.cardItem then
+		local cardItem = selectedOption.cardItem
+		local cardY = math.min(106,y+self.selectedOption*10+4)
+		cardItem.x,cardItem.tx = 210,210
+		cardItem.y,cardItem.ty = cardY,cardY
+		cardItem.large = true
+		cardItem.isNotInHand = true
+		cardItem:tick()
 	end
 end
 
@@ -126,7 +139,7 @@ function Event:eventControls()
 	end
 
 	local function validOption(i) return not self.options[i].locked end
-	if self.selectedOption == 0 then
+	if self.selectedOption == 0 or self.selectedOption > #self.options then
 		self.selectedOption = nextOrOtherIndexInTableIf(self.options,self.selectedOption,validOption)
 	end
 
@@ -141,7 +154,7 @@ end
 
 -- text event
 
-TextEvent = Event:new{name='',description='',spritebank=0}
+TextEvent = Event:new{name='',description='',spriteBank=0}
 
 function TextEvent:drawBackground(below)
 	if below then
@@ -162,5 +175,18 @@ function TextEvent:drawBackground(below)
 	else
 		printGlowed(self.name,78-strWidth(self.name)/2,23,12,15)
 		drawDescription(nil,self.description,9,36,222,999,12)
+	end
+end
+
+-- combat text event
+
+CombatTextEvent = Event:new{description=''}
+function CombatTextEvent:drawBackground(below)
+	act:drawBackground()
+	self:drawForeground(below)
+	if below then
+		drawDescription(nil,self.description,9,20,222,999,14)
+	else
+		drawDescription(nil,self.description,9,20,222,999,12)
 	end
 end

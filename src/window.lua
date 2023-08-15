@@ -265,16 +265,16 @@ GameWindow = Window:new{name='GameWindow'}
 function GameWindow:onOpen()
 	if self.child == nil then
 		queueSync(1,player.tileBank)
-		if roomActionType == 'combat' then
+		if roomActionType == 'combat' or roomActionType == 'eventCombat' then
 			queueSync(2,combatSpriteBank)
 		elseif roomActionType == 'event' and currentEvent ~= nil then
-			queueSync(2,currentEvent.spritebank)
+			queueSync(2,currentEvent.spriteBank)
 		end
 	end
 end
 
 function GameWindow:tick()
-	if roomActionType == 'combat' then
+	if roomActionType == 'combat' or roomActionType == 'eventCombat' then
 		combat()
 	elseif roomActionType == 'event' and currentEvent ~= nil then
 		event()

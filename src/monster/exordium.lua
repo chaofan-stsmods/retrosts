@@ -428,7 +428,7 @@ function FungiBeast:nextIntent()
 	})
 end
 
-SporeCloudPower = Power:new{icon=449}
+SporeCloudPower = Power:new{icon=26,iconColorMap={[2]=6,[3]=5,[5]=4,[6]=3,[7]=4}}
 function SporeCloudPower:onDeath()
 	addAction(ApplyPowerAction:new(VulnerablePower:new(player,self.amount,inEnemyTurn)))
 end
@@ -952,7 +952,7 @@ function ThreeLouseEncounter:setupEnemies(random)
 	self.enemyInfo[3] = random:randBool() and encItem(LouseNormal,44,0) or encItem(LouseDefensive,44,0)
 	Encounter.setupEnemies(self,random)
 end
-TwoFungiBeastEncounter = Encounter:new{spriteBank=1,name='TwoFungiBeast',enemyInfo={encItem(FungiBeast,-24,0),encItem(FungiBeast,24,0)}}
+TwoFungiBeastEncounter = Encounter:new{spriteBank=1,name='TwoFungiBeast',enemyInfo={encItem(FungiBeast,-24,0),encItem(FungiBeast,24,2)}}
 LargeSlimeEncounter = Encounter:new{spriteBank=1,name='LargeSlime',enemyInfo={}}
 function LargeSlimeEncounter:setupEnemies(random)
 	self.enemyInfo = {}
@@ -1005,5 +1005,8 @@ end
 GremlinNobEncounter = Encounter:new{spriteBank=1,name='GremlinNob',enemyInfo={encItem(GremlinNob)}}
 ThreeSentryEncounter = Encounter:new{spriteBank=3,name='ThreeSentry',enemyInfo={encItem(Sentry,-44,0),encItem(Sentry,0,3,{attackFirst=true}),encItem(Sentry,44,-1)}}
 LagavulinEncounter = Encounter:new{spriteBank=3,name='Lagavulin',enemyInfo={encItem(Lagavulin)}}
+
+-- event encounters
 LagavulinStrongEncounter = Encounter:new{spriteBank=3,name='Lagavulin',enemyInfo={encItem(Lagavulin,0,0,{sleepCooldown=0})}}
 GremlinNobEventEncounter = Encounter:new{spriteBank=3,name='GremlinNob',enemyInfo={encItem(GremlinNob)}}
+ThreeFungiBeastEncounter = Encounter:new{spriteBank=1,name='ThreeFungiBeast',enemyInfo={encItem(FungiBeast,-48,0),encItem(FungiBeast,0,1),encItem(FungiBeast,48,3)}}

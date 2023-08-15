@@ -6,7 +6,7 @@ function RewardWindow:onOpen()
 	if roomActionType == 'combat' then
 		queueSync(2,combatSpriteBank)
 	else
-		queueSync(2,currentEvent.spritebank)
+		queueSync(2,currentEvent.spriteBank)
 	end
 	queueSync(1,player.tileBank)
 end
@@ -351,7 +351,7 @@ function CardRewardWindow:onOpen()
 	if roomActionType == 'combat' then
 		queueSync(2,combatSpriteBank)
 	else
-		queueSync(2,currentEvent.spritebank)
+		queueSync(2,currentEvent.spriteBank)
 	end
 	queueSync(1,player.tileBank)
 	local replace = false

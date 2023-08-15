@@ -15,7 +15,7 @@ local function isCreature(obj)
 end
 
 Power = Object:new{
-	owner=nil,amount=0,stackable=true,debuff=false,turnBased=false,maxAmount=999,icon=40,iconflip=0,priority=100,
+	owner=nil,amount=0,stackable=true,debuff=false,turnBased=false,maxAmount=999,icon=40,iconflip=0,iconColorMap={},priority=100,
 	onTurnStart=noop,
 	onTurnEnd=noop,
 	onAttacked=function(self,damage,source,card) return damage end,
@@ -34,7 +34,13 @@ function Power:new(owner,amount)
 end
 
 function Power:drawImage(x,y)
+	for key,value in pairs(self.iconColorMap) do
+		mapColor(key,value)
+	end
 	spr(self.icon,x,y,0,1,self.iconflip)
+	for key,_ in pairs(self.iconColorMap) do
+		resetColor(key)
+	end
 	if self.stackable and self.amount ~= 0 then
 		local color = self.turnBased and 12 or (self.amount > 0 and 5 or 3)
 		local glowColor = self.turnBased and 15 or (self.amount > 0 and 7 or 1)
