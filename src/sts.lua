@@ -12,6 +12,7 @@
 package.path = package.path..";C:/Users/Chaofan/AppData/Roaming/com.nesbox.tic/TIC-80/myproj/sts/?.lua"
 
 require 'utils'
+require 'save'
 require 'window'
 require 'creature'
 require 'card'
@@ -36,6 +37,7 @@ PALETTE_MAP = 0x3FF0
 HAND_LIMIT = 10
 
 effectRandom = Random:new()
+characters = {Ironclad}
 
 switchWindow(TitleWindow:new())
 
@@ -47,7 +49,6 @@ end
 -- in game properties
 seed = 0
 ascension = 0
-mainRandom = nil
 player = nil
 floor = 1
 gold = 0
@@ -79,7 +80,7 @@ actEvents = {}
 commonEvents = {}
 roomActionType = nil
 
-local availableBosses = {
+availableBosses = {
 	{'Slime','Hexaghost','Guardian'},
 	{'Champ','Collector','Automation'},
 	{'Donu','TimeEater','Awakened'},
@@ -87,10 +88,10 @@ local availableBosses = {
 }
 
 function startGame(character,ascensionLevel)
-	mainRandom = Random:new(math.floor(tstamp()*2))
-	seed = mainRandom:randRaw()
+	local random = Random:new(math.floor(tstamp()*2))
+	seed = random:randRaw()
 	ascension = ascensionLevel or 0
-	player = _G[character]:new()
+	player = character:new()
 	if ascension >= 14 then
 		player:decreaseMaxHp(player:getAscensionMaxHPLoss())
 	end
@@ -120,6 +121,7 @@ function startGame(character,ascensionLevel)
 	cursorOnTopBar = false
 	oneTimeEvents = shallowcopy(getOneTimeEvents())
 	startAct(1)
+	saveGame()
 	switchWindow(GameWindow:new())
 end
 
@@ -178,23 +180,41 @@ function enterRoom(x)
 		end
 	end
 	if room == nil then
-		room = map[currentRoomY][currentRoomX]
+		room = stsMap[currentRoomY][currentRoomX]
 	end
 
+	saveGame()
+	prepareRoom()
+end
+
+function prepareRoom(completed,eventRoomType)
 	local roomType = room.type
 	local eventRandom = makeRand(act.id,room.id,1)
 	if roomType == 'event' then
-		roomType = generateEventRoomType(eventRandom)
+		if completed and eventRoomType ~= nil then
+			roomType = eventRoomType
+		else
+			roomType = generateEventRoomType(eventRandom)
+		end
+		room.eventType = roomType
 	end
 
 	if roomType == 'monster' then
 		roomActionType = 'combat'
-		startCombat(monsterEncounters[nextMonsterEncounterIndex])
-		nextMonsterEncounterIndex = nextMonsterEncounterIndex + 1
+		if completed then
+			startCombat(monsterEncounters[nextMonsterEncounterIndex - 1])
+		else
+			startCombat(monsterEncounters[nextMonsterEncounterIndex])
+			nextMonsterEncounterIndex = nextMonsterEncounterIndex + 1
+		end
 	elseif roomType == 'elite' then
 		roomActionType = 'combat'
-		startCombat(eliteEncounters[nextEliteEncounterIndex])
-		nextEliteEncounterIndex = nextEliteEncounterIndex + 1
+		if completed then
+			startCombat(eliteEncounters[nextEliteEncounterIndex - 1])
+		else
+			startCombat(eliteEncounters[nextEliteEncounterIndex])
+			nextEliteEncounterIndex = nextEliteEncounterIndex + 1
+		end
 	elseif roomType == 'boss' then
 		roomActionType = 'combat'
 		startCombat(bossEncounter)
@@ -220,11 +240,11 @@ end
 -- main
 
 queueSync(32,1)
-startGame('Ironclad',20)
+--startGame(Ironclad,20)
 --roomActionType = 'combat'
 --startCombat(ThreeFungiBeastEncounter)
 --currentEvent = rollEventType(effectRandom):new()
-window:onOpen()
+--window:onOpen()
 
 -- <TILES>
 -- 000:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd

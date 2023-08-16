@@ -296,7 +296,7 @@ end
 
 function table:retainIf(condition)
 	for i = #self,1,-1 do
-		if not condition(self[i]) then
+		if not condition(self[i],i) then
 			table.remove(self,i)
 		end
 	end

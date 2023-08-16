@@ -147,7 +147,7 @@ end
 
 function generateGoldReward(rewards,random)
 	local gold = nil
-	if room.type == 'monster' then
+	if room.type == 'monster' or room.eventType == 'monster' then
 		gold = random:randInt(10,20)
 	elseif room.type == 'elite' then
 		gold = random:randInt(25,35)
@@ -196,6 +196,16 @@ local potionRandOffset = 0
 function resetRewardGenerator()
 	rareCardRandOffset = initRareCardRandOffset
 	potionRandOffset = 0
+end
+
+function saveRewardGenerator(index)
+	pmem(index,(rareCardRandOffset-minRareCardRandOffset) | ((potionRandOffset+200) << 16))
+end
+
+function loadRewardGenerator(index)
+	local val32 = pmem(index)
+	rareCardRandOffset = (val32 & 0xffff) + minRareCardRandOffset
+	potionRandOffset = (val32 >> 16) - 200
 end
 
 function getPlayerCardType(random,rarity,type)

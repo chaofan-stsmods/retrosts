@@ -124,17 +124,27 @@ function TitleSelectionWindow:tick()
 end
 
 TitleWindow = TitleSelectionWindow:new{options={'New Game','Card List','Exit'},name='TitleWindow'}
+function TitleWindow:new(o)
+	o = o or {}
+	if hasSave() then
+		o.options = {'Continue','New Game','Card List','Exit'}
+	end
+	return TitleSelectionWindow.new(self,o)
+end
+
 function TitleWindow:onOption()
 	if self.selection == #self.options then
 		exit()
-	elseif self.selection == 2 then
+	elseif self.options[self.selection] == 'Card List' then
 		self:open(CardListWindow:new())
-	elseif self.selection == 1 then
+	elseif self.options[self.selection] == 'Continue' then
+		loadGame()
+	elseif self.options[self.selection] == 'New Game' then
 		self:open(CharacterSelectWindow:new())
 	end
 end
 
-CharacterSelectWindow = TitleSelectionWindow:new{selection=1,options={'Ironclad','Silent','Defect','Watcher'},ascension=0,name='CharacterSelectWindow'}
+CharacterSelectWindow = TitleSelectionWindow:new{selection=1,options=nil,ascension=0,name='CharacterSelectWindow'}
 local ascensionEffects = {
 	'Elites spawn more often',
 	'Normal enemies are deadlier',
@@ -157,6 +167,12 @@ local ascensionEffects = {
 	'Bosses are more challenging',
 	'Double Boss',
 }
+function CharacterSelectWindow:new(o)
+	o = o or {}
+	o.options = table.map(characters,function(c) return c.name end)
+	return TitleSelectionWindow.new(self,o)
+end
+
 function CharacterSelectWindow:tick()
 	TitleSelectionWindow.tick(self)
 
@@ -183,7 +199,7 @@ function CharacterSelectWindow:tick()
 end
 
 function CharacterSelectWindow:onOption()
-	startGame(self.options[self.selection],self.ascension)
+	startGame(characters[self.selection],self.ascension)
 end
 
 CardListWindow = Window:new{name='CardListWindow',gridUI=nil,cardItems=nil}

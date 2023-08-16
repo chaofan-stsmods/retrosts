@@ -2,7 +2,7 @@
 ---@diagnostic disable: lowercase-global
 
 Player = Creature:new{
-	x=30,y=52,tileBank=1,
+	x=30,y=52,tileBank=1,name=nil,
 }
 function Player:applyPowers()
 	handApplyPowers()
@@ -68,6 +68,7 @@ function Player:onCombatEnd()
 end
 
 function Player:die()
+	clearSavedGame()
 	switchWindow(LoseWindow:new())
 	Creature.die(self)
 end

@@ -2,7 +2,7 @@
 
 local redCards
 
-Ironclad = Player:new{ maxHp=80,width=5,height=4,tileBank=1 }
+Ironclad = Player:new{ maxHp=80,width=5,height=4,tileBank=1,name='Ironclad' }
 function Ironclad:drawImage(x,y)
 	x = x or self.x
 	y = y or self.y
@@ -38,6 +38,10 @@ end
 
 function Ironclad:getMatchAndKeepCardType()
 	return Bash
+end
+
+function Ironclad:getRelics()
+	return { BurningBlood }
 end
 
 -- cards
@@ -830,6 +834,17 @@ function SearingBlow:upgrade()
 	self.upgraded = true
 	self.numUpgraded = self.numUpgraded + 1
 	self.name = 'Searing Blow+' .. self.numUpgraded
+end
+
+function SearingBlow:save()
+	return self.numUpgraded
+end
+
+function SearingBlow:load(meta)
+	self.numUpgraded = meta
+	self.upgraded = meta > 0
+	self.name = 'Searing Blow+' .. self.numUpgraded
+	self.baseDamage = self.numUpgraded * (self.numUpgraded + 7) / 2 + 12;
 end
 
 Berserk = RedCard:new{

@@ -54,6 +54,8 @@ public class CompressMyCode {
         lines = lines.stream().filter(l -> l.length() > 0).collect(Collectors.toList());
         String code = String.join("\n",lines);
 
+        System.out.println("Original code length: " + code.length());
+
         TreeNode[] rootContainer = new TreeNode[1];
         byte[] huffmanResult = huffman(code, rootContainer, false);
         TreeNode root = rootContainer[0];
@@ -108,7 +110,9 @@ public class CompressMyCode {
         }
         words.merge(" ", 1, Integer::sum);
 
-        List<TreeNode> dict = words.entrySet().stream().map(e -> new TreeNode(e.getKey(), e.getValue())).collect(Collectors.toList());
+        List<TreeNode> dict = words.entrySet().stream()
+                .map(e -> new TreeNode(e.getKey(), e.getValue()))
+                .collect(Collectors.toList());
         TreeSet<TreeNode> treeNodes = new TreeSet<>((a, b) -> {
             int i = Integer.compare(a.value, b.value);
             if (i == 0) {

@@ -125,6 +125,17 @@ function Card:triggerEvent(name,...)
 	end
 end
 
+function Card:save()
+	return self.upgraded and 1 or 0
+end
+
+function Card:load(meta)
+	if meta > 0 then
+		self:upgrade()
+		self:resetPowers()
+	end
+end
+
 CardItem = Object:new{ x=0,y=136,tx=0,ty=136,card=nil,large=false,isNotInHand=false,showWhiteCost=false,glow=nil,flipped=false}
 cardTypeToSprIndex = {attack=57,skill=58,power=59,status=55,curse=56}
 cardRarityColor = {basic={14,15},common={14,15},special={14,15},uncommon={10,9},rare={4,3}}

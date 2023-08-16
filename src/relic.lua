@@ -18,6 +18,18 @@ function Relic:drawImage(x,y,hideCounter)
 	end
 end
 
+function Relic:save()
+	return self.counter == nil and 0 or ((self.counter << 1) | 1)
+end
+
+function Relic:load(meta)
+	if meta & 1 == 1 then
+		self.counter = meta >> 1
+	else
+		self.counter = nil
+	end
+end
+
 function getColorlessRelics()
 	return colorlessRelics
 end

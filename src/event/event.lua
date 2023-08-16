@@ -69,38 +69,49 @@ end
 
 -- event generator
 
-local monsterChance = 0.1
-local shopChance = 0.03
-local treasureChance = 0.02
+local monsterChance = 10
+local shopChance = 3
+local treasureChance = 2
 function resetEventGenerator()
-	monsterChance = 0.1
-	shopChance = 0.03
-	treasureChance = 0.02
+	monsterChance = 10
+	shopChance = 3
+	treasureChance = 2
+end
+
+function saveEventGenerator(index)
+	pmem(index, monsterChance | (shopChance << 8) | (treasureChance << 16))
+end
+
+function loadEventGenerator(index)
+	local val32 = pmem(index)
+	monsterChance = val32 & 0xff
+	shopChance = (val32 >> 8) & 0xff
+	treasureChance = (val32 >> 16) & 0xff
 end
 
 function generateEventRoomType(random)
-	local roll = random:rand()
+	local roll = random:randInt(0,99)
 	if roll < monsterChance then
-		monsterChance = 0.1
+		monsterChance = 10
 		return 'monster'
 	else
-		monsterChance = monsterChance + 0.1
+		monsterChance = monsterChance + 10
 		roll = roll - monsterChance
 	end
 
 	if roll < shopChance then
-		shopChance = 0.03
+		shopChance = 3
 		return 'shop'
 	else
-		shopChance = shopChance + 0.03
+		shopChance = shopChance + 3
 		roll = roll - shopChance
 	end
 
 	if roll < treasureChance then
-		treasureChance = 0.02
+		treasureChance = 2
 		return 'treasure'
 	else
-		treasureChance = treasureChance + 0.02
+		treasureChance = treasureChance + 2
 		roll = roll - treasureChance
 	end
 

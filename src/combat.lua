@@ -321,13 +321,17 @@ function checkCombatEnd()
 	end
 end
 
-function combatEnd()
+function combatEnd(shouldSave)
+	shouldSave = shouldSave or shouldSave == nil
+	if shouldSave then
+		saveGame(true)
+	end
 	player:onCombatEnd()
 	if roomActionType == 'eventCombat' then
 		currentEvent:onCombatEnd()
 	else
-		local rewards = generateRewards(rewardRand)
 		completeRoom()
+		local rewards = generateRewards(rewardRand)
 		openWindowAbove(RewardWindow:new{rewards=rewards})
 	end
 end
