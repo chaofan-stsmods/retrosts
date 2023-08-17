@@ -71,7 +71,14 @@ function Circlet:onBeforeObtainRelic(relic)
 	return nil
 end
 
-NeowsLament = Relic:new{name='Neow\'s Lament',description='Enemies in your first #10#3#12# combats will have #10#1#12# HP.',icon=68,tier='special',counter=3}
+NeowsLament = Relic:new{name='Neow\'s Lament',description='Enemies in your first #11#3#12# combats will have #11#1#12# HP.',icon=68,tier='special',counter=3}
+function NeowsLament:load(...)
+	Relic.load(self,...)
+	if self.counter == -1 then
+		self.description = 'This relic has been used up.'
+	end
+end
+
 function NeowsLament:onCombatStart()
 	if self.counter ~= -1 then
 		for _, enemy in ipairs(enemies) do
@@ -82,16 +89,17 @@ function NeowsLament:onCombatStart()
 		self.counter = self.counter - 1
 		if self.counter == 0 then
 			self.counter = -1
+			self.description = 'This relic has been used up.'
 		end
 	end
 end
 
-GoldenIdol = Relic:new{name='Golden Idol',description='Enemies drop #10#25%#12# more #4#Gold.',icon=24,tier='special'}
+GoldenIdol = Relic:new{name='Golden Idol',icon=24,tier='special',description='Enemies drop #11#25%#12# more #4#Gold.'}
 function GoldenIdol:onAddBonusGoldReward(bonusGold,amount)
 	return bonusGold + amount * 0.25
 end
 
-OddMushroom = Relic:new{name='Odd Mushroom',description='When #4#Vulnerable#12#, take #5#25%#12# more attack damage rather than #5#50%.',icon=26,tier='special'}
+OddMushroom = Relic:new{name='Odd Mushroom',icon=26,tier='special',description='When you have {60}, take #11#25%#12# more attack damage rather than #11#50%.'}
 function OddMushroom:onModifyVulnerableFactor(factor,isAttacking)
 	if isAttacking then
 		return factor
@@ -99,6 +107,30 @@ function OddMushroom:onModifyVulnerableFactor(factor,isAttacking)
 	return 1.25
 end
 
+Anchor = Relic:new{name='Anchor',icon=27,tier='common',description='Start each combat with #11#10#12# {47}.'}
+function Anchor:onCombatStart()
+	addAction(GainBlockAction:new{target=player,value=10})
+end
+
+EternalFeather = Relic:new{name='Eternal Feather',icon=73,tier='uncommon',description='For every #11#5#12# cards in deck, heal #11#3#12# HP whenever you enter a Rest Site.'}
+function EternalFeather:onEnterRoom(room)
+	if room.type == 'rest' then
+		player:heal(3*math.floor(#deck/5))
+	end
+end
+
+Calipers = Relic:new{name='Calipers',icon=28,tier='rare',description='At the start of your turn, lose #11#15#12# {47} rather than all.'}
+function Calipers:onBeforeTurnStartLoseBlock(block)
+	return math.min(block,15)
+end
+
 colorlessRelics = {
-	Circlet,NeowsLament,GoldenIdol,OddMushroom
+	-- special
+	Circlet,NeowsLament,GoldenIdol,OddMushroom,
+	-- common
+	Anchor,
+	-- uncommon
+	EternalFeather,
+	-- rare
+	Calipers,
 }

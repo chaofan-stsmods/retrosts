@@ -126,8 +126,8 @@ function drawTooltipBox(x,y,w,h)
 	rect(x+8,y+h*8-8,w*8-16,8,14)
 	line(x,y+8,x,y+h*8-9,15)
 	line(x+w*8-1,y+8,x+w*8-1,y+h*8-9,15)
-	line(x+w,y,x+w*8-9,y,15)
-	line(x+w,y+h*8-1,x+w*8-9,y+h*8-1,15)
+	line(x+8,y,x+w*8-9,y,15)
+	line(x+8,y+h*8-1,x+w*8-9,y+h*8-1,15)
 end
 
 function drawBanner(x,y,w)

@@ -303,12 +303,10 @@ local fallbackTiers = {common='uncommon',uncommon='rare',shop='uncommon'}
 function getRelicTier(random)
 	local roll = random:randInt(0,99)
 	local tier = 'uncommon'
-	if act ~= TheEnding then
-		if roll < 50 then
-			tier = 'common'
-		elseif roll > 82 then
-			tier = 'rare'
-		end
+	if roll < act.commonRelicChance then
+		tier = 'common'
+	elseif roll >= act.commonRelicChance + act.uncommonCardChance then
+		tier = 'rare'
 	end
 	return tier
 end

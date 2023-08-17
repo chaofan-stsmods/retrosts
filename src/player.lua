@@ -61,6 +61,14 @@ function Player:triggerReducerEvent(name,value,...)
 	return value
 end
 
+function Player:onTurnStart(turn)
+	if turn == 1 then
+		self:triggerEvent('onTurnStart')
+	else
+		Creature.onTurnStart(self,turn)
+	end
+end
+
 function Player:onCombatEnd()
 	self:triggerEvent('onCombatEnd')
 	self.block = 0

@@ -299,7 +299,7 @@ function drawDescription(card,description,x,y,lineWidth,maxLine,color)
 						base = card.baseMagic
 						value = card.magic
 					end
-					local valueColor = base > value and 3 or (base < value and 5 or 12)
+					local valueColor = base > value and 3 or (base < value and 5 or color)
 					if type == 'M' and base > value then valueColor = 5 end
 					currentX,currentY = moveLimitLineWidthAndPrint(tostring(value),currentX,currentY,x,lineWidth,maxY,valueColor,xOffset,yOffset)
 					if currentY > maxY then

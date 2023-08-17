@@ -135,7 +135,7 @@ function NoDrawPower:onTurnEnd()
 	addAction(ReducePowerAction:new(self,self.amount))
 end
 
-MetallicizePower = Power:new{icon=16}
+MetallicizePower = Power:new{icon=46,iconColorMap={[13]=12,[14]=13,[15]=14}}
 function MetallicizePower:onTurnEnd()
 	addAction(GainBlockAction:new{target=self.owner,value=self.amount})
 end

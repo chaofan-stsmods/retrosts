@@ -36,6 +36,12 @@ function obtainPotion(potion)
 end
 
 Potion = Object:new{name='',description='',icon=0,color={},canUseOutsideCombat=false,baseMagic=0,magic=0,enemyTarget=false,rarity='common',useTitle='Drink',use=noop}
+function Potion:new(o)
+	o = o or {}
+	o.magic = o.baseMagic
+	return Object.new(self,o)
+end
+
 function Potion:applyPowers()
 	self.magic = self.baseMagic
 end
@@ -62,14 +68,14 @@ function Slot:canUse()
 end
 
 FirePotion = Potion:new{
-	name='Fire Potion',description='{63} !M!.',icon=100,color={1,2,4},baseMagic=20,enemyTarget=true,useTitle='Throw',rarity='common'
+	name='Fire Potion',description='{63} #11#!M!#12#.',icon=100,color={1,2,4},baseMagic=20,enemyTarget=true,useTitle='Throw',rarity='common'
 }
 function FirePotion:use(target)
 	return { DamageAction:new{target=target,source=player,value=self.magic,type='power'} }
 end
 
 LiquidMemories = Potion:new{
-	name='Liquid Memories',description='Choose !M! card(s) in discard pile and return it to hand. It cost 0 this turn',
+	name='Liquid Memories',description='Choose #11#!M!#12# card(s) in discard pile and return it to hand. It cost 0 this turn',
 	icon=107,color={10,9},baseMagic=1,rarity='uncommon'
 }
 function LiquidMemories:use()
@@ -107,7 +113,7 @@ function LiquidMemories:use()
 end
 
 FruitJuice = Potion:new{
-	name='Fruit Juice',description='Gain !M! max HP.',icon=106,color={5,5,4,4},baseMagic=5,canUseOutsideCombat=true,rarity='rare'
+	name='Fruit Juice',description='Gain #11#!M!#12# max HP.',icon=106,color={5,5,4,4},baseMagic=5,canUseOutsideCombat=true,rarity='rare'
 }
 function FruitJuice:use()
 	player:increaseMaxHp(self.magic)

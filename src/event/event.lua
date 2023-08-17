@@ -46,7 +46,6 @@ local function getActEvents()
 end
 
 function rollEventType(random)
-	return DeadAdventurer --[[
 	local list
 	if random:rand() < 0.25 then
 		list = getCommonAndOneTimeEvents()
@@ -65,7 +64,7 @@ function rollEventType(random)
 	table.retainIf(actEvents,isNotThisEvent)
 	table.retainIf(commonEvents,isNotThisEvent)
 	table.retainIf(oneTimeEvents,isNotThisEvent)
-	return eventType]]--
+	return eventType
 end
 
 -- event generator

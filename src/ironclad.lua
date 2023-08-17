@@ -752,7 +752,7 @@ function Evolve:use()
 	return { ApplyPowerAction:new(EvolvePower:new(player,self.magic)) }
 end
 
-EvolvePower = Power:new{icon=244}
+EvolvePower = Power:new{icon=195}
 function EvolvePower:onDraw(card)
 	if card.type == 'status' then
 		addAction(DrawCardAction:new(self.amount))
@@ -767,7 +767,7 @@ function FeelNoPain:use()
 	return { ApplyPowerAction:new(FeelNoPainPower:new(player,self.magic)) }
 end
 
-FeelNoPainPower = Power:new{icon=245}
+FeelNoPainPower = Power:new{icon=211}
 function FeelNoPainPower:onExhaust()
 	addAction(GainBlockAction:new{target=self.owner,value=self.amount})
 end
@@ -780,7 +780,7 @@ function FireBreathing:use()
 	return { ApplyPowerAction:new(FireBreathingPower:new(player,self.magic)) }
 end
 
-FireBreathingPower = Power:new{icon=246}
+FireBreathingPower = Power:new{icon=227}
 function FireBreathingPower:onDraw(card)
 	if card.type == 'status' or card.type == 'curse' then
 		addAction(DamageAllEnemiesAction:new{source=player,value=self.amount,type='power'})
@@ -795,7 +795,7 @@ function FlameBarrier:use()
 	return { GainBlockAction:new{target=player,value=self.block}, ApplyPowerAction:new(FlameBarrierPower:new(player,self.magic)) }
 end
 
-FlameBarrierPower = Power:new{icon=247}
+FlameBarrierPower = Power:new{icon=196}
 function FlameBarrierPower:onBeforeDamaged(value,source,type)
 	if source ~= player and type == 'attack' then
 		addAction(DamageAction:new{source=player,target=source,value=self.amount,type='power'})
@@ -814,7 +814,7 @@ function Rupture:use()
 	return { ApplyPowerAction:new(RupturePower:new(player,self.magic)) }
 end
 
-RupturePower = Power:new{icon=248}
+RupturePower = Power:new{icon=212}
 function RupturePower:onHpLoss(value,source,type)
 	if source == self.owner then
 		addAction(ApplyPowerAction:new(StrengthPower:new(self.owner,self.amount)))
@@ -855,7 +855,7 @@ function Berserk:use()
 	return { ApplyPowerAction:new(VulnerablePower:new(player,self.magic)), ApplyPowerAction:new(BerserkPower:new(player,1)) }
 end
 
-BerserkPower = Power:new{icon=249}
+BerserkPower = Power:new{icon=228}
 function BerserkPower:onTurnStart()
 	addAction(GainEnergyAction:new(self.amount))
 end
@@ -868,7 +868,7 @@ function Brutality:use()
 	return { ApplyPowerAction:new(BrutalityPower:new(player,1)) }
 end
 
-BrutalityPower = Power:new{icon=250,hpLoss=1}
+BrutalityPower = Power:new{icon=244,hpLoss=1}
 function BrutalityPower:onAmountUpdated(diff)
 	if diff > 0 then
 		self.hpLoss = self.hpLoss + 1
@@ -888,7 +888,7 @@ function DemonForm:use()
 	return { ApplyPowerAction:new(DemonFormPower:new(player,self.magic)) }
 end
 
-DemonFormPower = Power:new{icon=251}
+DemonFormPower = Power:new{icon=197}
 function DemonFormPower:onTurnStart()
 	addAction(ApplyPowerAction:new(StrengthPower:new(player,self.amount)))
 end
@@ -901,7 +901,7 @@ function Juggernaut:use()
 	return { ApplyPowerAction:new(JuggernautPower:new(player,self.magic)) }
 end
 
-JuggernautPower = Power:new{icon=252}
+JuggernautPower = Power:new{icon=213}
 function JuggernautPower:onGainBlock()
 	addAction(DamageRandomEnemyAction:new{source=self.owner,value=self.amount,type='power'})
 end
@@ -937,7 +937,7 @@ function Corruption:use()
 	return { ApplyPowerAction:new(CorruptionPower:new(player)) }
 end
 
-CorruptionPower = Power:new{icon=253,stackable=false}
+CorruptionPower = Power:new{icon=229,stackable=false}
 function CorruptionPower:onModifyCost(cost,card)
 	if card.type == 'skill' then
 		card.costForOneTurnPlay = nil
@@ -1108,7 +1108,7 @@ redCards = {
 
 RedRelic = Relic:new{colorName='red'}
 
-BurningBlood = RedRelic:new{name='Burning Blood',description='At the end of combat, heal 6 HP.',icon=254,tier='basic'}
+BurningBlood = RedRelic:new{name='Burning Blood',description='At the end of combat, heal #11#6#12# HP.',icon=245,tier='basic'}
 function BurningBlood:onCombatEnd()
 	player:heal(6)
 end

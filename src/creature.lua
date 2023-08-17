@@ -162,7 +162,7 @@ function Creature:triggerConditionEvent(name,default,...)
 	return default
 end
 
-function Creature:onTurnStart()
+function Creature:onTurnStart(turn)
 	self.block = self.block - self:triggerReducerEvent('onBeforeTurnStartLoseBlock',self.block)
 	self:triggerEvent('onTurnStart')
 end

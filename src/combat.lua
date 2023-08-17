@@ -95,7 +95,11 @@ function drawOverlay()
 	if combatSelection.type == 'drawPile' then
 		drawSelectionBox(0,127,9+strWidth(tostring(#drawPile)),9,4,2)
 	end
-	spr(39,232,128,0)
+	mapColor(2,15)
+	mapColor(3,9)
+	mapColor(4,10)
+	spr(38,232,128,0,1,1)
+	resetColors{2,3,4}
 	width = strWidth(tostring(#discardPile))
 	printShadowed(tostring(#discardPile),232-width,129,12)
 	if combatSelection.type == 'discardPile' then

@@ -300,7 +300,7 @@ function EndTurnAction:tick()
 		player:onTurnEnd()
 		for _, enemy in ipairs(enemies) do
 			if enemy.alive then
-				enemy:onTurnStart()
+				enemy:onTurnStart(turn)
 			end
 		end
 		for _, enemy in ipairs(enemies) do
@@ -390,7 +390,7 @@ end
 NewTurnAction = Action:new{duration=10,secondary=true,additionalCard=0}
 function NewTurnAction:tick()
 	if self.duration == self.startDuration then
-		player:onTurnStart()
+		player:onTurnStart(turn + 1)
 		addAction(DrawCardAction:new(5+self.additionalCard))
 		energy = maxEnergy
 	end

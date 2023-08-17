@@ -25,12 +25,8 @@ function drawTopBar()
 		spr(9,168,0,0)
 		printShadowed(tostring(ascension),177,1,12)
 	end
-	for i = 1,#potions do
-		potions[i]:drawImage(96+i*8,0)
-	end
-	if topBarSelection.type == 'potion' then
-		drawSelectionBox(95+topBarSelection.index*8,0,10,9,nil,2)
-	elseif topBarSelection.type == 'deck' then
+	drawPotions()
+	if topBarSelection.type == 'deck' then
 		drawSelectionBox(215,0,10,9,nil,2)
 	elseif topBarSelection.type == 'map' then
 		drawSelectionBox(207,0,10,9,nil,2)
@@ -47,17 +43,51 @@ function drawTopBar()
 	end
 	if emeraldKeyObtained then spr(3,0,0,0) end
 	if rubyKeyObtained then spr(4,0,0,0) end
-	if sapphireKeyObtained then spr(5,0,0,0) end
+	if sapphireKeyObtained then
+		mapColor(1,15)
+		mapColor(2,9)
+		mapColor(3,10)
+		mapColor(4,11)
+		spr(4,1,0,0,1,1)
+		resetColors{1,2,3,4}
+	end
 	drawRelics()
+end
+
+function drawPotions()
+	local x = 104
+	local y = 0
+	for i, potion in ipairs(potions) do
+		potion:drawImage(x,0)
+		if topBarSelection.type == 'potion' and topBarSelection.index == i then
+			drawSelectionBox(x-1,y,10,9,nil,2)
+			if potion ~= Slot then
+				drawItemTooltip(potion,x-1,y+10)
+			end
+		end
+		x = x + 8
+	end
 end
 
 function drawRelics()
 	local x = 1-relicOffset
 	local y = 9
-	for _, relic in ipairs(relics) do
+	for i, relic in ipairs(relics) do
 		relic:drawImage(x,y)
+		if topBarSelection.type == 'relic' and topBarSelection.index == i then
+			drawSelectionBox(x-1,y-1,10,10,nil,2)
+			drawItemTooltip(relic,x-1,y+10)
+		end
 		x = x+12
 	end
+end
+
+function drawItemTooltip(item,x,y)
+	local _,h = drawDescription(item,item.description,-80,0,72,999,12)
+	local boxX = math.min(x,160)
+	drawTooltipBox(boxX,y,10,math.floor(h/8+2.5))
+	print(item.name,boxX+4,y+4,4,false,1,true)
+	drawDescription(item,item.description,boxX+4,y+14,72,999,12)
 end
 
 function drawPotionMenu(x)
@@ -82,10 +112,13 @@ function controlTopBar()
 			topBarSelection.index = 1
 		end
 	end
-	
+
 	if topBarSelection.type == 'potion' then
 		if btnp(2) then
 			topBarSelection.index = limit(topBarSelection.index-1,1,#potions)
+		elseif btnp(1) then
+			topBarSelection.type = 'relic'
+			topBarSelection.index = 1
 		elseif btnp(3) then
 			if topBarSelection.index == #potions then
 				topBarSelection.type = 'map'
@@ -98,7 +131,7 @@ function controlTopBar()
 				topBarSelection.potionIndex = topBarSelection.index
 				topBarSelection.index = 1
 			end
-		elseif btnp(1) or btnp(5) then
+		elseif btnp(5) then
 			exitTopBar()
 		end
 	elseif topBarSelection.type == 'potionMenu' then
@@ -166,6 +199,9 @@ function controlTopBar()
 		if btnp(2) then
 			topBarSelection.type = 'potion'
 			topBarSelection.index = #potions
+		elseif btnp(1) then
+			topBarSelection.type = 'relic'
+			topBarSelection.index = 1
 		elseif btnp(3) then
 			topBarSelection.type = 'deck'
 			topBarSelection.index = #potions
@@ -176,12 +212,15 @@ function controlTopBar()
 				openWindowAbove(MapWindow:new())
 			end
 			exitTopBar()
-		elseif btnp(1) or btnp(5) then
+		elseif btnp(5) then
 			exitTopBar()
 		end
 	elseif topBarSelection.type == 'deck' then
 		if btnp(2) then
 			topBarSelection.type = 'map'
+		elseif btnp(1) then
+			topBarSelection.type = 'relic'
+			topBarSelection.index = 1
 		elseif btnp(4) then
 			if getmetatable(nearestWindow) == CardGridSelectWindow and nearestWindow.isDeckView then
 				nearestWindow:close()
@@ -192,6 +231,24 @@ function controlTopBar()
 				openWindowAbove(gridView)
 			end
 			exitTopBar()
+		elseif btnp(5) then
+			exitTopBar()
+		end
+	elseif topBarSelection.type == 'relic' then
+		if topBarSelection.index < 1 or topBarSelection.index > #relics then
+			topBarSelection.index = limit(topBarSelection.index,1,#relics)
+			if topBarSelection.index < 1 or topBarSelection.index > #relics then
+				exitTopBar()
+				return
+			end
+		end
+		if btnp(0) then
+			topBarSelection.type = 'potion'
+			topBarSelection.index = 1
+		elseif btnp(2) then
+			topBarSelection.index = limit(topBarSelection.index-1,1,#relics)
+		elseif btnp(3) then
+			topBarSelection.index = limit(topBarSelection.index+1,1,#relics)
 		elseif btnp(1) or btnp(5) then
 			exitTopBar()
 		end

@@ -2,7 +2,7 @@
 ---@diagnostic disable: lowercase-global
 
 Act = Object:new{
-	id=0,title='',smallTitle='',cardUpgradedChance=0,drawBackground=noop,
+	id=0,title='',smallTitle='',cardUpgradedChance=0,drawBackground=noop,commonRelicChance=50,uncommonRelicChance=33,
 	weakEncounterCount=2,weakEncounters={},exclusiveEncounters={},strongEncounters={},eliteEncounters={},bossEncounters={},
 	events={}
 }
@@ -126,6 +126,6 @@ TheCity = Act:new{id=2,title='The City',smallTitle='Act 2',cardUpgradedChance=0.
 
 TheBeyond = Act:new{id=3,title='The Beyond',smallTitle='Act 3',cardUpgradedChance=0.5}
 
-TheEnding = Act:new{id=4,title='The Ending',smallTitle='Final Act',cardUpgradedChance=0.5}
+TheEnding = Act:new{id=4,title='The Ending',smallTitle='Final Act',cardUpgradedChance=0.5,commonRelicChance=0,uncommonRelicChance=100}
 
 acts = { Exordium,TheCity,TheBeyond,TheEnding }
