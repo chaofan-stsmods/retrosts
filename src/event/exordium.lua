@@ -3,7 +3,7 @@
 
 BigFish = TextEvent:new{name='Big Fish',screen='entry',healAmt=0}
 function BigFish:init()
-	self.random = self.random or makeRand(act.id,room.id,1)
+	self.random = makeRand(act.id,room.id,1)
 	self.healAmt = math.floor(player.maxHp / 3)
 	self.description = 'As you make your way down a long corridor you see a #4#banana,#12# a #4#donut,#12# and a #4#box#12# ~floating~ about. No... upon closer inspection they are tied to strings coming from holes in the ceiling. There is a quiet @cackling@ from above as you approach the objects. NL What do you do?'
 	self.options = {
@@ -42,7 +42,7 @@ end
 
 TheCleric = TextEvent:new{name='The Cleric',screen='entry',healAmt=0,removeCost=50}
 function TheCleric:init()
-	self.random = self.random or makeRand(act.id,room.id,1)
+	self.random = makeRand(act.id,room.id,1)
 	self.healAmt = math.floor(player.maxHp * 0.25)
 	self.removeCost = ascension >= 15 and 75 or 50
 	self.description = 'A strange blue humanoid with a golden helm(?) approaches you with a huge smile. NL @\"Hello@ @friend!@ I am #10#Cleric!#12# Are you interested in my services?!\" the creature shouts, loudly.'
@@ -87,7 +87,7 @@ end
 
 WingStatue = TextEvent:new{name='Wing Statue',screen='entry',hpLoss=7}
 function WingStatue:init()
-	self.random = self.random or makeRand(act.id,room.id,1)
+	self.random = makeRand(act.id,room.id,1)
 	self.description = 'Among the stone and boulders, you notice an intricate large blue statue resembling a wing. NL You find #4#gold#12# spilling from its cracks. Maybe there is more inside...'
 	self.options = {
 		{description='[Pray] #5#Remove a card from your deck. #3#Lose '..self.hpLoss..' HP.'},
@@ -127,7 +127,7 @@ end
 
 WorldOfGoop = TextEvent:new{name='World of Goop',screen='entry',hpLoss=11,goldLoss=11,goldGain=75}
 function WorldOfGoop:init()
-	self.random = self.random or makeRand(act.id,room.id,1)
+	self.random = makeRand(act.id,room.id,1)
 	self.goldLoss = math.min(gold,ascension >= 15 and self.random:randInt(35,75) or self.random:randInt(20,50))
 	self.description = 'You fall into a puddle. @IT\'S@ @MADE@ @OF@ @#5#SLIME@ @GOOP!!#12#@ NL Frantically, you claw yourself out over several minutes as you feel the goop starting to burn. NL You can feel goop in your ears, goop in your nose, goop everywhere. NL Climbing out, you notice that some of your #4#gold#12# is missing. Looking back to the puddle you see your missing coins combined with #4#gold#12# from unfortunate adventurers mixed together in the puddle.'
 	self.options = {
@@ -193,7 +193,7 @@ end
 
 LivingWall = TextEvent:new{name='Living Wall',screen='entry'}
 function LivingWall:init()
-	self.random = self.random or makeRand(act.id,room.id,1)
+	self.random = makeRand(act.id,room.id,1)
 	self.description = 'As you come to a dead-end and begin to turn around, walls @slam@ @down@ from the ceiling, trapping you! NL NL Three faces materialize from the walls and speak. NL #10#\"Forget what you know, and I\'ll let you go.\" NL #8#\"I require change to see a new space.\" NL #4#\"If you want to pass me, then you must grow.\"'
 	self.options = {
 		{description='[Forget] #5#Remove a card from your deck.'},
@@ -234,7 +234,7 @@ end
 
 ScrapOoze = TextEvent:new{name='Scrap Ooze',screen='entry',hpLoss=3,chance=25}
 function ScrapOoze:init()
-	self.random = self.random or makeRand(act.id,room.id,1)
+	self.random = makeRand(act.id,room.id,1)
 	self.hpLoss = ascension >= 15 and 5 or 3
 	self.description = 'As you walk into the room you hear a ~gurgling~ and the @grinding@ of metals. Before you is a slime-like creature that ate too much scrap for its own good. From the center of the creature you see glints of strange light, perhaps something magical? It looks like you can get some #4#treasure#12# if you just reach inside its... opening. However, the acid and sharp objects may #2#hurt.'
 	self.options = {
@@ -274,7 +274,7 @@ end
 
 ShiningLight = TextEvent:new{name='Shining Light',screen='entry',hpLoss=0}
 function ShiningLight:init()
-	self.random = self.random or makeRand(act.id,room.id,1)
+	self.random = makeRand(act.id,room.id,1)
 	self.hpLoss = math.floor((ascension >= 15 and 0.3 or 0.2) * player.maxHp)
 	self.description = 'You find a shimmering #4#mass of light#12# encompassing the center of the room. NL NL Its ~warm~ ~glow~ and ~enchanting~ ~patterns~ invite you in.'
 	self.options = {
@@ -311,7 +311,7 @@ end
 
 GoldenIdolEvent = TextEvent:new{name='Golden Idol',screen='entry',hpLoss=0,maxHpLoss=0}
 function GoldenIdolEvent:init()
-	self.random = self.random or makeRand(act.id,room.id,1)
+	self.random = makeRand(act.id,room.id,1)
 	self.hpLoss = math.floor((ascension >= 15 and 0.35 or 0.25) * player.maxHp)
 	self.maxHpLoss = math.max(1,math.floor((ascension >= 15 and 0.1 or 0.08) * player.maxHp))
 	self.description = 'You come across an inconspicuous pedestal with a #4#shining gold idol#12# sitting peacefully atop. It looks incredibly valuable. NL NL You sure don\'t see any traps nearby.'
@@ -371,7 +371,7 @@ local deadAdventurerRewards = {
 	{description='You found a #4#relic!#12# NL Continue searching?',action='relic'},
 }
 function DeadAdventurer:init()
-	self.random = self.random or makeRand(act.id,room.id,1)
+	self.random = makeRand(act.id,room.id,1)
 	self.rewardRandom = makeRand(act.id,room.id,2)
 	local roll = self.random:randInt(1,3)
 	self.encounter = deadAdventurerEncounters[roll]
@@ -455,6 +455,12 @@ function DeadAdventurer:relic()
 end
 
 function DeadAdventurer:onCombatEnd()
+	saveGame(true,self.numRewards)
+	self:load(self.numRewards)
+end
+
+function DeadAdventurer:load(eventMeta)
+	self.numRewards = eventMeta
 	local random = self.rewardRandom
 	local rewards = {}
 	local eventGold = random:randInt(25,35)
@@ -484,7 +490,7 @@ end
 
 Mushrooms = CombatTextEvent:new{screen='entry',spriteBank=1,healAmt=0,encounter=nil}
 function Mushrooms:init()
-	self.random = self.random or makeRand(act.id,room.id,1)
+	self.random = makeRand(act.id,room.id,1)
 	self.rewardRandom = makeRand(act.id,room.id,2)
 	self.healAmt = math.floor(player.maxHp*0.25)
 	self.description = 'You enter a corridor full of ~#10#hypnotizing~ ~colored~ ~mushrooms.#12#~ NL Due to your lack of specialization in mycology you are unable to identify the specimens. NL You want to escape, but feel oddly compelled to eat a #10#~mushroom...~'
@@ -548,6 +554,11 @@ function Mushrooms:onOption(selection)
 end
 
 function Mushrooms:onCombatEnd()
+	saveGame(true)
+	self:load()
+end
+
+function Mushrooms:load()
 	local random = self.rewardRandom
 	local rewards = {}
 	addGoldReward(rewards,random:randInt(20,30))

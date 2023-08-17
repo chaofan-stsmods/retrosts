@@ -89,6 +89,9 @@ end
 
 function closeChildWindows(output)
 	local w = window.child
+	if w == nil then
+		window:onOpen()
+	end
 	while w ~= nil do
 		w:close(output)
 		w = w.child

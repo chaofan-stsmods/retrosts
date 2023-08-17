@@ -21,7 +21,7 @@ local handUI = HandUI:new(hand)
 local combatSelection = {type='hand',index=1}
 local pauseControl = false
 
-function startCombat(encounter)
+function startCombat(encounter,completed)
 	shuffleRand = makeRand(act.id,room.id,2)
 	miscRand = makeRand(act.id,room.id,3)
 	rewardRand = makeRand(act.id,room.id,4)
@@ -30,6 +30,12 @@ function startCombat(encounter)
 	setupEnemies(encounter)
 	closeChildWindows()
 	resetActions()
+	if completed then
+		for _, enemy in ipairs(enemies) do
+			enemy.visible = false
+		end
+		return
+	end
 	drawPile = {}
 	discardPile = {}
 	exhaustPile = {}
@@ -321,19 +327,24 @@ function checkCombatEnd()
 	end
 end
 
-function combatEnd(shouldSave)
-	shouldSave = shouldSave or shouldSave == nil
-	if shouldSave then
-		saveGame(true)
-	end
+local function combatEndImplement()
+	completeRoom()
+	local rewards = generateRewards(rewardRand)
+	openWindowAbove(RewardWindow:new{rewards=rewards})
+end
+
+function combatEnd()
 	player:onCombatEnd()
 	if roomActionType == 'eventCombat' then
 		currentEvent:onCombatEnd()
 	else
-		completeRoom()
-		local rewards = generateRewards(rewardRand)
-		openWindowAbove(RewardWindow:new{rewards=rewards})
+		saveGame(true)
+		combatEndImplement()
 	end
+end
+
+function loadCombatEnd()
+	combatEndImplement()
 end
 
 -- enemies

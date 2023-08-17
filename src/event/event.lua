@@ -46,6 +46,7 @@ local function getActEvents()
 end
 
 function rollEventType(random)
+	return DeadAdventurer --[[
 	local list
 	if random:rand() < 0.25 then
 		list = getCommonAndOneTimeEvents()
@@ -64,7 +65,7 @@ function rollEventType(random)
 	table.retainIf(actEvents,isNotThisEvent)
 	table.retainIf(commonEvents,isNotThisEvent)
 	table.retainIf(oneTimeEvents,isNotThisEvent)
-	return eventType
+	return eventType]]--
 end
 
 -- event generator
@@ -95,24 +96,24 @@ function generateEventRoomType(random)
 		monsterChance = 10
 		return 'monster'
 	else
-		monsterChance = monsterChance + 10
 		roll = roll - monsterChance
+		monsterChance = monsterChance + 10
 	end
 
 	if roll < shopChance then
 		shopChance = 3
 		return 'shop'
 	else
-		shopChance = shopChance + 3
 		roll = roll - shopChance
+		shopChance = shopChance + 3
 	end
 
 	if roll < treasureChance then
 		treasureChance = 2
 		return 'treasure'
 	else
-		treasureChance = treasureChance + 2
 		roll = roll - treasureChance
+		treasureChance = treasureChance + 2
 	end
 
 	return 'event'
@@ -122,7 +123,7 @@ end
 
 Event = Object:new{
 	spriteBank=nil,options={},selectedOption=0,
-	onOption=noop,init=noop,drawForeground=noop,onCombatEnd=noop
+	onOption=noop,init=noop,drawForeground=noop,onCombatEnd=noop,load=noop,
 }
 function Event:new(o)
 	o = o or {}

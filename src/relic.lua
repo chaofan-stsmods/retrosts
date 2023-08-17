@@ -3,7 +3,7 @@
 
 local colorlessRelics
 
-Relic = Object:new{name='',description='',counter=nil,icon=0,tier='common',colorName='colorless',priority=50}
+Relic = Object:new{name='',description='',counter=-1,icon=0,tier='common',colorName='colorless',priority=50}
 
 function Relic:canSpwan()
 	return true
@@ -11,7 +11,7 @@ end
 
 function Relic:drawImage(x,y,hideCounter)
 	spr(self.icon,x,y,0)
-	if self.counter ~= nil and not hideCounter then
+	if self.counter >= 0 and not hideCounter then
 		local counterStr = tostring(self.counter)
 		local width = strWidth(counterStr,false,true)
 		printGlowed(counterStr,math.min(x+5,x+12-width),y+3,12,15,1,true)
@@ -19,14 +19,14 @@ function Relic:drawImage(x,y,hideCounter)
 end
 
 function Relic:save()
-	return self.counter == nil and 0 or ((self.counter << 1) | 1)
+	return self.counter < 0 and 0 or ((self.counter << 1) | 1)
 end
 
 function Relic:load(meta)
-	if meta & 1 == 1 then
+	if meta & 1 ~= 0 then
 		self.counter = meta >> 1
 	else
-		self.counter = nil
+		self.counter = -1
 	end
 end
 
@@ -73,7 +73,7 @@ end
 
 NeowsLament = Relic:new{name='Neow\'s Lament',description='Enemies in your first #10#3#12# combats will have #10#1#12# HP.',icon=68,tier='special',counter=3}
 function NeowsLament:onCombatStart()
-	if self.counter ~= nil then
+	if self.counter ~= -1 then
 		for _, enemy in ipairs(enemies) do
 			if enemy.alive then
 				enemy.hp = 1
@@ -81,7 +81,7 @@ function NeowsLament:onCombatStart()
 		end
 		self.counter = self.counter - 1
 		if self.counter == 0 then
-			self.counter = nil
+			self.counter = -1
 		end
 	end
 end
@@ -92,7 +92,10 @@ function GoldenIdol:onAddBonusGoldReward(bonusGold,amount)
 end
 
 OddMushroom = Relic:new{name='Odd Mushroom',description='When #4#Vulnerable#12#, take #5#25%#12# more attack damage rather than #5#50%.',icon=26,tier='special'}
-function OddMushroom:onModifyVulnerableFactor(factor)
+function OddMushroom:onModifyVulnerableFactor(factor,isAttacking)
+	if isAttacking then
+		return factor
+	end
 	return 1.25
 end
 

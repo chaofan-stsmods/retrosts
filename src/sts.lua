@@ -187,14 +187,14 @@ function enterRoom(x)
 	prepareRoom()
 end
 
-function prepareRoom(completed,eventRoomType)
+function prepareRoom(completed)
 	local roomType = room.type
-	local eventRandom = makeRand(act.id,room.id,1)
+	local rollRandom = makeRand(act.id,room.id,9)
 	if roomType == 'event' then
-		if completed and eventRoomType ~= nil then
-			roomType = eventRoomType
+		if completed and completed.eventRoomType ~= nil then
+			roomType = completed.eventRoomType
 		else
-			roomType = generateEventRoomType(eventRandom)
+			roomType = generateEventRoomType(rollRandom)
 		end
 		room.eventType = roomType
 	end
@@ -202,7 +202,7 @@ function prepareRoom(completed,eventRoomType)
 	if roomType == 'monster' then
 		roomActionType = 'combat'
 		if completed then
-			startCombat(monsterEncounters[nextMonsterEncounterIndex - 1])
+			startCombat(monsterEncounters[nextMonsterEncounterIndex - 1],completed)
 		else
 			startCombat(monsterEncounters[nextMonsterEncounterIndex])
 			nextMonsterEncounterIndex = nextMonsterEncounterIndex + 1
@@ -210,29 +210,33 @@ function prepareRoom(completed,eventRoomType)
 	elseif roomType == 'elite' then
 		roomActionType = 'combat'
 		if completed then
-			startCombat(eliteEncounters[nextEliteEncounterIndex - 1])
+			startCombat(eliteEncounters[nextEliteEncounterIndex - 1],completed)
 		else
 			startCombat(eliteEncounters[nextEliteEncounterIndex])
 			nextEliteEncounterIndex = nextEliteEncounterIndex + 1
 		end
 	elseif roomType == 'boss' then
 		roomActionType = 'combat'
-		startCombat(bossEncounter)
+		startCombat(bossEncounter,completed)
 	elseif roomType == 'rest' then
 		roomActionType = 'event'
-		currentEvent = CampfireEvent:new{random=eventRandom}
+		currentEvent = CampfireEvent:new()
 		closeChildWindows()
 	elseif roomType == 'treasure' then
 		roomActionType = 'event'
-		currentEvent = TreasureEvent:new{random=eventRandom}
+		currentEvent = TreasureEvent:new()
 		closeChildWindows()
 	elseif roomType == 'shop' then
 		roomActionType = 'event'
-		currentEvent = MerchantEvent:new{random=eventRandom}
+		currentEvent = MerchantEvent:new()
 		closeChildWindows()
 	else
 		roomActionType = 'event'
-		currentEvent = rollEventType(eventRandom):new{random=eventRandom}
+		if completed and completed.eventType ~= nil then
+			currentEvent = completed.eventType:new()
+		else
+			currentEvent = rollEventType(rollRandom):new()
+		end
 		closeChildWindows()
 	end
 end

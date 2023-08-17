@@ -435,7 +435,7 @@ function upgradeCardsWithEffect(cardItems)
 		cardItem.tx = startX+stepX*i
 		cardItem.ty = 68
 		cardItem.large = false
-		addEffect(CardEffect:new{cardItem=cardItem,pauseDuration=30,duration=50,tx=120,ty=-30})
+		addEffect(CardEffect:new{cardItem=cardItem,pauseDuration=30,duration=50,tx=240,ty=0})
 		addEffect(AnonymousEffect:new{duration=10,callback=function (duration)
 			if duration == 1 then
 				cardItem.card:upgrade()
