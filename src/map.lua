@@ -6,7 +6,7 @@ mapScreenX = 0
 mapScreenY = 1
 mapScreenSelectionMode = false
 
-MapWindow = Window:new{name='MapWindow',scroll=0,scrollSpeed=0,maxScroll=440,bossPosition=-424,bossY=16}
+MapWindow = Window:new{name='MapWindow',scroll=0,scrollSpeed=0,maxScroll=440,bossPosition=-424,bossY=16,canClose=true}
 function MapWindow:onOpen()
 	queueSync(1,1)
 	queueSync(2,0)
@@ -27,7 +27,6 @@ function MapWindow:tick()
 end
 
 local roomIconMap = {event=303,monster=285,rest=301,treasure=302,shop=317,elite=286,strongElite=287}
-local bossIconMap = {Slime=257,Hexaghost=261,Guardian=265,Champ=320,Collector=324,Automation=328,Donu=392,TimeEater=388,Awakened=384,Heart=332}
 function MapWindow:drawMap(y)
 	local backgroundOffset = y % 8
 	for i = 0,16 do
@@ -90,7 +89,7 @@ function MapWindow:selectMapControl()
 		return
 	end
 
-	if btnp(5) then
+	if btnp(5) and self.canClose then
 		self:close()
 		return
 	end
@@ -261,8 +260,15 @@ function generateMap(random,width,height,count)
 			addMapEdge(room,bossRoom)
 		end
 	end
+	local bossTreasureRoom = {id=height*width+2,x=1,y=height+2,previous={},next={},type='bossTreasure',hasEdge=false,completed=false}
+	addMapEdge(bossRoom,bossTreasureRoom)
 
-	return map
+	local otherRooms = {bossRoom,bossTreasureRoom}
+	for i, room in ipairs(otherRooms) do
+		room.specialRoomId = i
+	end
+
+	return map,otherRooms
 end
 
 function generatePath(random,map,startX,width,height)

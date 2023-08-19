@@ -26,7 +26,7 @@ function Window:onWindowOpen()
 			w = w.child
 		end
 		str = str:sub(1,#str-1)..'}'
-		trace(self.name..':onOpen '..str)
+		trace(self.name..'('..tostring(self)..'):onOpen '..str)
 		-- enddebug
 		self:onOpen()
 	end
@@ -75,6 +75,16 @@ function openWindowAbove(targetWindow,onClose)
 		closeWindowsIf(function (w) return getmetatable(w) == getmetatable(targetWindow) end)
 	end
 	nearestWindow:open(targetWindow,onClose)
+end
+
+function findWindow(windowType)
+	local w = window
+	while w ~= nil do
+		if windowType == getmetatable(w) then
+			return w
+		end
+		w = w.child
+	end
 end
 
 function closeWindowsIf(condition,output)

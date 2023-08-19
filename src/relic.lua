@@ -59,6 +59,7 @@ end
 function obtainRelic(relic)
 	if player:triggerConditionEvent('onBeforeObtainRelic',true,relic) then
 		table.insert(relics,relic)
+		player:triggerEvent('onObtainRelic',relic)
 	end
 end
 
@@ -124,6 +125,44 @@ function Calipers:onBeforeTurnStartLoseBlock(block)
 	return math.min(block,15)
 end
 
+EnergyRelic = Relic:new{tier='boss'}
+function EnergyRelic:onObtainRelic()
+	maxEnergy = maxEnergy + 1
+end
+
+function EnergyRelic:onLoseRelic()
+	maxEnergy = maxEnergy - 1
+end
+
+CoffeeDripper = EnergyRelic:new{name='Coffee Dripper',icon=173,description='Gain {202} at the start of your turn, You can no longer #4#Rest#12# at Rest Sites.'}
+function CoffeeDripper:onModifyCampfireOptions(options)
+	for _, option in ipairs(options) do
+		if option.name == 'Rest' then
+			option.locked = true
+			break
+		end
+	end
+end
+
+FusionHammer = EnergyRelic:new{name='Fusion Hammer',icon=177,description='Gain {202} at the start of your turn, You can no longer #4#Smith#12# at Rest Sites.'}
+function FusionHammer:onModifyCampfireOptions(options)
+	for _, option in ipairs(options) do
+		if option.name == 'Smith' then
+			option.locked = true
+			break
+		end
+	end
+end
+
+Ectoplasm = EnergyRelic:new{name='Ectoplasm',icon=175,description='Gain {202} at the start of your turn, You can no longer gain #4#Gold#12#.'}
+function Ectoplasm:onGainGold()
+	return 0
+end
+
+function Ectoplasm:canSpawn()
+	return act.id == 1
+end
+
 colorlessRelics = {
 	-- special
 	Circlet,NeowsLament,GoldenIdol,OddMushroom,
@@ -133,4 +172,6 @@ colorlessRelics = {
 	EternalFeather,
 	-- rare
 	Calipers,
+	-- boss
+	CoffeeDripper,FusionHammer,Ectoplasm,
 }

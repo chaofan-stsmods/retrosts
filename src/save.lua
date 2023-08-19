@@ -16,7 +16,7 @@ Act properties:
 9: common events
 10: reward generator
 11: event generator
-12: currentX, currentY each 8 bits
+12: currentX, currentY, special room id each 8 bits
 13 ~ 14: player path, each item 3 bits
 15: 1 bit completed, 3 bits event room type, 12 bits event type, 16 bits event meta
 Variable length properties:
@@ -138,7 +138,7 @@ function saveGame(completed,eventMeta)
 	saveListBits(index+9,commonEvents,getCommonEvents())
 	saveRewardGenerator(index+10)
 	saveEventGenerator(index+11)
-	pmem(index+12,currentRoomX | (currentRoomY << 8))
+	pmem(index+12,currentRoomX | (currentRoomY << 8) | ((room.specialRoomId or 0) << 16))
 	local pathVal = 0
 	for i = 1,math.min(10,#playerPath) do
 		pathVal = pathVal | (playerPath[i] << (i-1)*3)
@@ -220,7 +220,7 @@ function loadGame()
 	local actId = val32 & 0xff
 	act = acts[actId]
 	local mapRandom = makeRand(actId)
-	stsMap = generateMap(mapRandom,7,15,6)
+	stsMap,specialRooms = act:generateMap(mapRandom)
 	monsterEncounters,eliteEncounters,bossEncounters = act:generateEncounters(mapRandom)
 	nextMonsterEncounterIndex = (val32 >> 8) & 0xff
 	nextEliteEncounterIndex = (val32 >> 16) & 0xff
@@ -232,6 +232,7 @@ function loadGame()
 	val32 = pmem(index+12)
 	currentRoomX = val32 & 0xff
 	currentRoomY = (val32 >> 8) & 0xff
+	local specialRoomId = (val32 >> 16) & 0xff
 
 	playerPath = {}
 	local pathVal = pmem(index+13)
@@ -317,7 +318,12 @@ function loadGame()
 	switchWindow(GameWindow:new())
 
 	if floor ~= 0 then
-		room = stsMap[currentRoomY][currentRoomX]
+		if specialRoomId ~= 0 then
+			room = specialRooms[specialRoomId]
+		else
+			room = stsMap[currentRoomY][currentRoomX]
+		end
+
 		prepareRoom(roomCompleted and {eventRoomType=eventRoomType,eventType=eventType} or nil)
 
 		if roomCompleted then

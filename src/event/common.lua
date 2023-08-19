@@ -21,10 +21,10 @@ end
 function GoldenShrine:onOption(selection)
 	if self.screen == 'entry' then
 		if selection == 1 then
-			gold = gold + self.goldAmt
+			increaseGold(self.goldAmt)
 			self.description = 'As your hand touches the shrine, #4#gold#12# rains from the ceiling ~showering~ ~you~ ~in~ ~riches.~'
 		elseif selection == 2 then
-			gold = gold + 275
+			increaseGold(275)
 			local cardItem = CardItem:new{card=Regret:new(),x=0,y=136,tx=120,ty=68,isNotInHand=true}
 			addEffect(CardEffect:new{cardItem=cardItem,pauseDuration=30,duration=50,tx=240,ty=0})
 			table.insert(deck,cardItem.card)
@@ -271,7 +271,7 @@ function WheelOfChange:heal()
 end
 
 function WheelOfChange:gold()
-	gold = gold + self.goldAmt
+	increaseGold(self.goldAmt)
 end
 
 function WheelOfChange:relic()

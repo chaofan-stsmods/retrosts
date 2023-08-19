@@ -276,7 +276,7 @@ function MerchantWindow:merchantControls()
 		elseif btnp(4) then
 			local cardItem = self.goods.card1[self.selection]
 			if not cardItem.sold and cardItem.price <= gold then
-				gold = gold - cardItem.price
+				decreaseGold(cardItem.price)
 				cardItem.large = false
 				addEffect(CardEffect:new{cardItem=cardItem,pauseDuration=1,duration=20,tx=240,ty=0})
 				table.insert(deck,cardItem.card)
@@ -310,7 +310,7 @@ function MerchantWindow:merchantControls()
 		elseif btnp(4) then
 			local cardItem = self.goods.card2[self.selection]
 			if not cardItem.sold and cardItem.price <= gold then
-				gold = gold - cardItem.price
+				decreaseGold(cardItem.price)
 				cardItem.large = false
 				addEffect(CardEffect:new{cardItem=cardItem,pauseDuration=1,duration=20,tx=240,ty=0})
 				table.insert(deck,cardItem.card)
@@ -354,7 +354,7 @@ function MerchantWindow:merchantControls()
 		elseif btnp(4) then
 			local relic = self.goods.relics[self.selection]
 			if not relic.sold and relic.price <= gold then
-				gold = gold - relic.price
+				decreaseGold(relic.price)
 				relic.price = nil
 				relic.basePrice = nil
 				obtainRelic(relic)
@@ -392,7 +392,7 @@ function MerchantWindow:merchantControls()
 		elseif btnp(4) then
 			local potion = self.goods.potions[self.selection]
 			if not potion.sold and potion.price <= gold and obtainPotion(potion) then
-				gold = gold - potion.price
+				decreaseGold(potion.price)
 				potion.price = nil
 				potion.basePrice = nil
 				self.goods.potions[self.selection] = {sold=true}
@@ -419,7 +419,7 @@ function MerchantWindow:merchantControls()
 			if not self.cardRemoval.sold and self.cardRemoval.price <= gold then
 				removeCardFromDeck(1,true,function (completed)
 					if completed then
-						gold = gold - self.cardRemoval.price
+						decreaseGold(self.cardRemoval.price)
 						self.cardRemoval.sold = true
 						self.selection = 0
 					end

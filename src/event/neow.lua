@@ -109,7 +109,7 @@ function generateNeowRewards(options,random)
 		end}
 	elseif oid == 5 then
 		option = {description='[ #5#Obtain 100 gold #12#]',onSelect=function ()
-			gold = gold + 100
+			increaseGold(100)
 		end}
 	end
 	options[2] = option
@@ -123,7 +123,7 @@ function generateNeowRewards(options,random)
 		end}
 	elseif nid == 2 then
 		negative = {description='[ #3#Lose all gold ',onSelect=function ()
-			gold = 0
+			decreaseGold(gold)
 		end}
 	elseif nid == 3 then
 		negative = {description='[ #3#Obtain a curse ',onSelect=function ()
@@ -182,7 +182,7 @@ function generateNeowRewards(options,random)
 		end}
 	elseif oid == 6 then
 		option = {description='#5#Obtain 250 gold #12#]',onSelect=function ()
-			gold = gold + 250
+			increaseGold(250)
 		end}
 	elseif oid == 7 then
 		option = {description='#5#Remove 2 cards #12#]',onSelect=function ()

@@ -152,7 +152,7 @@ end
 
 Thunderclap = RedCard:new{
 	name='Thunderclap',description='{63} !D! and apply !M! {60} to all enemies.',rarity='common',baseCost=1,baseDamage=4,baseMagic=1,
-	enemyTarget=true,toAllEnemies=true,upgrade={baseMagic=7}
+	enemyTarget=true,toAllEnemies=true,upgrade={baseDamage=7}
 }
 function Thunderclap:use()
 	local result = {}
@@ -798,7 +798,7 @@ end
 FlameBarrierPower = Power:new{icon=196}
 function FlameBarrierPower:onBeforeDamaged(value,source,type)
 	if source ~= player and type == 'attack' then
-		addAction(DamageAction:new{source=player,target=source,value=self.amount,type='power'})
+		addAction(1,DamageAction:new{source=player,target=source,value=self.amount,type='power'})
 	end
 end
 

@@ -85,7 +85,7 @@ function RewardWindow:collectReward()
 
 	local reward = self.rewards[self.selection]
 	if reward.type == 'gold' then
-		gold = gold + reward.value
+		increaseGold(reward.value)
 		self:collectRewardComplete()
 	elseif reward.type == 'key' then
 		_G[reward.value] = true
@@ -130,6 +130,10 @@ function RewardWindow:onComplete()
 end
 
 function RewardWindow:onProceed()
+	if room.type == 'boss' then
+		act:bossRoomProceed()
+		return
+	end
 	openWindowAbove(MapWindow:new())
 end
 
@@ -146,19 +150,19 @@ function generateRewards(random)
 end
 
 function generateGoldReward(rewards,random)
-	local gold = nil
+	local amount = nil
 	if room.type == 'monster' or room.eventType == 'monster' then
-		gold = random:randInt(10,20)
+		amount = random:randInt(10,20)
 	elseif room.type == 'elite' then
-		gold = random:randInt(25,35)
+		amount = random:randInt(25,35)
 	elseif room.type == 'boss' then
-		gold = random:randInt(95,105)
+		amount = random:randInt(95,105)
 		if ascension >= 13 then
-			gold = math.floor(gold*0.75+0.5)
+			amount = math.floor(amount*0.75+0.5)
 		end
 	end
-	if gold then
-		addGoldReward(rewards,gold)
+	if amount then
+		addGoldReward(rewards,amount)
 	end
 end
 
@@ -305,7 +309,7 @@ function getRelicTier(random)
 	local tier = 'uncommon'
 	if roll < act.commonRelicChance then
 		tier = 'common'
-	elseif roll >= act.commonRelicChance + act.uncommonCardChance then
+	elseif roll >= act.commonRelicChance + act.uncommonRelicChance then
 		tier = 'rare'
 	end
 	return tier

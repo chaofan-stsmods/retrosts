@@ -66,11 +66,11 @@ end
 function TheCleric:onOption(selection)
 	if self.screen == 'entry' then
 		if selection == 1 then
-			gold = gold - 35
+			decreaseGold(35)
 			player:heal(self.healAmt)
 			self.description = 'A warm golden light envelops your body and dissipates. NL The creature grins. \"Cleric best healer. @Have@ @a@ @good@ @day!\"@'
 		elseif selection == 2 then
-			gold = gold - self.removeCost
+			decreaseGold(self.removeCost)
 			removeCardFromDeck(1,false,function ()
 				self.description = 'A cold blue flame envelops your body and dissipates. NL The creature grins. \"Cleric talented. @Have@ @a@ @good@ @day!\"@'
 			end)
@@ -108,7 +108,7 @@ function WingStatue:onOption(selection)
 			self.description = 'Someone once told you of a cult that worshipped a giant bird. As you kneel in prayer, you begin to ~feel~ ... ~lightheaded~ . NL NL You wake up some time later, feeling strangely fleet of foot.'
 			return
 		elseif selection == 2 then
-			gold = gold + self.random:randInt(50,80)
+			increaseGold(self.random:randInt(50,80))
 			self.description = 'With all your might, you hack away at the statue. NL It soon @crumbles,@ revealing a #4#pile of gold#12#. You grab as much as you can and continue onwards.'
 		else
 			self.description = 'The statue makes you feel ~uneasy.~ You walk past and continue onward.'
@@ -140,10 +140,10 @@ function WorldOfGoop:onOption(selection)
 	if self.screen == 'entry' then
 		if selection == 1 then
 			player:damage(player,self.hpLoss)
-			gold = gold + self.goldGain
+			increaseGold(self.goldGain)
 			self.description = 'Feeling the sting of the goop as the prolonged exposure starts to melt away at your skin, you manage to fish out the #4#gold.'
 		elseif selection == 2 then
-			gold = gold - self.goldLoss
+			decreaseGold(self.goldLoss)
 			self.description = 'You decide that mess is not worth it.'
 		end
 		self.screen = 'leave'
@@ -176,7 +176,7 @@ function TheSsssserpent:onOption(selection)
 			self.options = {{description='[Leave]'}}
 		end
 	elseif self.screen == 'agree' then
-		gold = gold + self.goldReward
+		increaseGold(self.goldReward)
 
 		local cardItem = CardItem:new{card=Doubt:new(),x=0,y=136,tx=120,ty=68,isNotInHand=true}
 		addEffect(CardEffect:new{cardItem=cardItem,pauseDuration=30,duration=50,tx=240,ty=0})
@@ -445,7 +445,7 @@ function DeadAdventurer:onOption(selection)
 end
 
 function DeadAdventurer:gold()
-	gold = gold + 30
+	increaseGold(30)
 end
 
 function DeadAdventurer:relic()

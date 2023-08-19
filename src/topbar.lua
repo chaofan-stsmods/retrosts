@@ -206,10 +206,11 @@ function controlTopBar()
 			topBarSelection.type = 'deck'
 			topBarSelection.index = #potions
 		elseif btnp(4) then
-			if getmetatable(nearestWindow) == MapWindow then
+			if getmetatable(nearestWindow) == MapWindow and nearestWindow.canClose then
 				nearestWindow:close()
 			else
-				openWindowAbove(MapWindow:new())
+				local existingMapWindow = findWindow(MapWindow)
+				openWindowAbove(MapWindow:new{canClose=existingMapWindow~=nil and existingMapWindow.canClose or true})
 			end
 			exitTopBar()
 		elseif btnp(5) then

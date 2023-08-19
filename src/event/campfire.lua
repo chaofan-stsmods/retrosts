@@ -9,6 +9,7 @@ function CampfireEvent:init()
 	if not rubyKeyObtained then
 		table.insert(self.options,{name='Recall',description='Obtain the ruby key.',icon=340,onSelect=function() self:recall() end})
 	end
+	player:triggerEvent('onModifyCampfireOptions',self.options)
 end
 
 function CampfireEvent:drawBackground()
@@ -34,7 +35,7 @@ function CampfireEvent:drawOptions()
 	local isOdd = #self.options%2 == 1
 	for i, option in ipairs(self.options) do
 		if option.locked then
-			darkenColors()
+			greyColors()
 		end
 
 		if isOdd and i == #self.options then
@@ -48,7 +49,7 @@ function CampfireEvent:drawOptions()
 				drawSelectionBox(x-1+(1-i%2)*stepX,y+stepY*math.floor((i-1)/2),34,24)
 			end
 		end
-		
+
 		if option.locked then
 			resetColors()
 		end
@@ -78,25 +79,29 @@ function CampfireEvent:eventControls()
 	end
 
 	if btnp(0) then
-		if self.selectedOption > 2 and validOption(self.selectedOption-2) then
-			self.selectedOption = self.selectedOption - 2
+		if self.selectedOption > 2 then
+			self.selectedOption = previousIndexInTableIf(self.options,self.selectedOption-1,validOption)
 		end
 	elseif btnp(1) then
-		if self.selectedOption+2 <= #self.options and validOption(self.selectedOption+2) then
-			self.selectedOption = self.selectedOption + 2
-		elseif #self.options%2 == 1 and self.selectedOption < #self.options and validOption(#self.options) then
-			self.selectedOption = #self.options
+		if self.selectedOption+2 <= #self.options then
+			self.selectedOption = nextOrOtherIndexInTableIf(self.options,self.selectedOption+1,validOption)
+		elseif #self.options%2 == 1 and self.selectedOption < #self.options then
+			self.selectedOption = nextOrOtherIndexInTableIf(self.options,#self.options,validOption)
 		end
 	elseif btnp(2) then
-		if self.selectedOption%2 == 0 and self.selectedOption > 1 and validOption(self.selectedOption-1) then
-			self.selectedOption = self.selectedOption - 1
+		if self.selectedOption%2 == 0 and self.selectedOption > 1 then
+			self.selectedOption = previousOrOtherIndexInTableIf(self.options,self.selectedOption,validOption)
 		end
 	elseif btnp(3) then
 		if self.selectedOption%2 == 1 and self.selectedOption < #self.options and validOption(self.selectedOption+1) then
-			self.selectedOption = self.selectedOption + 1
+			self.selectedOption = nextOrOtherIndexInTableIf(self.options,self.selectedOption,validOption)
 		end
 	elseif btnp(4) then
-		self:onOption(self.selectedOption)
+		if table.allMatch(self.options, function (option) return option.locked end) then
+			self:completeCampfire()
+		else
+			self:onOption(self.selectedOption)
+		end
 	end
 end
 

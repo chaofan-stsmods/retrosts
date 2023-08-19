@@ -168,6 +168,10 @@ function darkenColors()
 	isDarken = true
 end
 
+function greyColors()
+	mapColors(0,15,14,13,12,13,14,15,13,14,13,12,12,13,14,15)
+end
+
 function resetColor(color)
 	mapColor(color,color)
 end

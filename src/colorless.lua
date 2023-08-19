@@ -77,7 +77,7 @@ function HandOfGreed:use(target)
 	return {
 		damageAction,
 		FatalAction:new{target=target,action=damageAction,callback=function ()
-			gold = gold + self.magic
+			increaseGold(self.magic)
 		end}
 	}
 end

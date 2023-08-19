@@ -593,7 +593,7 @@ ThieveryPower = Power:new{icon=418}
 ThieveryAction = Action:new{owner=nil,amount=15}
 function ThieveryAction:tick()
 	local amount = math.min(gold,self.amount)
-	gold = gold - amount
+	decreaseGold(amount)
 	self.owner.goldStolen = self.owner.goldStolen + amount
 	self.isDone = true
 end

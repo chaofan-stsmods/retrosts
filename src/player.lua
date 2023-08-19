@@ -123,3 +123,11 @@ function sortByPriority(...)
 	end
 	return result
 end
+
+function increaseGold(amount)
+	gold = gold + player:triggerReducerEvent('onGainGold',amount)
+end
+
+function decreaseGold(amount)
+	gold = math.max(0,gold-amount)
+end

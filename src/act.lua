@@ -49,6 +49,14 @@ function Act:exclusiveListCheck(candidate,encounters)
 	return table.indexOf(exclusiveEncounters,candidate) == nil
 end
 
+function Act:bossRoomProceed()
+	enterRoom(1)
+end
+
+function Act:generateMap(random)
+	return generateMap(random,7,15,6)
+end
+
 function rollEncounters(encounters,random)
 	local item = rollList(random,encounters)
 	return item and item.item or CultistEncounter
@@ -129,9 +137,18 @@ function Exordium:drawBackground()
 end
 
 TheCity = Act:new{id=2,title='The City',smallTitle='Act 2',cardUpgradedChance=0.25}
+function TheCity:drawBackground()
+	sprmap(60,0,30,17,0,0)
+end
 
 TheBeyond = Act:new{id=3,title='The Beyond',smallTitle='Act 3',cardUpgradedChance=0.5}
+function TheBeyond:drawBackground()
+	sprmap(90,0,30,17,0,0)
+end
 
 TheEnding = Act:new{id=4,title='The Ending',smallTitle='Final Act',cardUpgradedChance=0.5,commonRelicChance=0,uncommonRelicChance=100}
+function TheEnding:drawBackground()
+	sprmap(120,0,30,17,0,0)
+end
 
 acts = { Exordium,TheCity,TheBeyond,TheEnding }
