@@ -174,9 +174,9 @@ end
 
 function Event:drawOptionButton(x,y,width)
 	spr(12,x,y,0)
-	for i=2,width-1 do
-		spr(13,x+i*8-8,y,0)
-	end
+	rect(x+8,y,width*8-16,1,13)
+	rect(x+8,y+1,width*8-16,6,14)
+	rect(x+8,y+7,width*8-16,1,15)
 	spr(12,x+width*8-8,y,0,1,1)
 end
 

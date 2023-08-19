@@ -46,7 +46,7 @@ end
 
 -- cards
 
-RedCard = Card:new{color={2,1},costIcon=45,typeIconColor=4,colorName='red'}
+RedCard = Card:new{color={2,1},costIcon=201,typeIconColor=4,colorName='red'}
 
 Strike = RedCard:new{ name='Strike',description='{63} !D!.',rarity='basic',baseCost=1,baseDamage=6,enemyTarget=true,upgrade={baseDamage=9},tags={'strike'} }
 function Strike:use(target)
@@ -226,8 +226,8 @@ function HeavyBlade:use(target)
 end
 
 Bloodletting = RedCard:new{
-	name='Bloodletting',description='Lose 3 HP. NL Gain {62}{62}.',rarity='uncommon',type='skill',baseCost=0,
-	baseMagic=2,playerTarget=true,upgrade={baseMagic=3,description='Lose 3 HP. NL Gain {62}{62}{62}.'}
+	name='Bloodletting',description='Lose 3 HP. NL Gain {202}{202}.',rarity='uncommon',type='skill',baseCost=0,
+	baseMagic=2,playerTarget=true,upgrade={baseMagic=3,description='Lose 3 HP. NL Gain {202}{202}{202}.'}
 }
 function Bloodletting:use()
 	return { DamageAction:new{target=player,source=player,type='hpLoss',value=3}, GainEnergyAction:new(self.magic) }
@@ -301,7 +301,7 @@ function Bludgeon:use(target)
 end
 
 Offering = RedCard:new{
-	name='Offering',description='Lose 6 HP. NL Gain {62}{62}. NL Draw !M! cards. NL Exhaust.',rarity='rare',type='skill',baseCost=0,
+	name='Offering',description='Lose 6 HP. NL Gain {202}{202}. NL Draw !M! cards. NL Exhaust.',rarity='rare',type='skill',baseCost=0,
 	baseMagic=3,playerTarget=true,upgrade={baseMagic=5},exhaust=true,
 }
 function Offering:use()
@@ -343,7 +343,7 @@ function Shockwave:use()
 end
 
 SeeingRed = RedCard:new{
-	name='Seeing Red',description='Gain {62}{62}. NL Exhaust.',rarity='uncommon',type='skill',baseCost=1,
+	name='Seeing Red',description='Gain {202}{202}. NL Exhaust.',rarity='uncommon',type='skill',baseCost=1,
 	baseMagic=2,playerTarget=true,upgrade={baseCost=0},exhaust=true,
 }
 function SeeingRed:use()
@@ -513,7 +513,7 @@ function BattleTrance:use()
 end
 
 BloodForBlood = RedCard:new{
-	name='Blood for Blood',description='Costs 1 less {62} each time you lose HP this combat. NL {63} !D!.',rarity='uncommon',
+	name='Blood for Blood',description='Costs 1 less {202} each time you lose HP this combat. NL {63} !D!.',rarity='uncommon',
 	baseCost=4,baseDamage=18,enemyTarget=true
 }
 function BloodForBlood:use(target)
@@ -564,7 +564,7 @@ function Carnage:use(target)
 end
 
 Dropkick = RedCard:new{
-	name='Dropkick',description='{63} !D!. NL If enemy has {60}, gain {62} and draw 1 card.',rarity='uncommon',baseCost=1,baseDamage=5,
+	name='Dropkick',description='{63} !D!. NL If enemy has {60}, gain {202} and draw 1 card.',rarity='uncommon',baseCost=1,baseDamage=5,
 	enemyTarget=true,playerTarget=true,upgrade={baseDamage=8}
 }
 function Dropkick:use(target)
@@ -690,8 +690,8 @@ function SeverSoul:use(target)
 end
 
 Sentinel = RedCard:new{
-	name='Sentinel',description='Gain !B! {47}. NL When this card is exhausted, gain {62}{62}.',rarity='uncommon',type='skill',baseCost=1,baseBlock=5,
-	baseMagic=2,playerTarget=true,upgrade={baseBlock=8,baseMagic=3,description='Gain !B! {47}. NL When this card is exhausted, gain {62}{62}{62}.'}
+	name='Sentinel',description='Gain !B! {47}. NL When this card is exhausted, gain {202}{202}.',rarity='uncommon',type='skill',baseCost=1,baseBlock=5,
+	baseMagic=2,playerTarget=true,upgrade={baseBlock=8,baseMagic=3,description='Gain !B! {47}. NL When this card is exhausted, gain {202}{202}{202}.'}
 }
 function Sentinel:use()
 	return { GainBlockAction:new{target=player,value=self.block} }
@@ -848,7 +848,7 @@ function SearingBlow:load(meta)
 end
 
 Berserk = RedCard:new{
-	name='Berserk',description='Gain !M! {60}. NL At the start of turn, gain {62}.',rarity='rare',type='power',baseCost=0,
+	name='Berserk',description='Gain !M! {60}. NL At the start of turn, gain {202}.',rarity='rare',type='power',baseCost=0,
 	playerTarget=true,baseMagic=2,upgrade={baseMagic=1}
 }
 function Berserk:use()

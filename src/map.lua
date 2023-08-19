@@ -56,7 +56,7 @@ function MapWindow:drawMap(y)
 			(currentRoomY == self.bossY and not mapScreenSelectionMode) then
 			drawSelectionBox(88-2,bossDrawY-2,68,68,15)
 		end
-		spr(bossIconMap[boss] or 257,88,bossDrawY,12,2,0,0,4,4)
+		spr(bossEncounters[nextBossEncounterIndex].mapIcon or 257,88,bossDrawY,12,2,0,0,4,4)
 	end
 	resetColor(15)
 end

@@ -211,7 +211,7 @@ function SpikeSlimeM:nextIntent()
 	})
 end
 
-SpikeSlimeL = Monster:new{ maxHp=70,width=5,height=3,dmg=18,splitting=false }
+SpikeSlimeL = Monster:new{ maxHp=70,width=5,height=3,dmg=18,splitting=false,splitDistance=24 }
 function SpikeSlimeL:init(random)
 	self.maxHp = ascension >= 7 and random:randInt(67,73) or random:randInt(64,70)
 	self.dmg = ascension >= 2 and 18 or 16
@@ -235,8 +235,8 @@ end
 
 function SpikeSlimeL:split()
 	addAction(HideMonsterAction:new{target=self})
-	local splitted1 = SpikeSlimeM:new{createRandom=self.createRandom,x=self.x-24,y=self.y+8}
-	local splitted2 = SpikeSlimeM:new{createRandom=self.createRandom,x=self.x+24,y=self.y+8}
+	local splitted1 = SpikeSlimeM:new{createRandom=self.createRandom,x=self.x-self.splitDistance,y=self.y+8}
+	local splitted2 = SpikeSlimeM:new{createRandom=self.createRandom,x=self.x+self.splitDistance,y=self.y+8}
 	splitted1.maxHp,splitted1.hp = self.hp,self.hp
 	splitted2.maxHp,splitted2.hp = self.hp,self.hp
 	addAction(SpawnMonsterAction:new{target=splitted1})
@@ -252,9 +252,18 @@ function SpikeSlimeL:nextIntent()
 end
 
 SplitPower = Power:new{icon=450,stackable=false}
+function SplitPower:new(...)
+	local r = Power.new(self,...)
+	if combatSpriteBank ~= 1 then
+		r.icon = 274
+	end
+	return r
+end
+
 function SplitPower:onDamaged()
 	local owner = self.owner
 	if owner.alive and not owner.splitting and owner.hp <= math.floor(owner.maxHp/2) then
+		addAction(EffectAction:new(TextEffect:new{color=12,text='Interrupted!',x=owner.x+owner.width*4,y=owner.y,ySpeed=-0.5}))
 		addAction(SetIntentAction:new(owner,'split','unknown',0,0,false))
 		owner.splitting = true
 	end
@@ -334,7 +343,7 @@ function AcidSlimeM:nextIntent()
 	end
 end
 
-AcidSlimeL = Monster:new{ maxHp=10,width=5,height=3,attackDmg=10,woundDmg=7 }
+AcidSlimeL = Monster:new{ maxHp=10,width=5,height=3,attackDmg=10,woundDmg=7,splitDistance=24 }
 function AcidSlimeL:init(random)
 	self.maxHp = ascension >= 7 and random:randInt(68,72) or random:randInt(65,69)
 	self.woundDmg = ascension >= 2 and 12 or 11
@@ -367,8 +376,8 @@ end
 
 function AcidSlimeL:split()
 	addAction(HideMonsterAction:new{target=self})
-	local splitted1 = AcidSlimeM:new{createRandom=self.createRandom,x=self.x-24,y=self.y+8}
-	local splitted2 = AcidSlimeM:new{createRandom=self.createRandom,x=self.x+24,y=self.y+8}
+	local splitted1 = AcidSlimeM:new{createRandom=self.createRandom,x=self.x-self.splitDistance,y=self.y+8}
+	local splitted2 = AcidSlimeM:new{createRandom=self.createRandom,x=self.x+self.splitDistance,y=self.y+8}
 	splitted1.maxHp,splitted1.hp = self.hp,self.hp
 	splitted2.maxHp,splitted2.hp = self.hp,self.hp
 	addAction(SpawnMonsterAction:new{target=splitted1})
@@ -913,6 +922,310 @@ function Lagavulin:damage(...)
 	end
 end
 
+SlimeBoss = Monster:new{ maxHp=140,width=8,height=6,dmg=35 }
+function SlimeBoss:init()
+	self.maxHp = ascension >= 9 and 150 or 140
+	self.dmg = ascension >= 4 and 38 or 35
+end
+
+function SlimeBoss:drawImage()
+	sprmap(48,17,6,self.height,self.x+8,self.y+8,0)
+end
+
+function SlimeBoss:onCombatStart()
+	addAction(ApplyPowerAction:new(SplitPower:new(self)))
+	Monster.onCombatStart(self)
+end
+
+function SlimeBoss:debuff()
+	addAction(MakeTempCardToDiscardPileAction:new(Slimed:new(),ascension >= 19 and 5 or 3))
+	addAction(SetIntentAction:new(self,'prepare','unknown'))
+end
+
+function SlimeBoss:prepare()
+	addAction(SetIntentAction:new(self,'attack','attack',self.dmg))
+end
+
+function SlimeBoss:attack()
+	addAction(DamageAction:new{target=player,source=self,value=self.intentDamage})
+	addAction(SetIntentAction:new(self,'debuff','strongDebuff'))
+end
+
+function SlimeBoss:split()
+	addAction(HideMonsterAction:new{target=self})
+	combatSpriteBank = 1
+	addAction(AnonymousAction:new(function ()
+		queueSync(2,1)
+	end))
+	local splitted1 = SpikeSlimeL:new{createRandom=self.createRandom,x=self.x-32,y=self.y+18,splitDistance=20}
+	local splitted2 = AcidSlimeL:new{createRandom=self.createRandom,x=self.x+48,y=self.y+18,splitDistance=20}
+	splitted1.maxHp,splitted1.hp = self.hp,self.hp
+	splitted2.maxHp,splitted2.hp = self.hp,self.hp
+	addAction(SpawnMonsterAction:new{target=splitted1})
+	addAction(SpawnMonsterAction:new{target=splitted2})
+	addAction(SuicideAction:new{target=self})
+end
+
+function SlimeBoss:nextIntent(first)
+	self:setIntent('debuff','strongDebuff')
+end
+
+Hexaghost = Monster:new{ maxHp=250,width=8,height=6,fireDmg=5,searDmg=6,searBurnCount=1,infernoDmg=2,strAmt=2,fires=nil,fireCount=0,burnUpgraded=false }
+function Hexaghost:init()
+	self.maxHp = ascension >= 9 and 264 or 250
+	self.fireDmg = ascension >= 4 and 6 or 5
+	self.infernoDmg = ascension >= 4 and 3 or 2
+	self.searBurnCount = ascension >= 19 and 2 or 1
+	self.strAmt = ascension >= 19 and 3 or 2
+	self.fires = { 0,0,0,0,0,0 }
+end
+
+local hexaghostFireLocation = (function()
+	local radius = 18
+	local xDiff = math.floor(radius / 2)
+	local yDiff = math.floor(radius / 2 * 1.732)
+	return {
+		{ x=xDiff,y=-yDiff },
+		{ x=radius,y=0 },
+		{ x=xDiff,y=yDiff },
+		{ x=-xDiff,y=yDiff },
+		{ x=-radius,y=0 },
+		{ x=-xDiff,y=-yDiff },
+	}
+end)()
+
+function Hexaghost:drawImage()
+	sprmap(54,17,4,4,self.x+16,self.y+8,0)
+	local cx,cy = self.x+32,self.y+24
+	for i,fire in ipairs(self.fires) do
+		if fire > 0 then
+			local location = hexaghostFireLocation[i]
+			local x,y = cx+location.x-4,cy+location.y-12
+			local mx = math.floor((fire-1)/2)
+			sprmap(58+mx,17,1,2,x,y,0,1,function(t) return t,fire%2 end)
+		end
+	end
+end
+
+function Hexaghost:prepare()
+	for i=1,6 do
+		addAction(ActivateFireAction:new{target=self,fireIndex=i})
+	end
+	addAction(SetIntentAction:new(self,'hpAttack','attack',math.floor(player.hp/12)+1,6))
+end
+
+function Hexaghost:hpAttack()
+	for _=1,self.intentAttackCount do
+		addAction(DamageAction:new{target=player,source=self,value=self.intentDamage})
+	end
+	addAction(ClearFiresAction:new{target=self})
+	addAction(NextIntentAction:new(self))
+end
+
+function Hexaghost:sear()
+	addAction(ActivateFireAction:new{target=self,fireIndex=self.fireCount+1})
+	addAction(DamageAction:new{target=player,source=self,value=self.intentDamage})
+	addAction(MakeTempCardToDiscardPileAction:new(self:getBurn(),self.searBurnCount))
+	addAction(NextIntentAction:new(self))
+end
+
+function Hexaghost:fire()
+	addAction(ActivateFireAction:new{target=self,fireIndex=self.fireCount+1})
+	for _=1,self.intentAttackCount do
+		addAction(DamageAction:new{target=player,source=self,value=self.intentDamage})
+	end
+	addAction(NextIntentAction:new(self))
+end
+
+function Hexaghost:buff()
+	addAction(ActivateFireAction:new{target=self,fireIndex=self.fireCount+1})
+	addAction(GainBlockAction:new{target=self,value=12})
+	addAction(ApplyPowerAction:new(StrengthPower:new(self,self.strAmt)))
+	addAction(NextIntentAction:new(self))
+end
+
+function Hexaghost:inferno()
+	for _=1,self.intentAttackCount do
+		addAction(DamageAction:new{target=player,source=self,value=self.intentDamage})
+	end
+	addAction(AnonymousAction:new(function ()
+		for _, card in ipairs(discardPile) do
+			if getmetatable(card) == Burn then
+				card:upgrade()
+				card:resetPowers()
+			end
+		end
+		for _, card in ipairs(drawPile) do
+			if getmetatable(card) == Burn then
+				card:upgrade()
+				card:resetPowers()
+			end
+		end
+		for _, cardItem in ipairs(hand) do
+			if getmetatable(cardItem.card) == Burn then
+				cardItem.card:upgrade()
+				cardItem.card:resetPowers()
+			end
+		end
+	end))
+	self.burnUpgraded = true
+	addAction(MakeTempCardToDiscardPileAction:new(self:getBurn(),3))
+	addAction(ClearFiresAction:new{target=self})
+	addAction(NextIntentAction:new(self))
+end
+
+function Hexaghost:getBurn()
+	local burn = Burn:new()
+	if self.burnUpgraded then
+		burn:upgrade()
+		burn:resetPowers()
+	end
+	return burn
+end
+
+function Hexaghost:nextIntent(first)
+	if first then
+		self:setIntent('prepare','unknown')
+		return
+	end
+	if self.fireCount == 0 then
+		self:setIntent('sear','attackDebuff',self.searDmg)
+	elseif self.fireCount == 1 then
+		self:setIntent('fire','attack',self.fireDmg,2)
+	elseif self.fireCount == 2 then
+		self:setIntent('sear','attackDebuff',self.searDmg)
+	elseif self.fireCount == 3 then
+		self:setIntent('buff','defendBuff')
+	elseif self.fireCount == 4 then
+		self:setIntent('fire','attack',self.fireDmg,2)
+	elseif self.fireCount == 5 then
+		self:setIntent('sear','attackDebuff',self.searDmg)
+	elseif self.fireCount == 6 then
+		self:setIntent('inferno','attackDebuff',self.infernoDmg,6)
+	end
+end
+
+ActivateFireAction = Action:new{target=nil,fireIndex=0,duration=10}
+function ActivateFireAction:tick()
+	if self.duration == self.startDuration then
+		self.target.fires[self.fireIndex] = effectRandom:randInt(5,8)
+		self.target.fireCount = self.target.fireCount + 1
+	end
+	Action.tick(self)
+end
+
+ClearFiresAction = Action:new{target=nil,duration=10}
+function ClearFiresAction:tick()
+	if self.duration == self.startDuration then
+		for i=1,6 do
+			self.target.fires[i] = effectRandom:randInt(1,4)
+		end
+		self.target.fireCount = 0
+	end
+	Action.tick(self)
+end
+
+TheGuardian = Monster:new{
+	maxHp=240,width=8,height=6,bashDmg=32,rollDmg=9,twinSlamDmg=8,whirlwindDmg=4,
+	modeShiftAmount=30,defensiveMode=false,enteringDefensiveMode=false
+}
+function TheGuardian:init()
+	self.maxHp = ascension >= 9 and 250 or 240
+	self.bashDmg = ascension >= 4 and 36 or 32
+	self.rollDmg = ascension >= 4 and 10 or 9
+	self.modeShiftAmount = ascension >= 19 and 40 or (ascension >= 9 and 35 or 30)
+end
+
+function TheGuardian:drawImage()
+	if self.defensiveMode then
+		sprmap(36,23,4,4,self.x+16,self.y+16,0)
+	else
+		sprmap(30,22,6,5,self.x+8,self.y+8,0)
+	end
+end
+
+function TheGuardian:onCombatStart()
+	addAction(ApplyPowerAction:new(ModeShiftPower:new(self,self.modeShiftAmount)))
+	Monster.onCombatStart(self)
+end
+
+function TheGuardian:chargeUp()
+	addAction(GainBlockAction:new{target=self,value=9})
+	addAction(SetIntentAction:new(self,'bash','attack',self.bashDmg))
+end
+
+function TheGuardian:bash()
+	addAction(DamageAction:new{target=player,source=self,value=self.intentDamage})
+	addAction(SetIntentAction:new(self,'ventSteam','strongDebuff'))
+end
+
+function TheGuardian:ventSteam()
+	addAction(ApplyPowerAction:new(WeakPower:new(player,2,true)))
+	addAction(ApplyPowerAction:new(VulnerablePower:new(player,2,true)))
+	addAction(SetIntentAction:new(self,'whirlwind','attack',self.whirlwindDmg,5))
+end
+
+function TheGuardian:whirlwind()
+	for _=1,self.intentAttackCount do
+		addAction(DamageAction:new{target=player,source=self,value=self.intentDamage})
+	end
+	addAction(SetIntentAction:new(self,'chargeUp','defend'))
+end
+
+function TheGuardian:enterDefensiveMode()
+	addAction(AnonymousAction:new(function ()
+		self.enteringDefensiveMode = false
+	end))
+	addAction(ApplyPowerAction:new(SharpHidePower:new(self,ascension>=19 and 4 or 3)))
+	addAction(SetIntentAction:new(self,'roll','attack',self.rollDmg))
+end
+
+function TheGuardian:roll()
+	addAction(DamageAction:new{target=player,source=self,value=self.intentDamage})
+	addAction(SetIntentAction:new(self,'twinSlam','attack',self.twinSlamDmg,2))
+end
+
+function TheGuardian:twinSlam()
+	for _=1,self.intentAttackCount do
+		addAction(DamageAction:new{target=player,source=self,value=self.intentDamage})
+	end
+	addAction(AnonymousAction:new(function ()
+		self.defensiveMode = false
+	end))
+	local power = self:getPower(SharpHidePower)
+	addAction(ReducePowerAction:new(power,power.amount))
+	addAction(ApplyPowerAction:new(ModeShiftPower:new(self,self.modeShiftAmount)))
+	addAction(SetIntentAction:new(self,'whirlwind','attack',self.whirlwindDmg,5))
+end
+
+function TheGuardian:nextIntent()
+	self:setIntent('chargeUp','defend')
+end
+
+ModeShiftPower = Power:new{icon=261}
+function ModeShiftPower:onDamaged(value)
+	local owner = self.owner
+	if self.amount > value then
+		self.amount = self.amount - value
+	elseif owner.alive and not owner.enteringDefensiveMode then
+		addAction(ReducePowerAction:new(self,self.amount))
+		addAction(GainBlockAction:new{target=owner,value=20})
+		addAction(AnonymousAction:new(function ()
+			owner.modeShiftAmount = owner.modeShiftAmount + 10
+			owner.defensiveMode = true
+			owner.enteringDefensiveMode = true
+		end))
+		addAction(SetIntentAction:new(owner,'enterDefensiveMode','buff',0,0,false))
+	end
+end
+
+SharpHidePower = Power:new{icon=43}
+function SharpHidePower:onUseCard(card)
+	if card.type == 'attack' then
+		addAction(DamageAction:new{target=player,source=self.owner,value=self.amount})
+	end
+end
+
 -- encounters
 CultistEncounter = Encounter:new{spriteBank=1,name='Cultist',enemyInfo={encItem(Cultist)}}
 TwoLouseEncounter = Encounter:new{spriteBank=1,name='TwoLouse',enemyInfo={}}
@@ -1010,3 +1323,8 @@ LagavulinEncounter = Encounter:new{spriteBank=3,name='Lagavulin',enemyInfo={encI
 LagavulinStrongEncounter = Encounter:new{spriteBank=3,name='Lagavulin',enemyInfo={encItem(Lagavulin,0,0,{sleepCooldown=0})}}
 GremlinNobEventEncounter = Encounter:new{spriteBank=3,name='GremlinNob',enemyInfo={encItem(GremlinNob)}}
 ThreeFungiBeastEncounter = Encounter:new{spriteBank=1,name='ThreeFungiBeast',enemyInfo={encItem(FungiBeast,-48,0),encItem(FungiBeast,0,1),encItem(FungiBeast,48,3)}}
+
+-- boss encounters
+SlimeBossEncounter = Encounter:new{spriteBank=4,name='SlimeBoss',enemyInfo={encItem(SlimeBoss,0,8)},mapIcon=257}
+HexaghostEncounter = Encounter:new{spriteBank=4,name='Hexaghost',enemyInfo={encItem(Hexaghost,0,0)},mapIcon=261}
+TheGuardianEncounter = Encounter:new{spriteBank=4,name='TheGuardian',enemyInfo={encItem(TheGuardian,0,0)},mapIcon=265}

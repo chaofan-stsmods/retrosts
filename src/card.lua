@@ -3,7 +3,7 @@
 
 Card = Object:new{
 	name='',description='',type='attack',rarity='common',
-	color={2,1},costIcon=45,typeIconColor=4,colorName='',
+	color={2,1},costIcon=201,typeIconColor=4,colorName='',
 	baseCost=0,cost=0,costForOneTurnPlay=nil,costForOnePlay=nil,
 	damage=0,baseDamage=0,block=0,baseBlock=0,magic=0,baseMagic=0,multiDamage={},
 	enemyTarget=false,playerTarget=false,toAllEnemies=false,
@@ -153,6 +153,8 @@ function CardItem:tick()
 	if t < -60 or t > 140 then
 		return
 	end
+	l = math.floor(l)
+	t = math.floor(t)
 	if self.glow ~= nil then
 		rect(l-1,t,self.large and 58 or 34,self.large and 57 or 41,self.glow)
 	end
@@ -185,15 +187,23 @@ function drawCardBack(card,large,l,t)
 	mapColor(10,cardRarityColor[card.rarity][1])
 	mapColor(9,cardRarityColor[card.rarity][2])
 	if large then
-		rect(l+7,t+7,42,42,14)
-		map(3,2,7,7,l,t,0)
-		--spr(cardTypeToSprIndex[card.type],l+48,t,0)
+		rect(l,t+8,56,40,14)
+		rect(l+8,t+48,40,8,14)
+		rect(l,t+8,1,40,15)
+		rect(l+55,t+8,1,40,15)
+		rect(l+8,t+55,40,1,15)
+		map(3,2,7,7,l,t,0,1,function(tile,x) return tile,x==9 and 1 or 0 end)
 	else
-		rect(l+7,t+7,18,26,14)
-		map(10,2,4,5,l,t,0)
+		rect(l,t+8,32,24,14)
+		rect(l+8,t+32,16,8,14)
+		rect(l,t+8,1,24,15)
+		rect(l+31,t+8,1,24,15)
+		rect(l+8,t+39,16,1,15)
+		map(10,2,4,5,l,t,0,1,function(tile,x) return tile,x==13 and 1 or 0 end)
 	end
 	local typeLeft = card.baseCost >= -1 and l+8 or l+1
-	spr(29,typeLeft,t-6,0)
+	rect(typeLeft,t-4,8,6,14)
+	rect(typeLeft+1,t-5,6,1,14)
 	spr(cardTypeToSprIndex[card.type],typeLeft,t-6,0)
 	resetColors{3,9,10,14,15}
 end

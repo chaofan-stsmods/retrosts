@@ -675,3 +675,13 @@ function FatalAction:tick()
 	end
 	self.isDone = true
 end
+
+EffectAction = Action:new{effect=nil}
+function EffectAction:new(effect)
+	return Action.new(self,{effect=effect})
+end
+
+function EffectAction:tick()
+	addEffect(self.effect)
+	self.isDone = true
+end

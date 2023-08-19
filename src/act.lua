@@ -27,13 +27,14 @@ function Act:generateEncounters(random)
 	generateEncountersByList(random,monsterEncounters,self.strongEncounters,14,2)
 	local eliteEncounters = {}
 	generateEncountersByList(random,eliteEncounters,self.eliteEncounters,10,1)
-	local bossEncounter = rollEncounters(self.bossEncounters,random)
+	local bossEncounters = {}
+	generateEncountersByList(random,bossEncounters,self.bossEncounters,2,1)
 
 	trace(table.concat(table.map(monsterEncounters,function (e) return e.name end),','))
 	trace(table.concat(table.map(eliteEncounters,function (e) return e.name end),','))
-	trace(bossEncounter.name)
+	trace(table.concat(table.map(bossEncounters,function (e) return e.name end),','))
 
-	return monsterEncounters,eliteEncounters,bossEncounter
+	return monsterEncounters,eliteEncounters,bossEncounters
 end
 
 function Act:exclusiveListCheck(candidate,encounters)
@@ -113,6 +114,11 @@ Exordium = Act:new{
 		{item=GremlinNobEncounter,power=1},
 		{item=ThreeSentryEncounter,power=1},
 		{item=LagavulinEncounter,power=1},
+	},
+	bossEncounters={
+		{item=SlimeBossEncounter,power=1},
+		{item=HexaghostEncounter,power=1},
+		{item=TheGuardianEncounter,power=1},
 	},
 	events={
 		BigFish,TheCleric,WingStatue,WorldOfGoop,TheSsssserpent,LivingWall,ScrapOoze,ShiningLight,DeadAdventurer,Mushrooms,GoldenIdolEvent

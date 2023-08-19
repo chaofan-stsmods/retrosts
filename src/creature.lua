@@ -38,11 +38,14 @@ function Creature:drawHealthBar()
 	if self.block > 0 then
 		mapColor(1,10)
 	end
-	spr(35,x,y+8*self.height,0)
-	for i = 1,width-2 do
-		spr(36,x+8*i,y+8*self.height,0)
-	end
+	mapColor(4,3)
+	spr(37,x,y+8*self.height,0,1,1)
+	resetColor(4)
+	rect(x+8,y+8*self.height,8*(width-2),1,1)
+	rect(x+8,y+8*self.height+1,8*(width-2),1,3)
+	rect(x+8,y+8*self.height+7,8*(width-2),1,1)
 	spr(37,x+8*width-8,y+8*self.height,0)
+	pix(x+8*width-3,y+8*self.height+2,4)
 	if self.block > 0 then
 		resetColor(1)
 		spr(47,x-4,y+8*self.height,0)

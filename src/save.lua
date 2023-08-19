@@ -11,7 +11,7 @@ Game properties:
 5: low 8 bits max energy, 8~15 bits shop remove count, 16 rubyKey, 17 emeraldKey, 18, sapphireKey
 6: one time events
 Act properties:
-7: act id, next monster encounter id, next elite encounter id, each 8 bits
+7: act id, next monster encounter id, next elite encounter id, next boss encounter id, each 8 bits
 8: act events
 9: common events
 10: reward generator
@@ -133,7 +133,7 @@ function saveGame(completed,eventMeta)
 	pmem(index+5,maxEnergy | (shopRemoveCount << 8) | (rubyKeyObtained and (1<<16) or 0) |
 		(emeraldKeyObtained and (1<<17) or 0) | (sapphireKeyObtained and (1<<18) or 0))
 	saveListBits(index+6,oneTimeEvents,getOneTimeEvents())
-	pmem(index+7,act.id | (nextMonsterEncounterIndex << 8) | (nextEliteEncounterIndex << 16))
+	pmem(index+7,act.id | (nextMonsterEncounterIndex << 8) | (nextEliteEncounterIndex << 16) | (nextBossEncounterIndex << 24))
 	saveListBits(index+8,actEvents,act.events)
 	saveListBits(index+9,commonEvents,getCommonEvents())
 	saveRewardGenerator(index+10)
@@ -221,10 +221,10 @@ function loadGame()
 	act = acts[actId]
 	local mapRandom = makeRand(actId)
 	stsMap = generateMap(mapRandom,7,15,6)
-	boss = availableBosses[actId][mapRandom:randInt(#availableBosses[actId])]
-	monsterEncounters,eliteEncounters,bossEncounter = act:generateEncounters(mapRandom)
+	monsterEncounters,eliteEncounters,bossEncounters = act:generateEncounters(mapRandom)
 	nextMonsterEncounterIndex = (val32 >> 8) & 0xff
 	nextEliteEncounterIndex = (val32 >> 16) & 0xff
+	nextBossEncounterIndex = val32 >> 24
 	actEvents = loadListBits(index+8,act.events)
 	commonEvents = loadListBits(index+9,getCommonEvents())
 	loadRewardGenerator(index+10)
@@ -253,7 +253,7 @@ function loadGame()
 	for y, x in ipairs(playerPath) do
 		stsMap[y][x].completed = true
 	end
-	
+
 	assignEventIndex()
 	val32 = pmem(index+15)
 	local roomCompleted = val32 & 1 ~= 0
