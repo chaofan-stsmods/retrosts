@@ -371,7 +371,8 @@ function moveLimitLineWidthAndPrint(str,currentX,currentY,x,lineWidth,maxY,color
 	return currentX,currentY
 end
 
-function removeCardFromDeck(amount,canClose,onClose)
+function removeCardFromDeck(amount,canClose,onClose,title)
+	title = title or 'Choose a Card to Remove'
 	local cardItems = table.map(deck, function (card) return CardItem:new{card=card,x=240,y=0,isNotInHand=true} end)
 	table.retainIf(cardItems,function (cardItem) return cardItem.card.canRemove end)
 	if #cardItems == 0 then
@@ -382,9 +383,9 @@ function removeCardFromDeck(amount,canClose,onClose)
 	end
 	local oldAmount = amount
 	amount = math.min(amount,#cardItems)
-	local gridView = CardGridSelectWindow:new{title='Choose a Card to Remove',cardItems=cardItems,min=amount,max=amount,canClose=canClose or false}
+	local gridView = CardGridSelectWindow:new{title=title,cardItems=cardItems,min=amount,max=amount,canClose=canClose or false}
 	if amount > 1 then
-		gridView.title = 'Choose Cards to Remove ({#}/'..oldAmount..')'
+		gridView.title = title..' ({#}/'..oldAmount..')'
 	end
 	openWindowAbove(gridView, function (cards)
 		if not cards then
@@ -393,20 +394,25 @@ function removeCardFromDeck(amount,canClose,onClose)
 			end
 			return
 		end
-		local startX,stepX = placeCardsInARow(#cards)
-		for i, cardItem in ipairs(cards) do
-			table.remove(deck,table.indexOf(deck,cardItem.card))
-			cardItem.card:onRemoveFromDeck()
-			cardItem.tx = startX+stepX*i
-			cardItem.ty = 68
-			cardItem.large = false
-			addEffect(CardEffect:new{cardItem=cardItem,pauseDuration=10,duration=30,tx=120,ty=-30})
-		end
+		removeCardsWithEffect(cards)
 		if onClose then
-			onClose(true)
+			onClose(true,cards)
 		end
 	end)
 	return true
+end
+
+function removeCardsWithEffect(cards,duration)
+	duration = duration or 10
+	local startX,stepX = placeCardsInARow(#cards)
+	for i, cardItem in ipairs(cards) do
+		table.remove(deck,table.indexOf(deck,cardItem.card))
+		cardItem.card:onRemoveFromDeck()
+		cardItem.tx = startX+stepX*i
+		cardItem.ty = 68
+		cardItem.large = false
+		addEffect(CardEffect:new{cardItem=cardItem,pauseDuration=duration+effectRandom:randInt(-10,10),duration=duration+20,tx=startX+stepX*i,ty=-30})
+	end
 end
 
 function upgradeCardFromDeck(amount,canClose,onClose)
@@ -507,6 +513,44 @@ function transformCardFromDeck(amount,random,canClose,onClose)
 		end
 		if onClose then
 			onClose(true)
+		end
+	end)
+	return true
+end
+
+function duplicateCardFromDeck(amount,canClose,onClose,title)
+	title = title or 'Choose a Card to Duplicate'
+	local cardItems = table.map(deck, function (card) return CardItem:new{card=card,x=240,y=0,isNotInHand=true} end)
+	if #cardItems == 0 then
+		if onClose then
+			onClose(false)
+		end
+		return false
+	end
+	local oldAmount = amount
+	amount = math.min(amount,#cardItems)
+	local gridView = CardGridSelectWindow:new{title=title,cardItems=cardItems,min=amount,max=amount,canClose=canClose or false}
+	if amount > 1 then
+		gridView.title = title..' ({#}/'..oldAmount..')'
+	end
+	openWindowAbove(gridView, function (cards)
+		if not cards then
+			if onClose then
+				onClose(false)
+			end
+			return
+		end
+		local startX,stepX = placeCardsInARow(#cards)
+		for i, cardItem in ipairs(cards) do
+			table.insert(deck,cardItem.card:copy())
+			cardItem.tx = startX+stepX*i
+			cardItem.ty = 68
+			cardItem.large = false
+			addEffect(CardEffect:new{cardItem=cardItem,pauseDuration=20,duration=40,tx=240,ty=0})
+			addEffect(CardEffect:new{cardItem=cardItem:copy(),pauseDuration=40,duration=60,tx=240,ty=0})
+		end
+		if onClose then
+			onClose(true,cards)
 		end
 	end)
 	return true

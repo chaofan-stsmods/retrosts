@@ -205,7 +205,7 @@ function UsePotionAction:tick()
 	if self.duration == self.startDuration then
 		local potion = self.potion
 		local potionIndex = table.indexOf(potions,potion)
-		if not potion:realCanUse() or not potionIndex or (self.target ~= nil and not self.target.alive) then
+		if not potion:canUse() or not potionIndex or (self.target ~= nil and not self.target.alive) then
 			self.isDone = true
 			return
 		end
@@ -392,6 +392,7 @@ function NewTurnAction:tick()
 	if self.duration == self.startDuration then
 		player:onTurnStart(turn + 1)
 		addAction(DrawCardAction:new(5+self.additionalCard))
+		player:triggerEvent('onTurnStartPostDraw', turn + 1)
 		energy = maxEnergy
 	end
 	Action.tick(self)
@@ -676,12 +677,14 @@ function FatalAction:tick()
 	self.isDone = true
 end
 
-EffectAction = Action:new{effect=nil}
-function EffectAction:new(effect)
-	return Action.new(self,{effect=effect})
+EffectAction = Action:new{effect=nil,duration=1}
+function EffectAction:new(effect,duration)
+	return Action.new(self,{effect=effect,duration=duration or 1})
 end
 
 function EffectAction:tick()
-	addEffect(self.effect)
-	self.isDone = true
+	if self.duration == self.startDuration then
+		addEffect(self.effect)
+	end
+	Action.tick(self)
 end

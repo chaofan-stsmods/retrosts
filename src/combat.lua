@@ -63,6 +63,9 @@ function startCombat(encounter,completed)
 	for _, enemy in ipairs(enemies) do
 		enemy:onCombatStart()
 	end
+	if room.hasKey then
+		applyKeyBuff()
+	end
 	addAction(NewTurnAction:new{additionalCard=math.max(0,#innateCards-5)})
 	combatSelection.type = 'hand'
 	combatSelection.index = 0
@@ -349,6 +352,23 @@ end
 
 function loadCombatEnd()
 	combatEndImplement()
+end
+
+local keyBuffAppliers = {
+	function (m) addAction(ApplyPowerAction:new(StrengthPower:new(m,act.id+1))) end,
+	function (m) addAction(AnonymousAction:new(function ()
+		local maxHpIncrease = math.floor(m.maxHp*0.25)
+		m:increaseMaxHp(maxHpIncrease)
+		addEffect(TextEffect:new{str='Max HP +'..tostring(maxHpIncrease),x=m.x+m.width*4,y=m.y,color=12})
+	end)) end,
+	function (m) addAction(ApplyPowerAction:new(MetallicizePower:new(m,2*(act.id+1)))) end,
+	function (m) addAction(ApplyPowerAction:new(RegenerateMonsterPower:new(m,2*act.id+1))) end,
+}
+function applyKeyBuff()
+	local roll = aiRand:randInt(1,4)
+	for _,monster in ipairs(enemies) do
+		keyBuffAppliers[roll](monster)
+	end
 end
 
 -- enemies

@@ -69,7 +69,7 @@ function MasterOfStrategy:use()
 end
 
 HandOfGreed = ColorlessCard:new{
-	name='Hand of Greed',description='{63} !D!. NL If fatal, gain !M! {7}.',baseCost=2,rarity='rare',
+	name='Hand of Greed',description='{63} !D!. NL If fatal, gain !M! Gold.',baseCost=2,rarity='rare',
 	enemyTarget=true,baseMagic=20,baseDamage=20,upgrade={baseMagic=25,baseDamage=25}
 }
 function HandOfGreed:use(target)
@@ -77,7 +77,7 @@ function HandOfGreed:use(target)
 	return {
 		damageAction,
 		FatalAction:new{target=target,action=damageAction,callback=function ()
-			increaseGold(self.magic)
+			gainGold(self.magic)
 		end}
 	}
 end
@@ -141,6 +141,13 @@ function Parasite:onRemoveFromDeck()
 	player:decreaseMaxHp(3)
 end
 
+Pain = CurseCard:new{ name='Pain',description='Unplayable. NL While in hand, NL lose 1 HP whenever you play another card.' }
+function Pain:onUseCard()
+	if table.anyMatch(hand,function (cardItem) return cardItem.card == self end) then
+		addAction(DamageAction:new{source=player,target=player,value=1,type='hpLoss'})
+	end
+end
+
 curseCards = {
-	AscendersBane,Injury,Clumsy,Writhe,Regret,Decay,Doubt
+	AscendersBane,Injury,Clumsy,Writhe,Regret,Decay,Doubt,Pain
 }

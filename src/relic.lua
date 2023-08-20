@@ -63,6 +63,13 @@ function obtainRelic(relic)
 	end
 end
 
+function loseRelic(relic)
+	local index = table.indexOf(relics,relic)
+	if index then
+		table.remove(relics,index)
+	end
+end
+
 Circlet = Relic:new{name='Circlet',description='Collect as many as you can.',icon=55,tier='special',counter=1}
 function Circlet:onBeforeObtainRelic(relic)
 	if getmetatable(relic) == Circlet then
@@ -163,9 +170,83 @@ function Ectoplasm:canSpawn()
 	return act.id == 1
 end
 
+WarpedTongs = Relic:new{name='Warped Tongs',icon=45,tier='special',description='At the start of your turn, #4#Upgrade#12# a random card in your hand for the rest of combat.'}
+function WarpedTongs:onTurnStartPostDraw()
+	addAction(AnonymousAction:new(function()
+		local candidates = table.map(hand,function(cardItem) return cardItem.card end)
+		table.retainIf(candidates,function(card) return card:canUpgrade() end)
+		if #candidates == 0 then
+			return
+		end
+		local card
+		if #candidates == 1 then
+			card = candidates[0]
+		else
+			card = candidates[miscRand:randInt(#candidates)]
+		end
+		card:upgrade()
+		card:resetPowers()
+	end))
+end
+
+SpiritPoop = Relic:new{name='Spirit Poop',icon=238,tier='special',description='It\'s unpleasant.'}
+
+CultistMask = Relic:new{name='Cultist Mask',icon=187,tier='special',description='You feel more talkative.'}
+function CultistMask:onCombatStart()
+	player:talk('@CAW!@ NL @CAAAW@')
+end
+
+FaceOfCleric = Relic:new{name='Face of Cleric',icon=189,tier='special',description='At the end of combat, raise your Max HP by #10#1.'}
+function FaceOfCleric:onCombatEnd()
+	player:increaseMaxHp(1)
+end
+
+GremlinMask = Relic:new{name='Gremlin Visage',icon=190,tier='special',description='Start each combat with #10#1#12# {61}.'}
+function GremlinMask:onCombatStart()
+	addAction(ApplyPowerAction:new(WeakPower:new(player,1,true)))
+end
+
+NlothsMask = Relic:new{name='N\'loth\'s Hungry Face',counter=1,icon=239,tier='special',description='The next non-Boss chest you open is empty.'}
+function NlothsMask:onOpenNonBossChest(rewards)
+	if self.counter <= 0 then
+		return
+	end
+	self.counter = self.counter - 1
+	for i,reward in ipairs(rewards) do
+		if reward.type == 'relic' then
+			table.remove(rewards,i)
+			if reward.link then
+				local linkIndex = table.indexOf(rewards,reward.link)
+				if linkIndex then
+					table.remove(rewards,linkIndex)
+				end
+			end
+			break
+		end
+	end
+
+	if self.counter == 0 then
+		self.counter = -1
+	end
+end
+
+SsserpentHead = Relic:new{name='Ssserpent Head',icon=254,tier='special',description='Whenever you enter a #4#?#12# room, gain #10#50 #4#Gold.'}
+function SsserpentHead:onEnterRoom(room)
+	if room.type == 'event' then
+		gainGold(50)
+	end
+end
+
+NlothsGift = Relic:new{name='N\'loth\'s Gift',icon=223,tier='special',description='Triple the chance of finding #4#Rare#12# cards from combat rewards.'}
+function NlothsGift:onModifyRareCardChance(chance)
+	if room.type ~= 'shop' or roomActionType == 'combat' then
+		return chance * 3
+	end
+end
+
 colorlessRelics = {
 	-- special
-	Circlet,NeowsLament,GoldenIdol,OddMushroom,
+	Circlet,NeowsLament,GoldenIdol,OddMushroom,WarpedTongs,SpiritPoop,CultistMask,FaceOfCleric,GremlinMask,NlothsMask,SsserpentHead,NlothsGift,
 	-- common
 	Anchor,
 	-- uncommon

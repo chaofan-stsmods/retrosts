@@ -28,4 +28,6 @@ function Mugger:drawImage()
 	end
 end
 
+-- encounters
 TwoThievesEncounter = Encounter:new{spriteBank=1,name='TwoThieves',enemyInfo={encItem(Looter,-24,0),encItem(Mugger,24,0)}}
+ThreeCultistEncounter = Encounter:new{spriteBank=1,name='ThreeCultist',enemyInfo={encItem(Cultist,-48,1),encItem(Cultist,0,0),encItem(Cultist,48,0)}}

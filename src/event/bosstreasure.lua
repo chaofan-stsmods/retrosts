@@ -1,7 +1,7 @@
 -- boss treasure
 ---@diagnostic disable: lowercase-global
 
-BossTreasureEvent = Event:new{screen='entry',spriteBank=2,random=nil,relics=nil,relicOption=1,opened=false}
+BossTreasureEvent = Event:new{screen='intro',spriteBank=2,random=nil,relics=nil,relicOption=1,opened=false}
 function BossTreasureEvent:init()
 	self.random = self.random or makeRand(act.id,room.id,1)
 	table.insert(self.options,{description='[Open]'})
@@ -46,7 +46,7 @@ function BossTreasureEvent:drawBackground()
 end
 
 function BossTreasureEvent:onOption(selection)
-	if self.screen == 'entry' then
+	if self.screen == 'intro' then
 		if selection == 1 then
 			self.opened = true
 		elseif selection == 2 then

@@ -35,6 +35,13 @@ function obtainPotion(potion)
 	return false
 end
 
+function losePotion(potion)
+	local index = table.indexOf(potions,potion)
+	if index then
+		potions[index] = Slot
+	end
+end
+
 Potion = Object:new{name='',description='',icon=0,color={},canUseOutsideCombat=false,baseMagic=0,magic=0,enemyTarget=false,rarity='common',useTitle='Drink',use=noop}
 function Potion:new(o)
 	o = o or {}
@@ -55,11 +62,13 @@ function Potion:drawImage(x,y)
 end
 
 function Potion:canUse()
-	return self.canUseOutsideCombat or (roomActionType == 'combat' and getmetatable(nearestWindow) == GameWindow and not inEnemyTurn)
+	return (self.canUseOutsideCombat and (currentEvent == nil or currentEvent.canOperatePotion)) or
+		(roomActionType == 'combat' and getmetatable(nearestWindow) == GameWindow and
+			not inEnemyTurn and table.anyMatch(enemies,function (e) return e.alive end))
 end
 
-function Potion:realCanUse()
-	return self:canUse() and (self.canUseOutsideCombat or not table.allMatch(enemies,function (e) return not e.alive end))
+function Potion:canDiscard()
+	return currentEvent == nil or currentEvent.canOperatePotion
 end
 
 Slot = Potion:new{icon=41}

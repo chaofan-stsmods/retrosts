@@ -11,6 +11,14 @@ function Cultist:init(random)
 	end
 end
 
+function Cultist:onCombatStart()
+	local str = ({'@MY@ @POWER@ @IS@ NL @UNMATCHED!@','@YOU@ @DO@ @NOT@ NL @BELONG@ @HERE!@'})[effectRandom:randInt(1,2)]
+	addAction(EffectAction:new(AnonymousEffect:new{duration=60,callback=function ()
+		drawTalkBubble(str,self.x-65,self.y-25,60,35,self.x+4,self.y+4,12,15)
+	end},10))
+	Monster.onCombatStart(self)
+end
+
 function Cultist:drawImage()
 	sprmap(5,17,self.width,self.height,self.x,self.y,0)
 end
@@ -593,7 +601,7 @@ ThieveryPower = Power:new{icon=418}
 ThieveryAction = Action:new{owner=nil,amount=15}
 function ThieveryAction:tick()
 	local amount = math.min(gold,self.amount)
-	decreaseGold(amount)
+	loseGold(amount)
 	self.owner.goldStolen = self.owner.goldStolen + amount
 	self.isDone = true
 end

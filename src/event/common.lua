@@ -7,7 +7,7 @@ function getCommonEvents()
 	return commonEvents
 end
 
-GoldenShrine = TextEvent:new{name='Golden Shrine',screen='entry'}
+GoldenShrine = TextEvent:new{name='Golden Shrine',screen='intro'}
 function GoldenShrine:init()
 	self.goldAmt = ascension >= 15 and 50 or 100
 	self.description = 'Before you lies an elaborate shrine to an ancient spirit.'
@@ -19,12 +19,12 @@ function GoldenShrine:init()
 end
 
 function GoldenShrine:onOption(selection)
-	if self.screen == 'entry' then
+	if self.screen == 'intro' then
 		if selection == 1 then
-			increaseGold(self.goldAmt)
+			gainGold(self.goldAmt)
 			self.description = 'As your hand touches the shrine, #4#gold#12# rains from the ceiling ~showering~ ~you~ ~in~ ~riches.~'
 		elseif selection == 2 then
-			increaseGold(275)
+			gainGold(275)
 			local cardItem = CardItem:new{card=Regret:new(),x=0,y=136,tx=120,ty=68,isNotInHand=true}
 			addEffect(CardEffect:new{cardItem=cardItem,pauseDuration=30,duration=50,tx=240,ty=0})
 			table.insert(deck,cardItem.card)
@@ -41,7 +41,7 @@ function GoldenShrine:onOption(selection)
 	end
 end
 
-Transmogrifier = TextEvent:new{name='Transmogrifier',screen='entry'}
+Transmogrifier = TextEvent:new{name='Transmogrifier',screen='intro'}
 function Transmogrifier:init()
 	self.random = self.random or makeRand(act.id,room.id,1)
 	self.description = 'Before you lies an elaborate shrine to a forgotten spirit.'
@@ -52,7 +52,7 @@ function Transmogrifier:init()
 end
 
 function Transmogrifier:onOption(selection)
-	if self.screen == 'entry' then
+	if self.screen == 'intro' then
 		if selection == 1 then
 			transformCardFromDeck(1,self.random,false,function ()
 				self.description = 'As the power of the shrine flows through you, your mind feels altered.'
@@ -69,7 +69,7 @@ function Transmogrifier:onOption(selection)
 	end
 end
 
-UpgradeShrine = TextEvent:new{name='Upgrade Shrine',screen='entry'}
+UpgradeShrine = TextEvent:new{name='Upgrade Shrine',screen='intro'}
 function UpgradeShrine:init()
 	self.description = 'Before you lies an elaborate shrine to a forgotten spirit.'
 	self.options = {
@@ -82,7 +82,7 @@ function UpgradeShrine:init()
 end
 
 function UpgradeShrine:onOption(selection)
-	if self.screen == 'entry' then
+	if self.screen == 'intro' then
 		if selection == 1 then
 			upgradeCardFromDeck(1,false,function ()
 				self.description = 'The shrine\'s energy flows into you, making you stronger.'
@@ -99,7 +99,7 @@ function UpgradeShrine:onOption(selection)
 	end
 end
 
-Purifier = TextEvent:new{name='Purifier',screen='entry'}
+Purifier = TextEvent:new{name='Purifier',screen='intro'}
 function Purifier:init()
 	self.description = 'Before you lies an elaborate shrine to a forgotten spirit.'
 	self.options = {
@@ -109,7 +109,7 @@ function Purifier:init()
 end
 
 function Purifier:onOption(selection)
-	if self.screen == 'entry' then
+	if self.screen == 'intro' then
 		if selection == 1 then
 			removeCardFromDeck(1,false,function ()
 				self.description = 'As you kneel in reverence, you feel a weight lifted off your shoulders.'
@@ -127,7 +127,7 @@ function Purifier:onOption(selection)
 end
 
 WheelOfChange = TextEvent:new{
-	name='Wheel of Change',screen='entry',hpLoss=0,goldAmt=100,prize=nil,wheelRotation=0,wheelYOffset=-130,wheelIn=true,
+	name='Wheel of Change',screen='intro',hpLoss=0,goldAmt=100,prize=nil,wheelRotation=0,wheelYOffset=-130,wheelIn=true,
 	rolling=false,rolled=false,wheelTargetRotation=0,pauseControl=false
 }
 local wheelIcons = {448,7,451,6,450,449}
@@ -245,7 +245,7 @@ function WheelOfChange:drawWheel()
 end
 
 function WheelOfChange:onOption(selection)
-	if self.screen == 'entry' then
+	if self.screen == 'intro' then
 		self.screen = 'roll'
 		self.options = {}
 		self.pauseControl = true
@@ -271,7 +271,7 @@ function WheelOfChange:heal()
 end
 
 function WheelOfChange:gold()
-	increaseGold(self.goldAmt)
+	gainGold(self.goldAmt)
 end
 
 function WheelOfChange:relic()
@@ -294,7 +294,7 @@ function WheelOfChange:remove()
 end
 
 MatchAndKeep = TextEvent:new{
-	name='Match and Keep!',screen='entry',cardItems=nil,pauseControl=false,cursorCard=0,flippedCard=0,flippedCard2=0,resetTimer=0,attempts=5,
+	name='Match and Keep!',screen='intro',cardItems=nil,pauseControl=false,cursorCard=0,flippedCard=0,flippedCard2=0,resetTimer=0,attempts=5,
 }
 function MatchAndKeep:init()
 	self.random = self.random or makeRand(act.id,room.id,1)
@@ -444,7 +444,7 @@ function MatchAndKeep:tick()
 end
 
 function MatchAndKeep:onOption()
-	if self.screen == 'entry' then
+	if self.screen == 'intro' then
 		self.screen = 'near'
 		self.description = '"#10#Twelve#12# cards! Match them to keep them! #10#Five#12# tries, no do-overs. NL Are you ready? Let\'s start!"'
 		self.options = {{description='[Play]'}}

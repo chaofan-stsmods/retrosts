@@ -1,7 +1,7 @@
 -- neow
 ---@diagnostic disable: lowercase-global
 
-NeowEvent = Event:new{screen='entry',spriteBank=3,words='Greetings...',random=nil}
+NeowEvent = Event:new{screen='intro',spriteBank=3,words='Greetings...',random=nil}
 function NeowEvent:init()
 	self.random = makeRand(1)
 	table.insert(self.options,{description='[Talk]'})
@@ -15,7 +15,7 @@ function NeowEvent:drawBackground()
 end
 
 function NeowEvent:onOption(selection)
-	if self.screen == 'entry' then
+	if self.screen == 'intro' then
 		self.screen = 'rewards'
 		self.words = 'Choose...'
 		self.options = {}
@@ -109,7 +109,7 @@ function generateNeowRewards(options,random)
 		end}
 	elseif oid == 5 then
 		option = {description='[ #5#Obtain 100 gold #12#]',onSelect=function ()
-			increaseGold(100)
+			gainGold(100)
 		end}
 	end
 	options[2] = option
@@ -123,7 +123,7 @@ function generateNeowRewards(options,random)
 		end}
 	elseif nid == 2 then
 		negative = {description='[ #3#Lose all gold ',onSelect=function ()
-			decreaseGold(gold)
+			loseGold(gold)
 		end}
 	elseif nid == 3 then
 		negative = {description='[ #3#Obtain a curse ',onSelect=function ()
@@ -182,7 +182,7 @@ function generateNeowRewards(options,random)
 		end}
 	elseif oid == 6 then
 		option = {description='#5#Obtain 250 gold #12#]',onSelect=function ()
-			increaseGold(250)
+			gainGold(250)
 		end}
 	elseif oid == 7 then
 		option = {description='#5#Remove 2 cards #12#]',onSelect=function ()

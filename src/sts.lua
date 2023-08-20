@@ -114,7 +114,6 @@ function startGame(character,ascensionLevel)
 	currentEvent = NeowEvent:new()
 	cursorOnTopBar = false
 	oneTimeEvents = shallowcopy(getOneTimeEvents())
-	startGameHack()
 	startAct(1)
 	saveGame()
 	switchWindow(GameWindow:new())
@@ -183,7 +182,7 @@ function enterRoom(x)
 	currentRoomX = x
 	floor = floor + 1
 
-	nextRooms = room.next
+	local nextRooms = room.next
 	room = nil
 	for _, nextRoom in ipairs(nextRooms) do
 		if nextRoom.x == currentRoomX then
@@ -239,12 +238,7 @@ function prepareRoom(completed)
 		end
 	elseif roomType == 'boss' then
 		roomActionType = 'combat'
-		if completed then
-			startCombat(bossEncounters[nextBossEncounterIndex - 1],completed)
-		else
-			startCombat(bossEncounters[nextBossEncounterIndex],completed)
-			nextBossEncounterIndex = nextBossEncounterIndex + 1
-		end
+		startCombat(bossEncounters[nextBossEncounterIndex],completed)
 	elseif specialEvents[roomType] then
 		roomActionType = 'event'
 		currentEvent = specialEvents[roomType]:new()
@@ -263,15 +257,12 @@ end
 -- main
 
 queueSync(32,1)
---startGame(Ironclad,20)
+startGame(Ironclad,20)
 --roomActionType = 'combat'
 --startCombat(TheGuardianEncounter)
---currentEvent = BossTreasureEvent:new()
---window:onOpen()
-
-function startGameHack()
-	obtainRelic(NeowsLament:new{counter=99})
-end
+obtainRelic(NeowsLament:new{counter=99})
+--currentEvent = WeMeetAgain:new()
+window:onOpen()
 
 -- <TILES>
 -- 000:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd
@@ -429,6 +420,7 @@ end
 -- 010:00ffffff00fceccf00fceecf00fccecf0fcc22cf0fcceccffdddddf0fffffff0
 -- 011:000ee00003ee0e303e000ee3f333333242f2f2f2424242400042424000404000
 -- 012:000ddddd00deeeee0deeeeeedeeeeeeefeeeeeee0feeeeee00feeeee000fffff
+-- 013:0505505050545505054cc55005cccc4554cccc55504cc4505055400505500550
 -- 014:0000111000014441000134410011134101441441144434411333441001111100
 -- 015:00fff000022dd2200f2222df0fd22ddffd2222f0f22dd220f2dddf2000fff000
 -- 016:444444444bffffb44fbffbf44ff44ff44fd44df44ff44ff44fdffdf444444444

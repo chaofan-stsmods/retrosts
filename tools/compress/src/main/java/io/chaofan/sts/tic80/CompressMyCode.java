@@ -22,6 +22,8 @@ public class CompressMyCode {
         List<String> prefixLines = new BufferedReader(new InputStreamReader(CompressMyCode.class.getResourceAsStream("/prefix.lua")))
                 .lines().collect(Collectors.toList());
         List<String> lines = Files.readAllLines(Paths.get(path));
+        int originalLength = lines.stream().mapToInt(String::length).reduce(Integer::sum).orElse(0) + lines.size();
+
         List<String> suffixLines = new ArrayList<>();
         boolean readSuffix = false;
         boolean inCommentBlock = false;
@@ -54,7 +56,9 @@ public class CompressMyCode {
         lines = lines.stream().filter(l -> l.length() > 0).collect(Collectors.toList());
         String code = String.join("\n",lines);
 
-        System.out.println("Original code length: " + code.length());
+        int suffixLength = suffixLines.stream().mapToInt(String::length).reduce(Integer::sum).orElse(0) + suffixLines.size();
+        System.out.println("Original code length: " + (originalLength - suffixLength));
+        System.out.println("Code remove space length: " + code.length());
 
         TreeNode[] rootContainer = new TreeNode[1];
         byte[] huffmanResult = huffman(code, rootContainer, false);

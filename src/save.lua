@@ -122,6 +122,11 @@ end
 
 local eventRoomTypes = {'event','monster','shop','treasure','elite'}
 function saveGame(completed,eventMeta)
+	if #deck + #relics + #potions > 223 then
+		trace('Save game: too many cards/relics/potions. Skip save.')
+		return
+	end
+
 	local index = 0
 	local playerId = table.indexOf(characters,getmetatable(player))
 	local seedLower = seed & 0xffff
@@ -334,4 +339,23 @@ function loadGame()
 			end
 		end
 	end
+end
+
+function saveNoteForYourselfCard(card)
+	assignCardIndex()
+	pmem(255, (card:save() << 12) | card.saveIndex)
+end
+
+function loadNoteForYourselfCard()
+	assignCardIndex()
+	local val32 = pmem(255)
+	if val32 == 0 then
+		return IronWave:new()
+	end
+
+	local saveIndex = val32 & 0xfff
+	local meta = val32 >> 12
+	local card = cardTypeMapForSave[saveIndex]:new()
+	card:load(meta)
+	return card
 end

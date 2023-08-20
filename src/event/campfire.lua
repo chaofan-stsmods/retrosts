@@ -1,7 +1,7 @@
 -- campfire
 ---@diagnostic disable: lowercase-global
 
-CampfireEvent = Event:new{screen='entry',spriteBank=2,random=nil}
+CampfireEvent = Event:new{screen='intro',spriteBank=2,random=nil}
 function CampfireEvent:init()
 	self.random = self.random or makeRand(act.id,room.id,1)
 	table.insert(self.options,{name='Rest',description=function () return self:getRestDescription() end,icon=320,onSelect=function() self:rest() end})
@@ -15,7 +15,7 @@ end
 function CampfireEvent:drawBackground()
 	act:drawBackground()
 	player:drawImage()
-	if self.screen == 'entry' then
+	if self.screen == 'intro' then
 		sprmap(12,37,4,4,64,58,0)
 	else
 		sprmap(12,41,4,2,64,73,8)
@@ -23,7 +23,7 @@ function CampfireEvent:drawBackground()
 end
 
 function CampfireEvent:drawOptions()
-	if self.screen ~= 'entry' then
+	if self.screen ~= 'intro' then
 		Event.drawOptions(self)
 		return
 	end
@@ -63,7 +63,7 @@ function CampfireEvent:drawOptions()
 end
 
 function CampfireEvent:eventControls()
-	if self.screen ~= 'entry' then
+	if self.screen ~= 'intro' then
 		Event.eventControls(self)
 		return
 	end
@@ -111,7 +111,7 @@ function CampfireEvent:getRestDescription()
 end
 
 function CampfireEvent:onOption(selection)
-	if self.screen ~= 'entry' then
+	if self.screen ~= 'intro' then
 		completeRoom()
 		openWindowAbove(MapWindow:new())
 		return

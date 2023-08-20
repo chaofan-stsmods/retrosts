@@ -1,7 +1,7 @@
 -- campfire
 ---@diagnostic disable: lowercase-global
 
-TreasureEvent = Event:new{screen='entry',spriteBank=2,chestType='small',random=nil}
+TreasureEvent = Event:new{screen='intro',spriteBank=2,chestType='small',random=nil}
 function TreasureEvent:init()
 	self.random = self.random or makeRand(act.id,room.id,1)
 	local roll = self.random:randInt(0,99)
@@ -70,6 +70,8 @@ function TreasureEvent:showRewards()
 		table.insert(rewards,{title='Sapphire key',icon=468,type='key',value='sapphireKeyObtained',link=rewards[#rewards],showLink=true})
 		rewards[#rewards-1].link = rewards[#rewards]
 	end
+
+	player:triggerEvent('onOpenNonBossChest',rewards)
 
 	openWindowAbove(RewardWindow:new{rewards=rewards})
 	completeRoom()

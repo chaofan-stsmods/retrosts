@@ -101,6 +101,13 @@ function Player:getMatchAndKeepCardType()
 	return Blind
 end
 
+function Player:talk(str,duration)
+	duration = duration or 60
+	addAction(EffectAction:new(AnonymousEffect:new{duration=duration,callback=function ()
+		drawTalkBubble(str,self.x+self.width*8+5,self.y-25,60,35,self.x+self.width*8-4,self.y+4,12,15)
+	end},30))
+end
+
 function sortByPriority(...)
 	local result = {}
 	local args = {...}
@@ -124,10 +131,10 @@ function sortByPriority(...)
 	return result
 end
 
-function increaseGold(amount)
+function gainGold(amount)
 	gold = gold + player:triggerReducerEvent('onGainGold',amount)
 end
 
-function decreaseGold(amount)
+function loseGold(amount)
 	gold = math.max(0,gold-amount)
 end

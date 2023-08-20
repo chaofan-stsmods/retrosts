@@ -136,7 +136,15 @@ function Exordium:drawBackground()
 	sprmap(30,0,30,17,0,0)
 end
 
-TheCity = Act:new{id=2,title='The City',smallTitle='Act 2',cardUpgradedChance=0.25}
+TheCity = Act:new{
+	id=2,title='The City',smallTitle='Act 2',cardUpgradedChance=0.25,
+	weakEncounters={
+		{item=TwoThievesEncounter,power=2},
+	},
+	strongEncounters={
+		{item=ThreeCultistEncounter,power=3},
+	},
+}
 function TheCity:drawBackground()
 	sprmap(60,0,30,17,0,0)
 end

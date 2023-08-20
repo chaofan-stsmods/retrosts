@@ -156,3 +156,14 @@ function ArtifactPower:onBeforeApplyPower(power)
 		return false
 	end
 end
+
+RegenerateMonsterPower = Power:new{icon=13}
+function RegenerateMonsterPower:onTurnEnd()
+	addAction(HealAction:new{target=self.owner,value=self.amount})
+end
+
+RegeneratePlayerPower = Power:new{icon=13,turnBased=true}
+function RegeneratePlayerPower:onTurnEnd()
+	addAction(HealAction:new{target=self.owner,value=self.amount})
+	addAction(ReducePowerAction:new(self,1))
+end

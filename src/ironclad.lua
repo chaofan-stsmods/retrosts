@@ -844,7 +844,8 @@ function SearingBlow:load(meta)
 	self.numUpgraded = meta
 	self.upgraded = meta > 0
 	self.name = 'Searing Blow+' .. self.numUpgraded
-	self.baseDamage = self.numUpgraded * (self.numUpgraded + 7) / 2 + 12;
+	self.baseDamage = math.floor(self.numUpgraded * (self.numUpgraded + 7) / 2 + 12);
+	self.damage = self.baseDamage
 end
 
 Berserk = RedCard:new{

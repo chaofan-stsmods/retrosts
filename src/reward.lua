@@ -28,6 +28,9 @@ function RewardWindow:drawRewards()
 	for i, reward in ipairs(self.rewards) do
 		local y = 16+i*18
 		if self.selection == i then
+			if reward.type == 'potion' or reward.type == 'relic' then
+				drawItemTooltip(reward.value,168,34,9)
+			end
 			mapColor(14,13)
 		end
 		spr(470,76,y,0)
@@ -85,7 +88,7 @@ function RewardWindow:collectReward()
 
 	local reward = self.rewards[self.selection]
 	if reward.type == 'gold' then
-		increaseGold(reward.value)
+		gainGold(reward.value)
 		self:collectRewardComplete()
 	elseif reward.type == 'key' then
 		_G[reward.value] = true
@@ -294,6 +297,7 @@ function generateCardRarity(random)
 	elseif room.type == 'shop' then
 		rareCardChance = 9
 	end
+	rareCardChance = player:triggerReducerEvent('onModifyRareCardChance',rareCardChance)
 	if roll < rareCardChance then
 		return 'rare'
 	elseif roll < rareCardChance + uncommonCardChance then

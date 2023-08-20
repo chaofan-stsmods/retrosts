@@ -121,7 +121,7 @@ end
 -- event instance
 
 Event = Object:new{
-	spriteBank=nil,options={},selectedOption=0,
+	spriteBank=nil,options={},selectedOption=0,canOperatePotion=true,
 	onOption=noop,init=noop,drawForeground=noop,onCombatEnd=noop,load=noop,
 }
 function Event:new(o)
@@ -155,20 +155,36 @@ function Event:drawOptions()
 			mapColor(13,14)
 		end
 		self:drawOptionButton(x,y+i*10,28)
-		printColorStr(option.description,x+4,y+i*10+1,true,12,option.locked and 13 or nil)
+		clip(x+4,y+i*10,216,8)
+		local xOffset = 0
+		if option.strWidth and option.strWidth > 216 then
+			local d = option.strWidth - 216
+			local f = 2
+			local p = ((option.timer or 0) + 1) % (2 * d * f + 60)
+			option.timer = p
+			xOffset = p<30 and 0 or (p-30<d*f and (-p+30)/f or (p<60+d*f and -d or (p-60-2*d*f)/f))
+		end
+		option.strWidth = printColorStr(option.description,x+4+xOffset,y+i*10+1,true,12,option.locked and 13 or nil)
+		clip()
 		if self.selectedOption == i or option.locked then
 			resetColors{13,14,15}
 		end
 	end
 	local selectedOption = self.options[self.selectedOption]
-	if selectedOption and selectedOption.cardItem then
-		local cardItem = selectedOption.cardItem
-		local cardY = math.min(106,y+self.selectedOption*10+4)
-		cardItem.x,cardItem.tx = 210,210
-		cardItem.y,cardItem.ty = cardY,cardY
-		cardItem.large = true
-		cardItem.isNotInHand = true
-		cardItem:tick()
+	if selectedOption then
+		if selectedOption.cardItem then
+			local cardItem = selectedOption.cardItem
+			local cardY = y+self.selectedOption*10-28
+			cardItem.x,cardItem.tx = 210,210
+			cardItem.y,cardItem.ty = cardY,cardY
+			cardItem.large = true
+			cardItem.isNotInHand = true
+			cardItem:tick()
+		end
+		if selectedOption.item then
+			local itemX = selectedOption.cardItem and 102 or 158
+			drawItemTooltip(selectedOption.item,itemX,y+self.selectedOption*10,10,true)
+		end
 	end
 end
 

@@ -1,7 +1,7 @@
 -- merchant
 ---@diagnostic disable: lowercase-global
 
-MerchantEvent = Event:new{screen='entry',spriteBank=2,random=nil,goods=nil,cardRemoval=nil}
+MerchantEvent = Event:new{screen='intro',spriteBank=2,random=nil,goods=nil,cardRemoval=nil}
 function MerchantEvent:init()
 	self.random = self.random or makeRand(act.id,room.id,1)
 	table.insert(self.options,{description='[Talk]'})
@@ -276,7 +276,7 @@ function MerchantWindow:merchantControls()
 		elseif btnp(4) then
 			local cardItem = self.goods.card1[self.selection]
 			if not cardItem.sold and cardItem.price <= gold then
-				decreaseGold(cardItem.price)
+				loseGold(cardItem.price)
 				cardItem.large = false
 				addEffect(CardEffect:new{cardItem=cardItem,pauseDuration=1,duration=20,tx=240,ty=0})
 				table.insert(deck,cardItem.card)
@@ -310,7 +310,7 @@ function MerchantWindow:merchantControls()
 		elseif btnp(4) then
 			local cardItem = self.goods.card2[self.selection]
 			if not cardItem.sold and cardItem.price <= gold then
-				decreaseGold(cardItem.price)
+				loseGold(cardItem.price)
 				cardItem.large = false
 				addEffect(CardEffect:new{cardItem=cardItem,pauseDuration=1,duration=20,tx=240,ty=0})
 				table.insert(deck,cardItem.card)
@@ -354,7 +354,7 @@ function MerchantWindow:merchantControls()
 		elseif btnp(4) then
 			local relic = self.goods.relics[self.selection]
 			if not relic.sold and relic.price <= gold then
-				decreaseGold(relic.price)
+				loseGold(relic.price)
 				relic.price = nil
 				relic.basePrice = nil
 				obtainRelic(relic)
@@ -392,7 +392,7 @@ function MerchantWindow:merchantControls()
 		elseif btnp(4) then
 			local potion = self.goods.potions[self.selection]
 			if not potion.sold and potion.price <= gold and obtainPotion(potion) then
-				decreaseGold(potion.price)
+				loseGold(potion.price)
 				potion.price = nil
 				potion.basePrice = nil
 				self.goods.potions[self.selection] = {sold=true}
@@ -419,7 +419,7 @@ function MerchantWindow:merchantControls()
 			if not self.cardRemoval.sold and self.cardRemoval.price <= gold then
 				removeCardFromDeck(1,true,function (completed)
 					if completed then
-						decreaseGold(self.cardRemoval.price)
+						loseGold(self.cardRemoval.price)
 						self.cardRemoval.sold = true
 						self.selection = 0
 					end

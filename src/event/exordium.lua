@@ -1,7 +1,7 @@
 -- exordium events
 ---@diagnostic disable: lowercase-global
 
-BigFish = TextEvent:new{name='Big Fish',screen='entry',healAmt=0}
+BigFish = TextEvent:new{name='Big Fish',screen='intro',healAmt=0}
 function BigFish:init()
 	self.random = makeRand(act.id,room.id,1)
 	self.healAmt = math.floor(player.maxHp / 3)
@@ -14,7 +14,7 @@ function BigFish:init()
 end
 
 function BigFish:onOption(selection)
-	if self.screen == 'entry' then
+	if self.screen == 'intro' then
 		if selection == 1 then
 			player:heal(self.healAmt)
 			self.description = 'You eat the #4#banana.#12# It is nutritious and slightly #10#magical#12#, healing you.'
@@ -40,7 +40,7 @@ function BigFish:onOption(selection)
 	end
 end
 
-TheCleric = TextEvent:new{name='The Cleric',screen='entry',healAmt=0,removeCost=50}
+TheCleric = TextEvent:new{name='The Cleric',screen='intro',healAmt=0,removeCost=50}
 function TheCleric:init()
 	self.random = makeRand(act.id,room.id,1)
 	self.healAmt = math.floor(player.maxHp * 0.25)
@@ -64,13 +64,13 @@ function TheCleric:isAvailable()
 end
 
 function TheCleric:onOption(selection)
-	if self.screen == 'entry' then
+	if self.screen == 'intro' then
 		if selection == 1 then
-			decreaseGold(35)
+			loseGold(35)
 			player:heal(self.healAmt)
 			self.description = 'A warm golden light envelops your body and dissipates. NL The creature grins. \"Cleric best healer. @Have@ @a@ @good@ @day!\"@'
 		elseif selection == 2 then
-			decreaseGold(self.removeCost)
+			loseGold(self.removeCost)
 			removeCardFromDeck(1,false,function ()
 				self.description = 'A cold blue flame envelops your body and dissipates. NL The creature grins. \"Cleric talented. @Have@ @a@ @good@ @day!\"@'
 			end)
@@ -85,7 +85,7 @@ function TheCleric:onOption(selection)
 	end
 end
 
-WingStatue = TextEvent:new{name='Wing Statue',screen='entry',hpLoss=7}
+WingStatue = TextEvent:new{name='Wing Statue',screen='intro',hpLoss=7}
 function WingStatue:init()
 	self.random = makeRand(act.id,room.id,1)
 	self.description = 'Among the stone and boulders, you notice an intricate large blue statue resembling a wing. NL You find #4#gold#12# spilling from its cracks. Maybe there is more inside...'
@@ -100,7 +100,7 @@ function WingStatue:init()
 end
 
 function WingStatue:onOption(selection)
-	if self.screen == 'entry' then
+	if self.screen == 'intro' then
 		if selection == 1 then
 			player:damage(player,self.hpLoss)
 			self.screen = 'purge'
@@ -108,7 +108,7 @@ function WingStatue:onOption(selection)
 			self.description = 'Someone once told you of a cult that worshipped a giant bird. As you kneel in prayer, you begin to ~feel~ ... ~lightheaded~ . NL NL You wake up some time later, feeling strangely fleet of foot.'
 			return
 		elseif selection == 2 then
-			increaseGold(self.random:randInt(50,80))
+			gainGold(self.random:randInt(50,80))
 			self.description = 'With all your might, you hack away at the statue. NL It soon @crumbles,@ revealing a #4#pile of gold#12#. You grab as much as you can and continue onwards.'
 		else
 			self.description = 'The statue makes you feel ~uneasy.~ You walk past and continue onward.'
@@ -125,7 +125,7 @@ function WingStatue:onOption(selection)
 	end
 end
 
-WorldOfGoop = TextEvent:new{name='World of Goop',screen='entry',hpLoss=11,goldLoss=11,goldGain=75}
+WorldOfGoop = TextEvent:new{name='World of Goop',screen='intro',hpLoss=11,goldLoss=11,goldGain=75}
 function WorldOfGoop:init()
 	self.random = makeRand(act.id,room.id,1)
 	self.goldLoss = math.min(gold,ascension >= 15 and self.random:randInt(35,75) or self.random:randInt(20,50))
@@ -137,13 +137,13 @@ function WorldOfGoop:init()
 end
 
 function WorldOfGoop:onOption(selection)
-	if self.screen == 'entry' then
+	if self.screen == 'intro' then
 		if selection == 1 then
 			player:damage(player,self.hpLoss)
-			increaseGold(self.goldGain)
+			gainGold(self.goldGain)
 			self.description = 'Feeling the sting of the goop as the prolonged exposure starts to melt away at your skin, you manage to fish out the #4#gold.'
 		elseif selection == 2 then
-			decreaseGold(self.goldLoss)
+			loseGold(self.goldLoss)
 			self.description = 'You decide that mess is not worth it.'
 		end
 		self.screen = 'leave'
@@ -154,7 +154,7 @@ function WorldOfGoop:onOption(selection)
 	end
 end
 
-TheSsssserpent = TextEvent:new{name='The Ssssserpent',screen='entry',goldReward=175}
+TheSsssserpent = TextEvent:new{name='The Ssssserpent',screen='intro',goldReward=175}
 function TheSsssserpent:init()
 	self.goldReward = ascension >= 15 and 150 or 175
 	self.description = 'You walk into a room to find a large hole in the ground. As you approach the hole, an enormous serpent creature appears from within. NL NL ~\"Ho~ ~hooo!~ ~Hello~ ~hello!~ ~what~ ~have~ ~we~ ~got~ ~here?~ Hello adventurer, I ask a simple question. NL The most fulfilling of lives is that in which you can ~#4#buy~ ~anything!#12#~ NL Do you agree?\"'
@@ -165,7 +165,7 @@ function TheSsssserpent:init()
 end
 
 function TheSsssserpent:onOption(selection)
-	if self.screen == 'entry' then
+	if self.screen == 'intro' then
 		if selection == 1 then
 			self.description = '~\"Yeeeeeeessssssssssessss!~ NL ~Thisss~ ~will~ ~all~ ~be~ ~worthhh~ ~it.~ NL ~..ssSSs.....~ ~ss...~ ~sssss....!\"~'
 			self.screen = 'agree'
@@ -176,7 +176,7 @@ function TheSsssserpent:onOption(selection)
 			self.options = {{description='[Leave]'}}
 		end
 	elseif self.screen == 'agree' then
-		increaseGold(self.goldReward)
+		gainGold(self.goldReward)
 
 		local cardItem = CardItem:new{card=Doubt:new(),x=0,y=136,tx=120,ty=68,isNotInHand=true}
 		addEffect(CardEffect:new{cardItem=cardItem,pauseDuration=30,duration=50,tx=240,ty=0})
@@ -191,7 +191,7 @@ function TheSsssserpent:onOption(selection)
 	end
 end
 
-LivingWall = TextEvent:new{name='Living Wall',screen='entry'}
+LivingWall = TextEvent:new{name='Living Wall',screen='intro'}
 function LivingWall:init()
 	self.random = makeRand(act.id,room.id,1)
 	self.description = 'As you come to a dead-end and begin to turn around, walls @slam@ @down@ from the ceiling, trapping you! NL NL Three faces materialize from the walls and speak. NL #10#\"Forget what you know, and I\'ll let you go.\" NL #8#\"I require change to see a new space.\" NL #4#\"If you want to pass me, then you must grow.\"'
@@ -206,7 +206,7 @@ function LivingWall:init()
 end
 
 function LivingWall:onOption(selection)
-	if self.screen == 'entry' then
+	if self.screen == 'intro' then
 		if selection == 1 then
 			removeCardFromDeck(1,false,function ()
 				self:completeOption()
@@ -232,7 +232,7 @@ function LivingWall:completeOption()
 	self.options = {{description='[Leave]'}}
 end
 
-ScrapOoze = TextEvent:new{name='Scrap Ooze',screen='entry',hpLoss=3,chance=25}
+ScrapOoze = TextEvent:new{name='Scrap Ooze',screen='intro',hpLoss=3,chance=25}
 function ScrapOoze:init()
 	self.random = makeRand(act.id,room.id,1)
 	self.hpLoss = ascension >= 15 and 5 or 3
@@ -244,7 +244,7 @@ function ScrapOoze:init()
 end
 
 function ScrapOoze:onOption(selection)
-	if self.screen == 'entry' then
+	if self.screen == 'intro' then
 		if selection == 1 then
 			player:damage(player,self.hpLoss)
 			if self.random:randInt(0,99) < self.chance then
@@ -272,7 +272,7 @@ function ScrapOoze:onOption(selection)
 	end
 end
 
-ShiningLight = TextEvent:new{name='Shining Light',screen='entry',hpLoss=0}
+ShiningLight = TextEvent:new{name='Shining Light',screen='intro',hpLoss=0}
 function ShiningLight:init()
 	self.random = makeRand(act.id,room.id,1)
 	self.hpLoss = math.floor((ascension >= 15 and 0.3 or 0.2) * player.maxHp)
@@ -287,7 +287,7 @@ function ShiningLight:init()
 end
 
 function ShiningLight:onOption(selection)
-	if self.screen == 'entry' then
+	if self.screen == 'intro' then
 		if selection == 1 then
 			player:damage(player,self.hpLoss)
 			local cards = shallowcopy(deck)
@@ -309,20 +309,20 @@ function ShiningLight:onOption(selection)
 	end
 end
 
-GoldenIdolEvent = TextEvent:new{name='Golden Idol',screen='entry',hpLoss=0,maxHpLoss=0}
+GoldenIdolEvent = TextEvent:new{name='Golden Idol',screen='intro',hpLoss=0,maxHpLoss=0}
 function GoldenIdolEvent:init()
 	self.random = makeRand(act.id,room.id,1)
 	self.hpLoss = math.floor((ascension >= 15 and 0.35 or 0.25) * player.maxHp)
 	self.maxHpLoss = math.max(1,math.floor((ascension >= 15 and 0.1 or 0.08) * player.maxHp))
 	self.description = 'You come across an inconspicuous pedestal with a #4#shining gold idol#12# sitting peacefully atop. It looks incredibly valuable. NL NL You sure don\'t see any traps nearby.'
 	self.options = {
-		{description='[Take] #5#Obtain Golden Idol. #3#Trigger a trap.'},
+		{description='[Take] #5#Obtain Golden Idol. #3#Trigger a trap.',item=GoldenIdol},
 		{description='[Leave]'},
 	}
 end
 
 function GoldenIdolEvent:onOption(selection)
-	if self.screen == 'entry' then
+	if self.screen == 'intro' then
 		if selection == 1 then
 			obtainRelic(GoldenIdol:new())
 			self.description = 'As you grab the Idol and stow it away, a giant boulder smashes through the ceiling into the ground next to you. NL You realize that the floor is slanted downwards as the boulder starts to roll towards you.'
@@ -358,7 +358,7 @@ function GoldenIdolEvent:onOption(selection)
 	end
 end
 
-DeadAdventurer = CombatTextEvent:new{screen='entry',spriteBank=3,encounter=nil,encounterChance=25,rewards=nil,numRewards=0}
+DeadAdventurer = CombatTextEvent:new{screen='intro',spriteBank=3,encounter=nil,encounterChance=25,rewards=nil,numRewards=0}
 local deadAdventurerEncounters = {ThreeSentryEncounter,GremlinNobEventEncounter,LagavulinStrongEncounter}
 local deadAdventurerDescriptions = {
 	'the armor and face appear to be @#2#scoured@ @by@ @flames.@ ',
@@ -406,7 +406,7 @@ function DeadAdventurer:drawForeground()
 end
 
 function DeadAdventurer:onOption(selection)
-	if self.screen == 'entry' then
+	if self.screen == 'intro' then
 		if selection == 1 then
 			local roll = self.random:randInt(0,99)
 			if roll < self.encounterChance then
@@ -445,7 +445,7 @@ function DeadAdventurer:onOption(selection)
 end
 
 function DeadAdventurer:gold()
-	increaseGold(30)
+	gainGold(30)
 end
 
 function DeadAdventurer:relic()
@@ -488,7 +488,7 @@ function DeadAdventurer:load(eventMeta)
 	openWindowAbove(RewardWindow:new{rewards=rewards})
 end
 
-Mushrooms = CombatTextEvent:new{screen='entry',spriteBank=1,healAmt=0,encounter=nil}
+Mushrooms = CombatTextEvent:new{screen='intro',spriteBank=1,healAmt=0,encounter=nil}
 function Mushrooms:init()
 	self.random = makeRand(act.id,room.id,1)
 	self.rewardRandom = makeRand(act.id,room.id,2)
@@ -528,7 +528,7 @@ function Mushrooms:drawForeground()
 end
 
 function Mushrooms:onOption(selection)
-	if self.screen == 'entry' then
+	if self.screen == 'intro' then
 		if selection == 1 then
 			self.screen = 'beforeFight'
 			self.description = '@#2#Ambushed!!#12#@ NL Rodents infested by the mushrooms appear out of nowhere!'

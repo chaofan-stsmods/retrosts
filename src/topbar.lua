@@ -82,14 +82,6 @@ function drawRelics()
 	end
 end
 
-function drawItemTooltip(item,x,y)
-	local _,h = drawDescription(item,item.description,-80,0,72,999,12)
-	local boxX = math.min(x,160)
-	drawTooltipBox(boxX,y,10,math.floor(h/8+2.5))
-	print(item.name,boxX+4,y+4,4,false,1,true)
-	drawDescription(item,item.description,boxX+4,y+14,72,999,12)
-end
-
 function drawPotionMenu(x)
 	local y = 9
 	drawTooltipBox(x,y,6,4)
@@ -142,7 +134,7 @@ function controlTopBar()
 		elseif btnp(4) then
 			if topBarSelection.index == 1 then
 				local potion = potions[topBarSelection.potionIndex]
-				if potion:realCanUse() then
+				if potion:canUse() then
 					if potion.enemyTarget then
 						topBarSelection.type = 'usePotion'
 					else
@@ -157,7 +149,7 @@ function controlTopBar()
 						exitTopBar()
 					end
 				end
-			else
+			elseif potions[topBarSelection.potionIndex]:canDiscard() then
 				potions[topBarSelection.potionIndex] = Slot
 				topBarSelection.type = 'potion'
 				topBarSelection.index = topBarSelection.potionIndex

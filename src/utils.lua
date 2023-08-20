@@ -8,6 +8,7 @@ end
 
 function printColorStr(str,x,y,small,color,lockColor)
 	color = lockColor or color or 12
+	local originalX = x
 	local originalColor = color
 	local lastStart = 1
 	local findStart,findEnd,findStr = str:find('(#%d+#)',lastStart)
@@ -21,7 +22,7 @@ function printColorStr(str,x,y,small,color,lockColor)
 		findStart,findEnd,findStr = str:find('(#%d+#)',lastStart)
 	end
 	x = x + print(str:sub(lastStart),x,y,color,false,1,small)
-	return x
+	return x - originalX
 end
 
 function printShadowed(str,x,y,color,shadowColor,scale,small)
@@ -114,6 +115,18 @@ function drawBezier(count,x0,y0,x1,y1,x2,y2)
 		rect(x-2,y-2,4,4,2)
 		rectb(x-2,y-2,4,4,1)
 	end
+end
+
+function drawItemTooltip(item,x,y,width,bottomAlign)
+	width = width or 10
+	local _,h = drawDescription(item,item.description,-80,0,(width-1)*8,999,12)
+	local boxX = math.min(x,240-width*8)
+	if bottomAlign then
+		y = y-math.floor(h/8+2.5)*8
+	end
+	drawTooltipBox(boxX,y,width,math.floor(h/8+2.5))
+	print(item.name,boxX+4,y+4,4,false,1,true)
+	drawDescription(item,item.description,boxX+4,y+14,(width-1)*8,999,12)
 end
 
 function drawTooltipBox(x,y,w,h)
@@ -298,6 +311,15 @@ function table:allMatch(condition)
 	return true
 end
 
+function table:anyMatch(condition)
+	for _, value in ipairs(self) do
+		if condition(value) then
+			return true
+		end
+	end
+	return false
+end
+
 function table:retainIf(condition)
 	for i = #self,1,-1 do
 		if not condition(self[i],i) then
@@ -447,6 +469,9 @@ function Random:randInt(from,to)
 	if to == nil then
 		to = from
 		from = 1
+	end
+	if from == to then
+		return to
 	end
 	return math.floor(self:rand() * (to-from+1)) + from
 end
