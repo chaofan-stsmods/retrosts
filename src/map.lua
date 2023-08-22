@@ -20,7 +20,7 @@ end
 
 function MapWindow:tick()
 	cls(0)
-	self:drawMap(self.scroll)
+	self:drawMap(math.floor(self.scroll+0.5))
 	tickEffects()
 	self:mapControls()
 	tickTopBar(true)

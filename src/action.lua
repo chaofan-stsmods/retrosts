@@ -70,7 +70,7 @@ function DrawCardAction:tick()
 	if self.duration <= 0 then
 		self.duration = 3
 		self.numCards = self.numCards - 1
-		if #hand > HAND_LIMIT or #drawPile == 0 then
+		if #hand >= HAND_LIMIT or #drawPile == 0 then
 			self.isDone = true
 			return
 		end
@@ -508,7 +508,7 @@ function fillCardPosition(cardItem)
 	local useCandidates = false
 	local start = inEnemyTurn and 1 or 2
 	for j = start,#cardPositionCandidates do
-		if table.allMatch(effects,function (e) return e.useCardPosition ~= j end) and 
+		if table.allMatch(effects,function (e) return e.useCardPosition ~= j end) and
 			table.allMatch(actions,function (e) return e.useCardPosition ~= j end) and
 			table.allMatch(secondaryActions,function (e) return e.useCardPosition ~= j end) and
 			(runningAction == nil or runningAction.useCardPosition ~= j) then

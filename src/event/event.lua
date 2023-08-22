@@ -91,9 +91,11 @@ end
 
 function generateEventRoomType(random)
 	local roll = random:randInt(0,99)
+	local result = 'event'
+	trace('generateEventRoomType '..roll..' chances:'..table.concat({monsterChance,shopChance,treasureChance},','))
 	if roll < monsterChance then
 		monsterChance = 10
-		return 'monster'
+		result = 'monster'
 	else
 		roll = roll - monsterChance
 		monsterChance = monsterChance + 10
@@ -101,7 +103,7 @@ function generateEventRoomType(random)
 
 	if roll < shopChance then
 		shopChance = 3
-		return 'shop'
+		result = 'shop'
 	else
 		roll = roll - shopChance
 		shopChance = shopChance + 3
@@ -109,13 +111,14 @@ function generateEventRoomType(random)
 
 	if roll < treasureChance then
 		treasureChance = 2
-		return 'treasure'
+		result = 'treasure'
 	else
 		roll = roll - treasureChance
 		treasureChance = treasureChance + 2
 	end
 
-	return 'event'
+	trace('generateEventRoomType result: '..result..' chances:'..table.concat({monsterChance,shopChance,treasureChance},','))
+	return result
 end
 
 -- event instance

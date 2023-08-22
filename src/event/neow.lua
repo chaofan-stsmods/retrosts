@@ -141,7 +141,7 @@ function generateNeowRewards(options,random)
 
 	oid = random:randInt(nid == 4 and 7 or 6)
 	if nid ~= 4 and oid >= nid + 4 then
-		old = oid + 1
+		oid = oid + 1
 	end
 	if oid == 1 then
 		option = {description='#5#Choose a rare colorless card to obtain #12#]',onSelect=function ()

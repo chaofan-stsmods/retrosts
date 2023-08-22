@@ -220,15 +220,11 @@ local hasSync = false
 function queueSync(mask,bank)
 	if not hasSync then
 		if syncCacheSetCompare(mask,bank) then
-			trace('sync ' .. mask .. ' ' .. bank)
 			sync(mask,bank)
 			hasSync = true
-		else
-			trace('sync cached ' .. mask .. ' ' .. bank)
 		end
 		return
 	end
-	trace('queuesync ' .. mask .. ' ' .. bank)
 	table.insert(syncQueue,table.pack(mask,bank))
 end
 
@@ -236,11 +232,8 @@ function doSync()
 	while #syncQueue > 0 do
 		local mask,bank = table.unpack(table.remove(syncQueue,1))
 		if syncCacheSetCompare(mask,bank) then
-			trace('sync ' .. mask .. ' ' .. bank)
 			sync(mask,bank)
 			break
-		else
-			trace('sync cached ' .. mask .. ' ' .. bank)
 		end
 	end
 	hasSync = #syncQueue > 0

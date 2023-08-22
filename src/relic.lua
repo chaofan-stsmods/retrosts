@@ -3,14 +3,20 @@
 
 local colorlessRelics
 
-Relic = Object:new{name='',description='',counter=-1,icon=0,tier='common',colorName='colorless',priority=50}
+Relic = Object:new{name='',description='',counter=-1,icon=0,iconColorMap={},tier='common',colorName='colorless',priority=50}
 
 function Relic:canSpwan()
 	return true
 end
 
 function Relic:drawImage(x,y,hideCounter)
+	for key, value in pairs(self.iconColorMap) do
+		mapColor(key,value)
+	end
 	spr(self.icon,x,y,0)
+	for key, _ in pairs(self.iconColorMap) do
+		resetColor(key)
+	end
 	if self.counter >= 0 and not hideCounter then
 		local counterStr = tostring(self.counter)
 		local width = strWidth(counterStr,false,true)
@@ -102,9 +108,16 @@ function NeowsLament:onCombatStart()
 	end
 end
 
-GoldenIdol = Relic:new{name='Golden Idol',icon=24,tier='special',description='Enemies drop #11#25%#12# more #4#Gold.'}
+GoldenIdol = Relic:new{name='Golden Idol',icon=24,iconColorMap={[5]=4,[6]=3,[7]=2,[9]=1,[10]=2},tier='special',description='Enemies drop #11#25%#12# more #4#Gold.'}
 function GoldenIdol:onAddBonusGoldReward(bonusGold,amount)
 	return bonusGold + amount * 0.25
+end
+
+BloodyIdol = Relic:new{name='Bloody Idol',icon=24,iconColorMap={1,14,13,12,2,2,1,8,2,2,11,12,13,14,2},tier='special',description='Whenever you gain #4#Gold#12#, heal #10#5#12# HP.'}
+function BloodyIdol:onGainGold(amount)
+	if amount > 0 then
+		player:heal(5)
+	end
 end
 
 OddMushroom = Relic:new{name='Odd Mushroom',icon=26,tier='special',description='When you have {60}, take #11#25%#12# more attack damage rather than #11#50%.'}
@@ -141,7 +154,7 @@ function EnergyRelic:onLoseRelic()
 	maxEnergy = maxEnergy - 1
 end
 
-CoffeeDripper = EnergyRelic:new{name='Coffee Dripper',icon=173,description='Gain {202} at the start of your turn, You can no longer #4#Rest#12# at Rest Sites.'}
+CoffeeDripper = EnergyRelic:new{name='Coffee Dripper',icon=173,description='Gain {202} at the start of your turn. You can no longer #4#Rest#12# at Rest Sites.'}
 function CoffeeDripper:onModifyCampfireOptions(options)
 	for _, option in ipairs(options) do
 		if option.name == 'Rest' then
@@ -151,7 +164,7 @@ function CoffeeDripper:onModifyCampfireOptions(options)
 	end
 end
 
-FusionHammer = EnergyRelic:new{name='Fusion Hammer',icon=177,description='Gain {202} at the start of your turn, You can no longer #4#Smith#12# at Rest Sites.'}
+FusionHammer = EnergyRelic:new{name='Fusion Hammer',icon=177,description='Gain {202} at the start of your turn. You can no longer #4#Smith#12# at Rest Sites.'}
 function FusionHammer:onModifyCampfireOptions(options)
 	for _, option in ipairs(options) do
 		if option.name == 'Smith' then
@@ -161,7 +174,7 @@ function FusionHammer:onModifyCampfireOptions(options)
 	end
 end
 
-Ectoplasm = EnergyRelic:new{name='Ectoplasm',icon=175,description='Gain {202} at the start of your turn, You can no longer gain #4#Gold#12#.'}
+Ectoplasm = EnergyRelic:new{name='Ectoplasm',icon=175,description='Gain {202} at the start of your turn. You can no longer gain #4#Gold#12#.'}
 function Ectoplasm:onGainGold()
 	return 0
 end
@@ -246,7 +259,7 @@ end
 
 colorlessRelics = {
 	-- special
-	Circlet,NeowsLament,GoldenIdol,OddMushroom,WarpedTongs,SpiritPoop,CultistMask,FaceOfCleric,GremlinMask,NlothsMask,SsserpentHead,NlothsGift,
+	Circlet,NeowsLament,GoldenIdol,OddMushroom,WarpedTongs,SpiritPoop,CultistMask,FaceOfCleric,GremlinMask,NlothsMask,SsserpentHead,NlothsGift,BloodyIdol,
 	-- common
 	Anchor,
 	-- uncommon
