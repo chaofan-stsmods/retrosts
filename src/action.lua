@@ -417,11 +417,9 @@ function ReducePowerAction:tick()
 	if self.duration == self.startDuration then
 		local power = self.power
 		local owner = power.owner
-		power.amount = power.amount - self.amount
+		power:setAmount(power.amount - self.amount)
 		if power.amount == 0 then
 			owner:removePower(power)
-		else
-			power:onAmountUpdated(-self.amount)
 		end
 		owner:applyPowers()
 	end
@@ -444,12 +442,9 @@ function ApplyPowerAction:tick()
 
 		local existingPower = owner:getPower(getmetatable(power))
 		if existingPower then
-			local oldAmount = existingPower.amount
-			existingPower.amount = limit(existingPower.amount+power.amount,-existingPower.maxAmount,existingPower.maxAmount)
+			existingPower:setAmount(existingPower.amount + power.amount)
 			if existingPower.amount == 0 then
 				owner:removePower(existingPower)
-			else
-				existingPower:onAmountUpdated(existingPower.amount-oldAmount)
 			end
 		else
 			owner:addPower(power)

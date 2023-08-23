@@ -53,6 +53,12 @@ function Power:drawImage(x,y)
 	end
 end
 
+function Power:setAmount(newAmount)
+	local oldAmount = self.amount
+	self.amount = limit(newAmount,-self.maxAmount,self.maxAmount)
+	self:onAmountUpdated(self.amount - oldAmount)
+end
+
 TurnBasedPower = Power:new{turnBased=true}
 function TurnBasedPower:new(owner,amount,keepForOneTurn)
 	if amount == nil then

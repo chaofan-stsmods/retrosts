@@ -1214,7 +1214,7 @@ ModeShiftPower = Power:new{icon=261}
 function ModeShiftPower:onDamaged(value)
 	local owner = self.owner
 	if self.amount > value then
-		self.amount = self.amount - value
+		self:setAmount(self.amount - value)
 	elseif owner.alive and not owner.enteringDefensiveMode then
 		addAction(ReducePowerAction:new(self,self.amount))
 		addAction(GainBlockAction:new{target=owner,value=20})
@@ -1273,7 +1273,7 @@ function ThreeLouseEncounter:setupEnemies(random)
 	self.enemyInfo[3] = random:randBool() and encItem(LouseNormal,44,0) or encItem(LouseDefensive,44,0)
 	Encounter.setupEnemies(self,random)
 end
-TwoFungiBeastEncounter = Encounter:new{spriteBank=1,name='TwoFungiBeast',enemyInfo={encItem(FungiBeast,-24,0),encItem(FungiBeast,24,2)}}
+TwoFungiBeastsEncounter = Encounter:new{spriteBank=1,name='TwoFungiBeasts',enemyInfo={encItem(FungiBeast,-24,0),encItem(FungiBeast,24,2)}}
 LargeSlimeEncounter = Encounter:new{spriteBank=1,name='LargeSlime',enemyInfo={}}
 function LargeSlimeEncounter:setupEnemies(random)
 	self.enemyInfo = {}

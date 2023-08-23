@@ -105,7 +105,7 @@ Exordium = Act:new{
 	strongEncounters={
 		{item=LotsOfSlimesEncounter,power=1},
 		{item=ThreeLouseEncounter,power=2},
-		{item=TwoFungiBeastEncounter,power=2},
+		{item=TwoFungiBeastsEncounter,power=2},
 		{item=LargeSlimeEncounter,power=2},
 		{item=SlaverBlueEncounter,power=2},
 		{item=SlaverRedEncounter,power=1},
@@ -140,9 +140,10 @@ TheCity = Act:new{
 	id=2,title='The City',smallTitle='Act 2',cardUpgradedChance=0.25,
 	weakEncounters={
 		{item=TwoThievesEncounter,power=2},
+		{item=ThreeByrdsEncounter,power=2},
 	},
 	strongEncounters={
-		{item=ThreeCultistEncounter,power=3},
+		{item=ThreeCultistsEncounter,power=3},
 	},
 }
 function TheCity:drawBackground()
