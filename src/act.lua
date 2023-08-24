@@ -141,10 +141,22 @@ TheCity = Act:new{
 	weakEncounters={
 		{item=TwoThievesEncounter,power=2},
 		{item=ThreeByrdsEncounter,power=2},
+		{item=SphericGuardianEncounter,power=2},
+		{item=Chosen,power=2},
+		{item=ShellParasiteEncounter,power=2},
 	},
 	strongEncounters={
 		{item=ThreeCultistsEncounter,power=3},
+		{item=SentryAndSphereEncounter,power=2},
+		{item=ByrdAndChosenEncounter,power=2},
+		{item=CultistAndChosenEncounter,power=3},
+		{item=ShellParasiteAndFungiEncounter,power=3},
 	},
+	exclusiveEncounters={
+		[SphericGuardianEncounter]={SentryAndSphereEncounter},
+		[ChosenEncounter]={CultistAndChosenEncounter,ByrdAndChosenEncounter},
+		[ShellParasiteEncounter]={ShellParasiteAndFungiEncounter},
+	}
 }
 function TheCity:drawBackground()
 	sprmap(60,0,30,17,0,0)

@@ -51,9 +51,7 @@ function Byrd:onCombatStart()
 end
 
 function Byrd:onFlightRemoved()
-	addAction(AnonymousAction:new(function ()
-		self.flying = false
-	end))
+	self.flying = false
 	addAction(SetIntentAction:new(self,'stun','stun',0,0,false))
 end
 
@@ -134,7 +132,212 @@ function FlightPower:onDamaged(value,source,type)
 	end
 end
 
+SphericGuardian = Monster:new{ maxHp=20,width=4,height=4,attackDmg=10 }
+function SphericGuardian:init()
+	self.attackDmg = ascension >= 2 and 11 or 10
+end
+
+function SphericGuardian:drawImage()
+	local layers = {
+		{name='sprmap',z=0,15,29,3,3,self.x+4,self.y,0},
+		{name='spr',z=math.cos(time()*0.003),373,self.x+self.width*4-4+math.sin(time()*0.003)*15,self.y+self.height*4-4+math.cos(time()*0.003)*10,0},
+		{name='spr',z=math.cos(time()*0.003+2.75),389,self.x+self.width*4-4+math.sin(time()*0.003+2.75)*14,self.y+3*4-4+math.cos(time()*0.003+2.75)*12,0},
+	}
+	table.sort(layers,function (a, b) return a.z < b.z end)
+	for _,layer in ipairs(layers) do
+		_G[layer.name](table.unpack(layer))
+	end
+end
+
+function SphericGuardian:onCombatStart()
+	addAction(ApplyPowerAction:new(BarricadePower:new(self)))
+	addAction(ApplyPowerAction:new(ArtifactPower:new(self,3)))
+	addAction(GainBlockAction:new{target=self,value=40})
+	Monster.onCombatStart(self)
+end
+
+function SphericGuardian:defend()
+	addAction(GainBlockAction:new{target=self,value=ascension >= 17 and 35 or 25})
+	addAction(SetIntentAction:new(self,'frailAttack','attackDebuff',self.attackDmg))
+end
+
+function SphericGuardian:frailAttack()
+	addAction(DamageAction:new{target=player,source=self,value=self.intentDamage})
+	addAction(ApplyPowerAction:new(FrailPower:new(player,5,true)))
+	addAction(SetIntentAction:new(self,'dualAttack','attack',self.attackDmg,2))
+end
+
+function SphericGuardian:dualAttack()
+	for _=1,self.intentAttackCount do
+		addAction(DamageAction:new{target=player,source=self,value=self.intentDamage})
+	end
+	addAction(SetIntentAction:new(self,'defendAttack','attackDefend',self.attackDmg))
+end
+
+function SphericGuardian:defendAttack()
+	addAction(DamageAction:new{target=player,source=self,value=self.intentDamage})
+	addAction(GainBlockAction:new{target=self,value=15})
+	addAction(SetIntentAction:new(self,'dualAttack','attack',self.attackDmg,2))
+end
+
+function SphericGuardian:nextIntent()
+	self:setIntent('defend','defend')
+end
+
+Chosen = Monster:new{ maxHp=99,width=4,height=4,zapDmg=18,debilitateDmg=10,pokeDmg=5,usedHex=false }
+function Chosen:init(random)
+	self.maxHp = ascension >= 7 and random:randInt(98,103) or random:randInt(95,99)
+	if ascension >= 2 then
+		self.zapDmg,self.debilitateDmg,self.pokeDmg = 21,12,6
+	end
+end
+
+function Chosen:drawImage()
+	sprmap(24,23,3,self.height,self.x+6,self.y,0)
+end
+
+function Chosen:hex()
+	self.usedHex = true
+	addAction(ApplyPowerAction:new(HexPower:new(player,1)))
+	addAction(NextIntentAction:new(self))
+end
+
+function Chosen:debilitate()
+	addAction(DamageAction:new{target=player,source=self,value=self.intentDamage})
+	addAction(ApplyPowerAction:new(VulnerablePower:new(player,2,true)))
+	addAction(NextIntentAction:new(self))
+end
+
+function Chosen:debuff()
+	addAction(ApplyPowerAction:new(WeakPower:new(player,3,true)))
+	addAction(ApplyPowerAction:new(StrengthPower:new(self,3)))
+	addAction(NextIntentAction:new(self))
+end
+
+function Chosen:zap()
+	addAction(DamageAction:new{target=player,source=self,value=self.intentDamage})
+	addAction(NextIntentAction:new(self))
+end
+
+function Chosen:poke()
+	for _=1,self.intentAttackCount do
+		addAction(DamageAction:new{target=player,source=self,value=self.intentDamage})
+	end
+	addAction(NextIntentAction:new(self))
+end
+
+function Chosen:nextIntent(first)
+	if ascension < 17 and first then
+		self:setIntent('poke','attack',self.pokeDmg,2)
+		return
+	end
+
+	if not self.usedHex then
+		self:setIntent('hex','strongDebuff')
+	elseif not self:lastIntentIs('debilitate') and not self:lastIntentIs('debuff') then
+		self:rollIntent{
+			{'debilitate','attackDebuff',self.debilitateDmg,power=50},
+			{'debuff','debuff',power=50},
+		}
+	else
+		self:rollIntent{
+			{'zap','attack',self.zapDmg,power=40},
+			{'poke','attack',self.pokeDmg,2,power=60},
+		}
+	end
+end
+
+HexPower = Power:new{icon=325}
+function HexPower:onUseCard(card)
+	if card.type ~= 'attack' then
+		addAction(MakeTempCardToDrawPileAction:new(Dazed:new()))
+	end
+end
+
+ShellParasite = Monster:new{ maxHp=70,width=6,height=4,doubleStrikeDmg=6,fellDmg=18,suckDmg=10,stunned=false }
+function ShellParasite:init(random)
+	self.maxHp = ascension >= 7 and random:randInt(70,75) or random:randInt(68,72)
+	if ascension >= 2 then
+		self.doubleStrikeDmg,self.fellDmg,self.suckDmg = 7,21,12
+	end
+end
+
+function ShellParasite:drawImage()
+	sprmap(14,25,5,self.height,self.x+4,self.y,0)
+end
+
+function ShellParasite:onCombatStart()
+	addAction(ApplyPowerAction:new(PlatedArmorPower:new(self,14)))
+	addAction(GainBlockAction:new{target=self,value=14})
+	Monster.onCombatStart(self)
+end
+
+function ShellParasite:fell()
+	addAction(DamageAction:new{target=player,source=self,value=self.intentDamage})
+	addAction(ApplyPowerAction:new(FrailPower:new(player,2,true)))
+	addAction(NextIntentAction:new(self))
+end
+
+function ShellParasite:doubleStrike()
+	for _=1,self.intentAttackCount do
+		addAction(DamageAction:new{target=player,source=self,value=self.intentDamage})
+	end
+	addAction(NextIntentAction:new(self))
+end
+
+function ShellParasite:suck()
+	local damageAction = DamageAction:new{target=player,source=self,value=self.intentDamage}
+	addAction(damageAction)
+	addAction(AnonymousAction:new(function ()
+		if damageAction.damageDealt and damageAction.damageDealt > 0 then
+			addAction(1,HealAction:new{target=self,value=damageAction.damageDealt})
+		end
+	end))
+	addAction(NextIntentAction:new(self))
+end
+
+function ShellParasite:stun()
+	addAction(NextIntentAction:new(self))
+end
+
+function ShellParasite:nextIntent(first)
+	if first then
+		if ascension >= 17 then
+			self:setIntent('fell','attackDebuff',self.fellDmg)
+		else
+			self:rollIntent{
+				{'doubleStrike','attack',self.doubleStrikeDmg,2,power=50},
+				{'suck','attackBuff',self.suckDmg,power=50},
+			}
+		end
+		return
+	end
+
+	self:rollIntent{
+		{'fell','attackDebuff',self.fellDmg,power=20,limit=1},
+		{'doubleStrike','attack',self.doubleStrikeDmg,2,power=40,limit=2},
+		{'suck','attackBuff',self.suckDmg,power=40,limit=2},
+	}
+end
+
+function ShellParasite:damage(...)
+	Monster.damage(self,...)
+	addAction(AnonymousAction:new(function()
+		if not self.stunned and not self:getPower(PlatedArmorPower) then
+			addAction(SetIntentAction:new(self,'stun','stun',0,0,false))
+			self.stunned = true
+		end
+	end))
+end
+
 -- encounters
 TwoThievesEncounter = Encounter:new{spriteBank=1,name='TwoThieves',enemyInfo={encItem(Looter,-24,0),encItem(Mugger,24,0)}}
 ThreeCultistsEncounter = Encounter:new{spriteBank=1,name='ThreeCultists',enemyInfo={encItem(Cultist,-48,1),encItem(Cultist,0,0),encItem(Cultist,48,0)}}
 ThreeByrdsEncounter = Encounter:new{spriteBank=1,name='ThreeByrds',enemyInfo={encItem(Byrd,-48,0),encItem(Byrd,0,0),encItem(Byrd,48,0)}}
+SphericGuardianEncounter = Encounter:new{spriteBank=3,name='SphericGuardian',enemyInfo={encItem(SphericGuardian,0,0)}}
+SentryAndSphereEncounter = Encounter:new{spriteBank=3,name='SentryAndSphere',enemyInfo={encItem(SphericGuardian,20,0),encItem(Sentry,-30,1)}}
+ChosenEncounter = Encounter:new{spriteBank=1,name='Chosen',enemyInfo={encItem(Chosen,0,0)}}
+ByrdAndChosenEncounter = Encounter:new{spriteBank=1,name='ByrdAndChosen',enemyInfo={encItem(Byrd,-24,3),encItem(Chosen,24,0)}}
+CultistAndChosenEncounter = Encounter:new{spriteBank=1,name='CultistAndChosen',enemyInfo={encItem(Cultist,-24,-1),encItem(Chosen,24,0)}}
+ShellParasiteEncounter = Encounter:new{spriteBank=1,name='ShellParasite',enemyInfo={encItem(ShellParasite,0,0)}}
+ShellParasiteAndFungiEncounter = Encounter:new{spriteBank=1,name='ShellParasiteAndFungi',enemyInfo={encItem(ShellParasite,-20,2),encItem(FungiBeast,28,0)}}

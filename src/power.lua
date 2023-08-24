@@ -173,3 +173,14 @@ function RegeneratePlayerPower:onTurnEnd()
 	addAction(HealAction:new{target=self.owner,value=self.amount})
 	addAction(ReducePowerAction:new(self,1))
 end
+
+PlatedArmorPower = Power:new{icon=62}
+function PlatedArmorPower:onTurnEnd()
+	addAction(GainBlockAction:new{target=self.owner,value=self.amount})
+end
+
+function PlatedArmorPower:onDamaged(value,source,type)
+	if value > 0 and type == 'attack' and source ~= self.owner then
+		addAction(ReducePowerAction:new(self,1))
+	end
+end
