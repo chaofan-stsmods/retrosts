@@ -151,11 +151,13 @@ TheCity = Act:new{
 		{item=ByrdAndChosenEncounter,power=2},
 		{item=CultistAndChosenEncounter,power=3},
 		{item=ShellParasiteAndFungiEncounter,power=3},
+		{item=CenturionAndMysticEncounter,power=6},
 	},
 	exclusiveEncounters={
 		[SphericGuardianEncounter]={SentryAndSphereEncounter},
 		[ChosenEncounter]={CultistAndChosenEncounter,ByrdAndChosenEncounter},
 		[ShellParasiteEncounter]={ShellParasiteAndFungiEncounter},
+		[ThreeByrdsEncounter]={ByrdAndChosenEncounter},
 	}
 }
 function TheCity:drawBackground()

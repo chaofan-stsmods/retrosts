@@ -330,6 +330,110 @@ function ShellParasite:damage(...)
 	end))
 end
 
+Centurion = Monster:new{ maxHp=80,width=4,height=5,blockAmt=15,slashDmg=12,furyDmg=6 }
+function Centurion:init(random)
+	self.maxHp = ascension >= 7 and random:randInt(78,83) or random:randInt(76,80)
+	self.blockAmt = ascension >= 17 and 20 or 15
+	if ascension >= 2 then
+		self.slashDmg,self.furyDmg = 14,7
+	end
+end
+
+function Centurion:drawImage()
+	sprmap(53,22,3,self.height,self.x+4,self.y,8)
+end
+
+function Centurion:defend()
+	addAction(AnonymousAction:new(function ()
+		local targets = shallowcopy(enemies)
+		table.retainIf(targets,function(e) return e.alive and e ~= self end)
+		local target
+		if #targets > 0 then
+			target = targets[aiRand:randInt(#targets)]
+		else
+			target = self
+		end
+		addAction(1,GainBlockAction:new{target=target,value=self.blockAmt})
+	end))
+	addAction(NextIntentAction:new(self))
+end
+
+function Centurion:slash()
+	addAction(DamageAction:new{target=player,source=self,value=self.intentDamage})
+	addAction(NextIntentAction:new(self))
+end
+
+function Centurion:fury()
+	for _=1,self.intentAttackCount do
+		addAction(DamageAction:new{target=player,source=self,value=self.intentDamage})
+	end
+	addAction(NextIntentAction:new(self))
+end
+
+function Centurion:nextIntent()
+	if table.count(enemies,function(e) return e.alive end) == 1 then
+		self:rollIntent{
+			{'fury','attack',self.furyDmg,3,power=35,limit=2},
+			{'slash','attack',self.slashDmg,power=65,limit=2},
+		}
+	else
+		self:rollIntent{
+			{'defend','defend',power=35,limit=2},
+			{'slash','attack',self.slashDmg,power=65,limit=2},
+		}
+	end
+end
+
+Mystic = Monster:new{ maxHp=50,width=4,height=4,strAmt=2,attackDmg=8,healAmt=16 }
+function Mystic:init(random)
+	self.maxHp = ascension >= 7 and random:randInt(50,58) or random:randInt(48,56)
+	self.strAmt = ascension >= 17 and 4 or (ascension >= 2 and 3 or 2)
+	self.attackDmg = ascension >= 2 and 9 or 8
+	self.healAmt = ascension >= 17 and 20 or 16
+end
+
+function Mystic:drawImage()
+	sprmap(56,21,4,self.height,self.x-6,self.y,0)
+end
+
+function Mystic:healAll()
+	for _,e in ipairs(enemies) do
+		addAction(HealAction:new{target=e,value=self.healAmt})
+	end
+	addAction(NextIntentAction:new(self))
+end
+
+function Mystic:attack()
+	addAction(DamageAction:new{target=player,source=self,value=self.intentDamage})
+	addAction(ApplyPowerAction:new(FrailPower:new(player,2)))
+	addAction(NextIntentAction:new(self))
+end
+
+function Mystic:strengthen()
+	for _,e in ipairs(enemies) do
+		addAction(ApplyPowerAction:new(StrengthPower:new(e,self.strAmt)))
+	end
+	addAction(NextIntentAction:new(self))
+end
+
+function Mystic:nextIntent()
+	local needToHeal = 0
+	for _,e in ipairs(enemies) do
+		if e.alive then
+			needToHeal = needToHeal + e.maxHp - e.hp
+		end
+	end
+	if needToHeal > 15 and (ascension < 17 or needToHeal > 20) and not self:lastTwoIntentsAre('healAll') then
+		self:setIntent('healAll','buff')
+		return
+	end
+	self:rollIntent{
+		{'attack','attackDebuff',self.attackDmg,power=60,limit=ascension>=17 and 1 or 2},
+		{'strengthen','buff',power=40,limit=2},
+	}
+end
+
+
 -- encounters
 TwoThievesEncounter = Encounter:new{spriteBank=1,name='TwoThieves',enemyInfo={encItem(Looter,-24,0),encItem(Mugger,24,0)}}
 ThreeCultistsEncounter = Encounter:new{spriteBank=1,name='ThreeCultists',enemyInfo={encItem(Cultist,-48,1),encItem(Cultist,0,0),encItem(Cultist,48,0)}}
@@ -341,3 +445,4 @@ ByrdAndChosenEncounter = Encounter:new{spriteBank=1,name='ByrdAndChosen',enemyIn
 CultistAndChosenEncounter = Encounter:new{spriteBank=1,name='CultistAndChosen',enemyInfo={encItem(Cultist,-24,-1),encItem(Chosen,24,0)}}
 ShellParasiteEncounter = Encounter:new{spriteBank=1,name='ShellParasite',enemyInfo={encItem(ShellParasite,0,0)}}
 ShellParasiteAndFungiEncounter = Encounter:new{spriteBank=1,name='ShellParasiteAndFungi',enemyInfo={encItem(ShellParasite,-20,2),encItem(FungiBeast,28,0)}}
+CenturionAndMysticEncounter = Encounter:new{spriteBank=4,name='CenturionAndMystic',enemyInfo={encItem(Centurion,-24,0),encItem(Mystic,24,2)}}
