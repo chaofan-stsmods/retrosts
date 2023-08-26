@@ -461,7 +461,7 @@ end
 
 function GainEnergyAction:tick()
 	if self.duration == self.startDuration then
-		energy = energy + self.amount
+		energy = math.max(0, energy + self.amount)
 	end
 	Action.tick(self)
 end
@@ -499,7 +499,12 @@ function AnonymousAction:tick()
 end
 
 local cardPositionCandidates = {{120,68},{80,68},{160,68},{40,68},{200,68},{100,28},{140,28},{60,28},{180,28}}
-function fillCardPosition(cardItem)
+function fillCardPosition(cardItem,preferedPosition)
+	if preferedPosition then
+		cardItem.tx,cardItem.ty = table.unpack(cardPositionCandidates[preferedPosition])
+		return preferedPosition
+	end
+
 	local useCandidates = false
 	local start = inEnemyTurn and 1 or 2
 	for j = start,#cardPositionCandidates do
@@ -518,7 +523,7 @@ function fillCardPosition(cardItem)
 	return nil
 end
 
-MakeTempCardToDiscardPileAction = Action:new{duration=30}
+MakeTempCardToDiscardPileAction = Action:new{duration=10}
 function MakeTempCardToDiscardPileAction:new(card,amount)
 	amount = amount or 1
 	return Action.new(self,{card=card,amount=amount})
@@ -539,7 +544,7 @@ function MakeTempCardToDiscardPileAction:tick()
 	Action.tick(self)
 end
 
-MakeTempCardToHandAction = Action:new{duration=20}
+MakeTempCardToHandAction = Action:new{duration=10}
 function MakeTempCardToHandAction:new(card,amount)
 	amount = amount or 1
 	return Action.new(self,{card=card,amount=amount})
@@ -566,10 +571,13 @@ function MakeTempCardToHandAction:tick()
 	Action.tick(self)
 end
 
-MakeTempCardToDrawPileAction = Action:new{duration=30}
-function MakeTempCardToDrawPileAction:new(card,amount)
+MakeTempCardToDrawPileAction = Action:new{duration=10}
+function MakeTempCardToDrawPileAction:new(card,amount,o)
 	amount = amount or 1
-	return Action.new(self,{card=card,amount=amount})
+	o = o or {}
+	o.card = card
+	o.amount = amount
+	return Action.new(self,o)
 end
 
 function MakeTempCardToDrawPileAction:tick()
@@ -579,8 +587,9 @@ function MakeTempCardToDrawPileAction:tick()
 			table.insert(drawPile,miscRand:randInt(#drawPile+1),card)
 			card:resetPowers()
 			local cardItem = CardItem:new{card=card,x=0,y=136,isNotInHand=true}
-			local effect = CardEffect:new{cardItem=cardItem,pauseDuration=30,duration=50,tx=0,ty=136}
-			effect.useCardPosition = fillCardPosition(cardItem)
+			local additionalPause = self.pauseDuration or 0
+			local effect = CardEffect:new{cardItem=cardItem,pauseDuration=30+additionalPause,duration=50+additionalPause,tx=0,ty=136}
+			effect.useCardPosition = fillCardPosition(cardItem,self.cardPosition)
 			addEffect(effect)
 		end
 	end

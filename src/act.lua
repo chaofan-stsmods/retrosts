@@ -152,13 +152,20 @@ TheCity = Act:new{
 		{item=CultistAndChosenEncounter,power=3},
 		{item=ShellParasiteAndFungiEncounter,power=3},
 		{item=CenturionAndMysticEncounter,power=6},
+		{item=SnakePlantEncounter,power=6},
+		{item=SneckoEncounter,power=3},
 	},
 	exclusiveEncounters={
 		[SphericGuardianEncounter]={SentryAndSphereEncounter},
 		[ChosenEncounter]={CultistAndChosenEncounter,ByrdAndChosenEncounter},
 		[ShellParasiteEncounter]={ShellParasiteAndFungiEncounter},
 		[ThreeByrdsEncounter]={ByrdAndChosenEncounter},
-	}
+	},
+	eliteEncounters={
+		{item=SlaversEncounter,power=1},
+		{item=GremlinLeaderEncounter,power=1},
+		{item=BookOfStabbingEncounter,power=1},
+	},
 }
 function TheCity:drawBackground()
 	sprmap(60,0,30,17,0,0)
@@ -169,7 +176,12 @@ function TheBeyond:drawBackground()
 	sprmap(90,0,30,17,0,0)
 end
 
-TheEnding = Act:new{id=4,title='The Ending',smallTitle='Final Act',cardUpgradedChance=0.5,commonRelicChance=0,uncommonRelicChance=100}
+TheEnding = Act:new{
+	id=4,title='The Ending',smallTitle='Final Act',cardUpgradedChance=0.5,commonRelicChance=0,uncommonRelicChance=100,
+	bossEncounters={
+		{item=CorruptHeartEncounter,power=1},
+	},
+}
 function TheEnding:drawBackground()
 	sprmap(120,0,30,17,0,0)
 end

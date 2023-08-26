@@ -184,3 +184,16 @@ function PlatedArmorPower:onDamaged(value,source,type)
 		addAction(ReducePowerAction:new(self,1))
 	end
 end
+
+ConfusionPower = Power:new{icon=36,stackable=false}
+function ConfusionPower:onDraw(card)
+	if card.baseCost >= 0 then
+		local newCost = miscRand:randInt(0,3)
+		if newCost ~= card.baseCost then
+			card.baseCost = newCost
+			card.costForOneTurnPlay = nil
+			card.costForOnePlay = nil
+			card:applyPowers()
+		end
+	end
+end

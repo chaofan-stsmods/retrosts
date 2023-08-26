@@ -28,6 +28,13 @@ function Burn:use()
 	return { DamageAction:new{source=player,target=player,value=self.magic,type='power'} }
 end
 
+Void = ColorlessCard:new{ name='Void',description='Unplayable. NL Ethereal. NL Whenever this card is drawn, lose {202}.',rarity='special',baseCost=-2,type='status',baseCanUse=false,canUpgrade=false,ethereal=true,playerTarget=true }
+function Void:onDraw(card)
+	if card == self then
+		addAction(GainEnergyAction:new(-1))
+	end
+end
+
 BandageUp = ColorlessCard:new{
 	name='Bandage Up',description='Heal !M! HP. NL Exhaust.',baseCost=0,type='skill',rarity='uncommon',
 	playerTarget=true,baseMagic=4,upgrade={baseMagic=6},exhaust=true,canGenerateInCombat=false
@@ -109,7 +116,7 @@ function ThinkingAhead:use()
 end
 
 colorlessCards = {
-	Wound,Dazed,Burn,Slimed,BandageUp,Blind,Finesse,MasterOfStrategy,HandOfGreed,ThinkingAhead
+	Wound,Dazed,Burn,Slimed,Void,BandageUp,Blind,Finesse,MasterOfStrategy,HandOfGreed,ThinkingAhead
 }
 
 CurseCard = Card:new{color={15,0},costIcon=46,typeIconColor=13,colorName='curse',type='curse',rarity='common',baseCost=-2,baseCanUse=false,canUpgrade=false,playerTarget=true}

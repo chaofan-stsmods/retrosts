@@ -276,9 +276,9 @@ end
 
 function LoseWindow:tick()
 	cls(0)
-	player:tick()
+	--player:drawImage()
 	for i=1,#enemies do
-		enemies[i]:tick()
+		enemies[i]:drawImage()
 	end
 	tickEffects()
 	tickTopBar()

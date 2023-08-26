@@ -92,7 +92,7 @@ public class CompressMyCode {
         System.out.println("Final code length: " + sb.length());
         sb.append(String.join("\n",suffixLines));
 
-        System.out.println("Compressed code length: " + huffmanResult.length);
+        System.out.println("Compressed code length: " + base64String.length());
         System.out.println("Num words: " + wordCodes.size());
         System.out.println("Num tree nodes: " + root.size());
         System.out.println("Num tree depth: " + root.depth());

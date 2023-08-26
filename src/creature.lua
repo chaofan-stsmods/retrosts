@@ -112,22 +112,23 @@ function Creature:damage(source,value,type,action)
 			end
 		end
 	end
+	value = self:triggerReducerEvent('onBeforeHpLoss',value,source,type,action)
 	if value > 0 then
 		addEffect(TextEffect:new{x=self.x+self.width*4,y=self.y,text=tostring(value),color=3,ySpeed=-0.5})
-		self:triggerEvent('onHpLoss',value,source,type,action)
 		if action then
 			action.damageDealt = (action.damageDealt or 0) + value
 		end
-	end
-	self.hp = self.hp - value
-	if self.hp <= 0 then
-		self.hp = 0
-		self:die()
-		if action then
-			action.numKilled = (action.numKilled or 0) + 1
+		self.hp = self.hp - value
+		if self.hp <= 0 then
+			self.hp = 0
+			self:die()
+			if action then
+				action.numKilled = (action.numKilled or 0) + 1
+			end
 		end
 	end
 	self:triggerEvent('onDamaged',value,source,type,action)
+	source:triggerEvent('onDamageDealt',value,self,type,action)
 end
 
 function Creature:die()

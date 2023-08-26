@@ -1,3 +1,5 @@
 require 'monster.monster'
+require 'monster.encounter'
 require 'monster.exordium'
 require 'monster.city'
+require 'monster.ending'

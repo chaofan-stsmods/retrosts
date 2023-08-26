@@ -67,8 +67,13 @@ end
 
 AnonymousEffect = Effect:new{duration=30,callback=nil}
 function AnonymousEffect:tick()
+	local result = nil
 	if self.callback then
-		self.callback(self.duration)
+		result = self.callback(self.duration)
 	end
-	Effect.tick(self)
+	if result == nil then
+		Effect.tick(self)
+	else
+		self.isDone = result
+	end
 end

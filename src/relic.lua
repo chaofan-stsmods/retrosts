@@ -113,7 +113,7 @@ function GoldenIdol:onAddBonusGoldReward(bonusGold,amount)
 	return bonusGold + amount * 0.25
 end
 
-BloodyIdol = Relic:new{name='Bloody Idol',icon=24,iconColorMap={1,14,13,12,2,2,1,8,2,2,11,12,13,14,2},tier='special',description='Whenever you gain #4#Gold#12#, heal #10#5#12# HP.'}
+BloodyIdol = Relic:new{name='Bloody Idol',icon=24,iconColorMap={1,14,13,12,2,2,1,8,2,2,11,12,13,14,2},tier='special',description='Whenever you gain #4#Gold#12#, heal #11#5#12# HP.'}
 function BloodyIdol:onGainGold(amount)
 	if amount > 0 then
 		player:heal(5)
@@ -209,12 +209,12 @@ function CultistMask:onCombatStart()
 	player:talk('@CAW!@ NL @CAAAW@')
 end
 
-FaceOfCleric = Relic:new{name='Face of Cleric',icon=189,tier='special',description='At the end of combat, raise your Max HP by #10#1.'}
+FaceOfCleric = Relic:new{name='Face of Cleric',icon=189,tier='special',description='At the end of combat, raise your Max HP by #11#1.'}
 function FaceOfCleric:onCombatEnd()
 	player:increaseMaxHp(1)
 end
 
-GremlinMask = Relic:new{name='Gremlin Visage',icon=190,tier='special',description='Start each combat with #10#1#12# {61}.'}
+GremlinMask = Relic:new{name='Gremlin Visage',icon=190,tier='special',description='Start each combat with #11#1#12# {61}.'}
 function GremlinMask:onCombatStart()
 	addAction(ApplyPowerAction:new(WeakPower:new(player,1,true)))
 end
@@ -243,7 +243,7 @@ function NlothsMask:onOpenNonBossChest(rewards)
 	end
 end
 
-SsserpentHead = Relic:new{name='Ssserpent Head',icon=254,tier='special',description='Whenever you enter a #4#?#12# room, gain #10#50 #4#Gold.'}
+SsserpentHead = Relic:new{name='Ssserpent Head',icon=254,tier='special',description='Whenever you enter a #4#?#12# room, gain #11#50 #4#Gold.'}
 function SsserpentHead:onEnterRoom(room)
 	if room.type == 'event' then
 		gainGold(50)

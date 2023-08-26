@@ -109,8 +109,8 @@ function LouseDefensive:nextIntent()
 end
 
 CurlUpPower = Power:new{icon=448,triggered=false}
-function CurlUpPower:onHpLoss()
-	if not self.triggered then
+function CurlUpPower:onDamaged(value)
+	if not self.triggered and value > 0 then
 		self.triggered = true
 		addAction(GainBlockAction:new{target=self.owner,value=self.amount})
 		addAction(ReducePowerAction:new(self,self.amount))

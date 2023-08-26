@@ -520,8 +520,10 @@ function BloodForBlood:use(target)
 	return { DamageAction:new{target=target,source=player,value=self.damage} }
 end
 
-function BloodForBlood:onHpLoss()
-	self.baseCost = math.max(0,self.baseCost-1)
+function BloodForBlood:onDamaged(value)
+	if value > 0 then
+		self.baseCost = math.max(0,self.baseCost-1)
+	end
 end
 
 function BloodForBlood:upgrade()
@@ -815,8 +817,8 @@ function Rupture:use()
 end
 
 RupturePower = Power:new{icon=212}
-function RupturePower:onHpLoss(value,source,type)
-	if source == self.owner then
+function RupturePower:onDamaged(value,source)
+	if source == self.owner and value > 0 then
 		addAction(ApplyPowerAction:new(StrengthPower:new(self.owner,self.amount)))
 	end
 end
@@ -938,7 +940,7 @@ function Corruption:use()
 	return { ApplyPowerAction:new(CorruptionPower:new(player)) }
 end
 
-CorruptionPower = Power:new{icon=229,stackable=false}
+CorruptionPower = Power:new{icon=229,stackable=false,priority=150}
 function CorruptionPower:onModifyCost(cost,card)
 	if card.type == 'skill' then
 		card.costForOneTurnPlay = nil
