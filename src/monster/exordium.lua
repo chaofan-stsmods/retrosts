@@ -672,7 +672,11 @@ function GremlinThief:init(random)
 end
 
 function GremlinThief:drawImage()
-	sprmap(0,29,2,2,self.x+8,self.y,0)
+	if self.flipped then
+		sprmap(0,29,2,2,self.x+8,self.y,0,1,flipRemap(0,2))
+	else
+		sprmap(0,29,2,2,self.x+8,self.y,0)
+	end
 end
 
 function GremlinThief:attack()
@@ -693,7 +697,11 @@ function GremlinFat:init(random)
 end
 
 function GremlinFat:drawImage()
-	sprmap(11,28,2,6,self.x+8,self.y,0)
+	if self.flipped then
+		sprmap(11,28,2,6,self.x+8,self.y,0,1,flipRemap(11,2))
+	else
+		sprmap(11,28,2,6,self.x+8,self.y,0)
+	end
 end
 
 function GremlinFat:attack()
@@ -723,7 +731,11 @@ function GremlinWarrior:onCombatStart()
 end
 
 function GremlinWarrior:drawImage()
-	sprmap(6,28,3,3,self.x+4,self.y,0)
+	if self.flipped then
+		sprmap(6,28,3,3,self.x+4,self.y,0,1,flipRemap(6,3))
+	else
+		sprmap(6,28,3,3,self.x+4,self.y,0)
+	end
 end
 
 function GremlinWarrior:attack()
@@ -751,7 +763,11 @@ function GremlinWizard:init(random)
 end
 
 function GremlinWizard:drawImage()
-	sprmap(2,29,4,3,self.x-4,self.y,0)
+	if self.flipped then
+		sprmap(2,29,4,3,self.x+4,self.y,0,1,flipRemap(2,4))
+	else
+		sprmap(2,29,4,3,self.x-4,self.y,0)
+	end
 end
 
 function GremlinWizard:charge()
@@ -790,7 +806,11 @@ function GremlinTsundere:init(random)
 end
 
 function GremlinTsundere:drawImage()
-	sprmap(9,28,2,4,self.x+8,self.y,0)
+	if self.flipped then
+		sprmap(9,28,2,4,self.x+8,self.y,0,1,flipRemap(9,2))
+	else
+		sprmap(9,28,2,4,self.x+8,self.y,0)
+	end
 end
 
 function GremlinTsundere:defend()

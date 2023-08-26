@@ -91,7 +91,7 @@ function TurnBasedPower:onTurnEnd()
 	addAction(ReducePowerAction:new(self,1))
 end
 
-VulnerablePower = TurnBasedPower:new{debuff=true,icon=60}
+VulnerablePower = TurnBasedPower:new{debuff=true,icon=60,priority=150}
 function VulnerablePower:onAttacked(damage)
 	return damage * self.owner:triggerReducerEvent('onModifyVulnerableFactor',1.5)
 end

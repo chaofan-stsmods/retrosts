@@ -603,7 +603,7 @@ function GremlinLeader:buff()
 
 	addAction(EffectAction:new(AnonymousEffect:new{duration=60,callback=function ()
 		drawTalkBubble(str,self.x-65,self.y-25,60,35,self.x+8,self.y+6,12,15)
-	end},10))	
+	end},10))
 	for _,e in ipairs(enemies) do
 		addAction(ApplyPowerAction:new(StrengthPower:new(e,self.strAmt)))
 		if e ~= self then
@@ -621,18 +621,19 @@ function GremlinLeader:attack()
 end
 
 function GremlinLeader:summon()
+	local possessed = {}
 	for _=1,2 do
 		local index = nil
 		for i=#enemies,1,-1 do
 			local enemy = enemies[i]
-			if not enemy.alive and not enemy.possessed then
+			if not enemy.alive and not possessed[i] then
 				index = i
 				break
 			end
 		end
 		if index then
 			local target = enemies[index]
-			target.possessed = true
+			possessed[index] = true
 			local gremlin = gremlinPool[aiRand:randInt(#gremlinPool)]:new{createRandom=self.createRandom}
 			local tx,ty = target.x+target.width*4-gremlin.width*4,target.y+target.height*8-gremlin.height*8
 			gremlin.visible = false
@@ -677,6 +678,15 @@ end
 
 function GremlinLeader:gremlinCount()
 	return table.count(enemies,function(e) return e.alive and e ~= self end)
+end
+
+function GremlinLeader:die()
+	Monster.die(self)
+	for _,enemy in ipairs(enemies) do
+		if enemy.alive and enemy ~= self then
+			addAction(EscapeAction:new{target=enemy})
+		end
+	end
 end
 
 BookOfStabbing = Monster:new{ maxHp=164,width=6,height=6,stabDmg=6,bigStabDmg=21,stabCount=2 }
@@ -726,6 +736,114 @@ function PainfulStabsPower:onDamageDealt(value,target,type)
 	end
 end
 
+TheCollector = Monster:new{ maxHp=282,width=8,height=6,blockAmt=15,rakeDmg=18,strAmt=3,debuffAmt=3,numTurn=1,debuffUsed=false }
+function TheCollector:init()
+	if ascension >= 9 then
+		self.maxHp = 300
+		self.blockAmt = ascension >= 19 and 23 or 18
+	end
+	self.rakeDmg = ascension >= 4 and 21 or 18
+	self.debuffAmt = ascension >= 19 and 5 or 3
+	self.strAmt = ascension >= 19 and 5 or (ascension >= 4 and 4 or 3)
+end
+
+function TheCollector:drawImage()
+	sprmap(51,27,5,self.height,self.x+12,self.y,8)
+end
+
+function TheCollector:rake()
+	addAction(DamageAction:new{target=player,source=self,value=self.intentDamage})
+	addAction(NextIntentAction:new(self))
+end
+
+function TheCollector:debuff()
+	self.debuffUsed = true
+	addAction(EffectAction:new(AnonymousEffect:new{duration=60,callback=function ()
+		drawTalkBubble('@You@ @are@ @mine!@',self.x-65,self.y-25,60,35,self.x+8,self.y+6,12,15)
+	end},10))
+	addAction(ApplyPowerAction:new(WeakPower:new(player,self.debuffAmt,true)))
+	addAction(ApplyPowerAction:new(VulnerablePower:new(player,self.debuffAmt,true)))
+	addAction(ApplyPowerAction:new(FrailPower:new(player,self.debuffAmt,true)))
+	addAction(NextIntentAction:new(self))
+end
+
+function TheCollector:defend()
+	addAction(GainBlockAction:new{target=self,value=self.blockAmt})
+	for _, enemy in ipairs(enemies) do
+		if enemy.alive then
+			addAction(ApplyPowerAction:new(StrengthPower:new(enemy,self.strAmt)))
+		end
+	end
+	addAction(NextIntentAction:new(self))
+end
+
+function TheCollector:summon()
+	for i = 1,2 do
+		if not enemies[i].alive then
+			local torchHead = TorchHead:new{createRandom=self.createRandom}
+			local target = enemies[i]
+			torchHead.x,torchHead.y = target.x+target.width*4-torchHead.width*4,target.y+target.height*8-torchHead.height*8
+			addAction(SpawnMonsterAction:new{target=torchHead,index=i})
+			addAction(ApplyPowerAction:new(MinionPower:new(torchHead)))
+		end
+	end
+	addAction(NextIntentAction:new(self))
+end
+
+function TheCollector:enemyTurn()
+	self.numTurn = self.numTurn + 1
+	Monster.enemyTurn(self)
+end
+
+function TheCollector:nextIntent()
+	if self.numTurn == 1 then
+		self:setIntent('summon','unknown')
+	elseif self.numTurn == 4 then
+		self:setIntent('debuff','strongDebuff')
+	elseif table.anyMatch(enemies,function (e) return e ~= self and not e.alive end) then
+		self:rollIntent{
+			{'summon','unknown',power=25,limit=1},
+			{'rake','attack',self.rakeDmg,power=45,limit=2},
+			{'defend','defendBuff',power=30,limit=1},
+		}
+	else
+		self:rollIntent{
+			{'rake','attack',self.rakeDmg,power=70,limit=2},
+			{'defend','defendBuff',power=30,limit=1},
+		}
+	end
+end
+
+function TheCollector:die()
+	Monster.die(self)
+	for _,enemy in ipairs(enemies) do
+		if enemy.alive and enemy ~= self then
+			addAction(SuicideAction:new{target=enemy})
+		end
+	end
+end
+
+TorchHead = Monster:new{ maxHp=40,width=4,height=3 }
+function TorchHead:init(random)
+	self.maxHp = ascension >= 9 and random:randInt(40,45) or random:randInt(38,40)
+	if ascension >= 4 then
+		self.attackDmg = 12
+	end
+end
+
+function TorchHead:drawImage()
+	sprmap(48,27,3,self.height,self.x-2,self.y,0)
+end
+
+function TorchHead:attack()
+	addAction(DamageAction:new{target=player,source=self,value=self.intentDamage})
+	addAction(NextIntentAction:new(self))
+end
+
+function TorchHead:nextIntent()
+	self:setIntent('attack','attack',7)
+end
+
 -- encounters
 TwoThievesEncounter = Encounter:new{spriteBank=1,name='TwoThieves',enemyInfo={encItem(Looter,-24,0),encItem(Mugger,24,0)}}
 ThreeCultistsEncounter = Encounter:new{spriteBank=1,name='ThreeCultists',enemyInfo={encItem(Cultist,-48,1),encItem(Cultist,0,0),encItem(Cultist,48,0)}}
@@ -753,3 +871,6 @@ function GremlinLeaderEncounter:setupEnemies(random)
 	Encounter.setupEnemies(self,random)
 end
 BookOfStabbingEncounter = Encounter:new{spriteBank=5,name='BookOfStabbing',enemyInfo={encItem(BookOfStabbing,0,0)}}
+
+-- boss encounters
+TheCollectorEncounter = Encounter:new{spriteBank=5,name='TheCollector',enemyInfo={encItem(MonsterSlot,-58,1),encItem(MonsterSlot,-14,2),encItem(TheCollector,40,-3)},mapIcon=324}

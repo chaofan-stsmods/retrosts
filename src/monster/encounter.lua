@@ -1,6 +1,8 @@
 -- encounter
 ---@diagnostic disable: lowercase-global
 
+currentEncounter = nil
+
 Encounter = Object:new{spriteBank=0,enemyInfo=nil,name=''}
 function Encounter:new(o)
 	local r = Object.new(self,o)
@@ -9,6 +11,7 @@ function Encounter:new(o)
 end
 
 function Encounter:setupEnemies(random)
+	currentEncounter = self
 	enemies = {}
 	for i, enemyInfo in ipairs(self.enemyInfo) do
 		enemies[i] = enemyInfo.type:new{x=enemyInfo.x,y=enemyInfo.y,createRandom=random}

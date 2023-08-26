@@ -169,9 +169,16 @@ TheCity = Act:new{
 		{item=GremlinLeaderEncounter,power=1},
 		{item=BookOfStabbingEncounter,power=1},
 	},
+	bossEncounters={
+		{item=TheCollector,power=1},
+	},
 }
 function TheCity:drawBackground()
 	sprmap(60,0,30,17,0,0)
+	if currentEncounter == TheCollectorEncounter and #enemies == 3 then
+		local collector = enemies[3]
+		sprmap(71,17,8,10,collector.x+4,collector.y-16,8)
+	end
 end
 
 TheBeyond = Act:new{id=3,title='The Beyond',smallTitle='Act 3',cardUpgradedChance=0.5}

@@ -120,7 +120,8 @@ end
 
 -- window
 ---@class MerchantWindow : Window
----@field goods {card1:CardItem[],card2:CardItem[],relics:Relic[],potions:Potion[]}
+---@field goods {card1:any[],card2:any[],relics:any[],potions:any[]}?
+---@field cardRemoval {price:number,sold:boolean}?
 MerchantWindow = {name='MerchantWindow',goods=nil,cardRemoval=nil,selectionType='card1',selection=0,yOffset=-136}
 Window:new(MerchantWindow)
 
