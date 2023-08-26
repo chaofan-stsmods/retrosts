@@ -1,10 +1,18 @@
 -- window
 ---@diagnostic disable: lowercase-global
 
+---@type Window
 window = nil
+---@type Window
 nearestWindow = nil
 
-Window = Object:new{child=nil,parent=nil,tick=noop,tickBelow=noop,name='',onOpen=noop,single=true}
+---@class Window : Object
+---@field child Window?
+---@field parent Window?
+---@field onClose fun(output: any): nil
+Window = {child=nil,parent=nil,tick=noop,tickBelow=noop,name='',onOpen=noop,single=true}
+Object:new(Window)
+
 function Window:windowTick()
 	if self.child ~= nil then
 		self:tickBelow()
@@ -275,7 +283,9 @@ function LoseWindow:onOpen()
 end
 
 function LoseWindow:tick()
-	cls(0)
+	darkenColors()
+	act:drawBackground()
+	resetColors()
 	--player:drawImage()
 	for i=1,#enemies do
 		enemies[i]:drawImage()

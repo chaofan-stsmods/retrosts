@@ -1,7 +1,9 @@
 -- card
 ---@diagnostic disable: lowercase-global
 
-Card = Object:new{
+---@class Card : Object
+---@field costForOneTurnPlay integer?
+Card = {
 	name='',description='',type='attack',rarity='common',
 	color={2,1},costIcon=201,typeIconColor=4,colorName='',
 	baseCost=0,cost=0,costForOneTurnPlay=nil,costForOnePlay=nil,
@@ -11,6 +13,8 @@ Card = Object:new{
 	upgrade=noop,upgraded=false,tags={},canGenerateInCombat=true,canRemove=true,
 	onRemoveFromDeck=noop,
 }
+Object:new(Card)
+
 function Card:new(o)
 	local r = Object.new(self,o)
 	if type(r.upgrade) == 'table' then
@@ -136,7 +140,15 @@ function Card:load(meta)
 	end
 end
 
-CardItem = Object:new{ x=0,y=136,tx=0,ty=136,card=nil,large=false,isNotInHand=false,showWhiteCost=false,glow=nil,flipped=false}
+---@class CardItem : Object
+---@field card Card
+---@field tx integer
+---@field ty integer
+---@field isNotInHand boolean
+---@field large boolean
+CardItem = { x=0,y=136,tx=0,ty=136,large=false,isNotInHand=false,showWhiteCost=false,glow=nil,flipped=false }
+Object:new(CardItem)
+
 cardTypeToSprIndex = {attack=57,skill=58,power=59,status=55,curse=56}
 cardRarityColor = {basic={14,15},common={14,15},special={14,15},uncommon={10,9},rare={4,3}}
 function CardItem:tick()

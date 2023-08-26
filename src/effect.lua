@@ -1,7 +1,9 @@
 -- effect
 ---@diagnostic disable: lowercase-global
 
+---@type Effect[]
 effects = {}
+---@type Effect[]
 pendingEffects = {}
 local tickingEffect = false
 function tickEffects()
@@ -27,6 +29,7 @@ function addEffect(effect)
 	end
 end
 
+---@class Effect : Action
 Effect = Action:new()
 
 TextEffect = Effect:new{duration=120,color=2,xSpeed=0,ySpeed=0,text='',x=120,y=68,small=true,scale=1,shadow=nil}

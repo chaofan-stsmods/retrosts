@@ -2,16 +2,27 @@
 ---@diagnostic disable: lowercase-global
 
 -- in combat properties
+---@type Random
 shuffleRand = nil
+---@type Random
 miscRand = nil
+---@type Random
 local rewardRand = nil
+---@type Random
 aiRand = nil
+---@type Random
 potionRand = nil
+---@type Monster[]
 enemies = {}
+---@type Card[]
 drawPile = {}
+---@type Card[]
 discardPile = {}
+---@type Card[]
 exhaustPile = {}
+---@type CardItem[]
 hand = {}
+---@type CardItem[]
 limbo = {}
 energy = 3
 turn = 1

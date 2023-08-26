@@ -282,10 +282,14 @@ function rollList(random,list,key)
 	return list[#list],#list
 end
 
-function noop() end
+function noop(...) end
 
 -- table
 
+---@generic T
+---@param self T[]
+---@param item T
+---@return integer?
 function table:indexOf(item)
 	for index, value in ipairs(self) do
 		if value == item then
@@ -295,7 +299,11 @@ function table:indexOf(item)
 	return nil
 end
 
-function table:allMatch(condition)
+---@generic T
+---@param self T[]
+---@param condition fun(T): boolean
+---@return boolean
+function table.allMatch(self,condition)
 	for _, value in ipairs(self) do
 		if not condition(value) then
 			return false
@@ -304,7 +312,11 @@ function table:allMatch(condition)
 	return true
 end
 
-function table:anyMatch(condition)
+---@generic T
+---@param self T[]
+---@param condition fun(T): boolean
+---@return boolean
+function table.anyMatch(self,condition)
 	for _, value in ipairs(self) do
 		if condition(value) then
 			return true
@@ -313,7 +325,10 @@ function table:anyMatch(condition)
 	return false
 end
 
-function table:retainIf(condition)
+---@generic T
+---@param self T[]
+---@param condition fun(T,integer): boolean
+function table.retainIf(self,condition)
 	for i = #self,1,-1 do
 		if not condition(self[i],i) then
 			table.remove(self,i)
@@ -321,7 +336,12 @@ function table:retainIf(condition)
 	end
 end
 
-function table:map(func)
+---@generic T
+---@generic U
+---@param self T[]
+---@param func fun(T,integer): U
+---@return U[]
+function table.map(self,func)
 	local r = {}
 	for index, value in ipairs(self) do
 		table.insert(r,func(value,index))
@@ -329,7 +349,11 @@ function table:map(func)
 	return r
 end
 
-function table:count(condition)
+---@generic T
+---@param self T[]
+---@param condition fun(T): boolean
+---@return integer
+function table.count(self,condition)
 	local count = 0
 	for _, value in ipairs(self) do
 		if condition(value) then
@@ -411,7 +435,12 @@ end
 
 -- objects
 
+---@class Object
 Object = {}
+
+---@generic T : Object
+---@param o T?
+---@return T
 function Object:new(o)
 	o = o or {}
 	setmetatable(o, self)
@@ -429,7 +458,9 @@ end
 local A1, A2 = 727595, 798405  -- 5^17=D20*A1+A2
 local D20, D40 = 1048576, 1099511627776  -- 2^20, 2^40
 
-Random = Object:new{x1=0,x2=1}
+---@class Random : Object
+Random = {x1=0,x2=1}
+Object:new(Random)
 function Random:new(seed,x2)
 	seed = math.floor(seed or tstamp())
 	local x1 = seed

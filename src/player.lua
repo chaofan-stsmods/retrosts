@@ -1,9 +1,12 @@
 -- player
 ---@diagnostic disable: lowercase-global
 
-Player = Creature:new{
+---@class Player : Creature
+Player = {
 	x=30,y=52,tileBank=1,name=nil,
 }
+Creature:new(Player)
+
 function Player:applyPowers()
 	handApplyPowers()
 	for _, enemy in ipairs(enemies) do

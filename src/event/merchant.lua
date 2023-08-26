@@ -119,7 +119,11 @@ function MerchantEvent:showMerchant()
 end
 
 -- window
-MerchantWindow = Window:new{name='MerchantWindow',goods=nil,cardRemoval=nil,selectionType='card1',selection=0,yOffset=-136}
+---@class MerchantWindow : Window
+---@field goods {card1:CardItem[],card2:CardItem[],relics:Relic[],potions:Potion[]}
+MerchantWindow = {name='MerchantWindow',goods=nil,cardRemoval=nil,selectionType='card1',selection=0,yOffset=-136}
+Window:new(MerchantWindow)
+
 function MerchantWindow:onOpen()
 	queueSync(2,currentEvent.spriteBank)
 	queueSync(1,player.tileBank)

@@ -42,7 +42,10 @@ function losePotion(potion)
 	end
 end
 
-Potion = Object:new{name='',description='',icon=0,color={},canUseOutsideCombat=false,baseMagic=0,magic=0,enemyTarget=false,rarity='common',useTitle='Drink',use=noop}
+---@class Potion : Object
+Potion = {name='',description='',icon=0,color={},canUseOutsideCombat=false,baseMagic=0,magic=0,enemyTarget=false,rarity='common',useTitle='Drink',use=noop}
+Object:new(Potion)
+
 function Potion:new(o)
 	o = o or {}
 	o.magic = o.baseMagic

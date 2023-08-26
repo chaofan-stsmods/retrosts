@@ -1,10 +1,13 @@
 -- monster
 ---@diagnostic disable: lowercase-global
 
-Monster = Creature:new{
+---@class Monster : Creature
+Monster = {
 	intent='takeTurn',intentType='attack',intentBaseDamage=0,intentDamage=0,intentAttackCount=1,showIntent=false,lockIntentDamage=false,
 	takeTurn=noop,createRandom=nil,init=noop,lastIntent=nil,lastSecondIntent=nil,
 }
+Creature:new(Monster)
+
 function Monster:new(o)
 	local r = Creature.new(self,o)
 	if r.createRandom then

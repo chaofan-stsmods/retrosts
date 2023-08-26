@@ -1,8 +1,11 @@
 ---@diagnostic disable: lowercase-global
 -- actions
 
+---@type Action[]
 actions = {}
+---@type Action[]
 secondaryActions = {}
+---@type Action?
 runningAction = nil
 function resetActions()
 	actions = {}
@@ -36,7 +39,12 @@ function tickActions()
 	end
 end
 
-Action = Object:new{isDone=false,duration=10,startDuration=10,secondary=false}
+---@class Action : Object
+---@field duration integer?
+---@field startDuration integer?
+Action = {isDone=false,duration=10,startDuration=10,secondary=false}
+Object:new(Action)
+
 function Action:new(o)
 	if o and o.duration then
 		o.startDuration = o.duration

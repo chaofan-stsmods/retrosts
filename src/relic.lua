@@ -3,7 +3,9 @@
 
 local colorlessRelics
 
-Relic = Object:new{name='',description='',counter=-1,icon=0,iconColorMap={},tier='common',colorName='colorless',priority=50}
+---@class Relic : Object
+Relic = {name='',description='',counter=-1,icon=0,iconColorMap={},tier='common',colorName='colorless',priority=50}
+Object:new(Relic)
 
 function Relic:canSpwan()
 	return true

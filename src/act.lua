@@ -1,11 +1,14 @@
 -- act
 ---@diagnostic disable: lowercase-global
 
-Act = Object:new{
+---@class Act : Object
+Act = {
 	id=0,title='',smallTitle='',cardUpgradedChance=0,drawBackground=noop,commonRelicChance=50,uncommonRelicChance=33,
 	weakEncounterCount=2,weakEncounters={},exclusiveEncounters={},strongEncounters={},eliteEncounters={},bossEncounters={},
 	events={}
 }
+Object:new(Act)
+
 function Act:new(o)
 	local r = Object.new(self,o)
 	normalize(r.weakEncounters)

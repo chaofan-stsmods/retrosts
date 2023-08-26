@@ -1,12 +1,15 @@
 -- creature
 ---@diagnostic disable: lowercase-global
 
-Creature = Object:new{
+---@class Creature : Object
+---@field visible boolean
+Creature = {
 	hp=100,maxHp=100,x=0,y=0,width=3,height=3,block=0,powerIndex=0,powers={},alive=true,visible=true,flipped=false,
 	applyPowers=noop,
 	onCombatStart=noop,
 	drawImage=noop,
 }
+Object:new(Creature)
 function Creature:new(o)
 	o = o or {}
 	o.powers={}

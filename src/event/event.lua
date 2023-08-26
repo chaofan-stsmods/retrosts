@@ -1,6 +1,7 @@
 -- event
 ---@diagnostic disable: lowercase-global
 
+---@type Event
 currentEvent=nil
 function event()
 	if currentEvent then
@@ -123,10 +124,13 @@ end
 
 -- event instance
 
-Event = Object:new{
+---@class Event : Object
+Event = {
 	spriteBank=nil,options={},selectedOption=0,canOperatePotion=true,
 	onOption=noop,init=noop,drawForeground=noop,onCombatEnd=noop,load=noop,
 }
+Object:new(Event)
+
 function Event:new(o)
 	o = o or {}
 	o.options = o.options or {}

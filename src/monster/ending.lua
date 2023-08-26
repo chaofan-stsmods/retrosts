@@ -11,7 +11,7 @@ function CorruptHeart:init()
 end
 
 function CorruptHeart:drawImage()
-	sprmap(62,17,10,12,self.x,self.y-40,0)
+	sprmap(62,17,9,10,self.x,self.y-24,0)
 end
 
 function CorruptHeart:onCombatStart()
@@ -86,7 +86,7 @@ function CorruptHeart:nextIntent(first)
 	end
 end
 
-InvinciblePower = Power:new{icon=462}
+InvinciblePower = Power:new{icon=430}
 function InvinciblePower:new(owner,amount)
 	local result = Power.new(self,owner,amount)
 	result.initialAmount = amount
@@ -111,7 +111,7 @@ function InvinciblePower:onBeforeHpLoss(value)
 	end
 end
 
-BeatOfDeathPower = Power:new{icon=463}
+BeatOfDeathPower = Power:new{icon=431}
 function BeatOfDeathPower:onUseCard()
 	addAction(DamageAction:new{target=player,source=self.owner,value=self.amount,type='power'})
 end
