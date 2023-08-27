@@ -32,7 +32,7 @@ function OminousForge:onOption(selection)
 			obtainRelic(WarpedTongs:new())
 			local cardItem = CardItem:new{card=Pain:new(),x=0,y=136,tx=120,ty=68,isNotInHand=true}
 			addEffect(CardEffect:new{cardItem=cardItem,pauseDuration=30,duration=50,tx=240,ty=0})
-			table.insert(deck,cardItem.card)
+			obtainCard(cardItem.card)
 
 			self.screen = 'leave'
 			self.description = 'You decide to see if you can find anything of use. After uncovering tarps,looking through boxes,and checking nooks and crannies,you find a dust covered ~#4#relic!#12#~ ' ..
@@ -380,7 +380,7 @@ function KnowingSkull:onOption(selection)
 			local card = getColorlessCardType(self.random,'uncommon'):new()
 			local cardItem = CardItem:new{card=card,x=0,y=136,tx=120,ty=68,isNotInHand=true}
 			addEffect(CardEffect:new{cardItem=cardItem,pauseDuration=30,duration=50,tx=240,ty=0})
-			table.insert(deck,cardItem.card)
+			obtainCard(cardItem.card)
 			player:damage(player,self.cardCost,'hpLoss')
 			self.cardCost = self.cardCost+1
 			self.options[3].description = '[Success?] #5#Get a Colorless Card. #3#Lose '..self.cardCost..' HP.'
@@ -457,7 +457,7 @@ function NoteForYourself:onOption(selection)
 		if selection == 1 then
 			local cardItem = CardItem:new{card=self.card,x=0,y=136,tx=120,ty=68,isNotInHand=true}
 			addEffect(CardEffect:new{cardItem=cardItem,pauseDuration=30,duration=50,tx=240,ty=0})
-			table.insert(deck,self.card)
+			obtainCard(self.card)
 			removeCardFromDeck(1,false,function (completed,cardItems)
 				self.description = 'What is going on?'
 				if completed then
@@ -581,7 +581,7 @@ function WeMeetAgain:init()
 	self.options = {}
 
 	local potionCandidates = shallowcopy(potions)
-	table.retainIf(potionCandidates,function (p) return p ~= Slot end)
+	table.retainIf(potionCandidates,function (p) return p ~= PotionSlot end)
 	if #potionCandidates > 0 then
 		self.potion = potionCandidates[self.random:randInt(#potionCandidates)]
 		self.options[1] = {description='[Give Potion] #3#Lose '..self.potion.name..'. #5#Obtain a Relic.'}
@@ -670,8 +670,7 @@ function TheWomanInBlue:onOption(selection)
 			for _=1,selection do
 				addPotionReward(rewards,getTrueRandomPotionType(self.random):new())
 			end
-			local rewardWindow = RewardWindow:new{rewards=rewards,canClose=true}
-			rewardWindow.onProceed = function (self) self:close() end
+			local rewardWindow = RewardWindow:new{rewards=rewards,canClose=true,onProceed=function(self) self:close() end}
 			openWindowAbove(rewardWindow,function ()
 				self.description = '\"Good. Now leave.\" NL You exit the shop cautiously.'
 				self.screen = 'leave'

@@ -61,7 +61,7 @@ function drawPotions()
 		potion:drawImage(x,0)
 		if topBarSelection.type == 'potion' and topBarSelection.index == i then
 			drawSelectionBox(x-1,y,10,9,nil,2)
-			if potion ~= Slot then
+			if potion ~= PotionSlot then
 				drawItemTooltip(potion,x-1,y+10)
 			end
 		end
@@ -118,7 +118,7 @@ function controlTopBar()
 				topBarSelection.index = limit(topBarSelection.index+1,1,#potions)
 			end
 		elseif btnp(4) then
-			if potions[topBarSelection.index] ~= Slot then
+			if potions[topBarSelection.index] ~= PotionSlot then
 				topBarSelection.type = 'potionMenu'
 				topBarSelection.potionIndex = topBarSelection.index
 				topBarSelection.index = 1
@@ -142,7 +142,7 @@ function controlTopBar()
 						if potion.canUseOutsideCombat then
 							potion:applyPowers()
 							potion:use()
-							potions[topBarSelection.potionIndex] = Slot
+							potions[topBarSelection.potionIndex] = PotionSlot
 						else
 							addAction(UsePotionAction:new{potion=potion})
 						end
@@ -150,7 +150,7 @@ function controlTopBar()
 					end
 				end
 			elseif potions[topBarSelection.potionIndex]:canDiscard() then
-				potions[topBarSelection.potionIndex] = Slot
+				potions[topBarSelection.potionIndex] = PotionSlot
 				topBarSelection.type = 'potion'
 				topBarSelection.index = topBarSelection.potionIndex
 				topBarSelection.potionIndex = nil

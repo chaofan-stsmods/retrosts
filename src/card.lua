@@ -304,7 +304,7 @@ function drawDescription(card,description,x,y,lineWidth,maxLine,color)
 							return maxX-x,maxY
 						end
 						if sprId >= 55 and sprId <= 59 then
-							mapColor(3,card.typeIconColor)
+							mapColor(3,card.typeIconColor or color)
 							spr(sprId,currentX+xOffset,currentY+yOffset-2,0,1,flip and 1 or 0)
 							resetColor(3)
 						else
@@ -389,6 +389,16 @@ function moveLimitLineWidthAndPrint(str,currentX,currentY,x,lineWidth,maxY,color
 	return currentX,currentY
 end
 
+function obtainCard(card)
+	table.insert(deck,card)
+	player:triggerEvent('onObtainCard',card)
+end
+
+function removeCard(card)
+	table.remove(deck,table.indexOf(deck,card))
+	card:onRemoveFromDeck()
+end
+
 function removeCardFromDeck(amount,canClose,onClose,title)
 	title = title or 'Choose a Card to Remove'
 	local cardItems = table.map(deck, function (card) return CardItem:new{card=card,x=240,y=0,isNotInHand=true} end)
@@ -424,8 +434,7 @@ function removeCardsWithEffect(cards,duration)
 	duration = duration or 10
 	local startX,stepX = placeCardsInARow(#cards)
 	for i, cardItem in ipairs(cards) do
-		table.remove(deck,table.indexOf(deck,cardItem.card))
-		cardItem.card:onRemoveFromDeck()
+		removeCard(cardItem.card)
 		cardItem.tx = startX+stepX*i
 		cardItem.ty = 68
 		cardItem.large = false
@@ -516,9 +525,8 @@ function transformCardFromDeck(amount,random,canClose,onClose)
 			end
 			table.retainIf(thisCardTypes,function (card) return getmetatable(cardItem.card) ~= card end)
 			local randomCard = thisCardTypes[random:randInt(#thisCardTypes)]:new()
-			table.remove(deck,table.indexOf(deck,cardItem.card))
-			cardItem.card:onRemoveFromDeck()
-			table.insert(deck,randomCard)
+			removeCard(cardItem.card)
+			obtainCard(randomCard)
 			cardItem.tx = startX+stepX*i
 			cardItem.ty = 68
 			cardItem.large = false
@@ -560,7 +568,7 @@ function duplicateCardFromDeck(amount,canClose,onClose,title)
 		end
 		local startX,stepX = placeCardsInARow(#cards)
 		for i, cardItem in ipairs(cards) do
-			table.insert(deck,cardItem.card:copy())
+			obtainCard(cardItem.card:copy())
 			cardItem.tx = startX+stepX*i
 			cardItem.ty = 68
 			cardItem.large = false
@@ -699,7 +707,7 @@ function CardGridUI:gridControls()
 	if not self.cursorOnSelf then
 		return
 	end
-	
+
 	if self.selection > #self.cardItems then
 		self.selection = #self.cardItems
 	end

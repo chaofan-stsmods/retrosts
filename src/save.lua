@@ -173,7 +173,7 @@ function saveGame(completed,eventMeta)
 		index = index + 1
 	end
 	for _,potion in ipairs(potions) do
-		if potion == Slot then
+		if potion == PotionSlot then
 			pmem(index,0)
 		else
 			pmem(index,table.indexOf(getAllPotions(),getmetatable(potion)))
@@ -301,7 +301,7 @@ function loadGame()
 	for i = 1,potionCount do
 		val32 = pmem(index)
 		if val32 == 0 then
-			potions[i] = Slot
+			potions[i] = PotionSlot
 		else
 			potions[i] = getAllPotions()[val32]:new()
 		end

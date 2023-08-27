@@ -217,7 +217,7 @@ function UsePotionAction:tick()
 			self.isDone = true
 			return
 		end
-		potions[potionIndex] = Slot
+		potions[potionIndex] = PotionSlot
 		potion:applyPowers()
 		local potionActions = potion:use(self.target) or {}
 		for i,potionAction in ipairs(potionActions) do
@@ -401,7 +401,9 @@ function NewTurnAction:tick()
 		player:onTurnStart(turn + 1)
 		addAction(DrawCardAction:new(5+self.additionalCard))
 		player:triggerEvent('onTurnStartPostDraw', turn + 1)
-		energy = maxEnergy
+		if turn ~= 0 then
+			energy = maxEnergy
+		end
 	end
 	Action.tick(self)
 	if self.isDone then

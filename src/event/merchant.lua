@@ -75,7 +75,7 @@ function MerchantEvent:generateGoods()
 	end
 
 	for i=1,3 do
-		potion = getRandomPotionType(random):new()
+		local potion = getRandomPotionType(random):new()
 		potion.basePrice = potionPrice[potion.rarity]*random:randFloat(0.95,1.05)
 		potions[i] = potion
 	end
@@ -284,7 +284,7 @@ function MerchantWindow:merchantControls()
 				loseGold(cardItem.price)
 				cardItem.large = false
 				addEffect(CardEffect:new{cardItem=cardItem,pauseDuration=1,duration=20,tx=240,ty=0})
-				table.insert(deck,cardItem.card)
+				obtainCard(cardItem.card)
 				cardItem.sold = true
 				self.selection = 0
 			end
@@ -318,7 +318,7 @@ function MerchantWindow:merchantControls()
 				loseGold(cardItem.price)
 				cardItem.large = false
 				addEffect(CardEffect:new{cardItem=cardItem,pauseDuration=1,duration=20,tx=240,ty=0})
-				table.insert(deck,cardItem.card)
+				obtainCard(cardItem.card)
 				cardItem.sold = true
 				self.selection = 0
 			end

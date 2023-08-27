@@ -10,6 +10,8 @@ function CampfireEvent:init()
 		table.insert(self.options,{name='Recall',description='Obtain the ruby key.',icon=340,onSelect=function() self:recall() end})
 	end
 	player:triggerEvent('onModifyCampfireOptions',self.options)
+	self.healAmt = math.floor(player.maxHp*0.3)
+	self.additionalHealAmt = table.anyMatch(relics,function(relic) return getmetatable(relic) == RegalPillow end) and 15 or 0
 end
 
 function CampfireEvent:drawBackground()
@@ -107,7 +109,7 @@ end
 
 
 function CampfireEvent:getRestDescription()
-	return ('Heal for 30% of your max HP ({#}).'):gsub('{#}',tostring(math.floor(player.maxHp*0.3)))
+	return ('Heal for 30% of your max HP ({#}).'):gsub('{#}',tostring(self.healAmt)..(self.additionalHealAmt > 0 and '+'..tostring(self.additionalHealAmt) or ''))
 end
 
 function CampfireEvent:onOption(selection)
@@ -124,8 +126,9 @@ function CampfireEvent:onOption(selection)
 end
 
 function CampfireEvent:rest()
-	player:heal(math.floor(player.maxHp*0.3))
+	player:heal(self.healAmt+self.additionalHealAmt)
 	self:completeCampfire()
+	player:triggerEvent('onRest',self)
 end
 
 function CampfireEvent:smith()

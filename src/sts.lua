@@ -53,7 +53,7 @@ player = nil
 floor = 1
 gold = 0
 deck = {}
-potions = {Slot,Slot,Slot}
+potions = {PotionSlot,PotionSlot,PotionSlot}
 relics = {}
 maxEnergy = 3
 rubyKeyObtained = false
@@ -101,7 +101,7 @@ function startGame(character,ascensionLevel)
 		table.insert(deck,1,AscendersBane:new())
 	end
 	relics = player:getStartRelics()
-	potions = {Slot,Slot,Slot}
+	potions = {PotionSlot,PotionSlot,PotionSlot}
 	if ascension >= 11 then
 		potions[3] = nil
 	end
@@ -218,7 +218,7 @@ function prepareRoom(completed)
 	end
 
 	if not completed then
-		player:triggerEvent('onEnterRoom',room)
+		player:triggerEvent('onEnterRoom',room,roomType)
 	end
 
 	if roomType == 'monster' then
@@ -255,11 +255,15 @@ function prepareRoom(completed)
 	end
 end
 
+function isInShop()
+	return room.type == 'shop' or (room.type == 'event' and room.eventType == 'shop')
+end
+
 -- main
 
 queueSync(32,1)
+--[[startAct(2)
 startGame(Ironclad,1)
-startAct(2)
 roomActionType = 'combat'
 table.insert(deck,BattleTrance:new())
 table.insert(deck,Pummel:new())
@@ -272,8 +276,20 @@ maxEnergy = 4
 startCombat(TheChampEncounter)
 addAction(ApplyPowerAction:new(StrengthPower:new(player,30)))
 addAction(ApplyPowerAction:new(MetallicizePower:new(player,300)))
+--]]
+----[[
+startGame(Ironclad,20)
+currentEvent = TreasureEvent:new()
+currentEvent:showRewards()
+nearestWindow.rewards = {}
+table.insert(deck,Bloodletting:new())
+table.insert(deck,Bloodletting:new())
+table.insert(deck,Bloodletting:new())
+table.insert(deck,Bloodletting:new())
 --obtainRelic(NeowsLament:new{counter=99})
---currentEvent = WeMeetAgain:new()
+addRelicReward(nearestWindow.rewards,MealTicket:new())
+addRelicReward(nearestWindow.rewards,Nunchaku:new())
+--]]
 window:onOpen()
 
 -- <TILES>

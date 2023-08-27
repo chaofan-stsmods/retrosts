@@ -136,5 +136,6 @@ function gainGold(amount)
 end
 
 function loseGold(amount)
+	player:triggerEvent('onLoseGold',amount)
 	gold = math.max(0,gold-amount)
 end

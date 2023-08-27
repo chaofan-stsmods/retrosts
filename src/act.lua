@@ -145,7 +145,7 @@ TheCity = Act:new{
 		{item=TwoThievesEncounter,power=2},
 		{item=ThreeByrdsEncounter,power=2},
 		{item=SphericGuardianEncounter,power=2},
-		{item=Chosen,power=2},
+		{item=ChosenEncounter,power=2},
 		{item=ShellParasiteEncounter,power=2},
 	},
 	strongEncounters={
@@ -170,8 +170,9 @@ TheCity = Act:new{
 		{item=BookOfStabbingEncounter,power=1},
 	},
 	bossEncounters={
-		{item=TheCollector,power=1},
+		{item=TheCollectorEncounter,power=1},
 		{item=BronzeAutomatonEncounter,power=1},
+		{item=TheChampEncounter,power=1},
 	},
 }
 function TheCity:drawBackground()

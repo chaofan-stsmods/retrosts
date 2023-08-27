@@ -77,6 +77,7 @@ function startCombat(encounter,completed)
 	if room.hasKey then
 		applyKeyBuff()
 	end
+	energy = maxEnergy
 	addAction(NewTurnAction:new{additionalCard=math.max(0,#innateCards-5)})
 	combatSelection.type = 'hand'
 	combatSelection.index = 0

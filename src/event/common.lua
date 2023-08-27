@@ -27,7 +27,7 @@ function GoldenShrine:onOption(selection)
 			gainGold(275)
 			local cardItem = CardItem:new{card=Regret:new(),x=0,y=136,tx=120,ty=68,isNotInHand=true}
 			addEffect(CardEffect:new{cardItem=cardItem,pauseDuration=30,duration=50,tx=240,ty=0})
-			table.insert(deck,cardItem.card)
+			obtainCard(cardItem.card)
 			self.description = 'Each time you strike the shrine, #4#gold#12# pours forth again and again! NL NL As you pocket the riches, something #2#weighs heavily on you.'
 		else
 			self.description = 'You ignore the shrine.'
@@ -285,7 +285,7 @@ end
 function WheelOfChange:curse()
 	local cardItem = CardItem:new{card=Decay:new(),x=0,y=136,tx=120,ty=68,isNotInHand=true}
 	addEffect(CardEffect:new{cardItem=cardItem,pauseDuration=30,duration=50,tx=240,ty=0})
-	table.insert(deck,cardItem.card)
+	obtainCard(cardItem.card)
 end
 
 function WheelOfChange:remove()
@@ -427,7 +427,7 @@ function MatchAndKeep:tick()
 				cardItem2.tx,cardItem2.ty,cardItem2.large = 120,68,false
 				addEffect(CardEffect:new{cardItem=cardItem1,pauseDuration=30,duration=50,tx=240,ty=0})
 				addEffect(CardEffect:new{cardItem=cardItem2,pauseDuration=30,duration=50,tx=240,ty=0})
-				table.insert(deck,cardItem1.card)
+				obtainCard(cardItem1.card)
 				self.cardItems[self.flippedCard] = {picked=true}
 				self.cardItems[self.flippedCard2] = {picked=true}
 				self.flippedCard = 0

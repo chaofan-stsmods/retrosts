@@ -4,7 +4,7 @@
 local colorlessRelics
 
 ---@class Relic : Object
-Relic = {name='',description='',counter=-1,icon=0,iconColorMap={},tier='common',colorName='colorless',priority=50}
+Relic = {name='',description='',counter=-1,saved=0,icon=0,iconColorMap={},tier='common',colorName='colorless',priority=50,onObtained=noop,onLost=noop}
 Object:new(Relic)
 
 function Relic:canSpwan()
@@ -27,14 +27,28 @@ function Relic:drawImage(x,y,hideCounter)
 end
 
 function Relic:save()
-	return self.counter < 0 and 0 or ((self.counter << 1) | 1)
+	local counterPart = self.counter < 0 and 0 or ((self.counter << 1) | 1)
+	return (self.saved << 11) | counterPart
 end
 
 function Relic:load(meta)
 	if meta & 1 ~= 0 then
-		self.counter = meta >> 1
+		self.counter = (meta >> 1) & 0x3FF
 	else
 		self.counter = -1
+	end
+	self.saved = (meta >> 11) & 0x1FF
+end
+
+function Relic:onObtainRelic(relic)
+	if relic == self then
+		self:onObtained()
+	end
+end
+
+function Relic:onLoseRelic(relic)
+	if relic == self then
+		self:onLost()
 	end
 end
 
@@ -74,6 +88,7 @@ end
 function loseRelic(relic)
 	local index = table.indexOf(relics,relic)
 	if index then
+		player:triggerEvent('onLoseRelic',relic)
 		table.remove(relics,index)
 	end
 end
@@ -136,8 +151,8 @@ function Anchor:onCombatStart()
 end
 
 EternalFeather = Relic:new{name='Eternal Feather',icon=73,tier='uncommon',description='For every #11#5#12# cards in deck, heal #11#3#12# HP whenever you enter a Rest Site.'}
-function EternalFeather:onEnterRoom(room)
-	if room.type == 'rest' then
+function EternalFeather:onEnterRoom(_,roomType)
+	if roomType == 'rest' then
 		player:heal(3*math.floor(#deck/5))
 	end
 end
@@ -148,11 +163,11 @@ function Calipers:onBeforeTurnStartLoseBlock(block)
 end
 
 EnergyRelic = Relic:new{tier='boss'}
-function EnergyRelic:onObtainRelic()
+function EnergyRelic:onObtained()
 	maxEnergy = maxEnergy + 1
 end
 
-function EnergyRelic:onLoseRelic()
+function EnergyRelic:onLost()
 	maxEnergy = maxEnergy - 1
 end
 
@@ -259,11 +274,185 @@ function NlothsGift:onModifyRareCardChance(chance)
 	end
 end
 
+PotionBelt = Relic:new{name='Potion Belt',icon=11,tier='common',description='Upon pickup, gain #11#2#12# Potion slots.'}
+function PotionBelt:onObtained()
+	table.insert(potions,PotionSlot)
+	table.insert(potions,PotionSlot)
+end
+
+PreservedInsect = Relic:new{name='Preserved Insect',icon=16,tier='common',description='Enemies in Elite combats have #11#25%#12# less HP.'}
+function PreservedInsect:onCombatStart()
+	if room.type == 'elite' then
+		for _, enemy in ipairs(enemies) do
+			if enemy.alive then
+				enemy.hp = math.min(enemy.hp, math.ceil(enemy.maxHp * 0.75))
+			end
+		end
+	end
+end
+
+Akabeko = Relic:new{name='Akabeko',icon=30,tier='common',description='Your first {57} each combat deals #11#8#12# additional damage.'}
+function Akabeko:onCombatStart()
+	addAction(ApplyPowerAction:new(VigorPower:new(player,8)))
+end
+
+AncientTeaSet = Relic:new{name='Ancient Tea Set',icon=31,tier='common',description='Whenever you enter a Rest Site, start the next combat with {202} {202}.'}
+function AncientTeaSet:onEnterRoom(_,roomType)
+	if roomType == 'rest' then
+		self.saved = 1
+	end
+end
+
+function AncientTeaSet:onCombatStart()
+	if self.saved == 1 then
+		addAction(GainEnergyAction:new(2))
+		self.saved = 0
+	end
+end
+
+ArtOfWar = Relic:new{name='Art of War',icon=32,tier='common',notPlayAttack=false,description='If you do not play any {57} during your turn, gain an additional {202} next turn.'}
+function ArtOfWar:onCombatStart()
+	self.notPlayAttack = false
+end
+
+function ArtOfWar:onTurnStart()
+	if self.notPlayAttack then
+		addAction(GainEnergyAction:new(1))
+	end
+	self.notPlayAttack = true
+end
+
+function ArtOfWar:onUseCard(card)
+	if card.type == 'attack' then
+		self.notPlayAttack = false
+	end
+end
+
+BagOfMarbles = Relic:new{name='Bag of Marbles',icon=33,tier='common',description='At the start of each combat, apply #11#1#12# {60} to ALL enemies.'}
+function BagOfMarbles:onCombatStart()
+	for _, enemy in ipairs(enemies) do
+		if enemy.alive then
+			addAction(ApplyPowerAction:new(VulnerablePower:new(enemy,1)))
+		end
+	end
+end
+
+BagOfPreparation = Relic:new{name='Bag of Preparation',icon=34,tier='common',description='At the start of each combat, draw #11#2#12# additional cards.'}
+function BagOfPreparation:onTurnStartPostDraw(turn)
+	if turn == 1 then
+		addAction(DrawCardAction:new(2))
+	end
+end
+
+RegalPillow = Relic:new{name='Regal Pillow',icon=39,tier='common',description='Whenever you rest, heal an additional #11#15#12# HP.'}
+
+BloodVial = Relic:new{name='Blood Vial',icon=42,tier='common',description='At the start of each combat, heal #11#2#12# HP.'}
+function BloodVial:onCombatStart()
+	player:heal(2)
+end
+
+BronzeScales = Relic:new{name='Bronze Scales',icon=43,tier='common',description='Start each combat with 3 {29}.'}
+function BronzeScales:onCombatStart()
+	addAction(ApplyPowerAction:new(ThornsPower:new(player,3)))
+end
+
+CentennialPuzzle = Relic:new{name='Centennial Puzzle',icon=44,tier='common',activated=false,description='The first time you lose HP each combat, draw #11#3#12# card.'}
+function CentennialPuzzle:onCombatStart()
+	self.activated = true
+end
+
+function CentennialPuzzle:onDamaged(value)
+	if self.activated and value > 0 then
+		addAction(DrawCardAction:new(3))
+		self.activated = false
+	end
+end
+
+CeramicFish = Relic:new{name='Ceramic Fish',icon=70,tier='common',description='Whenever you add a card to your deck, gain #11#9 #4#Gold.'}
+function CeramicFish:onObtainCard()
+	gainGold(9)
+end
+
+DreamCatcher = Relic:new{name='Dream Catcher',icon=71,tier='common',description='Whenever you rest, you may add a card to your deck.'}
+function DreamCatcher:onRest(campfireEvent)
+	local rewards = {}
+	generateCardRewards(rewards,campfireEvent.random)
+	openWindowAbove(CardRewardWindow:new{cards=rewards[1].value,title='Dreaming?'}, function(cardItem)
+		if cardItem then
+			cardItem.large = false
+			addEffect(CardEffect:new{cardItem=cardItem,pauseDuration=1,duration=20,tx=240,ty=0})
+			obtainCard(cardItem.card)
+		end
+	end)
+end
+
+HappyFlower = Relic:new{name='Happy Flower',icon=86,tier='common',counter=0,description='Every #11#3#12# turns, gain {202}.'}
+function HappyFlower:onTurnStart()
+	self.counter = self.counter + 1
+	if self.counter == 3 then
+		self.counter = 0
+		addAction(GainEnergyAction:new(1))
+	end
+end
+
+JuzuBracelet = Relic:new{name='Juzu Bracelet',icon=87,tier='common',description='Normal enemy combats are no longer encountered in #4#?#12# rooms.'}
+function JuzuBracelet:modifyEventRoomType(result)
+	if result == 'monster' then
+		return 'event'
+	end
+end
+
+Lantern = Relic:new{name='Lantern',icon=88,tier='common',description='Start each combat with an additional {202}.'}
+function Lantern:onCombatStart()
+	addAction(GainEnergyAction:new(1))
+end
+
+MawBank = Relic:new{name='Maw Bank',icon=89,tier='common',description='Whenever you climb a floor, gain #11#12 #4#Gold#12#. No longer works when you spend any #4#Gold#12# at a shop.'}
+function MawBank:onEnterRoom()
+	if self.saved == 0 then
+		gainGold(12)
+	end
+end
+
+function MawBank:onLoseGold()
+	if isInShop() then
+		self.saved = 1
+		self.description = 'This relic has been used up.'
+	end
+end
+
+function MawBank:load(...)
+	Relic.load(self,...)
+	if self.saved == 1 then
+		self.description = 'This relic has been used up.'
+	end
+end
+
+MealTicket = Relic:new{name='Meal Ticket',icon=90,tier='common',description='Whenever you enter a shop, heal #11#15#12# HP.'}
+function MealTicket:onEnterRoom(_,roomType)
+	if roomType == 'shop' then
+		player:heal(15)
+	end
+end
+
+Nunchaku = Relic:new{name='Nunchaku',icon=91,tier='common',counter=0,description='Every time you play #11#10#12# {57}, gain {202}.'}
+function Nunchaku:onUseCard(card)
+	if card.type == 'attack' then
+		self.counter = self.counter + 1
+		if self.counter == 10 then
+			self.counter = 0
+			addAction(GainEnergyAction:new(1))
+		end
+	end
+end
+
 colorlessRelics = {
 	-- special
-	Circlet,NeowsLament,GoldenIdol,OddMushroom,WarpedTongs,SpiritPoop,CultistMask,FaceOfCleric,GremlinMask,NlothsMask,SsserpentHead,NlothsGift,BloodyIdol,
+	Circlet,NeowsLament,GoldenIdol,OddMushroom,WarpedTongs,SpiritPoop,CultistMask,FaceOfCleric,GremlinMask,NlothsMask,
+	SsserpentHead,NlothsGift,BloodyIdol,
 	-- common
-	Anchor,
+	Anchor,PotionBelt,PreservedInsect,Akabeko,AncientTeaSet,ArtOfWar,BagOfMarbles,BagOfPreparation,RegalPillow,BloodVial,
+	BronzeScales,CentennialPuzzle,CeramicFish,DreamCatcher,HappyFlower,JuzuBracelet,Lantern,MawBank,MealTicket,Nunchaku,
 	-- uncommon
 	EternalFeather,
 	-- rare

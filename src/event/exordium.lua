@@ -27,7 +27,7 @@ function BigFish:onOption(selection)
 
 			local cardItem = CardItem:new{card=Regret:new(),x=0,y=136,tx=120,ty=68,isNotInHand=true}
 			addEffect(CardEffect:new{cardItem=cardItem,pauseDuration=30,duration=50,tx=240,ty=0})
-			table.insert(deck,cardItem.card)
+			obtainCard(cardItem.card)
 			self.description = 'You grab the box. Inside you find a #4#relic!#12#'..
 				' NL However, you really craved the donut... NL You are filled with ~sadness,~ but mostly #2#regret.'
 		end
@@ -179,7 +179,7 @@ function TheSsssserpent:onOption(selection)
 
 		local cardItem = CardItem:new{card=Doubt:new(),x=0,y=136,tx=120,ty=68,isNotInHand=true}
 		addEffect(CardEffect:new{cardItem=cardItem,pauseDuration=30,duration=50,tx=240,ty=0})
-		table.insert(deck,cardItem.card)
+		obtainCard(cardItem.card)
 
 		self.description = 'The serpent rears its head and blasts a stream of #4#gold#12# upwards! NL It is amazing and terrifying simultaneously. NL You gather all the #4#gold#12#, thank the snake, and get going.'
 		self.screen = 'leave'
@@ -339,7 +339,7 @@ function GoldenIdolEvent:onOption(selection)
 		if selection == 1 then
 			local cardItem = CardItem:new{card=Injury:new(),x=0,y=136,tx=120,ty=68,isNotInHand=true}
 			addEffect(CardEffect:new{cardItem=cardItem,pauseDuration=30,duration=50,tx=240,ty=0})
-			table.insert(deck,cardItem.card)
+			obtainCard(cardItem.card)
 			self.description = '@RUUUUUUUUUUN!@ NL You barely leap into a side passageway as the boulder rushes by. Unfortunately it feels like you sprained something however.'
 		elseif selection == 2 then
 			player:damage(player,self.hpLoss)
@@ -533,7 +533,7 @@ function Mushrooms:onOption(selection)
 			player:heal(self.healAmt)
 			local cardItem = CardItem:new{card=Parasite:new(),x=0,y=136,tx=120,ty=68,isNotInHand=true}
 			addEffect(CardEffect:new{cardItem=cardItem,pauseDuration=30,duration=50,tx=240,ty=0})
-			table.insert(deck,cardItem.card)
+			obtainCard(cardItem.card)
 			self.description = 'You give in to the unnatural desire to eat. As you consume mushroom after mushroom, you feel yourself entering into a daze and pass out. As you awake, you feel very odd. NL You #5#Heal #10#25%#12# of your HP, but you also get #2#infected.'
 			self.options = {{description='[Leave]'}}
 			self.screen = 'leave'

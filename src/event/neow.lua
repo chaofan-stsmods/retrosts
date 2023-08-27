@@ -44,7 +44,7 @@ function generateNeowRewards(options,random)
 				if cardItem then
 					cardItem.large = false
 					addEffect(CardEffect:new{cardItem=cardItem,pauseDuration=1,duration=20,tx=240,ty=0})
-					table.insert(deck,cardItem.card)
+					obtainCard(cardItem.card)
 				end
 			end)
 		end}
@@ -53,7 +53,7 @@ function generateNeowRewards(options,random)
 			local card = getPlayerCardType(random,'rare'):new()
 			local cardItem = CardItem:new{card=card,x=0,y=136,tx=120,ty=68,isNotInHand=true}
 			addEffect(CardEffect:new{cardItem=cardItem,pauseDuration=30,duration=50,tx=240,ty=0})
-			table.insert(deck,cardItem.card)
+			obtainCard(cardItem.card)
 		end}
 	elseif oid == 3 then
 		option = {description='[ #5#Remove a card from your deck #12#]',onSelect=function ()
@@ -75,7 +75,7 @@ function generateNeowRewards(options,random)
 				if cardItem then
 					cardItem.large = false
 					addEffect(CardEffect:new{cardItem=cardItem,pauseDuration=1,duration=20,tx=240,ty=0})
-					table.insert(deck,cardItem.card)
+					obtainCard(cardItem.card)
 				end
 			end)
 		end}
@@ -90,8 +90,7 @@ function generateNeowRewards(options,random)
 				local potion = getTrueRandomPotionType(random):new()
 				rewards[i] = {type='potion',title=potion.name,value=potion}
 			end
-			local rewardWindow = RewardWindow:new{rewards=rewards,canClose=true}
-			rewardWindow.onProceed = function (self) self:close() end
+			local rewardWindow = RewardWindow:new{rewards=rewards,canClose=true,onProceed=function(self) self:close() end}
 			openWindowAbove(rewardWindow)
 		end}
 	elseif oid == 2 then
@@ -130,7 +129,7 @@ function generateNeowRewards(options,random)
 			local card = getCurseCardType(random):new()
 			local cardItem = CardItem:new{card=card,x=0,y=136,tx=120,ty=68,isNotInHand=true}
 			addEffect(CardEffect:new{cardItem=cardItem,pauseDuration=30,duration=50,tx=240,ty=0})
-			table.insert(deck,cardItem.card)
+			obtainCard(cardItem.card)
 		end}
 	elseif nid == 4 then
 		local damage = math.floor(player.hp/10)*3
@@ -151,7 +150,7 @@ function generateNeowRewards(options,random)
 				if cardItem then
 					cardItem.large = false
 					addEffect(CardEffect:new{cardItem=cardItem,pauseDuration=1,duration=20,tx=240,ty=0})
-					table.insert(deck,cardItem.card)
+					obtainCard(cardItem.card)
 				end
 			end)
 		end}
@@ -167,7 +166,7 @@ function generateNeowRewards(options,random)
 				if cardItem then
 					cardItem.large = false
 					addEffect(CardEffect:new{cardItem=cardItem,pauseDuration=1,duration=20,tx=240,ty=0})
-					table.insert(deck,cardItem.card)
+					obtainCard(cardItem.card)
 				end
 			end)
 		end}

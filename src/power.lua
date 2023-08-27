@@ -204,3 +204,21 @@ function ShackledPower:onTurnEnd()
 	addAction(ApplyPowerAction:new(StrengthPower:new(self.owner,self.amount)))
 	addAction(RemovePowerAction:new(self))
 end
+
+VigorPower = Power:new{icon=253}
+function VigorPower:onAttack(damage)
+	return damage + self.amount
+end
+
+function VigorPower:onUseCard(card)
+	if card.type == 'attack' then
+		addAction(RemovePowerAction:new(self))
+	end
+end
+
+ThornsPower = Power:new{icon=29}
+function ThornsPower:onDamaged(_,source,type)
+	if type == 'attack' then
+		addAction(DamageAction:new{source=self.owner,target=source,value=self.amount,type='power'})
+	end
+end

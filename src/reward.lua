@@ -1,7 +1,7 @@
 -- reward
 ---@diagnostic disable: lowercase-global
 
-RewardWindow = Window:new{rewards=nil,selection=0,title='Rewards',canClose=false,name='RewardWindow'}
+RewardWindow = Window:new{rewards=nil,selection=0,title='Rewards',canClose=false,name='RewardWindow',single=false}
 function RewardWindow:onOpen()
 	if roomActionType == 'combat' then
 		queueSync(2,combatSpriteBank)
@@ -98,7 +98,7 @@ function RewardWindow:collectReward()
 			if cardItem then
 				cardItem.large = false
 				addEffect(CardEffect:new{cardItem=cardItem,pauseDuration=1,duration=20,tx=240,ty=0})
-				table.insert(deck,cardItem.card)
+				obtainCard(cardItem.card)
 				self:collectRewardComplete()
 			end
 		end)
@@ -294,7 +294,7 @@ function generateCardRarity(random)
 	elseif room.type == 'elite' then
 		rareCardChance = 10
 		uncommonCardChance = 40
-	elseif room.type == 'shop' then
+	elseif isInShop() then
 		rareCardChance = 9
 	end
 	rareCardChance = player:triggerReducerEvent('onModifyRareCardChance',rareCardChance)
@@ -379,7 +379,7 @@ function addPotionReward(rewards,potion)
 end
 
 -- cardselect
-CardRewardWindow = Window:new{name='CardRewardWindow',cards=nil,selection=0,single=false,canClose=true}
+CardRewardWindow = Window:new{name='CardRewardWindow',title='Choose a Card',cards=nil,selection=0,single=false,canClose=true}
 function CardRewardWindow:onOpen()
 	if roomActionType == 'combat' then
 		queueSync(2,combatSpriteBank)
@@ -401,9 +401,8 @@ end
 
 function CardRewardWindow:tick()
 	drawBanner(56,18,16)
-	local title = 'Choose a Card'
-	local width = strWidth(title)
-	printGlowed(title,120-width/2,21,12)
+	local width = strWidth(self.title)
+	printGlowed(self.title,120-width/2,21,12)
 	self:drawCards()
 	self:cardRewardControls()
 	tickEffects()

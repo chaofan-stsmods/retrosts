@@ -92,7 +92,7 @@ end
 
 function generateEventRoomType(random)
 	local roll = random:randInt(0,99)
-	local result = 'event'
+	local result = nil
 	trace('generateEventRoomType '..roll..' chances:'..table.concat({monsterChance,shopChance,treasureChance},','))
 	if roll < monsterChance then
 		monsterChance = 10
@@ -102,7 +102,7 @@ function generateEventRoomType(random)
 		monsterChance = monsterChance + 10
 	end
 
-	if roll < shopChance then
+	if roll < shopChance and result == nil then
 		shopChance = 3
 		result = 'shop'
 	else
@@ -110,13 +110,16 @@ function generateEventRoomType(random)
 		shopChance = shopChance + 3
 	end
 
-	if roll < treasureChance then
+	if roll < treasureChance and result == nil then
 		treasureChance = 2
 		result = 'treasure'
 	else
 		roll = roll - treasureChance
 		treasureChance = treasureChance + 2
 	end
+
+	result = result or 'event'
+	result = player:triggerReducerEvent('modifyEventRoomType',result)
 
 	trace('generateEventRoomType result: '..result..' chances:'..table.concat({monsterChance,shopChance,treasureChance},','))
 	return result

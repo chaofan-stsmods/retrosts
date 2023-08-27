@@ -27,7 +27,7 @@ end
 
 function obtainPotion(potion)
 	for i,v in ipairs(potions) do
-		if v == Slot then
+		if v == PotionSlot then
 			potions[i] = potion
 			return true
 		end
@@ -38,7 +38,7 @@ end
 function losePotion(potion)
 	local index = table.indexOf(potions,potion)
 	if index then
-		potions[index] = Slot
+		potions[index] = PotionSlot
 	end
 end
 
@@ -74,8 +74,8 @@ function Potion:canDiscard()
 	return currentEvent == nil or currentEvent.canOperatePotion
 end
 
-Slot = Potion:new{icon=41}
-function Slot:canUse()
+PotionSlot = Potion:new{icon=41}
+function PotionSlot:canUse()
 	return false
 end
 
