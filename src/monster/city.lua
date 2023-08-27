@@ -544,14 +544,127 @@ function Snecko:nextIntent(first)
 	}
 end
 
+Pointy = Monster:new{ maxHp=30,width=4,height=3,attackDmg=5 }
+function Pointy:init()
+	self.maxHp = ascension >= 7 and 34 or 30
+	self.attackDmg = ascension >= 2 and 6 or 5
+end
+
+function Pointy:drawImage()
+	sprmap(64,27,self.width,self.height,self.x,self.y,0)
+end
+
+function Pointy:attack()
+	for _=1,self.intentAttackCount do
+		addAction(DamageAction:new{target=player,source=self,value=self.intentDamage})
+	end
+	addAction(NextIntentAction:new(self))
+end
+
+function Pointy:nextIntent()
+	self:setIntent('attack','attack',self.attackDmg,2)
+end
+
+function Pointy:onBearDie()
+	addAction(TalkAction:new(self,'~Beeeaaar!!!!~',{duration=120}))
+end
+
+Romeo = Monster:new{ maxHp=39,width=4,height=5,weakAmt=2,slashDmg=15,agonizeDmg=10 }
+function Romeo:init(random)
+	self.maxHp = ascension >= 7 and random:randInt(37,41) or random:randInt(35,39)
+	self.weakAmt = ascension >= 17 and 3 or 2
+	if ascension >= 2 then
+		self.slashDmg,self.agonizeDmg = 17,12
+	end
+end
+
+function Romeo:drawImage()
+	sprmap(68,27,3,6,self.x,self.y-8,0)
+end
+
+function Romeo:slash()
+	addAction(DamageAction:new{target=player,source=self,value=self.intentDamage})
+	addAction(NextIntentAction:new(self))
+	if ascension >= 17 and not self:lastTwoIntentsAre('slash') then
+		addAction(SetIntentAction:new(self,'slash','attack',self.slashDmg))
+	else
+		addAction(SetIntentAction:new(self,'agonize','attackDebuff',self.agonizeDmg))
+	end
+end
+
+function Romeo:agonize()
+	addAction(DamageAction:new{target=player,source=self,value=self.intentDamage})
+	addAction(ApplyPowerAction:new(WeakPower:new(player,self.weakAmt,true)))
+	addAction(SetIntentAction:new(self,'slash','attack',self.slashDmg))
+end
+
+function Romeo:shout()
+	if enemies[3].alive then
+		addAction(TalkAction:new(self,'~Grab~ ~em\'~ NL ~Bear!!~'))
+	else
+		addAction(TalkAction:new(self,'~You~ ~will~ ~pay~ NL ~for~ ~this!!~'))
+	end
+	addAction(SetIntentAction:new(self,'agonize','attackDebuff',self.agonizeDmg))
+end
+
+function Romeo:nextIntent()
+	self:setIntent('shout','unknown')
+end
+
+function Romeo:onBearDie()
+	addAction(TalkAction:new(self,'~Nooooooo,~ ~Bear!~',{duration=120}))
+end
+
+Bear = Monster:new{ maxHp=40,width=4,height=5,maulDmg=18,lungeDmg=9,dexReduction=2 }
+function Bear:init(random)
+	self.maxHp = ascension >= 7 and random:randInt(40,44) or random:randInt(38,42)
+	self.dexReduction = ascension >= 17 and 4 or 2
+	if ascension >= 2 then
+		self.maulDmg,self.lungeDmg = 20,10
+	end
+end
+
+function Bear:drawImage()
+	sprmap(71,27,3,self.height,self.x+4,self.y,0)
+end
+
+function Bear:maul()
+	addAction(DamageAction:new{target=player,source=self,value=self.intentDamage})
+	addAction(SetIntentAction:new(self,'lunge','attackDefend',self.lungeDmg))
+end
+
+function Bear:lunge()
+	addAction(DamageAction:new{target=player,source=self,value=self.intentDamage})
+	addAction(GainBlockAction:new{target=self,value=9})
+	addAction(SetIntentAction:new(self,'maul','attack',self.maulDmg))
+end
+
+function Bear:debuff()
+	addAction(ApplyPowerAction:new(DexterityPower:new(player,-self.dexReduction,true)))
+	addAction(SetIntentAction:new(self,'lunge','attackDefend',self.lungeDmg))
+end
+
+function Bear:nextIntent()
+	self:setIntent('debuff','strongDebuff')
+end
+
+function Bear:die()
+	for _,e in ipairs(enemies) do
+		if e.alive and e ~= self and e.onBearDie then
+			e:onBearDie()
+		end
+	end
+	Monster.die(self)
+end
+
 Taskmaster = Monster:new{ maxHp=54,width=4,height=4,woundAmt=1 }
 function Taskmaster:init(random)
-	self.maxHp = ascension >= 7 and random:randInt(57,64) or random:randInt(54,60)
+	self.maxHp = ascension >= 8 and random:randInt(57,64) or random:randInt(54,60)
 	self.woundAmt = ascension >= 18 and 3 or (ascension >= 3 and 2 or 1)
 end
 
 function Taskmaster:drawImage()
-	sprmap(27,23,3,self.height,self.x+4,self.y,0)
+	sprmap(27,23,3,self.height,self.x+8,self.y,0)
 end
 
 function Taskmaster:attack()
@@ -601,9 +714,7 @@ function GremlinLeader:buff()
 		'Get em boys!',
 	})[effectRandom:randInt(1,3)]
 
-	addAction(EffectAction:new(AnonymousEffect:new{duration=60,callback=function ()
-		drawTalkBubble(str,self.x-65,self.y-25,60,35,self.x+8,self.y+6,12,15)
-	end},10))
+	addAction(TalkAction:new(self,str,{xOffset=8,yOffset=6}))
 	for _,e in ipairs(enemies) do
 		addAction(ApplyPowerAction:new(StrengthPower:new(e,self.strAmt)))
 		if e ~= self then
@@ -758,9 +869,7 @@ end
 
 function TheCollector:debuff()
 	self.debuffUsed = true
-	addAction(EffectAction:new(AnonymousEffect:new{duration=60,callback=function ()
-		drawTalkBubble('@You@ @are@ @mine!@',self.x-65,self.y-25,60,35,self.x+8,self.y+6,12,15)
-	end},10))
+	addAction(TalkAction:new(self,'@You@ @are@ @mine!@',{xOffset=8,yOffset=6}))
 	addAction(ApplyPowerAction:new(WeakPower:new(player,self.debuffAmt,true)))
 	addAction(ApplyPowerAction:new(VulnerablePower:new(player,self.debuffAmt,true)))
 	addAction(ApplyPowerAction:new(FrailPower:new(player,self.debuffAmt,true)))
@@ -844,6 +953,275 @@ function TorchHead:nextIntent()
 	self:setIntent('attack','attack',7)
 end
 
+BronzeAutomaton = Monster:new{ maxHp=300,width=8,height=6,blockAmt=9,strAmt=3,beamDmg=45,flailDmg=7,numTurn=1 }
+function BronzeAutomaton:init()
+	self.maxHp = ascension >= 9 and 320 or 300
+	self.blockAmt = ascension >= 9 and 12 or 9
+	if ascension >= 4 then
+		self.strAmt = 4
+		self.beamDmg = 50
+		self.flailDmg = 8
+	end
+end
+
+function BronzeAutomaton:drawImage()
+	sprmap(56,27,4,self.height,self.x+16,self.y,0)
+	sprmap(60,27,3,3,self.x+20,self.y+8,0)
+end
+
+function BronzeAutomaton:onCombatStart()
+	addAction(ApplyPowerAction:new(ArtifactPower:new(self,3)))
+	Monster.onCombatStart(self)
+end
+
+function BronzeAutomaton:beam()
+	self.numTurn = 1
+	addAction(DamageAction:new{target=player,source=self,value=self.intentDamage})
+	addAction(NextIntentAction:new(self))
+end
+
+function BronzeAutomaton:flail()
+	for _=1,self.intentAttackCount do
+		addAction(DamageAction:new{target=player,source=self,value=self.intentDamage})
+	end
+	addAction(NextIntentAction:new(self))
+end
+
+function BronzeAutomaton:defend()
+	addAction(GainBlockAction:new{target=self,value=self.blockAmt})
+	addAction(ApplyPowerAction:new(StrengthPower:new(self,self.strAmt)))
+	addAction(NextIntentAction:new(self))
+end
+
+function BronzeAutomaton:summon()
+	for i=1,3,2 do
+		local orb = BronzeOrb:new{createRandom=self.createRandom}
+		local target = enemies[i]
+		orb.x,orb.y = target.x+target.width*4-orb.width*4,target.y+target.height*8-orb.height*8
+		addAction(SpawnMonsterAction:new{target=orb,index=i})
+		addAction(ApplyPowerAction:new(MinionPower:new(orb)))
+	end
+	addAction(NextIntentAction:new(self))
+end
+
+function BronzeAutomaton:stun()
+	addAction(NextIntentAction:new(self))
+end
+
+function BronzeAutomaton:enemyTurn()
+	self.numTurn = self.numTurn + 1
+	Monster.enemyTurn(self)
+end
+
+function BronzeAutomaton:nextIntent(first)
+	if first then
+		self:setIntent('summon','unknown')
+	elseif self.numTurn == 6 then
+		self:setIntent('beam','attack',self.beamDmg)
+	elseif self:lastIntentIs('beam') then
+		if ascension >= 19 then
+			self:setIntent('defend','defendBuff')
+		else
+			self:setIntent('stun','stun')
+		end
+	elseif not self:lastIntentIs('flail') then
+		self:setIntent('flail','attack',self.flailDmg,2)
+	else
+		self:setIntent('defend','defendBuff')
+	end
+end
+
+BronzeOrb = Monster:new{ maxHp=58,width=4,height=2,usedStasis=false }
+function BronzeOrb:init(random)
+	self.maxHp = ascension >= 9 and random:randInt(54,60) or random:randInt(52,58)
+end
+
+function BronzeOrb:drawImage()
+	sprmap(63,27,1,self.height,self.x+12,self.y,0)
+end
+
+function BronzeOrb:attack()
+	addAction(DamageAction:new{target=player,source=self,value=self.intentDamage})
+	addAction(NextIntentAction:new(self))
+end
+
+function BronzeOrb:defend()
+	addAction(GainBlockAction:new{target=enemies[2],value=12})
+	addAction(NextIntentAction:new(self))
+end
+
+function BronzeOrb:stasis()
+	self.usedStasis = true
+	addAction(AnonymousAction:new(function ()
+		if #drawPile == 0 and #discardPile == 0 then
+			return
+		end
+		local rarityMap = {common=1,uncommon=2,rare=3}
+		local isDrawPile = #drawPile > 0
+		local pile = isDrawPile and drawPile or discardPile
+		local highestRarity = table.reduce(pile,function (p,c)
+			return (rarityMap[c.rarity] or 0) > (rarityMap[p] or 0) and c.rarity or p
+		end,'any')
+		local candidates = shallowcopy(pile)
+		if highestRarity ~= 'any' then
+			table.retainIf(candidates,function (c) return c.rarity == highestRarity end)
+		end
+		local card = candidates[aiRand:randInt(#candidates)]
+		-- Making it searchable
+		if isDrawPile then
+			table.remove(drawPile,table.indexOf(drawPile,card))
+		else
+			table.remove(discardPile,table.indexOf(discardPile,card))
+		end
+		card:resetPowers()
+		local cardItem = CardItem:new{card=card,x=isDrawPile and 0 or 240,y=136,isNotInHand=true}
+		local effect = CardEffect:new{cardItem=cardItem,pauseDuration=30,duration=50,tx=self.x+self.width*4,ty=self.y+self.height*4}
+		effect.useCardPosition = fillCardPosition(cardItem)
+		addEffect(effect)
+		local power = StasisPower:new(self)
+		power.card = card
+		addAction(1,ApplyPowerAction:new(power))
+	end))
+	addAction(NextIntentAction:new(self))
+end
+
+function BronzeOrb:nextIntent()
+	if not self.usedStasis then
+		local roll = aiRand:rand()
+		if roll > 0.25 then
+			self:setIntent('stasis','strongDebuff')
+		elseif not self:lastTwoIntentsAre('attack') then
+			self:setIntent('attack','attack',8)
+		else
+			self:setIntent('defend','defend')
+		end
+	else
+		self:rollIntent{
+			{'attack','attack',8,power=70,limit=2},
+			{'defend','defend',power=30,limit=2},
+		}
+	end
+end
+
+StasisPower = Power:new{icon=440,stackable=false,card=nil}
+function StasisPower:onDeath()
+	addAction(MakeTempCardToHandAction:new(self.card,1,{
+		cardItem=CardItem:new{x=self.owner.x+self.owner.width*4,y=self.owner.y+self.owner.height*4}
+	}))
+end
+
+TheChamp = Monster:new{
+	maxHp=400,width=8,height=6,slashDmg=16,executeDmg=10,slapDmg=12,strAmt=2,forgeAmt=5,blockAmt=15,remainingForge=2,usedAnger=false,
+	numTurn=1,
+}
+function TheChamp:init()
+	self.maxHp = ascension >= 9 and 420 or 400
+	self.slashDmg = ascension >= 4 and 18 or 16
+	self.slapDmg = ascension >= 4 and 14 or 12
+	self.strAmt = ascension >= 19 and 4 or (ascension >= 4 and 3 or 2)
+	self.forgeAmt = ascension >= 19 and 7 or (ascension >= 9 and 6 or 5)
+	self.blockAmt = ascension >= 19 and 20 or (ascension >= 9 and 18 or 15)
+end
+
+function TheChamp:drawImage()
+	sprmap(36,28,6,self.height,self.x+8,self.y,0)
+end
+
+function TheChamp:enemyTurn()
+	self.numTurn = self.numTurn + 1
+	Monster.enemyTurn(self)
+end
+
+function TheChamp:forge()
+	self.remainingForge = self.remainingForge - 1
+	addAction(GainBlockAction:new{target=self,value=self.blockAmt})
+	addAction(ApplyPowerAction:new(MetallicizePower:new(self,self.forgeAmt)))
+	addAction(NextIntentAction:new(self))
+end
+
+function TheChamp:slap()
+	addAction(DamageAction:new{target=player,source=self,value=self.intentDamage})
+	addAction(ApplyPowerAction:new(FrailPower:new(player,2,true)))
+	addAction(ApplyPowerAction:new(VulnerablePower:new(player,2,true)))
+	addAction(NextIntentAction:new(self))
+end
+
+function TheChamp:slash()
+	addAction(DamageAction:new{target=player,source=self,value=self.intentDamage})
+	addAction(NextIntentAction:new(self))
+end
+
+function TheChamp:execute()
+	for _=1,self.intentAttackCount do
+		addAction(DamageAction:new{target=player,source=self,value=self.intentDamage})
+	end
+	addAction(NextIntentAction:new(self))
+end
+
+function TheChamp:taunt()
+	local text = ({
+		'You call that NL a weapon?',
+		'Come at me!',
+		'Do your worst! NL @HAHAHA!@',
+		'Have a free shot! NL Futile weakling!',
+	})[effectRandom:randInt(1,4)]
+
+	self.numTurn = 1
+	self:talk(text)
+	addAction(ApplyPowerAction:new(WeakPower:new(player,2,true)))
+	addAction(ApplyPowerAction:new(VulnerablePower:new(player,2,true)))
+	addAction(NextIntentAction:new(self))
+end
+
+function TheChamp:anger()
+	local text = ({
+		'~You\'ve~ ~done~ NL ~it~ ~now...~',
+		'@DEFEAT??@ NL @IMPOSSIBLE!!@',
+	})[effectRandom:randInt(1,2)]
+
+	self.usedAnger = true
+	self:talk(text)
+	addAction(RemoveDebuffsAction:new(self))
+	addAction(RemovePowerByTypeAction:new(self,ShackledPower))
+	addAction(ApplyPowerAction:new(StrengthPower:new(self,3*self.strAmt)))
+	addAction(NextIntentAction:new(self))
+end
+
+function TheChamp:gloat()
+	addAction(ApplyPowerAction:new(StrengthPower:new(self,self.strAmt)))
+	addAction(NextIntentAction:new(self))
+end
+
+function TheChamp:nextIntent()
+	if self.hp < self.maxHp / 2 and not self.usedAnger then
+		self:setIntent('anger','buff')
+	elseif self.numTurn == 4 and not self.usedAnger then
+		self:setIntent('taunt','debuff')
+	elseif not self:oneOfLastTwoIntentsIs('execute') and self.usedAnger then
+		local text = ({
+			'~DIE~ ~.~ ~.~ ~.~',
+			'Face my wrath!',
+		})[effectRandom:randInt(1,2)]
+		self:talk(text,120)
+		self:setIntent('execute','attack',self.executeDmg,2)
+	else
+		local roll = aiRand:rand()
+		if not self:lastIntentIs('forge') and ((ascension >= 19 and roll < 0.3) or roll < 0.15) and self.remainingForge > 0 then
+			self:setIntent('forge','defendBuff')
+		elseif not self:lastIntentIs('forge') and not self:lastIntentIs('gloat') and roll < 0.3 then
+			self:setIntent('gloat','buff')
+		elseif (not self:lastIntentIs('slap') and roll < 0.55) or self:lastIntentIs('slash') then
+			self:setIntent('slap','attackDebuff',self.slapDmg)
+		else
+			self:setIntent('slash','attack',self.slashDmg)
+		end
+	end
+end
+
+function TheChamp:talk(text,duration)
+	addAction(TalkAction:new(self,text,{xOffset=16,yOffset=8,boxXOffset=12,boxYOffset=4,duration=duration}))
+end
+
 -- encounters
 TwoThievesEncounter = Encounter:new{spriteBank=1,name='TwoThieves',enemyInfo={encItem(Looter,-24,0),encItem(Mugger,24,0)}}
 ThreeCultistsEncounter = Encounter:new{spriteBank=1,name='ThreeCultists',enemyInfo={encItem(Cultist,-48,1),encItem(Cultist,0,0),encItem(Cultist,48,0)}}
@@ -858,6 +1236,11 @@ ShellParasiteAndFungiEncounter = Encounter:new{spriteBank=1,name='ShellParasiteA
 CenturionAndMysticEncounter = Encounter:new{spriteBank=4,name='CenturionAndMystic',enemyInfo={encItem(Centurion,-24,0),encItem(Mystic,24,2)}}
 SnakePlantEncounter = Encounter:new{spriteBank=4,name='SnakePlant',enemyInfo={encItem(SnakePlant,0,0)}}
 SneckoEncounter = Encounter:new{spriteBank=3,name='Snecko',enemyInfo={encItem(Snecko,0,0)}}
+
+-- event
+BanditsEncounter = Encounter:new{spriteBank=5,name='Bandits',enemyInfo={encItem(Pointy,-48,0),encItem(Romeo,0,0),encItem(Bear,48,1)}}
+ColosseumNobsEncounter = Encounter:new{spriteBank=1,name='ColosseumNob',enemyInfo={encItem(Taskmaster,-28,0),encItem(GremlinNob,20,2)}}
+ColosseumSlaversEncounter = Encounter:new{spriteBank=1,name='ColosseumSlavers',enemyInfo={encItem(SlaverBlue,-32,0),encItem(SlaverRed,24,1)}}
 
 -- elite encounters
 SlaversEncounter = Encounter:new{spriteBank=1,name='Slavers',enemyInfo={encItem(SlaverBlue,-48,0),encItem(Taskmaster,0,0),encItem(SlaverRed,48,1)}}
@@ -874,3 +1257,5 @@ BookOfStabbingEncounter = Encounter:new{spriteBank=5,name='BookOfStabbing',enemy
 
 -- boss encounters
 TheCollectorEncounter = Encounter:new{spriteBank=5,name='TheCollector',enemyInfo={encItem(MonsterSlot,-58,1),encItem(MonsterSlot,-14,2),encItem(TheCollector,40,-3)},mapIcon=324}
+BronzeAutomatonEncounter = Encounter:new{spriteBank=4,name='BronzeAutomaton',enemyInfo={encItem(MonsterSlot,-48,-25),encItem(BronzeAutomaton,0,0),encItem(MonsterSlot,48,-23)},mapIcon=328}
+TheChampEncounter = Encounter:new{spriteBank=6,name='TheChamp',enemyInfo={encItem(TheChamp,0,0)},mapIcon=320}

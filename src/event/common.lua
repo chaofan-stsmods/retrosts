@@ -276,8 +276,7 @@ end
 
 function WheelOfChange:relic()
 	local rewards = {}
-	local tier = getRelicTier(self.random)
-	local relic = getRelicTypeByTier(tier):new()
+	local relic = getRandomNonBottleRelic(self.random)
 	addRelicReward(rewards,relic)
 	completeRoom()
 	openWindowAbove(RewardWindow:new{rewards=rewards})

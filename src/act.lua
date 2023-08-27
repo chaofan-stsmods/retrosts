@@ -171,6 +171,7 @@ TheCity = Act:new{
 	},
 	bossEncounters={
 		{item=TheCollector,power=1},
+		{item=BronzeAutomatonEncounter,power=1},
 	},
 }
 function TheCity:drawBackground()

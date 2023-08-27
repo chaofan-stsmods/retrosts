@@ -621,8 +621,7 @@ function WeMeetAgain:onOption(selection)
 			self.description = '\"Exemplary! I shall study this further in my chambers.\"'
 		end
 		if selection ~= 4 then
-			local tier = getRelicTier(self.random)
-			local relic = getRelicTypeByTier(tier):new()
+			local relic = getRandomNonBottleRelic(self.random)
 			obtainRelic(relic)
 			self.description = self.description..' NL NL He rummages around his various pockets... NL \"Here,look what I\'ve got for you today! Take it take it!\"'
 		else

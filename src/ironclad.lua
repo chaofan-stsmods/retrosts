@@ -641,7 +641,7 @@ function RagePower:onUseCard(card)
 end
 
 function RagePower:onTurnEnd()
-	addAction(ReducePowerAction:new(self,self.amount))
+	addAction(RemovePowerAction:new(self))
 end
 
 SecondWind = RedCard:new{
@@ -805,7 +805,7 @@ function FlameBarrierPower:onBeforeDamaged(value,source,type)
 end
 
 function FlameBarrierPower:onTurnStart()
-	addAction(ReducePowerAction:new(self,self.amount))
+	addAction(RemovePowerAction:new(self))
 end
 
 Rupture = RedCard:new{
@@ -985,7 +985,7 @@ function DoubleTapPower:onUseCard(card,target,useCardAction)
 end
 
 function DoubleTapPower:onTurnEnd()
-	addAction(ReducePowerAction:new(self,self.amount))
+	addAction(RemovePowerAction:new(self))
 end
 
 Feed = RedCard:new{

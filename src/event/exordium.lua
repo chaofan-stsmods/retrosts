@@ -22,8 +22,7 @@ function BigFish:onOption(selection)
 			player:increaseMaxHp(5)
 			self.description = 'You eat the #4#donut.#12# It really hits the spot! Your Max HP increases.'
 		else
-			local tier = getRelicTier(self.random)
-			local relic = getRelicTypeByTier(tier):new()
+			local relic = getRandomNonBottleRelic(self.random)
 			obtainRelic(relic)
 
 			local cardItem = CardItem:new{card=Regret:new(),x=0,y=136,tx=120,ty=68,isNotInHand=true}
@@ -248,8 +247,7 @@ function ScrapOoze:onOption(selection)
 		if selection == 1 then
 			player:damage(player,self.hpLoss)
 			if self.random:randInt(0,99) < self.chance then
-				local tier = getRelicTier(self.random)
-				local relic = getRelicTypeByTier(tier):new()
+				local relic = getRandomNonBottleRelic(self.random)
 				obtainRelic(relic)
 
 				self.description = '#5#Success!#12# NL After rummaging through the metal and burning acid, you finally grab hold of a #4#relic#12# and yank it out. NL You pull your way out of the ooze #rdamaged but rewarded.'
@@ -358,7 +356,7 @@ function GoldenIdolEvent:onOption(selection)
 	end
 end
 
-DeadAdventurer = CombatTextEvent:new{screen='intro',spriteBank=3,encounter=nil,encounterChance=25,rewards=nil,numRewards=0}
+DeadAdventurer = CombatTextEvent:new{screen='intro',spriteBank=3,encounter=nil,encounterChance=25,rewards=nil,numRewards=0,relicReward=nil}
 local deadAdventurerEncounters = {ThreeSentryEncounter,GremlinNobEventEncounter,LagavulinStrongEncounter}
 local deadAdventurerDescriptions = {
 	'the armor and face appear to be @#2#scoured@ @by@ @flames.@ ',
@@ -383,6 +381,7 @@ function DeadAdventurer:init()
 		{description='[Leave]'},
 	}
 	self.rewards = shallowcopy(deadAdventurerRewards)
+	self.relicReward = getRandomNonBottleRelic(self.random)
 	self.random:shuffle(self.rewards)
 end
 
@@ -449,9 +448,7 @@ function DeadAdventurer:gold()
 end
 
 function DeadAdventurer:relic()
-	local tier = getRelicTier(self.random)
-	local relic = getRelicTypeByTier(tier):new()
-	obtainRelic(relic)
+	obtainRelic(self.relicReward)
 end
 
 function DeadAdventurer:onCombatEnd()
@@ -475,9 +472,7 @@ function DeadAdventurer:load(eventMeta)
 	end
 	addGoldReward(rewards,eventGold)
 	if hasRelic then
-		local tier = getRelicTier(self.random)
-		local relic = getRelicTypeByTier(tier):new()
-		addRelicReward(rewards,relic)
+		addRelicReward(rewards,self.relicReward)
 	end
 	generateCardRewards(rewards,random)
 	generatePotionRewards(rewards,random)

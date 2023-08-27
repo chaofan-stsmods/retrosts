@@ -301,7 +301,7 @@ end
 
 ---@generic T
 ---@param self T[]
----@param condition fun(T): boolean
+---@param condition fun(item: T): boolean
 ---@return boolean
 function table.allMatch(self,condition)
 	for _, value in ipairs(self) do
@@ -314,7 +314,7 @@ end
 
 ---@generic T
 ---@param self T[]
----@param condition fun(T): boolean
+---@param condition fun(item: T): boolean
 ---@return boolean
 function table.anyMatch(self,condition)
 	for _, value in ipairs(self) do
@@ -327,7 +327,7 @@ end
 
 ---@generic T
 ---@param self T[]
----@param condition fun(T,integer): boolean
+---@param condition fun(item: T, index: integer): boolean
 function table.retainIf(self,condition)
 	for i = #self,1,-1 do
 		if not condition(self[i],i) then
@@ -339,7 +339,7 @@ end
 ---@generic T
 ---@generic U
 ---@param self T[]
----@param func fun(T,integer): U
+---@param func fun(item: T, index: integer): U
 ---@return U[]
 function table.map(self,func)
 	local r = {}
@@ -351,7 +351,7 @@ end
 
 ---@generic T
 ---@param self T[]
----@param condition fun(T): boolean
+---@param condition fun(item: T): boolean
 ---@return integer
 function table.count(self,condition)
 	local count = 0
@@ -361,6 +361,19 @@ function table.count(self,condition)
 		end
 	end
 	return count
+end
+
+---@generic T,U
+---@param self T[]
+---@param func fun(previous: U, current: T): U
+---@param init U?
+---@return U?
+function table.reduce(self,func,init)
+	local result = init
+	for _, value in ipairs(self) do
+		result = func(result,value)
+	end
+	return result
 end
 
 -- selection

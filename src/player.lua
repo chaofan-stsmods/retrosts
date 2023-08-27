@@ -105,10 +105,7 @@ function Player:getMatchAndKeepCardType()
 end
 
 function Player:talk(str,duration)
-	duration = duration or 60
-	addAction(EffectAction:new(AnonymousEffect:new{duration=duration,callback=function ()
-		drawTalkBubble(str,self.x+self.width*8+5,self.y-25,60,35,self.x+self.width*8-4,self.y+4,12,15)
-	end},30))
+	addAction(TalkAction:new(self,str,{duration=duration}))
 end
 
 function sortByPriority(...)

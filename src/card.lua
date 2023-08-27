@@ -6,7 +6,7 @@
 Card = {
 	name='',description='',type='attack',rarity='common',
 	color={2,1},costIcon=201,typeIconColor=4,colorName='',
-	baseCost=0,cost=0,costForOneTurnPlay=nil,costForOnePlay=nil,
+	baseCost=0,cost=0,costForOneTurnPlay=nil,costForOnePlay=nil,baseCostModified=false,
 	damage=0,baseDamage=0,block=0,baseBlock=0,magic=0,baseMagic=0,multiDamage={},
 	enemyTarget=false,playerTarget=false,toAllEnemies=false,
 	exhaust=false,ethereal=false,innate=false,autoPlayOnEndTurn=false,
@@ -81,11 +81,11 @@ function Card:applyPowers(target)
 		damage = target:triggerReducerEvent('onAttacked',damage,player,self)
 	end
 
-	self.damage = math.floor(damage)
+	self.damage = math.max(0,math.floor(damage))
 
 	local block = self.baseBlock
 	block = player:triggerReducerEvent('onModifyBlock',block,self)
-	self.block = math.floor(block)
+	self.block = math.max(0,math.floor(block))
 
 	self.magic = self.baseMagic
 
@@ -234,7 +234,7 @@ function drawCost(card,l,t,isNotInHand,showWhiteCost)
 		local costStr = cost == -1 and 'X' or tostring(cost)
 		local txtWidth = strWidth(costStr)
 		local color = (isNotInHand or showWhiteCost or card:canUse()) and 12 or 1
-		if color == 12 and cost ~= card.baseCost then
+		if color == 12 and (cost ~= card.baseCost or card.baseCostModified) then
 			color = 5
 		end
 		printShadowed(costStr,l+4-txtWidth//2,t+1,color)

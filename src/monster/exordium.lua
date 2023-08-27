@@ -12,10 +12,10 @@ function Cultist:init(random)
 end
 
 function Cultist:onCombatStart()
-	local str = ({'@MY@ @POWER@ @IS@ NL @UNMATCHED!@','@YOU@ @DO@ @NOT@ NL @BELONG@ @HERE!@'})[effectRandom:randInt(1,2)]
-	addAction(EffectAction:new(AnonymousEffect:new{duration=60,callback=function ()
-		drawTalkBubble(str,self.x-65,self.y-25,60,35,self.x+4,self.y+4,12,15)
-	end},10))
+	if enemies[1] == self then
+		local str = ({'@MY@ @POWER@ @IS@ NL @UNMATCHED!@','@YOU@ @DO@ @NOT@ NL @BELONG@ @HERE!@'})[effectRandom:randInt(1,2)]
+		addAction(TalkAction:new(self,str))
+	end
 	Monster.onCombatStart(self)
 end
 
@@ -113,7 +113,7 @@ function CurlUpPower:onDamaged(value)
 	if not self.triggered and value > 0 then
 		self.triggered = true
 		addAction(GainBlockAction:new{target=self.owner,value=self.amount})
-		addAction(ReducePowerAction:new(self,self.amount))
+		addAction(RemovePowerAction:new(self))
 	end
 end
 
@@ -1236,7 +1236,7 @@ function ModeShiftPower:onDamaged(value)
 	if self.amount > value then
 		self:setAmount(self.amount - value)
 	elseif owner.alive and not owner.enteringDefensiveMode then
-		addAction(ReducePowerAction:new(self,self.amount))
+		addAction(RemovePowerAction:new(self))
 		addAction(GainBlockAction:new{target=owner,value=20})
 		addAction(AnonymousAction:new(function ()
 			owner.modeShiftAmount = owner.modeShiftAmount + 10

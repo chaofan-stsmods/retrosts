@@ -462,6 +462,39 @@ function ApplyPowerAction:tick()
 	Action.tick(self)
 end
 
+RemovePowerAction = Action:new{duration=10}
+function RemovePowerAction:new(power)
+	return Action.new(self,{power=power})
+end
+
+function RemovePowerAction:tick()
+	if self.duration == self.startDuration then
+		local power = self.power
+		local owner = power.owner
+		owner:removePower(power)
+		owner:applyPowers()
+	end
+	Action.tick(self)
+end
+
+RemovePowerByTypeAction = Action:new{duration=10}
+function RemovePowerByTypeAction:new(target,powerType)
+	return Action.new(self,{target=target,powerType=powerType})
+end
+
+function RemovePowerByTypeAction:tick()
+	if self.duration == self.startDuration then
+		local powerType = self.powerType
+		local owner = self.target
+		local power = owner:getPower(powerType)
+		if power then
+			owner:removePower(power)
+			owner:applyPowers()
+		end
+	end
+	Action.tick(self)
+end
+
 GainEnergyAction = Action:new{duration=10}
 function GainEnergyAction:new(amount)
 	return Action.new(self,{amount=amount})
@@ -553,9 +586,11 @@ function MakeTempCardToDiscardPileAction:tick()
 end
 
 MakeTempCardToHandAction = Action:new{duration=10}
-function MakeTempCardToHandAction:new(card,amount)
-	amount = amount or 1
-	return Action.new(self,{card=card,amount=amount})
+function MakeTempCardToHandAction:new(card,amount,o)
+	o = o or {}
+	o.card = card
+	o.amount = amount or 1
+	return Action.new(self,o)
 end
 
 function MakeTempCardToHandAction:tick()
@@ -571,7 +606,9 @@ function MakeTempCardToHandAction:tick()
 		end
 		for _ = 1,self.amount do
 			local card = self.card:copy()
-			local cardItem = CardItem:new{card=card,x=0,y=136}
+			local cardItem = self.cardItem:copy() or CardItem:new{x=0,y=136}
+			cardItem.card = card
+			cardItem.isNotInHand = false
 			card:applyPowers()
 			table.insert(hand,cardItem)
 		end
@@ -581,10 +618,9 @@ end
 
 MakeTempCardToDrawPileAction = Action:new{duration=10}
 function MakeTempCardToDrawPileAction:new(card,amount,o)
-	amount = amount or 1
 	o = o or {}
 	o.card = card
-	o.amount = amount
+	o.amount = amount or 1
 	return Action.new(self,o)
 end
 
@@ -697,6 +733,42 @@ end
 function EffectAction:tick()
 	if self.duration == self.startDuration then
 		addEffect(self.effect)
+	end
+	Action.tick(self)
+end
+
+TalkAction = EffectAction:new(nil)
+function TalkAction:new(creature,text,additional)
+	local xOffset = additional and additional.xOffset or 4
+	local yOffset = additional and additional.yOffset or 4
+	local boxXOffset = additional and additional.boxXOffset or 4
+	local boxYOffset = additional and additional.boxYOffset or 4
+	local duration = additional and additional.duration or 60
+	if creature == player then
+		return EffectAction.new(self,AnonymousEffect:new{duration=duration,callback=function ()
+			drawTalkBubble(text,creature.x+creature.width*8+5-boxXOffset,creature.y-25+boxYOffset,60,35,creature.x+creature.width*8-xOffset,creature.y+yOffset,12,15)
+		end},10)
+	else
+		return EffectAction.new(self,AnonymousEffect:new{duration=duration,callback=function ()
+			drawTalkBubble(text,creature.x-65+boxXOffset,creature.y-25+boxYOffset,60,35,creature.x+xOffset,creature.y+yOffset,12,15)
+		end},10)
+	end
+end
+
+RemoveDebuffsAction = Action:new{target=nil,duration=1}
+function RemoveDebuffsAction:new(target)
+	return Action.new(self,{target=target})
+end
+
+function RemoveDebuffsAction:tick()
+	if self.duration == self.startDuration then
+		local index = 1
+		for _,power in ipairs(self.target.powers) do
+			if power.debuff then
+				addAction(index,RemovePowerAction:new(power))
+				index = index + 1
+			end
+		end
 	end
 	Action.tick(self)
 end

@@ -133,12 +133,12 @@ end
 LoseStrengthPower = Power:new{debuff=true,icon=14}
 function LoseStrengthPower:onTurnEnd()
 	addAction(ApplyPowerAction:new(StrengthPower:new(self.owner,-self.amount)))
-	addAction(ReducePowerAction:new(self,self.amount))
+	addAction(RemovePowerAction:new(self))
 end
 
 NoDrawPower = Power:new{debuff=true,icon=15,stackable=false}
 function NoDrawPower:onTurnEnd()
-	addAction(ReducePowerAction:new(self,self.amount))
+	addAction(RemovePowerAction:new(self))
 end
 
 MetallicizePower = Power:new{icon=46,iconColorMap={[13]=12,[14]=13,[15]=14}}
@@ -193,7 +193,14 @@ function ConfusionPower:onDraw(card)
 			card.baseCost = newCost
 			card.costForOneTurnPlay = nil
 			card.costForOnePlay = nil
+			card.baseCostModified = true
 			card:applyPowers()
 		end
 	end
+end
+
+ShackledPower = Power:new{icon=204}
+function ShackledPower:onTurnEnd()
+	addAction(ApplyPowerAction:new(StrengthPower:new(self.owner,self.amount)))
+	addAction(RemovePowerAction:new(self))
 end

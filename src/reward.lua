@@ -324,9 +324,7 @@ function generateRelicRewards(rewards,random)
 		return
 	end
 
-	local tier = getRelicTier(random)
-	local relic = getRelicTypeByTier(tier):new()
-	addRelicReward(rewards,relic)
+	addRelicReward(rewards,getRandomRelic(random):new())
 
 	if room.hasKey then
 		table.insert(rewards,{title='Emerald key',icon=467,type='key',value='emeraldKeyObtained'})
@@ -350,6 +348,15 @@ function getRelicTypeByTier(tier)
 		end
 	until relic:canSpwan()
 	return relic
+end
+
+function getRandomRelic(random)
+	local tier = getRelicTier(random)
+	return getRelicTypeByTier(tier):new()
+end
+
+function getRandomNonBottleRelic(random)
+	return getRandomRelic(random)
 end
 
 function generatePotionRewards(rewards,random)
