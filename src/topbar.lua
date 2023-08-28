@@ -142,6 +142,7 @@ function controlTopBar()
 						if potion.canUseOutsideCombat then
 							potion:applyPowers()
 							potion:use()
+							player:triggerEvent('onUsePotion',potion,false)
 							potions[topBarSelection.potionIndex] = PotionSlot
 						else
 							addAction(UsePotionAction:new{potion=potion})

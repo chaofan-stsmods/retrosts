@@ -81,32 +81,34 @@ function MerchantEvent:generateGoods()
 	end
 
 	self.goods = goods
-	self:modifyPrices()
 
-	self.cardRemoval = {price=self:getCardRemovalPrice(),sold=false}
+	self.cardRemoval = {basePrice=self:getCardRemovalPrice(),sold=false}
+	self:modifyPrices()
 end
 
 function MerchantEvent:modifyPrices()
 	local card1,card2,relics,potions = self.goods.card1,self.goods.card2,self.goods.relics,self.goods.potions
 	for _, item in ipairs(card1) do
-		self:modifyPrice(item)
+		self:modifyPrice(item,'card')
 	end
 	for _, item in ipairs(card2) do
-		self:modifyPrice(item)
+		self:modifyPrice(item,'card')
 	end
 	for _, item in ipairs(relics) do
-		self:modifyPrice(item)
+		self:modifyPrice(item,'relic')
 	end
 	for _, item in ipairs(potions) do
-		self:modifyPrice(item)
+		self:modifyPrice(item,'potion')
 	end
+	self:modifyPrice(self.cardRemoval,'cardRemoval')
 end
 
-function MerchantEvent:modifyPrice(item)
+function MerchantEvent:modifyPrice(item,type)
 	local price = item.basePrice
-	if ascension >= 16 then
+	if ascension >= 16 and type ~= 'cardRemoval' then
 		price = price * 1.1
 	end
+	price = player:triggerReducerEvent('modifyShopPrice',price,type,item)
 	item.price = math.floor(price+0.5)
 end
 
@@ -223,10 +225,12 @@ function MerchantWindow:drawGoods()
 		local x = 90+24*self.selection
 		local y = 80+self.yOffset
 		drawSelectionBox(x-2,y-2,12,12,12)
+		drawItemTooltip(self.goods.relics[self.selection],x-82,y+10,nil,true)
 	elseif self.selectionType == 'potion' and self.selection > 0 then
 		local x = 90+24*self.selection
 		local y = 108+self.yOffset
 		drawSelectionBox(x-2,y-2,12,12,12)
+		drawItemTooltip(self.goods.potions[self.selection],x-82,y+10,nil,true)
 	elseif self.selectionType == 'cardRemoval' and not self.cardRemoval.sold then
 		drawSelectionBox(186,cardRemovalY-2,36,44,12)
 	end
@@ -256,7 +260,7 @@ function MerchantWindow:merchantControls()
 				return
 			end
 		end
-		
+
 		if btnp(1) then
 			if self.selection < 3 then
 				self.selectionType = 'card2'
@@ -297,7 +301,7 @@ function MerchantWindow:merchantControls()
 				return
 			end
 		end
-		
+
 		if btnp(0) then
 			self.selectionType = 'card1'
 			if not isNotSold(self.selection,self.goods.card1) then

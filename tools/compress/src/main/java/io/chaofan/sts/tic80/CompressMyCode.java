@@ -88,7 +88,7 @@ public class CompressMyCode {
         //*/
         sb.append(",\n'");
         sb.append(root.toCompressedLuaTree());
-        sb.append("')\n");
+        sb.append("'\n)\n");
         System.out.println("Final code length: " + sb.length());
         sb.append(String.join("\n",suffixLines));
 

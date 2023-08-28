@@ -277,18 +277,21 @@ startCombat(TheChampEncounter)
 addAction(ApplyPowerAction:new(StrengthPower:new(player,30)))
 addAction(ApplyPowerAction:new(MetallicizePower:new(player,300)))
 --]]
-----[[
+--[[
 startGame(Ironclad,20)
 currentEvent = TreasureEvent:new()
 currentEvent:showRewards()
 nearestWindow.rewards = {}
 table.insert(deck,Bloodletting:new())
 table.insert(deck,Bloodletting:new())
-table.insert(deck,Bloodletting:new())
-table.insert(deck,Bloodletting:new())
+table.insert(deck,Reaper:new())
+table.insert(deck,Reaper:new())
 --obtainRelic(NeowsLament:new{counter=99})
-addRelicReward(nearestWindow.rewards,MealTicket:new())
-addRelicReward(nearestWindow.rewards,Nunchaku:new())
+addRelicReward(nearestWindow.rewards,WarPaint:new())
+addRelicReward(nearestWindow.rewards,Whetstone:new())
+addRelicReward(nearestWindow.rewards,RedSkull:new())
+addPotionReward(nearestWindow.rewards,FruitJuice:new())
+addPotionReward(nearestWindow.rewards,FruitJuice:new())
 --]]
 window:onOpen()
 

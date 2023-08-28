@@ -41,7 +41,7 @@ function Ironclad:getMatchAndKeepCardType()
 end
 
 function Ironclad:getRelics()
-	return { BurningBlood }
+	return { BurningBlood,RedSkull }
 end
 
 -- cards
@@ -1111,7 +1111,31 @@ redCards = {
 
 RedRelic = Relic:new{colorName='red'}
 
-BurningBlood = RedRelic:new{name='Burning Blood',description='At the end of combat, heal #11#6#12# HP.',icon=245,tier='basic'}
+BurningBlood = RedRelic:new{name='Burning Blood',icon=245,tier='basic',description='At the end of combat, heal #11#6#12# HP.'}
 function BurningBlood:onCombatEnd()
 	player:heal(6)
+end
+
+RedSkull = RedRelic:new{name='Red Skull',icon=230,tier='common',activated=false,description='While your HP is at or below #11#50%#12#, you have #11#3#12# additional {76<}.'}
+function RedSkull:onCombatStart()
+	if player.hp <= player.maxHp / 2 then
+		addAction(ApplyPowerAction:new(StrengthPower:new(player,3)))
+		self.activated = true
+	else
+		self.activated = false
+	end
+end
+
+function RedSkull:onHealed()
+	if self.activated and player.hp > player.maxHp / 2 then
+		addAction(ApplyPowerAction:new(StrengthPower:new(player,-3)))
+		self.activated = false
+	end
+end
+
+function RedSkull:onDamaged()
+	if not self.activated and player.hp <= player.maxHp / 2 then
+		addAction(ApplyPowerAction:new(StrengthPower:new(player,3)))
+		self.activated = true
+	end
 end

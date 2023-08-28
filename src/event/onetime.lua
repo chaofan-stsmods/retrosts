@@ -422,7 +422,7 @@ function Nloth:onOption(selection)
 		if selection <= 2 then
 			loseRelic(self.relics[selection])
 			obtainRelic(NlothsGift:new())
-			self.description = 'Holding the #4#relic#12# out towards him,N’loth snatches it out of your hand with his tentacles,dislocates his jaw,and slurps down your offer in one quick gulp. NL He gives you a large,toothy grin as more tentacles appear from behind his cloak,these ones brandishing an impossibly neat looking box. He pushes it towards you until you take it.'
+			self.description = 'Holding the #4#relic#12# out towards him,N\'loth snatches it out of your hand with his tentacles,dislocates his jaw,and slurps down your offer in one quick gulp. NL He gives you a large,toothy grin as more tentacles appear from behind his cloak,these ones brandishing an impossibly neat looking box. He pushes it towards you until you take it.'
 		else
 			self.description = 'You shake your head. N\'loth hunches even further and sighs,then scuttles away.'
 		end

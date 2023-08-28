@@ -93,6 +93,10 @@ function loseRelic(relic)
 	end
 end
 
+function hasRelic(relicType)
+	return table.anyMatch(relics,function(relic) return getmetatable(relic) == relicType end)
+end
+
 Circlet = Relic:new{name='Circlet',description='Collect as many as you can.',icon=55,tier='special',counter=1}
 function Circlet:onBeforeObtainRelic(relic)
 	if getmetatable(relic) == Circlet then
@@ -446,6 +450,127 @@ function Nunchaku:onUseCard(card)
 	end
 end
 
+OddlySmoothStone = Relic:new{name='Oddly Smooth Stone',icon=92,tier='common',description='Start each combat with #11#1#12# {1}.'}
+function OddlySmoothStone:onCombatStart()
+	addAction(ApplyPowerAction:new(DexterityPower:new(player,1)))
+end
+
+Omamori = Relic:new{name='Omamori',icon=93,tier='common',counter=2,description='Negate the next #11#2#12# {56} you obtain.'}
+function Omamori:load(...)
+	Relic.load(self,...)
+	if self.counter == -1 then
+		self.description = 'This relic has been used up.'
+	end
+end
+
+function Omamori:onBeforeObtainCard(card)
+	if card.type == 'curse' and self.counter > 0 then
+		self.counter = self.counter - 1
+		if self.counter == 0 then
+			self.counter = -1
+			self.description = 'This relic has been used up.'
+		end
+		return false
+	end
+end
+
+Orichalcum = Relic:new{name='Orichalcum',icon=94,tier='common',description='If you end your turn without {47}, gain #11#6#12# {47}.'}
+function Orichalcum:onTurnEnd()
+	if player.block == 0 then
+		addAction(GainBlockAction:new{target=player,value=6})
+	end
+end
+
+PenNib = Relic:new{name='Pen Nib',icon=95,tier='common',counter=0,priority=200,description='Every #11#10th#12# {57} you play deals double damage.'}
+function PenNib:onAttack(damage)
+	if self.counter == 9 then
+		return damage * 2
+	end
+end
+
+function PenNib:onUseCard(card)
+	if card.type == 'attack' then
+		self.counter = self.counter + 1
+		if self.counter == 10 then
+			self.counter = 0
+		end
+	end
+end
+
+SmilingMask = Relic:new{name='Smiling Mask',icon=110,tier='common',description='The Merchant\'s card removal service now always costs #11#50 #4#Gold.'}
+function SmilingMask:canSpwan()
+	return not isInShop()
+end
+
+function SmilingMask:modifyShopPrice(_,type)
+	if type == 'cardRemoval' then
+		return 50
+	end
+end
+
+Strawberry = Relic:new{name='Strawberry',icon=111,tier='common',description='Upon pickup, raise your Max HP by #11#7#12#.'}
+function Strawberry:onObtained()
+	player:increaseMaxHp(7)
+end
+
+TheBoot = Relic:new{name='The Boot',icon=112,tier='common',description='Whenever you would deal #11#4#12# or less unblocked attack damage, increase it to #11#5#12#.'}
+function TheBoot:onBeforeReduceHp(damage,target,type)
+	if damage > 0 and damage <= 4 and type == 'attack' then
+		return 5
+	end
+end
+
+TinyChest = Relic:new{name='Tiny Chest',icon=113,tier='common',counter=0,description='Every #11#4th #4#?#12# room is a #4#Treasure#12# room.'}
+function TinyChest:canSpawn()
+	return floor <= 35
+end
+
+function TinyChest:modifyEventRoomTypeBeforeUpdateChance(result)
+	self.counter = self.counter + 1
+	if self.counter == 4 then
+		self.counter = 0
+		return 'treasure'
+	end
+end
+
+ToyOrnithopter = Relic:new{name='Toy Ornithopter',icon=114,tier='common',description='Whenever you use a potion, heal #11#5#12# HP.'}
+function ToyOrnithopter:onUsePotion(_,inCombat)
+	if inCombat then
+		addAction(1,HealAction:new{target=player,value=5})
+	else
+		player:heal(5)
+	end
+end
+
+Vajra = Relic:new{name='Vajra',icon=115,tier='common',description='Start each combat with #11#1#12# {76<}.'}
+function Vajra:onCombatStart()
+	addAction(ApplyPowerAction:new(StrengthPower:new(player,1)))
+end
+
+WarPaint = Relic:new{name='War Paint',icon=116,tier='common',description='Upon pickup, upgrade #11#2#12# random {58}.'}
+function WarPaint:onObtained()
+	local random = makeRand(act.id,room.id,7)
+	local cards = shallowcopy(deck)
+	table.retainIf(cards,function(c) return c:canUpgrade() and c.type == 'skill' end)
+	random:shuffle(cards)
+	local toBeUpgraded = table.map({cards[1],cards[2]},function (card)
+		return CardItem:new{card=card,x=240,y=0,isNotInHand=true}
+	end)
+	upgradeCardsWithEffect(toBeUpgraded)
+end
+
+Whetstone = Relic:new{name='Whetstone',icon=117,tier='common',description='Upon pickup, upgrade #11#2#12# random {57}.'}
+function Whetstone:onObtained()
+	local random = makeRand(act.id,room.id,7)
+	local cards = shallowcopy(deck)
+	table.retainIf(cards,function(c) return c:canUpgrade() and c.type == 'attack' end)
+	random:shuffle(cards)
+	local toBeUpgraded = table.map({cards[1],cards[2]},function (card)
+		return CardItem:new{card=card,x=240,y=0,isNotInHand=true}
+	end)
+	upgradeCardsWithEffect(toBeUpgraded)
+end
+
 colorlessRelics = {
 	-- special
 	Circlet,NeowsLament,GoldenIdol,OddMushroom,WarpedTongs,SpiritPoop,CultistMask,FaceOfCleric,GremlinMask,NlothsMask,
@@ -453,6 +578,8 @@ colorlessRelics = {
 	-- common
 	Anchor,PotionBelt,PreservedInsect,Akabeko,AncientTeaSet,ArtOfWar,BagOfMarbles,BagOfPreparation,RegalPillow,BloodVial,
 	BronzeScales,CentennialPuzzle,CeramicFish,DreamCatcher,HappyFlower,JuzuBracelet,Lantern,MawBank,MealTicket,Nunchaku,
+	OddlySmoothStone,Omamori,Orichalcum,PenNib,SmilingMask,Strawberry,TheBoot,TinyChest,ToyOrnithopter,Vajra,WarPaint,
+	Whetstone,
 	-- uncommon
 	EternalFeather,
 	-- rare

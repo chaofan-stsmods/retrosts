@@ -11,7 +11,7 @@ function CampfireEvent:init()
 	end
 	player:triggerEvent('onModifyCampfireOptions',self.options)
 	self.healAmt = math.floor(player.maxHp*0.3)
-	self.additionalHealAmt = table.anyMatch(relics,function(relic) return getmetatable(relic) == RegalPillow end) and 15 or 0
+	self.additionalHealAmt = hasRelic(RegalPillow) and 15 or 0
 end
 
 function CampfireEvent:drawBackground()

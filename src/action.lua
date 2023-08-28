@@ -217,12 +217,13 @@ function UsePotionAction:tick()
 			self.isDone = true
 			return
 		end
-		potions[potionIndex] = PotionSlot
 		potion:applyPowers()
 		local potionActions = potion:use(self.target) or {}
 		for i,potionAction in ipairs(potionActions) do
 			addAction(i,potionAction)
 		end
+		player:triggerEvent('onUsePotion',potion,true,self.target)
+		potions[potionIndex] = PotionSlot
 	end
 	Action.tick(self)
 end

@@ -144,11 +144,11 @@ function TitleSelectionWindow:tick()
 	end
 end
 
-TitleWindow = TitleSelectionWindow:new{options={'New Game','Card List','Exit'},name='TitleWindow'}
+TitleWindow = TitleSelectionWindow:new{options={'New Game','Card List','Relic Collection','Exit'},name='TitleWindow'}
 function TitleWindow:new(o)
 	o = o or {}
 	if hasSave() then
-		o.options = {'Continue','New Game','Card List','Exit'}
+		o.options = {'Continue','New Game','Card List','Relic Collection','Exit'}
 	end
 	return TitleSelectionWindow.new(self,o)
 end
@@ -158,6 +158,8 @@ function TitleWindow:onOption()
 		exit()
 	elseif self.options[self.selection] == 'Card List' then
 		self:open(CardListWindow:new())
+	elseif self.options[self.selection] == 'Relic Collection' then
+		self:open(RelicCollectionWindow:new())
 	elseif self.options[self.selection] == 'Continue' then
 		loadGame()
 	elseif self.options[self.selection] == 'New Game' then
@@ -228,8 +230,10 @@ local rarityPriority = {basic=0,special=1,common=2,uncommon=3,rare=4}
 local colorPriority = {red=0,colorless=10,curse=11}
 function CardListWindow:new()
 	local cardItems = {}
-	for _,cardType in ipairs(Ironclad:getCards()) do
-		table.insert(cardItems,CardItem:new{card=cardType:new(),isNotInHand=true})
+	for _,character in ipairs(characters) do
+		for _,cardType in ipairs(character:getCards()) do
+			table.insert(cardItems,CardItem:new{card=cardType:new(),isNotInHand=true})
+		end
 	end
 	for _,cardType in ipairs(getColorlessCards()) do
 		table.insert(cardItems,CardItem:new{card=cardType:new(),isNotInHand=true})
@@ -274,6 +278,111 @@ function CardListWindow:gridUISelect(selection)
 	else
 		cardItem.card:upgrade()
 		cardItem.card:showUpgrade()
+	end
+end
+
+RelicCollectionWindow = Window:new{name='RelicCollectionWindow',scrollY=0,targetScrollY=0,relics=nil,poolSelection=1,itemSelection=1}
+local relicPoolNames = {'basic','common','uncommon','rare','boss','shop','special'}
+function RelicCollectionWindow:new()
+	local relics = {}
+	for _,character in ipairs(characters) do
+		for _,relicType in ipairs(character:getRelics()) do
+			table.insert(relics,relicType:new())
+		end
+	end
+	for _,relicType in ipairs(getColorlessRelics()) do
+		table.insert(relics,relicType:new())
+	end
+
+	table.sort(relics,function(a,b) return a.name < b.name end)
+
+	local relicWithPools = {}
+	for _, relicType in ipairs(relics) do
+		local pool = relicWithPools[relicType.tier]
+		if not pool then
+			pool = {}
+			relicWithPools[relicType.tier] = pool
+		end
+		table.insert(pool,relicType)
+	end
+
+	return Window.new(self,{relics=relicWithPools})
+end
+
+function RelicCollectionWindow:onOpen()
+	queueSync(1,1)
+end
+
+function RelicCollectionWindow:tick()
+	cls(0)
+	local y = -self.scrollY
+	local sx = 20
+	for pi,poolName in ipairs(relicPoolNames) do
+		local pool = self.relics[poolName]
+		if pool then
+			local x = sx
+			printShadowed(poolName:sub(1,1):upper()..poolName:sub(2),x,y+2,4)
+			y = y + 12
+			for ri,relic in ipairs(pool) do
+				relic:drawImage(x,y,true)
+				if pi == self.poolSelection and ri == self.itemSelection then
+					drawSelectionBox(x-2,y-2,12,12)
+					drawItemTooltip(relic,sx+120+2,2)
+					self.targetScrollY = y+self.scrollY-68
+				end
+				x = x + 12
+				if x - sx >= 120 then
+					x = sx
+					y = y + 12
+				end
+			end
+			if x > sx then
+				y = y + 12
+			end
+		end
+	end
+
+	self.scrollY = limit(lerp(self.scrollY,self.targetScrollY,0.2),-2,y+self.scrollY-134)
+
+	if btnp(0) then
+		if self.itemSelection > 10 then
+			self.itemSelection = self.itemSelection - 10
+		else
+			local oldPoolSelection = self.poolSelection
+			repeat
+				self.poolSelection = self.poolSelection - 1
+			until self.poolSelection == 0 or (self.relics[relicPoolNames[self.poolSelection]] and #self.relics[relicPoolNames[self.poolSelection]] > 0)
+			if self.poolSelection == 0 then
+				self.poolSelection = oldPoolSelection
+			else
+				local relicCount = #self.relics[relicPoolNames[self.poolSelection]]
+				self.itemSelection = limit(math.floor((relicCount-1)/10)*10+self.itemSelection,1,relicCount)
+			end
+		end
+	elseif btnp(1) then
+		if self.itemSelection <= #self.relics[relicPoolNames[self.poolSelection]] - 10 then
+			self.itemSelection = self.itemSelection + 10
+		else
+			local oldPoolSelection = self.poolSelection
+			repeat
+				self.poolSelection = self.poolSelection + 1
+			until self.poolSelection > #relicPoolNames or (self.relics[relicPoolNames[self.poolSelection]] and #self.relics[relicPoolNames[self.poolSelection]] > 0)
+			if self.poolSelection > #relicPoolNames then
+				self.poolSelection = oldPoolSelection
+			else
+				self.itemSelection = limit((self.itemSelection-1)%10+1,1,#self.relics[relicPoolNames[self.poolSelection]])
+			end
+		end
+	elseif btnp(2) then
+		if self.itemSelection > 1 then
+			self.itemSelection = self.itemSelection - 1
+		end
+	elseif btnp(3) then
+		if self.itemSelection < #self.relics[relicPoolNames[self.poolSelection]] then
+			self.itemSelection = self.itemSelection + 1
+		end
+	elseif btnp(5) then
+		self:close()
 	end
 end
 

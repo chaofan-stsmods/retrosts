@@ -93,10 +93,12 @@ function Creature:decreaseMaxHp(value)
 end
 
 function Creature:heal(value)
+	local oldHp = self.hp
 	self.hp = math.min(self.hp+value,self.maxHp)
 	if value > 0 then
 		addEffect(TextEffect:new{x=self.x+self.width*4,y=self.y+self.height*2-30,duration=60,text=tostring(value),color=5,ySpeed=0.5})
 	end
+	self:triggerEvent('onHealed',value,self.hp-oldHp)
 end
 
 function Creature:damage(source,value,type,action)
@@ -116,6 +118,7 @@ function Creature:damage(source,value,type,action)
 		end
 	end
 	value = self:triggerReducerEvent('onBeforeHpLoss',value,source,type,action)
+	value = source:triggerReducerEvent('onBeforeReduceHp',value,self,type,action)
 	if value > 0 then
 		addEffect(TextEffect:new{x=self.x+self.width*4,y=self.y,text=tostring(value),color=3,ySpeed=-0.5})
 		if action then

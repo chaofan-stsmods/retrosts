@@ -390,8 +390,12 @@ function moveLimitLineWidthAndPrint(str,currentX,currentY,x,lineWidth,maxY,color
 end
 
 function obtainCard(card)
-	table.insert(deck,card)
-	player:triggerEvent('onObtainCard',card)
+	if player:triggerConditionEvent('onBeforeObtainCard',true,card) then
+		table.insert(deck,card)
+		player:triggerEvent('onObtainCard',card)
+		return true
+	end
+	return false
 end
 
 function removeCard(card)
