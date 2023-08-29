@@ -164,7 +164,7 @@ function Event:drawOptions()
 			mapColor(13,14)
 		end
 		self:drawOptionButton(x,y+i*10,28)
-		clip(x+4,y+i*10,216,8)
+		stackClip(x+4,y+i*10,216,8)
 		local xOffset = 0
 		if option.strWidth and option.strWidth > 216 then
 			local d = option.strWidth - 216
@@ -174,7 +174,7 @@ function Event:drawOptions()
 			xOffset = p<30 and 0 or (p-30<d*f and (-p+30)/f or (p<60+d*f and -d or (p-60-2*d*f)/f))
 		end
 		option.strWidth = printColorStr(option.description,x+4+xOffset,y+i*10+1,true,12,option.locked and 13 or nil)
-		clip()
+		popClip()
 		if self.selectedOption == i or option.locked then
 			resetColors{13,14,15}
 		end

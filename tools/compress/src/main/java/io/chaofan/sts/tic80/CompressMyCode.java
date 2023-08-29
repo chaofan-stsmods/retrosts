@@ -176,7 +176,7 @@ public class CompressMyCode {
     }
 
     public static void visitCode(String code, Consumer<String> callback) {
-        Pattern wordPattern = Pattern.compile("[0-9]|[a-zA-Z_][0-9a-zA-Z_]*");
+        Pattern wordPattern = Pattern.compile("[a-zA-Z_][0-9a-zA-Z_]*|[^0-9a-zA-Z_]+");
         int start = 0;
         Matcher matcher = wordPattern.matcher(code);
         while (matcher.find()) {

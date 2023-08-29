@@ -136,6 +136,12 @@ function LoseStrengthPower:onTurnEnd()
 	addAction(RemovePowerAction:new(self))
 end
 
+LoseDexterityPower = Power:new{debuff=true,icon=14}
+function LoseDexterityPower:onTurnEnd()
+	addAction(ApplyPowerAction:new(DexterityPower:new(self.owner,-self.amount)))
+	addAction(RemovePowerAction:new(self))
+end
+
 NoDrawPower = Power:new{debuff=true,icon=15,stackable=false}
 function NoDrawPower:onTurnEnd()
 	addAction(RemovePowerAction:new(self))

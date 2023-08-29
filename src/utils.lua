@@ -239,6 +239,24 @@ function doSync()
 	hasSync = #syncQueue > 0
 end
 
+local clipStack = {}
+local recent = {0,0,240,136}
+function stackClip(x,y,w,h)
+	clipStack[#clipStack+1] = recent
+	local l,t,r,b=table.unpack(recent)
+	l,t,r,b=math.max(x,l),math.max(y,t),math.min(x+w,r),math.min(y+h,b)
+	recent = {l,t,r,b}
+	clip(l,t,r-l,b-t)
+end
+
+function popClip()
+	if #clipStack > 0 then
+		recent = table.remove(clipStack,#clipStack)
+	end
+	local l,t,r,b=table.unpack(recent)
+	clip(l,t,r-l,b-t)
+end
+
 function makeRand(actId,roomId,index)
 	actId = actId or 0
 	roomId = roomId or 0

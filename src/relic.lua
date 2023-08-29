@@ -4,7 +4,11 @@
 local colorlessRelics
 
 ---@class Relic : Object
-Relic = {name='',description='',counter=-1,saved=0,icon=0,iconColorMap={},tier='common',colorName='colorless',priority=50,onObtained=noop,onLost=noop}
+Relic = {
+	name='',description='',counter=-1,saved=0,icon=0,iconColorMap={},
+	tier='common',colorName='colorless',tags={},
+	priority=70,onObtained=noop,onLost=noop
+}
 Object:new(Relic)
 
 function Relic:canSpwan()
@@ -348,7 +352,7 @@ function BagOfPreparation:onTurnStartPostDraw(turn)
 	end
 end
 
-RegalPillow = Relic:new{name='Regal Pillow',icon=39,tier='common',description='Whenever you rest, heal an additional #11#15#12# HP.'}
+RegalPillow = Relic:new{name='Regal Pillow',icon=39,tier='common',description='Whenever you #4#Rest#12#, heal an additional #11#15#12# HP.'}
 
 BloodVial = Relic:new{name='Blood Vial',icon=42,tier='common',description='At the start of each combat, heal #11#2#12# HP.'}
 function BloodVial:onCombatStart()
@@ -377,7 +381,7 @@ function CeramicFish:onObtainCard()
 	gainGold(9)
 end
 
-DreamCatcher = Relic:new{name='Dream Catcher',icon=71,tier='common',description='Whenever you rest, you may add a card to your deck.'}
+DreamCatcher = Relic:new{name='Dream Catcher',icon=71,tier='common',description='Whenever you #4#Rest#12#, you may add a card to your deck.'}
 function DreamCatcher:onRest(campfireEvent)
 	local rewards = {}
 	generateCardRewards(rewards,campfireEvent.random)
@@ -547,7 +551,7 @@ function Vajra:onCombatStart()
 	addAction(ApplyPowerAction:new(StrengthPower:new(player,1)))
 end
 
-WarPaint = Relic:new{name='War Paint',icon=116,tier='common',description='Upon pickup, upgrade #11#2#12# random {58}.'}
+WarPaint = Relic:new{name='War Paint',icon=116,tier='common',description='Upon pickup, #4#Upgrade #11#2#12# random {58}.'}
 function WarPaint:onObtained()
 	local random = makeRand(act.id,room.id,7)
 	local cards = shallowcopy(deck)
@@ -559,7 +563,7 @@ function WarPaint:onObtained()
 	upgradeCardsWithEffect(toBeUpgraded)
 end
 
-Whetstone = Relic:new{name='Whetstone',icon=117,tier='common',description='Upon pickup, upgrade #11#2#12# random {57}.'}
+Whetstone = Relic:new{name='Whetstone',icon=117,tier='common',description='Upon pickup, #4#Upgrade #11#2#12# random {57}.'}
 function Whetstone:onObtained()
 	local random = makeRand(act.id,room.id,7)
 	local cards = shallowcopy(deck)
@@ -569,6 +573,94 @@ function Whetstone:onObtained()
 		return CardItem:new{card=card,x=240,y=0,isNotInHand=true}
 	end)
 	upgradeCardsWithEffect(toBeUpgraded)
+end
+
+BlueCandle = Relic:new{name='Blue Candle',icon=118,tier='uncommon',description='#4#Unplayable#12# {56} can now be played. NL Whenever you play a {56}, lose #11#1#12# HP.'}
+function BlueCandle:canUseCard(card)
+	if card.type == 'curse' and not card:baseCanUse(true) then
+		return true
+	end
+end
+
+function BlueCandle:onUseCard(card,_,action)
+	if card.type == 'curse' then
+		action.exhaust = true
+		addAction(DamageAction:new{target=player,source=player,value=1,type='hpLoss'})
+	end
+end
+
+BottleRelic = Relic:new{tier='uncommon',tags={'bottle'},linkedCard=nil}
+function BottleRelic:onObtained()
+	local cards = shallowcopy(deck)
+	table.retainIf(cards,function(c) return self:condition(c) end)
+	local cardItems = table.map(cards,function (card) return CardItem:new{card=card,x=240,y=0,isNotInHand=true} end)
+	if #cardItems == 0 then
+		return
+	end
+	local gridView = CardGridSelectWindow:new{title='Choose a Card for '..self.name,cardItems=cardItems,min=1,max=1,canClose=false}
+	openWindowAbove(gridView, function (cardItems)
+		if not cardItems then
+			return
+		end
+		self:linkCard(cardItems[1].card)
+	end)
+end
+
+function BottleRelic:onLost()
+	self:unlinkCard()
+end
+
+function BottleRelic:canSpwan()
+	return table.anyMatch(deck,function(card) return card.rarity ~= 'basic' and self:condition(card) end)
+end
+
+function BottleRelic:condition(_)
+	return true
+end
+
+function BottleRelic:linkCard(card)
+	self.linkedCard = card
+	self.cardOldCanRemove = card.canRemove
+	card.linkedBottle = self
+	card.canRemove = false
+	self.description = 'Start each combat with '..card.name..' in your hand.'
+end
+
+function BottleRelic:unlinkCard()
+	local card = self.linkedCard
+	if card then
+		card.linkedBottle = nil
+		card.canRemove = self.cardOldCanRemove
+	end
+end
+
+function BottleRelic:save()
+	if self.linkedCard then
+		return table.indexOf(deck,self.linkedCard) or 0
+	else
+		return 0
+	end
+end
+
+function BottleRelic:load(meta)
+	if meta > 0 then
+		self:linkCard(deck[meta])
+	end
+end
+
+BottledFlame = BottleRelic:new{name='Bottled Flame',icon=119,description='Upon pickup, choose a {57}. Start each combat with this card in your hand.'}
+function BottledFlame:condition(card)
+	return card.type == 'attack' and not card.linkedBottle
+end
+
+BottledLightning = BottleRelic:new{name='Bottled Lightning',icon=120,description='Upon pickup, choose a {58}. Start each combat with this card in your hand.'}
+function BottledLightning:condition(card)
+	return card.type == 'skill' and not card.linkedBottle
+end
+
+BottledTornado = BottleRelic:new{name='Bottled Tornado',icon=121,description='Upon pickup, choose a {59}. Start each combat with this card in your hand.'}
+function BottledTornado:condition(card)
+	return card.type == 'power' and not card.linkedBottle
 end
 
 colorlessRelics = {
@@ -581,7 +673,7 @@ colorlessRelics = {
 	OddlySmoothStone,Omamori,Orichalcum,PenNib,SmilingMask,Strawberry,TheBoot,TinyChest,ToyOrnithopter,Vajra,WarPaint,
 	Whetstone,
 	-- uncommon
-	EternalFeather,
+	EternalFeather,BlueCandle,BottledFlame,BottledLightning,BottledTornado,
 	-- rare
 	Calipers,
 	-- boss

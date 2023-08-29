@@ -19,12 +19,13 @@ function Player:getAscensionMaxHPLoss()
 end
 
 function Player:onCombatStart()
+	self.visible = true
 	self:triggerEvent('onCombatStart')
 	Creature.onCombatStart(self)
 end
 
 function Player:triggerEvent(name,...)
-	for _, item in ipairs(sortByPriority(relics,self.powers)) do
+	for _, item in ipairs(sortByPriority(potions,relics,self.powers)) do
 		if item[name] then
 			item[name](item,...)
 		end
@@ -44,7 +45,7 @@ function Player:triggerEvent(name,...)
 end
 
 function Player:triggerConditionEvent(name,default,...)
-	for _, item in ipairs(sortByPriority(relics,self.powers)) do
+	for _, item in ipairs(sortByPriority(potions,relics,self.powers)) do
 		if item[name] then
 			local b = item[name](item,...)
 			if b ~= nil then
@@ -56,7 +57,7 @@ function Player:triggerConditionEvent(name,default,...)
 end
 
 function Player:triggerReducerEvent(name,value,...)
-	for _, item in ipairs(sortByPriority(relics,self.powers)) do
+	for _, item in ipairs(sortByPriority(potions,relics,self.powers)) do
 		if item[name] then
 			value = item[name](item,value,...) or value
 		end
@@ -79,6 +80,9 @@ function Player:onCombatEnd()
 end
 
 function Player:die()
+	if not self:triggerConditionEvent('onBeforeDeath',true) and self.hp > 0 then
+		return
+	end
 	clearSavedGame()
 	switchWindow(LoseWindow:new())
 	Creature.die(self)
@@ -97,6 +101,10 @@ function Player:getCards()
 end
 
 function Player:getRelics()
+	return {}
+end
+
+function Player:getPotions()
 	return {}
 end
 

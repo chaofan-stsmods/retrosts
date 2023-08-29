@@ -100,7 +100,7 @@ end
 
 UseCardAction = Action:new{
 	cardItem=nil,target=nil,secondary=false,exhaust=false,randomTarget=false,free=false,forceUse=false,energyOnUse=nil,
-	tempCard=false,isDoubleTap=false,fromHand=false,tx=120,ty=68,duration=20
+	tempCard=false,isDoubleTap=false,autoPlay=false,triggerOnUseCard=true,fromHand=false,tx=120,ty=68,duration=20
 }
 function UseCardAction:new(o)
 	local cardItem = o.cardItem
@@ -148,13 +148,20 @@ function UseCardAction:tick()
 		end
 		trace('useCard '..card.name)
 		self.energyOnUse = self.energyOnUse or energy
-		local cardActions = card:use(self.target,self.energyOnUse,self.free) or {}
+		local cardActions
+		if self.autoPlay then
+			cardActions = card:autoPlay(self.target,self.energyOnUse,self.free) or {}
+		else
+			cardActions = card:use(self.target,self.energyOnUse,self.free) or {}
+		end
 		for i,cardAction in ipairs(cardActions) do
 			addAction(i,cardAction)
 		end
-		player:triggerEvent('onUseCard',card,self.target,self)
-		for _, enemy in ipairs(enemies) do
-			enemy:triggerEvent('onUseCard',card,self.target,self)
+		if not self.autoPlay and self.triggerOnUseCard then
+			player:triggerEvent('onUseCard',card,self.target,self)
+			for _, enemy in ipairs(enemies) do
+				enemy:triggerEvent('onUseCard',card,self.target,self)
+			end
 		end
 		addAction(#cardActions+1,self:makeUseCardEndAction())
 		local cost = card:getCost()
@@ -352,7 +359,7 @@ function AutoPlayOnEndTurnAction:tick()
 	end
 	miscRand:shuffle(autoPlayCards)
 	for i,cardItem in ipairs(autoPlayCards) do
-		addAction(1,UseCardAction:new{cardItem=cardItem,secondary=true,forceUse=true,fromHand=true})
+		addAction(1,UseCardAction:new{cardItem=cardItem,secondary=true,forceUse=true,fromHand=true,autoPlay=true})
 	end
 	self.isDone = true
 end
@@ -413,9 +420,9 @@ function NewTurnAction:tick()
 	end
 end
 
-EndCombatAction = Action:new{secondary=true}
+EndCombatAction = Action:new{secondary=true,escaped=false}
 function EndCombatAction:tick()
-	combatEnd()
+	combatEnd(self.escaped)
 	self.isDone = true
 end
 
@@ -772,6 +779,71 @@ function RemoveDebuffsAction:tick()
 				index = index + 1
 			end
 		end
+	end
+	Action.tick(self)
+end
+
+DiscoveryAction = Action:new{duration=1,amount=1,cost=nil,type=nil,rarity=nil,colorless=false}
+function DiscoveryAction:tick()
+	if self.duration == self.startDuration then
+		local cards = {}
+		for i = 1, 3 do
+			local card
+			repeat
+				if self.colorless then
+					card = getColorlessCardType(miscRand,self.rarity,self.type):new()
+				else
+					card = getPlayerCardType(miscRand,self.rarity,self.type):new()
+				end
+			until card.canGenerateInCombat and not table.anyMatch(cards,function (c) return getmetatable(c) == getmetatable(card) end)
+			cards[i] = card
+		end
+		openWindowAbove(CardRewardWindow:new{cards=cards,canClose=false},function (cardItem)
+			cardItem.card.costForOneTurnPlay = self.cost
+			addAction(1,MakeTempCardToHandAction:new(cardItem.card,self.amount,{cardItem=cardItem}))
+		end)
+	end
+	Action.tick(self)
+end
+
+DiscardAction = Action:new{duration=30,cardItem=nil,show=false}
+function DiscardAction:new(o)
+	table.insert(limbo,o.cardItem)
+	return Action.new(self,o)
+end
+
+function DiscardAction:tick()
+	if self.duration == self.startDuration then
+		local cardItem = self.cardItem
+		local card = cardItem.card
+		card:resetPowers()
+		local limboIndex = table.indexOf(limbo,cardItem)
+		if limboIndex then
+			table.remove(limbo,limboIndex)
+		end
+		card.costForOneTurnPlay = nil
+		table.insert(discardPile,card)
+		cardItem.large = false
+		local effect = CardEffect:new{cardItem=cardItem,pauseDuration=30,duration=50,tx=240,ty=136}
+		if self.show then
+			effect.useCardPosition = fillCardPosition(cardItem)
+		else
+			effect.pauseDuration = 1
+			effect.duration = 20
+			effect.startDuration = 20
+		end
+		addEffect(effect)
+	end
+	Action.tick(self)
+end
+
+PlayerEscapeAction = Action:new{duration=30}
+function PlayerEscapeAction:tick()
+	if self.duration == self.startDuration then
+		local target = player:copy()
+		player.visible = false
+		target.flipped = true
+		addEffect(CreatureEffect:new{target=target,x=target.x,y=target.y,xSpeed=-1})
 	end
 	Action.tick(self)
 end

@@ -129,6 +129,9 @@ function RewardWindow:collectRewardComplete()
 end
 
 function RewardWindow:onComplete()
+	if nearestWindow ~= self then
+		return
+	end
 	self:onProceed()
 end
 
@@ -218,7 +221,8 @@ end
 function getPlayerCardType(random,rarity,type)
 	local allCardTypes = shallowcopy(player:getCards())
 	table.retainIf(allCardTypes,function (cardType)
-		return (rarity == nil or cardType.rarity == rarity) and
+		return ((rarity == nil and (cardType.rarity == 'common' or cardType.rarity == 'uncommon' or cardType.rarity == 'rare'))
+				or cardType.rarity == rarity) and
 			(type == nil or cardType.type == type)
 	end)
 	return allCardTypes[random:randInt(#allCardTypes)]
@@ -227,7 +231,8 @@ end
 function getColorlessCardType(random,rarity,type)
 	local allCardTypes = shallowcopy(getColorlessCards())
 	table.retainIf(allCardTypes,function (cardType)
-		return (rarity == nil or cardType.rarity == rarity) and
+		return ((rarity == nil and (cardType.rarity == 'common' or cardType.rarity == 'uncommon' or cardType.rarity == 'rare'))
+				or cardType.rarity == rarity) and
 			(type == nil or cardType.type == type)
 	end)
 	return allCardTypes[random:randInt(#allCardTypes)]
@@ -355,8 +360,13 @@ function getRandomRelic(random)
 	return getRelicTypeByTier(tier):new()
 end
 
-function getRandomNonBottleRelic(random)
-	return getRandomRelic(random)
+function getRandomNonBottleRelic(random,tier)
+	tier = tier or getRelicTier(random)
+	local relicType
+	repeat
+		relicType = getRelicTypeByTier(tier)
+	until table.indexOf(relicType.tags,'bottle') == nil
+	return relicType:new()
 end
 
 function generatePotionRewards(rewards,random)

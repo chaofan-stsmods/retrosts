@@ -657,7 +657,7 @@ function Bear:die()
 	Monster.die(self)
 end
 
-Taskmaster = Monster:new{ maxHp=54,width=4,height=4,woundAmt=1 }
+Taskmaster = Monster:new{ maxHp=54,width=4,height=4,woundAmt=1,type='elite' }
 function Taskmaster:init(random)
 	self.maxHp = ascension >= 8 and random:randInt(57,64) or random:randInt(54,60)
 	self.woundAmt = ascension >= 18 and 3 or (ascension >= 3 and 2 or 1)
@@ -680,7 +680,7 @@ function Taskmaster:nextIntent()
 	self:setIntent('attack','attackDebuff',7)
 end
 
-GremlinLeader = Monster:new{ maxHp=148,width=6,height=5,strAmt=3,blockAmt=6 }
+GremlinLeader = Monster:new{ maxHp=148,width=6,height=5,strAmt=3,blockAmt=6,type='elite' }
 local gremlinPool = {
 	GremlinWarrior,GremlinWarrior,
 	GremlinThief,GremlinThief,
@@ -800,7 +800,7 @@ function GremlinLeader:die()
 	end
 end
 
-BookOfStabbing = Monster:new{ maxHp=164,width=6,height=6,stabDmg=6,bigStabDmg=21,stabCount=2 }
+BookOfStabbing = Monster:new{ maxHp=164,width=6,height=6,stabDmg=6,bigStabDmg=21,stabCount=2,type='elite' }
 function BookOfStabbing:init(random)
 	self.maxHp = ascension >= 8 and random:randInt(168,172) or random:randInt(160,164)
 	if ascension >= 3 then
@@ -847,7 +847,7 @@ function PainfulStabsPower:onDamageDealt(value,target,type)
 	end
 end
 
-TheCollector = Monster:new{ maxHp=282,width=8,height=6,blockAmt=15,rakeDmg=18,strAmt=3,debuffAmt=3,numTurn=1,debuffUsed=false }
+TheCollector = Monster:new{ maxHp=282,width=8,height=6,blockAmt=15,rakeDmg=18,strAmt=3,debuffAmt=3,numTurn=1,debuffUsed=false,type='boss' }
 function TheCollector:init()
 	if ascension >= 9 then
 		self.maxHp = 300
@@ -953,7 +953,7 @@ function TorchHead:nextIntent()
 	self:setIntent('attack','attack',7)
 end
 
-BronzeAutomaton = Monster:new{ maxHp=300,width=8,height=6,blockAmt=9,strAmt=3,beamDmg=45,flailDmg=7,numTurn=1 }
+BronzeAutomaton = Monster:new{ maxHp=300,width=8,height=6,blockAmt=9,strAmt=3,beamDmg=45,flailDmg=7,numTurn=1,type='boss' }
 function BronzeAutomaton:init()
 	self.maxHp = ascension >= 9 and 320 or 300
 	self.blockAmt = ascension >= 9 and 12 or 9
@@ -1112,7 +1112,7 @@ end
 
 TheChamp = Monster:new{
 	maxHp=400,width=8,height=6,slashDmg=16,executeDmg=10,slapDmg=12,strAmt=2,forgeAmt=5,blockAmt=15,remainingForge=2,usedAnger=false,
-	numTurn=1,
+	numTurn=1,type='boss',
 }
 function TheChamp:init()
 	self.maxHp = ascension >= 9 and 420 or 400

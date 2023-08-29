@@ -24,7 +24,7 @@ Burn = ColorlessCard:new{
 	name='Burn',description='Unplayable. NL At the end of turn, {63} !M! to you.',rarity='special',baseCost=-2,type='status',
 	baseCanUse=false,canUpgrade=false,baseMagic=2,upgrade={baseMagic=4},autoPlayOnEndTurn=true,playerTarget=true
 }
-function Burn:use()
+function Burn:autoPlay()
 	return { DamageAction:new{source=player,target=player,value=self.magic,type='power'} }
 end
 
@@ -129,18 +129,23 @@ Injury = CurseCard:new{ name='Injury',description='Unplayable.' }
 Clumsy = CurseCard:new{ name='Clumsy',description='Unplayable. NL Ethereal.',ethereal=true }
 Writhe = CurseCard:new{ name='Writhe',description='Unplayable. NL Innate.',innate=true }
 Regret = CurseCard:new{ name='Regret',description='Unplayable. NL At the end of turn, lose HP equal to the number of cards in hand.',autoPlayOnEndTurn=true }
-function Regret:use()
+function Regret:autoPlay()
 	return { DamageAction:new{source=player,target=player,value=#hand+1,type='hpLoss'} }
 end
 
 Decay = CurseCard:new{ name='Decay',description='Unplayable. NL At the end of turn, {63} 2 to you.',autoPlayOnEndTurn=true }
-function Decay:use()
+function Decay:autoPlay()
 	return { DamageAction:new{source=player,target=player,value=2,type='power'} }
 end
 
 Doubt = CurseCard:new{ name='Doubt',description='Unplayable. NL At the end of your turn, gain 1 {61}.',autoPlayOnEndTurn=true }
-function Doubt:use()
+function Doubt:autoPlay()
 	return { ApplyPowerAction:new(WeakPower:new(player,1,true)) }
+end
+
+Shame = CurseCard:new{ name='Shame',description='Unplayable. NL At the end of your turn, gain 1 {75}.',autoPlayOnEndTurn=true }
+function Shame:autoPlay()
+	return { ApplyPowerAction:new(FrailPower:new(player,1,true)) }
 end
 
 Parasite = CurseCard:new{ name='Parasite',description='Unplayable. NL If transformed or removed from deck, lose 3 Max HP.' }
@@ -156,5 +161,5 @@ function Pain:onUseCard()
 end
 
 curseCards = {
-	AscendersBane,Injury,Clumsy,Writhe,Regret,Decay,Doubt,Pain
+	AscendersBane,Injury,Clumsy,Writhe,Regret,Decay,Doubt,Pain,Shame,Parasite,
 }

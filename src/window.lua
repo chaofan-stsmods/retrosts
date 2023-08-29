@@ -144,11 +144,11 @@ function TitleSelectionWindow:tick()
 	end
 end
 
-TitleWindow = TitleSelectionWindow:new{options={'New Game','Card List','Relic Collection','Exit'},name='TitleWindow'}
+TitleWindow = TitleSelectionWindow:new{options={'New Game','Card List','Relic Collection','Potion Lab','Exit'},name='TitleWindow'}
 function TitleWindow:new(o)
 	o = o or {}
 	if hasSave() then
-		o.options = {'Continue','New Game','Card List','Relic Collection','Exit'}
+		o.options = {'Continue','New Game','Card List','Relic Collection','Potion Lab','Exit'}
 	end
 	return TitleSelectionWindow.new(self,o)
 end
@@ -160,6 +160,8 @@ function TitleWindow:onOption()
 		self:open(CardListWindow:new())
 	elseif self.options[self.selection] == 'Relic Collection' then
 		self:open(RelicCollectionWindow:new())
+	elseif self.options[self.selection] == 'Potion Lab' then
+		self:open(PotionLabWindow:new())
 	elseif self.options[self.selection] == 'Continue' then
 		loadGame()
 	elseif self.options[self.selection] == 'New Game' then
@@ -225,33 +227,39 @@ function CharacterSelectWindow:onOption()
 	startGame(characters[self.selection],self.ascension)
 end
 
-CardListWindow = Window:new{name='CardListWindow',gridUI=nil,cardItems=nil}
+CardListWindow = Window:new{name='CardListWindow',gridUI=nil,allCardItems=nil,cardItemsIndex=1}
 local rarityPriority = {basic=0,special=1,common=2,uncommon=3,rare=4}
-local colorPriority = {red=0,colorless=10,curse=11}
 function CardListWindow:new()
-	local cardItems = {}
+	local allCardItems = {}
+	local cardItems
 	for _,character in ipairs(characters) do
+		cardItems = {}
 		for _,cardType in ipairs(character:getCards()) do
 			table.insert(cardItems,CardItem:new{card=cardType:new(),isNotInHand=true})
 		end
+		table.insert(allCardItems,cardItems)
 	end
+	cardItems = {}
 	for _,cardType in ipairs(getColorlessCards()) do
 		table.insert(cardItems,CardItem:new{card=cardType:new(),isNotInHand=true})
 	end
+	table.insert(allCardItems,cardItems)
+	cardItems = {}
 	for _,cardType in ipairs(getCurseCards()) do
 		table.insert(cardItems,CardItem:new{card=cardType:new(),isNotInHand=true})
 	end
-	table.sort(cardItems,function (a, b)
-		if a.card.rarity == b.card.rarity and a.card.colorName == b.card.colorName then
-			return a.card.name < b.card.name
-		elseif a.card.colorName == b.card.colorName then
-			return rarityPriority[a.card.rarity] < rarityPriority[b.card.rarity]
-		else
-			return colorPriority[a.card.colorName] < colorPriority[b.card.colorName]
-		end
-	end)
-	local gridUI = CardGridUI:new(cardItems)
-	local r = Window.new(self,{gridUI=gridUI,cardItems=cardItems})
+	table.insert(allCardItems,cardItems)
+	for _,cardItems in ipairs(allCardItems) do
+		table.sort(cardItems,function (a, b)
+			if a.card.rarity == b.card.rarity then
+				return a.card.name < b.card.name
+			else
+				return rarityPriority[a.card.rarity] < rarityPriority[b.card.rarity]
+			end
+		end)
+	end
+	local gridUI = CardGridUI:new(allCardItems[1])
+	local r = Window.new(self,{gridUI=gridUI,allCardItems=allCardItems})
 	gridUI.cursorOnSelf = true
 	gridUI.onSelect = function (selection)
 		r:gridUISelect(selection)
@@ -266,13 +274,27 @@ end
 function CardListWindow:tick()
 	cls(0)
 	self.gridUI:tick()
-	if btnp(5) then
+	if btnp(6) then
+		if self.cardItemsIndex > 1 then
+			self.cardItemsIndex = self.cardItemsIndex - 1
+			self.gridUI.cardItems = self.allCardItems[self.cardItemsIndex]
+			self.gridUI.selection = 1
+			self.gridUI:scrollToSelection()
+		end
+	elseif btnp(7) then
+		if self.cardItemsIndex < #self.allCardItems then
+			self.cardItemsIndex = self.cardItemsIndex + 1
+			self.gridUI.cardItems = self.allCardItems[self.cardItemsIndex]
+			self.gridUI.selection = 1
+			self.gridUI:scrollToSelection()
+		end
+	elseif btnp(5) then
 		self:close()
 	end
 end
 
 function CardListWindow:gridUISelect(selection)
-	local cardItem = self.cardItems[selection]
+	local cardItem = self.gridUI.cardItems[selection]
 	if cardItem.card.upgraded then
 		cardItem.card = getmetatable(cardItem.card):new()
 	else
@@ -281,47 +303,26 @@ function CardListWindow:gridUISelect(selection)
 	end
 end
 
-RelicCollectionWindow = Window:new{name='RelicCollectionWindow',scrollY=0,targetScrollY=0,relics=nil,poolSelection=1,itemSelection=1}
-local relicPoolNames = {'basic','common','uncommon','rare','boss','shop','special'}
-function RelicCollectionWindow:new()
-	local relics = {}
-	for _,character in ipairs(characters) do
-		for _,relicType in ipairs(character:getRelics()) do
-			table.insert(relics,relicType:new())
-		end
-	end
-	for _,relicType in ipairs(getColorlessRelics()) do
-		table.insert(relics,relicType:new())
-	end
-
-	table.sort(relics,function(a,b) return a.name < b.name end)
-
-	local relicWithPools = {}
-	for _, relicType in ipairs(relics) do
-		local pool = relicWithPools[relicType.tier]
-		if not pool then
-			pool = {}
-			relicWithPools[relicType.tier] = pool
-		end
-		table.insert(pool,relicType)
-	end
-
-	return Window.new(self,{relics=relicWithPools})
+ItemCollectionWindow = Window:new{name='RelicCollectionWindow',scrollY=0,targetScrollY=0,items=nil,poolSelection=0,itemSelection=1}
+local itemPoolNames = {'basic','common','uncommon','rare','boss','shop','special'}
+local itemPoolDisplayNames = {basic='Starter',special='Event'}
+function ItemCollectionWindow:new(items)
+	return Window.new(self,{items=items})
 end
 
-function RelicCollectionWindow:onOpen()
+function ItemCollectionWindow:onOpen()
 	queueSync(1,1)
 end
 
-function RelicCollectionWindow:tick()
+function ItemCollectionWindow:tick()
 	cls(0)
-	local y = -self.scrollY
+	local y = math.floor(-self.scrollY)
 	local sx = 20
-	for pi,poolName in ipairs(relicPoolNames) do
-		local pool = self.relics[poolName]
+	for pi,poolName in ipairs(itemPoolNames) do
+		local pool = self.items[poolName]
 		if pool then
 			local x = sx
-			printShadowed(poolName:sub(1,1):upper()..poolName:sub(2),x,y+2,4)
+			printShadowed(itemPoolDisplayNames[poolName] or poolName:sub(1,1):upper()..poolName:sub(2),x,y+2,4)
 			y = y + 12
 			for ri,relic in ipairs(pool) do
 				relic:drawImage(x,y,true)
@@ -344,6 +345,15 @@ function RelicCollectionWindow:tick()
 
 	self.scrollY = limit(lerp(self.scrollY,self.targetScrollY,0.2),-2,y+self.scrollY-134)
 
+	if self.poolSelection == 0 then
+		repeat
+			self.poolSelection = self.poolSelection + 1
+		until self.poolSelection > #itemPoolNames or (self.items[itemPoolNames[self.poolSelection]] and #self.items[itemPoolNames[self.poolSelection]] > 0)
+		if self.poolSelection > #itemPoolNames then
+			self.poolSelection = 0
+		end
+	end
+
 	if btnp(0) then
 		if self.itemSelection > 10 then
 			self.itemSelection = self.itemSelection - 10
@@ -351,26 +361,26 @@ function RelicCollectionWindow:tick()
 			local oldPoolSelection = self.poolSelection
 			repeat
 				self.poolSelection = self.poolSelection - 1
-			until self.poolSelection == 0 or (self.relics[relicPoolNames[self.poolSelection]] and #self.relics[relicPoolNames[self.poolSelection]] > 0)
+			until self.poolSelection == 0 or (self.items[itemPoolNames[self.poolSelection]] and #self.items[itemPoolNames[self.poolSelection]] > 0)
 			if self.poolSelection == 0 then
 				self.poolSelection = oldPoolSelection
 			else
-				local relicCount = #self.relics[relicPoolNames[self.poolSelection]]
+				local relicCount = #self.items[itemPoolNames[self.poolSelection]]
 				self.itemSelection = limit(math.floor((relicCount-1)/10)*10+self.itemSelection,1,relicCount)
 			end
 		end
 	elseif btnp(1) then
-		if self.itemSelection <= #self.relics[relicPoolNames[self.poolSelection]] - 10 then
+		if self.itemSelection <= #self.items[itemPoolNames[self.poolSelection]] - 10 then
 			self.itemSelection = self.itemSelection + 10
 		else
 			local oldPoolSelection = self.poolSelection
 			repeat
 				self.poolSelection = self.poolSelection + 1
-			until self.poolSelection > #relicPoolNames or (self.relics[relicPoolNames[self.poolSelection]] and #self.relics[relicPoolNames[self.poolSelection]] > 0)
-			if self.poolSelection > #relicPoolNames then
+			until self.poolSelection > #itemPoolNames or (self.items[itemPoolNames[self.poolSelection]] and #self.items[itemPoolNames[self.poolSelection]] > 0)
+			if self.poolSelection > #itemPoolNames then
 				self.poolSelection = oldPoolSelection
 			else
-				self.itemSelection = limit((self.itemSelection-1)%10+1,1,#self.relics[relicPoolNames[self.poolSelection]])
+				self.itemSelection = limit((self.itemSelection-1)%10+1,1,#self.items[itemPoolNames[self.poolSelection]])
 			end
 		end
 	elseif btnp(2) then
@@ -378,12 +388,68 @@ function RelicCollectionWindow:tick()
 			self.itemSelection = self.itemSelection - 1
 		end
 	elseif btnp(3) then
-		if self.itemSelection < #self.relics[relicPoolNames[self.poolSelection]] then
+		if self.itemSelection < #self.items[itemPoolNames[self.poolSelection]] then
 			self.itemSelection = self.itemSelection + 1
 		end
 	elseif btnp(5) then
 		self:close()
 	end
+end
+
+RelicCollectionWindow = ItemCollectionWindow:new{name='RelicCollectionWindow'}
+function RelicCollectionWindow:new()
+	local relics = {}
+	for _,character in ipairs(characters) do
+		for _,relicType in ipairs(character:getRelics()) do
+			table.insert(relics,relicType:new())
+		end
+	end
+	for _,relicType in ipairs(getColorlessRelics()) do
+		if relicType ~= Circlet then
+			table.insert(relics,relicType:new())
+		end
+	end
+
+	table.sort(relics,function(a,b) return a.name < b.name end)
+
+	local relicWithPools = {}
+	for _, relicType in ipairs(relics) do
+		local pool = relicWithPools[relicType.tier]
+		if not pool then
+			pool = {}
+			relicWithPools[relicType.tier] = pool
+		end
+		table.insert(pool,relicType)
+	end
+
+	return ItemCollectionWindow.new(self,relicWithPools)
+end
+
+PotionLabWindow = ItemCollectionWindow:new{name='PotionLabWindow'}
+function PotionLabWindow:new()
+	local potions = {}
+	for _,character in ipairs(characters) do
+		for _,potionType in ipairs(character:getPotions()) do
+			table.insert(potions,potionType:new())
+		end
+	end
+	for _,potionType in ipairs(getAllPotions()) do
+		table.insert(potions,potionType:new())
+	end
+
+	table.sort(potions,function(a,b) return a.name < b.name end)
+
+	local potionWithPools = {}
+	for _, potionType in ipairs(potions) do
+		local pool = potionWithPools[potionType.rarity]
+		if not pool then
+			pool = {}
+			potionWithPools[potionType.rarity] = pool
+		end
+		table.insert(pool,potionType)
+	end
+
+	return ItemCollectionWindow.new(self,potionWithPools)
 end
 
 LoseWindow = Window:new{name='LoseWindow'}
@@ -433,7 +499,9 @@ function GameWindow:tickBelow()
 	if roomActionType == 'combat' then
 		darkenColors()
 		act:drawBackground()
-		player:drawImage()
+		if player.visible then
+			player:drawImage()
+		end
 		for _, enemy in ipairs(enemies) do
 			if enemy.visible then
 				enemy:drawImage()

@@ -176,7 +176,7 @@ function saveGame(completed,eventMeta)
 		if potion == PotionSlot then
 			pmem(index,0)
 		else
-			pmem(index,table.indexOf(getAllPotions(),getmetatable(potion)))
+			pmem(index,table.indexOf(potionPool,getmetatable(potion)))
 		end
 		index = index + 1
 	end
@@ -197,6 +197,7 @@ function loadGame()
 	val32 = pmem(index+2)
 	player.hp,player.maxHp = val32 & 0xffff,val32 >> 16
 	relicPools = generateRelicPools(makeRand(0))
+	potionPool = generatePotionPool()
 	val32 = pmem(index+3)
 	local num = val32 & 0xff
 	table.retainIf(relicPools.common, function (_,i) return i<=num end)
@@ -303,7 +304,7 @@ function loadGame()
 		if val32 == 0 then
 			potions[i] = PotionSlot
 		else
-			potions[i] = getAllPotions()[val32]:new()
+			potions[i] = potionPool[val32]:new()
 		end
 		index = index + 1
 	end
@@ -333,7 +334,7 @@ function loadGame()
 
 		if roomCompleted then
 			if roomActionType == 'combat' then
-				loadCombatEnd()
+				loadCombatEnd(eventMeta)
 			elseif roomActionType == 'event' then
 				currentEvent:load(eventMeta)
 			end

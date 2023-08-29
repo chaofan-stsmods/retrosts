@@ -59,7 +59,7 @@ function startCombat(encounter,completed)
 	local innateCards = {}
 	for _,card in ipairs(deck) do
 		local card = card:copy()
-		if card.innate then
+		if card.innate or card.linkedBottle then
 			table.insert(innateCards,card)
 		else
 			table.insert(drawPile,card)
@@ -346,24 +346,28 @@ function checkCombatEnd()
 	end
 end
 
-local function combatEndImplement()
+local function combatEndImplement(escaped)
 	completeRoom()
-	local rewards = generateRewards(rewardRand)
-	openWindowAbove(RewardWindow:new{rewards=rewards})
-end
-
-function combatEnd()
-	player:onCombatEnd()
-	if roomActionType == 'eventCombat' then
-		currentEvent:onCombatEnd()
+	if escaped then
+		openWindowAbove(RewardWindow:new{rewards={},title='Fled...'})
 	else
-		saveGame(true)
-		combatEndImplement()
+		local rewards = generateRewards(rewardRand)
+		openWindowAbove(RewardWindow:new{rewards=rewards})
 	end
 end
 
-function loadCombatEnd()
-	combatEndImplement()
+function combatEnd(escaped)
+	player:onCombatEnd()
+	if roomActionType == 'eventCombat' then
+		currentEvent:onCombatEnd(escaped)
+	else
+		saveGame(true,escaped and 1 or 0)
+		combatEndImplement(escaped)
+	end
+end
+
+function loadCombatEnd(escaped)
+	combatEndImplement(escaped ~= 0)
 end
 
 local keyBuffAppliers = {

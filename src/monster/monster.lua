@@ -4,7 +4,7 @@
 ---@class Monster : Creature
 Monster = {
 	intent='takeTurn',intentType='attack',intentBaseDamage=0,intentDamage=0,intentAttackCount=1,showIntent=false,lockIntentDamage=false,
-	takeTurn=noop,createRandom=nil,init=noop,lastIntent=nil,lastSecondIntent=nil,
+	takeTurn=noop,createRandom=nil,init=noop,lastIntent=nil,lastSecondIntent=nil,type='monster',
 }
 Creature:new(Monster)
 

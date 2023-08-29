@@ -109,8 +109,8 @@ function LouseDefensive:nextIntent()
 end
 
 CurlUpPower = Power:new{icon=448,triggered=false}
-function CurlUpPower:onDamaged(value)
-	if not self.triggered and value > 0 then
+function CurlUpPower:onDamaged(value,_,type)
+	if not self.triggered and value > 0 and type == 'attack' then
 		self.triggered = true
 		addAction(GainBlockAction:new{target=self.owner,value=self.amount})
 		addAction(RemovePowerAction:new(self))
@@ -606,7 +606,7 @@ function ThieveryAction:tick()
 	self.isDone = true
 end
 
-GremlinNob = Monster:new{ maxHp=90,width=5,height=6,bashDmg=6,rushDmg=14,usedBellow=false }
+GremlinNob = Monster:new{ maxHp=90,width=5,height=6,bashDmg=6,rushDmg=14,usedBellow=false,type='elite' }
 function GremlinNob:init(random)
 	self.maxHp = ascension >= 8 and random:randInt(85,90) or random:randInt(82,86)
 	if ascension >= 3 then
@@ -841,7 +841,7 @@ function GremlinTsundere:nextIntent()
 	end
 end
 
-Sentry = Monster:new{ maxHp=40,width=4,height=5,dmg=9,attackFirst=false }
+Sentry = Monster:new{ maxHp=40,width=4,height=5,dmg=9,attackFirst=false,type='elite' }
 function Sentry:init(random)
 	self.maxHp = ascension >= 8 and random:randInt(39,45) or random:randInt(38,42)
 	if ascension >= 3 then
@@ -882,7 +882,7 @@ function Sentry:nextIntent(first)
 	end
 end
 
-Lagavulin = Monster:new{ maxHp=110,width=6,height=5,dmg=18,sleepCooldown=3,debuffAmt=-1,metallicizeAmt=8 }
+Lagavulin = Monster:new{ maxHp=110,width=6,height=5,dmg=18,sleepCooldown=3,debuffAmt=-1,metallicizeAmt=8,type='elite' }
 function Lagavulin:init(random)
 	self.maxHp = ascension >= 8 and random:randInt(112,115) or random:randInt(109,111)
 	self.dmg = ascension >= 3 and 20 or 18
@@ -950,7 +950,7 @@ function Lagavulin:damage(...)
 	end
 end
 
-SlimeBoss = Monster:new{ maxHp=140,width=8,height=6,dmg=35 }
+SlimeBoss = Monster:new{ maxHp=140,width=8,height=6,dmg=35,type='boss' }
 function SlimeBoss:init()
 	self.maxHp = ascension >= 9 and 150 or 140
 	self.dmg = ascension >= 4 and 38 or 35
@@ -998,7 +998,10 @@ function SlimeBoss:nextIntent(first)
 	self:setIntent('debuff','strongDebuff')
 end
 
-Hexaghost = Monster:new{ maxHp=250,width=8,height=6,fireDmg=5,searDmg=6,searBurnCount=1,infernoDmg=2,strAmt=2,fires=nil,fireCount=0,burnUpgraded=false }
+Hexaghost = Monster:new{
+	maxHp=250,width=8,height=6,fireDmg=5,searDmg=6,searBurnCount=1,infernoDmg=2,strAmt=2,fires=nil,fireCount=0,
+	burnUpgraded=false,type='boss'
+}
 function Hexaghost:init()
 	self.maxHp = ascension >= 9 and 264 or 250
 	self.fireDmg = ascension >= 4 and 6 or 5
@@ -1155,7 +1158,7 @@ end
 
 TheGuardian = Monster:new{
 	maxHp=240,width=8,height=6,bashDmg=32,rollDmg=9,twinSlamDmg=8,whirlwindDmg=4,
-	modeShiftAmount=30,defensiveMode=false,enteringDefensiveMode=false
+	modeShiftAmount=30,defensiveMode=false,enteringDefensiveMode=false,type='boss'
 }
 function TheGuardian:init()
 	self.maxHp = ascension >= 9 and 250 or 240

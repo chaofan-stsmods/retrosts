@@ -451,36 +451,45 @@ function DeadAdventurer:relic()
 	obtainRelic(self.relicReward)
 end
 
-function DeadAdventurer:onCombatEnd()
+function DeadAdventurer:onCombatEnd(escaped)
+	if escaped then
+		self.numRewards = 20
+	end
 	saveGame(true,self.numRewards)
 	self:load(self.numRewards)
 end
 
 function DeadAdventurer:load(eventMeta)
-	self.numRewards = eventMeta
-	local random = self.rewardRandom
-	local rewards = {}
-	local eventGold = random:randInt(25,35)
-	local hasRelic = false
-	for i = self.numRewards+1,#self.rewards do
-		local reward = self.rewards[i]
-		if reward.action == 'gold' then
-			eventGold = eventGold + 30
-		elseif reward.action == 'relic' then
-			hasRelic = true
-		end
-	end
-	addGoldReward(rewards,eventGold)
-	if hasRelic then
-		addRelicReward(rewards,self.relicReward)
-	end
-	generateCardRewards(rewards,random)
-	generatePotionRewards(rewards,random)
 	self.screen = 'leave'
 	self.description = ''
 	self.options = {}
 	completeRoom()
-	openWindowAbove(RewardWindow:new{rewards=rewards})
+
+	self.numRewards = eventMeta
+	if self.numRewards >= 20 then
+		--escaped
+		openWindowAbove(RewardWindow:new{rewards={},title='Fled...'})
+	else
+		local random = self.rewardRandom
+		local rewards = {}
+		local eventGold = random:randInt(25,35)
+		local hasRelic = false
+		for i = self.numRewards+1,#self.rewards do
+			local reward = self.rewards[i]
+			if reward.action == 'gold' then
+				eventGold = eventGold + 30
+			elseif reward.action == 'relic' then
+				hasRelic = true
+			end
+		end
+		addGoldReward(rewards,eventGold)
+		if hasRelic then
+			addRelicReward(rewards,self.relicReward)
+		end
+		generateCardRewards(rewards,random)
+		generatePotionRewards(rewards,random)
+		openWindowAbove(RewardWindow:new{rewards=rewards})
+	end
 end
 
 Mushrooms = CombatTextEvent:new{screen='intro',spriteBank=1,healAmt=0,encounter=nil}
@@ -548,21 +557,27 @@ function Mushrooms:onOption(selection)
 	end
 end
 
-function Mushrooms:onCombatEnd()
-	saveGame(true)
-	self:load()
+function Mushrooms:onCombatEnd(escaped)
+	saveGame(true,escaped and 1 or 0)
+	self:load(escaped and 1 or 0)
 end
 
-function Mushrooms:load()
-	local random = self.rewardRandom
-	local rewards = {}
-	addGoldReward(rewards,random:randInt(20,30))
-	addRelicReward(rewards,OddMushroom:new())
-	generateCardRewards(rewards,random)
-	generatePotionRewards(rewards,random)
+function Mushrooms:load(escaped)
 	self.screen = 'leave'
 	self.description = ''
 	self.options = {}
 	completeRoom()
-	openWindowAbove(RewardWindow:new{rewards=rewards})
+
+	if escaped == 1 then
+		--escaped
+		openWindowAbove(RewardWindow:new{rewards={},title='Fled...'})
+	else
+		local random = self.rewardRandom
+		local rewards = {}
+		addGoldReward(rewards,random:randInt(20,30))
+		addRelicReward(rewards,OddMushroom:new())
+		generateCardRewards(rewards,random)
+		generatePotionRewards(rewards,random)
+		openWindowAbove(RewardWindow:new{rewards=rewards})
+	end
 end

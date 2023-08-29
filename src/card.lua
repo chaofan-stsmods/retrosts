@@ -10,7 +10,7 @@ Card = {
 	damage=0,baseDamage=0,block=0,baseBlock=0,magic=0,baseMagic=0,multiDamage={},
 	enemyTarget=false,playerTarget=false,toAllEnemies=false,
 	exhaust=false,ethereal=false,innate=false,autoPlayOnEndTurn=false,
-	upgrade=noop,upgraded=false,tags={},canGenerateInCombat=true,canRemove=true,
+	upgrade=noop,upgraded=false,tags={},canGenerateInCombat=true,canRemove=true,linkedBottle=nil,
 	onRemoveFromDeck=noop,
 }
 Object:new(Card)
@@ -175,8 +175,15 @@ function CardItem:tick()
 	else	
 		drawCardBack(self.card,self.large,l,t)
 		drawCost(self.card,l,t,self.isNotInHand,self.showWhiteCost)
-		drawTitle(self.card,self.large,l,t)
+
+		stackClip(l+1,t,self.large and 54 or 30,self.large and 56 or 40)
+		drawTitle(self,l,t)
 		drawDescription(self.card,self.card.description,l+3,t+10,self.large and 51 or 27,self.large and 999 or 3)
+		popClip()
+
+		if self.card.linkedBottle and getmetatable(nearestWindow) == CardGridSelectWindow then
+			self.card.linkedBottle:drawImage(l+(self.large and 48 or 24),t-6,true)
+		end
 	end
 end
 
@@ -244,17 +251,26 @@ function drawCost(card,l,t,isNotInHand,showWhiteCost)
 	end
 end
 
-function drawTitle(card,large,l,t)
+function drawTitle(cardItem,l,t)
+	local card = cardItem.card
 	local titleStart = l+2
 	local cardName = card.name
-	if #cardName > 8 and not large then
-		cardName = cardName:sub(1,8)
-	end
 	local color = card.upgraded and 5 or 12
 	if card.rarity == 'rare' then
 		color = card.upgraded and 6 or 0
 	end
-	print(cardName,titleStart,t+2,color,false,1,true)
+
+	local xOffset = 0
+	local titleWidth = cardItem.titleWidth
+	if cardItem.large and titleWidth and titleWidth > 54 then
+		local d = titleWidth - 54
+		local f = 2
+		local p = ((cardItem.titleTimer or 0) + 1) % (2 * d * f + 60)
+		cardItem.titleTimer = p
+		xOffset = p<30 and 0 or (p-30<d*f and (-p+30)/f or (p<60+d*f and -d or (p-60-2*d*f)/f))
+	end
+
+	cardItem.titleWidth = print(cardName,titleStart+xOffset,t+2,color,false,1,true)
 end
 
 function drawDescription(card,description,x,y,lineWidth,maxLine,color)
@@ -737,13 +753,17 @@ function CardGridUI:gridControls()
 	end
 
 	if pressed then
-		local row = math.floor((self.selection-1)/5)
-		local y = self.top+36+row*56-self.y
-		if y < 36+self.top then
-			self.ty = row*56
-		elseif y > 100 then
-			self.ty = self.top+row*56-64
-		end
+		self:scrollToSelection()
+	end
+end
+
+function CardGridUI:scrollToSelection()
+	local row = math.floor((self.selection-1)/5)
+	local y = self.top+36+row*56-self.y
+	if y < 36+self.top then
+		self.ty = row*56
+	elseif y > 100 then
+		self.ty = self.top+row*56-64
 	end
 end
 
@@ -979,9 +999,9 @@ function CardGridSelectWindow:tick()
 		local b=16+(self.gridUI.y+self.height)/(self.maxY+self.height)*112
 		rect(234,t,4,b-t,14)
 	end
-	clip(0,24,240,136)
+	stackClip(0,24,240,136)
 	self.gridUI:tick()
-	clip()
+	popClip()
 	self:selectedCardsControls()
 	tickTopBar(true)
 end

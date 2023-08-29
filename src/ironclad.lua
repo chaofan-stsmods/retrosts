@@ -3,10 +3,14 @@
 local redCards
 
 Ironclad = Player:new{ maxHp=80,width=5,height=4,tileBank=1,name='Ironclad' }
-function Ironclad:drawImage(x,y)
-	x = x or self.x
-	y = y or self.y
-	map(0,17,self.width,self.height,x-8,y,0)
+function Ironclad:drawImage()
+	if self.flipped then
+		map(0,17,self.width,2,self.x+12,self.y,0,1,flipRemap(0,self.width))
+		map(0,19,self.width,2,self.x+8,self.y+16,0,1,flipRemap(0,self.width))
+	else
+		map(0,17,self.width,2,self.x-12,self.y,0)
+		map(0,19,self.width,2,self.x-8,self.y+16,0)
+	end
 end
 
 function Ironclad:getStartDeck()
@@ -42,6 +46,10 @@ end
 
 function Ironclad:getRelics()
 	return { BurningBlood,RedSkull }
+end
+
+function Ironclad:getPotions()
+	return { BloodPotion,HeartOfIron,Elixir }
 end
 
 -- cards
@@ -1138,4 +1146,41 @@ function RedSkull:onDamaged()
 		addAction(ApplyPowerAction:new(StrengthPower:new(player,3)))
 		self.activated = true
 	end
+end
+
+-- potions
+BloodPotion = Potion:new{
+	name='Blood Potion',icon=96,baseMagic=20,canUseOutsideCombat=true,rarity='common',color={13,13,12,12,13,13},
+	description='Heal for #11#!M!%#12# of your Max HP.'
+}
+function BloodPotion:use()
+	player:heal(math.floor(player.maxHp*self.magic/100))
+end
+
+HeartOfIron = Potion:new{
+	name='Heart of Iron',icon=106,baseMagic=6,rarity='rare',color={9,11,9,11},
+	description='Gain #11#!M!#12# {46}.' -- TODO icon
+}
+function HeartOfIron:use()
+	return { ApplyPowerAction:new(MetallicizePower:new(player,self.magic)) }
+end
+
+Elixir = Potion:new{ name='Elixir',icon=104,rarity='uncommon',color={13,12},description='#4#Exhaust#12# any number of cards in your hand.' }
+function Elixir:use()
+	return {
+		AnonymousAction:new(function ()
+			if #hand == 0 then
+				return
+			else
+				openWindowAbove(HandSelectWindow:new{cardItems=hand,title='Choose any Card to Exhaust',min=0},function (cards)
+					effectRandom:shuffle(cards)
+					for i,cardItem in ipairs(cards) do
+						local cardIndex = table.indexOf(hand,cardItem)
+						addAction(i,ExhaustCardAction:new{cardItem=cardItem,duration=10})
+						removeHand(cardIndex)
+					end
+				end)
+			end
+		end)
+	}
 end
