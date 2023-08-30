@@ -52,7 +52,7 @@ end
 
 ---@class Potion : Object
 Potion = {
-	name='',description='',icon=0,color={},canUseOutsideCombat=false,baseMagic=0,magic=0,timer=0,
+	name='',description='',icon=Icon:new{image=0},canUseOutsideCombat=false,baseMagic=0,magic=0,timer=0,
 	enemyTarget=false,rarity='common',useTitle='Drink',use=noop,priority=50
 }
 Object:new(Potion)
@@ -67,22 +67,10 @@ function Potion:applyPowers()
 	self.magic = self.baseMagic
 end
 
-local rainbow =  {8,2,3,4,5,11,10}
-local rainbow2 = {1,1,2,3,6,10,9}
 local rainbowSpeed = 0.1
 function Potion:drawImage(x,y)
-	self.timer = (self.timer + 1) % math.floor(#rainbow/rainbowSpeed)
-	for i,v in ipairs(self.color) do
-		if v == -1 then
-			mapColor(i,rainbow[math.floor(self.timer*rainbowSpeed)+1])
-		elseif v == -2 then
-			mapColor(i,rainbow2[math.floor(self.timer*rainbowSpeed)+1])
-		else
-			mapColor(i,v)
-		end
-	end
-	spr(self.icon,x,y,0)
-	resetColors{1,2,3,4,5,6}
+	self.timer = (self.timer + 1) % math.floor(Icon.rainbowLength/rainbowSpeed)
+	drawIcon(self.icon,x,y,math.floor(self.timer*rainbowSpeed)+1)
 end
 
 function Potion:canUse()
@@ -95,13 +83,13 @@ function Potion:canDiscard()
 	return currentEvent == nil or currentEvent.canOperatePotion
 end
 
-PotionSlot = Potion:new{icon=41}
+PotionSlot = Potion:new{icon=Icon:new{image=41}}
 function PotionSlot:canUse()
 	return false
 end
 
 FirePotion = Potion:new{
-	name='Fire Potion',description='{63} #11#!M!#12#.',icon=100,color={1,2,4},baseMagic=20,enemyTarget=true,useTitle='Throw',rarity='common'
+	name='Fire Potion',description='{Damage} #11#!M!#12#.',icon=Icon:new{image=100,colorMap={1,2,4}},baseMagic=20,enemyTarget=true,useTitle='Throw',rarity='common'
 }
 function FirePotion:use(target)
 	return { DamageAction:new{target=target,source=player,value=self.magic,type='power'} }
@@ -109,7 +97,7 @@ end
 
 LiquidMemories = Potion:new{
 	name='Liquid Memories',description='Choose #11#!M!#12# card(s) in discard pile and return it to hand. It cost 0 this turn',
-	icon=107,color={10,9},baseMagic=1,rarity='uncommon'
+	icon=Icon:new{image=107,colorMap={10,9}},baseMagic=1,rarity='uncommon'
 }
 function LiquidMemories:use()
 	local amount = self.magic
@@ -146,20 +134,20 @@ function LiquidMemories:use()
 end
 
 FruitJuice = Potion:new{
-	name='Fruit Juice',description='Gain #11#!M!#12# max HP.',icon=106,color={5,5,4,4},baseMagic=5,canUseOutsideCombat=true,rarity='rare'
+	name='Fruit Juice',description='Gain #11#!M!#12# max HP.',icon=Icon:new{image=106,colorMap={5,5,4,4}},baseMagic=5,canUseOutsideCombat=true,rarity='rare'
 }
 function FruitJuice:use()
 	player:increaseMaxHp(self.magic)
 end
 
 AttackPotion = Potion:new{
-	name='Attack Potion',icon=101,color={2,2,3},baseMagic=1,rarity='common',
-	description='Choose #11#1#12# of #11#3#12# random {57} cards to add to your hand, it costs #11#0#12# this turn.'
+	name='Attack Potion',icon=Icon:new{image=101,colorMap={2,2,3}},baseMagic=1,rarity='common',
+	description='Choose #11#1#12# of #11#3#12# random {Attack} cards to add to your hand, it costs #11#0#12# this turn.'
 }
 function AttackPotion:applyPowers()
 	Potion.applyPowers(self)
 	if self.magic > 1 then
-		self.description = 'Choose #11#1#12# of #11#3#12# random {57} cards and add #11#!M!#12# copies to your hand, they cost #11#0#12# this turn.'
+		self.description = 'Choose #11#1#12# of #11#3#12# random {Attack} cards and add #11#!M!#12# copies to your hand, they cost #11#0#12# this turn.'
 	end
 end
 
@@ -168,13 +156,13 @@ function AttackPotion:use()
 end
 
 SkillPotion = Potion:new{
-	name='Skill Potion',icon=101,color={5,6,5},baseMagic=1,rarity='common',
-	description='Choose #11#1#12# of #11#3#12# random {58} cards to add to your hand, it costs #11#0#12# this turn.'
+	name='Skill Potion',icon=Icon:new{image=101,colorMap={5,6,5}},baseMagic=1,rarity='common',
+	description='Choose #11#1#12# of #11#3#12# random {Skill} cards to add to your hand, it costs #11#0#12# this turn.'
 }
 function SkillPotion:applyPowers()
 	Potion.applyPowers(self)
 	if self.magic > 1 then
-		self.description = 'Choose #11#1#12# of #11#3#12# random {58} cards and add #11#!M!#12# copies to your hand, they cost #11#0#12# this turn.'
+		self.description = 'Choose #11#1#12# of #11#3#12# random {Skill} cards and add #11#!M!#12# copies to your hand, they cost #11#0#12# this turn.'
 	end
 end
 
@@ -183,13 +171,13 @@ function SkillPotion:use()
 end
 
 PowerPotion = Potion:new{
-	name='Power Potion',icon=101,color={11,13,11},baseMagic=1,rarity='common',
-	description='Choose #11#1#12# of #11#3#12# random {59} cards to add to your hand, it costs #11#0#12# this turn.'
+	name='Power Potion',icon=Icon:new{image=101,colorMap={11,13,11}},baseMagic=1,rarity='common',
+	description='Choose #11#1#12# of #11#3#12# random {Power} cards to add to your hand, it costs #11#0#12# this turn.'
 }
 function PowerPotion:applyPowers()
 	Potion.applyPowers(self)
 	if self.magic > 1 then
-		self.description = 'Choose #11#1#12# of #11#3#12# random {59} cards and add #11#!M!#12# copies to your hand, they cost #11#0#12# this turn.'
+		self.description = 'Choose #11#1#12# of #11#3#12# random {Power} cards and add #11#!M!#12# copies to your hand, they cost #11#0#12# this turn.'
 	end
 end
 
@@ -198,7 +186,7 @@ function PowerPotion:use()
 end
 
 ColorlessPotion = Potion:new{
-	name='Colorless Potion',icon=101,color={12,13,13},baseMagic=1,rarity='common',
+	name='Colorless Potion',icon=Icon:new{image=101,colorMap={12,13,13}},baseMagic=1,rarity='common',
 	description='Choose #11#1#12# of #11#3#12# random colorless cards to add to your hand, it costs #11#0#12# this turn.'
 }
 function ColorlessPotion:applyPowers()
@@ -213,7 +201,7 @@ function ColorlessPotion:use()
 end
 
 BlessingOfTheForge = Potion:new{
-	name='Blessing of the Forge',icon=103,color={2,3},rarity='common',description='Upgrade all cards in your hand for the rest of combat.'
+	name='Blessing of the Forge',icon=Icon:new{image=103,colorMap={2,3}},rarity='common',description='Upgrade all cards in your hand for the rest of combat.'
 }
 function BlessingOfTheForge:use()
 	return {
@@ -229,56 +217,56 @@ function BlessingOfTheForge:use()
 end
 
 BlockPotion = Potion:new{
-	name='Block Potion',icon=98,color={10,13,11,11,13},baseMagic=12,rarity='common',
-	description='Gain #11#!M!#12# {47}.'
+	name='Block Potion',icon=Icon:new{image=98,colorMap={10,13,11,11,13}},baseMagic=12,rarity='common',
+	description='Gain #11#!M!#12# {Block}.'
 }
 function BlockPotion:use()
 	return { GainBlockAction:new{target=player,value=self.magic} }
 end
 
 DexterityPotion = Potion:new{
-	name='Dexterity Potion',icon=98,color={6,6,5,5,6},baseMagic=2,rarity='common',
-	description='Gain #11#!M!#12# {1}.'
+	name='Dexterity Potion',icon=Icon:new{image=98,colorMap={6,6,5,5,6}},baseMagic=2,rarity='common',
+	description='Gain #11#!M!#12# {Dexterity}.'
 }
 function DexterityPotion:use()
 	return { ApplyPowerAction:new(DexterityPower:new(player,self.magic)) }
 end
 
 StrengthPotion = Potion:new{
-	name='Strength Potion',icon=98,color={15,15,15,3,3},baseMagic=2,rarity='common',
-	description='Gain #11#!M!#12# {76<}.'
+	name='Strength Potion',icon=Icon:new{image=98,colorMap={15,15,15,3,3}},baseMagic=2,rarity='common',
+	description='Gain #11#!M!#12# {Strength}.'
 }
 function StrengthPotion:use()
 	return { ApplyPowerAction:new(StrengthPower:new(player,self.magic)) }
 end
 
 EnergyPotion = Potion:new{
-	name='Energy Potion',icon=99,color={3,4,4},baseMagic=2,rarity='common',
-	description='Gain #11#!M!#12# {202}.'
+	name='Energy Potion',icon=Icon:new{image=99,colorMap={3,4,4}},baseMagic=2,rarity='common',
+	description='Gain #11#!M!#12# {Energy}.'
 }
 function EnergyPotion:use()
 	return { GainEnergyAction:new(self.magic) }
 end
 
 ExplosivePotion = Potion:new{
-	name='Explosive Potion',icon=96,color={4,4,4,4,3,3},baseMagic=10,rarity='common',useTitle='Throw',
-	description='{63} #11#!M!#12# to all enemies.'
+	name='Explosive Potion',icon=Icon:new{image=96,colorMap={4,4,4,4,3,3}},baseMagic=10,rarity='common',useTitle='Throw',
+	description='{Damage} #11#!M!#12# to all enemies.'
 }
 function ExplosivePotion:use()
 	return { DamageAllEnemiesAction:new{source=player,value=self.magic,type='power'} }
 end
 
 FearPotion = Potion:new{
-	name='Fear Potion',icon=96,color={2,2,15,15,15,2},baseMagic=3,rarity='common',useTitle='Throw',
-	description='Apply #11#!M!#12# {60}.',enemyTarget=true,
+	name='Fear Potion',icon=Icon:new{image=96,colorMap={2,2,15,15,15,2}},baseMagic=3,rarity='common',useTitle='Throw',
+	description='Apply #11#!M!#12# {Vulnerable}.',enemyTarget=true,
 }
 function FearPotion:use(target)
 	return { ApplyPowerAction:new(VulnerablePower:new(target,self.magic)) }
 end
 
 FlexPotion = Potion:new{
-	name='Flex Potion',icon=102,color={15,2,15,2},baseMagic=5,rarity='common',
-	description='Gain #11#!M!#12# temporary {76<}.',
+	name='Flex Potion',icon=Icon:new{image=102,colorMap={15,2,15,2}},baseMagic=5,rarity='common',
+	description='Gain #11#!M!#12# temporary {Strength}.',
 }
 function FlexPotion:use()
 	return {
@@ -288,8 +276,8 @@ function FlexPotion:use()
 end
 
 SpeedPotion = Potion:new{
-	name='Speed Potion',icon=99,color={6,5,5},baseMagic=5,rarity='common',
-	description='Gain #11#!M!#12# temporary {1}.'
+	name='Speed Potion',icon=Icon:new{image=99,colorMap={6,5,5}},baseMagic=5,rarity='common',
+	description='Gain #11#!M!#12# temporary {Dexterity}.'
 }
 function SpeedPotion:use()
 	return {
@@ -299,7 +287,7 @@ function SpeedPotion:use()
 end
 
 SwiftPotion = Potion:new{
-	name='Swift Potion',icon=96,color={9,11,9,11,9,11},baseMagic=3,rarity='common',
+	name='Swift Potion',icon=Icon:new{image=96,colorMap={9,11,9,11,9,11}},baseMagic=3,rarity='common',
 	description='Draw #11#!M!#12# cards.'
 }
 function SwiftPotion:use()
@@ -307,15 +295,15 @@ function SwiftPotion:use()
 end
 
 WeakPotion = Potion:new{
-	name='Weak Potion',icon=96,color={1,1,8,8,1,1},baseMagic=3,rarity='common',useTitle='Throw',
-	description='Apply #11#!M!#12# {61}.',enemyTarget=true,
+	name='Weak Potion',icon=Icon:new{image=96,colorMap={1,1,8,8,1,1}},baseMagic=3,rarity='common',useTitle='Throw',
+	description='Apply #11#!M!#12# {Weak}.',enemyTarget=true,
 }
 function WeakPotion:use(target)
 	return { ApplyPowerAction:new(WeakPower:new(target,self.magic)) }
 end
 
 CultistPotion = Potion:new{
-	name='Cultist Potion',icon=108,color={15,9},baseMagic=1,rarity='rare',
+	name='Cultist Potion',icon=Icon:new{image=108,colorMap={15,9}},baseMagic=1,rarity='rare',
 	description='Gain #11#!M!#12# {73}.',
 }
 function CultistPotion:use()
@@ -323,7 +311,7 @@ function CultistPotion:use()
 end
 
 EntropicBrew = Potion:new{
-	name='Entropic Brew',icon=97,color={-1,-1},rarity='rare',canUseOutsideCombat=true,
+	name='Entropic Brew',icon=Icon:new{image=97,colorMap={-1,-1},isRainbow=true},rarity='rare',canUseOutsideCombat=true,
 	description='Fill all your empty potion slots with random potions.'
 }
 function EntropicBrew:use()
@@ -335,7 +323,7 @@ function EntropicBrew:use()
 end
 
 FairyInABottle = Potion:new{
-	name='Fairy in a Bottle',icon=102,color={7,7,5,5},rarity='rare',baseMagic=30,
+	name='Fairy in a Bottle',icon=Icon:new{image=102,colorMap={7,7,5,5}},rarity='rare',baseMagic=30,
 	description='When you would die, heal to #11#!M!%#12# of your Max HP instead and discard this potion.'
 }
 function FairyInABottle:canUse()
@@ -358,7 +346,7 @@ function FairyInABottle:onBeforeDeath()
 end
 
 SmokeBomb = Potion:new{
-	name='Smoke Bomb',icon=100,color={14,13,14},rarity='rare',description='Escape from a non-boss combat. Receive no rewards.',
+	name='Smoke Bomb',icon=Icon:new{image=100,colorMap={14,13,14}},rarity='rare',description='Escape from a non-boss combat. Receive no rewards.',
 	useTitle='Throw',
 }
 function SmokeBomb:canUse()
@@ -397,7 +385,7 @@ function SneckoOil:use()
 end
 
 AncientPotion = Potion:new{
-	name='Ancient Potion',icon=102,color={4,11,4,11},rarity='uncommon',baseMagic=1,
+	name='Ancient Potion',icon=Icon:new{image=102,colorMap={4,11,4,11}},rarity='uncommon',baseMagic=1,
 	description='Gain #11#!M!#12# {22}.'
 }
 function AncientPotion:use()
@@ -405,7 +393,7 @@ function AncientPotion:use()
 end
 
 DistilledChaos = Potion:new{
-	name='Distilled Chaos',icon=104,color={-2,-1},rarity='uncommon',baseMagic=3,
+	name='Distilled Chaos',icon=Icon:new{image=104,colorMap={-2,-1},isRainbow=true},rarity='uncommon',baseMagic=3,
 	description='Play the top #11#!M!#12# cards of your draw pile.'
 }
 function DistilledChaos:use()
@@ -417,7 +405,7 @@ function DistilledChaos:use()
 end
 
 DuplicationPotion = Potion:new{
-	name='Duplication Potion',icon=101,color={-1,13,-1},rarity='uncommon',baseMagic=1,
+	name='Duplication Potion',icon=Icon:new{image=101,colorMap={-1,13,-1},isRainbow=true},rarity='uncommon',baseMagic=1,
 	description='This turn, your next card is played twice.'
 }
 function DuplicationPotion:applyPowers()
@@ -444,7 +432,7 @@ function DuplicationPower:onUseCard(_,target,useCardAction)
 end
 
 EssenceOfSteel = Potion:new{
-	name='Essence of Steel',icon=103,color={7,7},rarity='uncommon',baseMagic=4,
+	name='Essence of Steel',icon=Icon:new{image=103,colorMap={7,7}},rarity='uncommon',baseMagic=4,
 	description='Gain #11#!M!#12# {62}.'
 }
 function EssenceOfSteel:use()
@@ -452,7 +440,7 @@ function EssenceOfSteel:use()
 end
 
 GamblersBrew = Potion:new{
-	name='Gambler\'s Brew',icon=98,color={14,14,13,13,14},rarity='uncommon',
+	name='Gambler\'s Brew',icon=Icon:new{image=98,colorMap={14,14,13,13,14}},rarity='uncommon',
 	description='Discard any number of cards then draw that many.'
 }
 function GamblersBrew:use()
@@ -477,7 +465,7 @@ function GamblersBrew:use()
 end
 
 LiquidBronze = Potion:new{
-	name='Liquid Bronze',icon=105,color={10,4},rarity='uncommon',baseMagic=3,
+	name='Liquid Bronze',icon=Icon:new{image=105,colorMap={10,4}},rarity='uncommon',baseMagic=3,
 	description='Gain #11#!M!#12# {29}.'
 }
 function LiquidBronze:use()
@@ -485,7 +473,7 @@ function LiquidBronze:use()
 end
 
 RegenPotion = Potion:new{
-	name='Regen Potion',icon=106,color={13,13,12,12},rarity='uncommon',baseMagic=5,
+	name='Regen Potion',icon=Icon:new{image=106,colorMap={13,13,12,12}},rarity='uncommon',baseMagic=5,
 	description='Gain #11#!M!#12# {13}.'
 }
 function RegenPotion:use()

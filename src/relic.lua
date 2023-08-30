@@ -5,7 +5,7 @@ local colorlessRelics
 
 ---@class Relic : Object
 Relic = {
-	name='',description='',counter=-1,saved=0,icon=0,iconColorMap={},
+	name='',description='',counter=-1,saved=0,icon=0,
 	tier='common',colorName='colorless',tags={},
 	priority=70,onObtained=noop,onLost=noop
 }
@@ -16,13 +16,7 @@ function Relic:canSpwan()
 end
 
 function Relic:drawImage(x,y,hideCounter)
-	for key, value in pairs(self.iconColorMap) do
-		mapColor(key,value)
-	end
-	spr(self.icon,x,y,0)
-	for key, _ in pairs(self.iconColorMap) do
-		resetColor(key)
-	end
+	drawIcon(self.icon,x,y)
 	if self.counter >= 0 and not hideCounter then
 		local counterStr = tostring(self.counter)
 		local width = strWidth(counterStr,false,true)
@@ -133,19 +127,19 @@ function NeowsLament:onCombatStart()
 	end
 end
 
-GoldenIdol = Relic:new{name='Golden Idol',icon=24,iconColorMap={[5]=4,[6]=3,[7]=2,[9]=1,[10]=2},tier='special',description='Enemies drop #11#25%#12# more #4#Gold.'}
+GoldenIdol = Relic:new{name='Golden Idol',icon=Icon:new{image=24,colorMap={[5]=4,[6]=3,[7]=2,[9]=1,[10]=2}},tier='special',description='Enemies drop #11#25%#12# more #4#Gold.'}
 function GoldenIdol:onAddBonusGoldReward(bonusGold,amount)
 	return bonusGold + amount * 0.25
 end
 
-BloodyIdol = Relic:new{name='Bloody Idol',icon=24,iconColorMap={1,14,13,12,2,2,1,8,2,2,11,12,13,14,2},tier='special',description='Whenever you gain #4#Gold#12#, heal #11#5#12# HP.'}
+BloodyIdol = Relic:new{name='Bloody Idol',icon=Icon:new{image=24,colorMap={1,14,13,12,2,2,1,8,2,2,11,12,13,14,2}},tier='special',description='Whenever you gain #4#Gold#12#, heal #11#5#12# HP.'}
 function BloodyIdol:onGainGold(amount)
 	if amount > 0 then
 		player:heal(5)
 	end
 end
 
-OddMushroom = Relic:new{name='Odd Mushroom',icon=26,tier='special',description='When you have {60}, take #11#25%#12# more attack damage rather than #11#50%.'}
+OddMushroom = Relic:new{name='Odd Mushroom',icon=26,tier='special',description='When you have {Vulnerable}, take #11#25%#12# more attack damage rather than #11#50%.'}
 function OddMushroom:onModifyVulnerableFactor(factor,isAttacking)
 	if isAttacking then
 		return factor
@@ -153,7 +147,7 @@ function OddMushroom:onModifyVulnerableFactor(factor,isAttacking)
 	return 1.25
 end
 
-Anchor = Relic:new{name='Anchor',icon=27,tier='common',description='Start each combat with #11#10#12# {47}.'}
+Anchor = Relic:new{name='Anchor',icon=27,tier='common',description='Start each combat with #11#10#12# {Block}.'}
 function Anchor:onCombatStart()
 	addAction(GainBlockAction:new{target=player,value=10})
 end
@@ -165,7 +159,7 @@ function EternalFeather:onEnterRoom(_,roomType)
 	end
 end
 
-Calipers = Relic:new{name='Calipers',icon=28,tier='rare',description='At the start of your turn, lose #11#15#12# {47} rather than all.'}
+Calipers = Relic:new{name='Calipers',icon=28,tier='rare',description='At the start of your turn, lose #11#15#12# {Block} rather than all.'}
 function Calipers:onBeforeTurnStartLoseBlock(block)
 	return math.min(block,15)
 end
@@ -179,7 +173,7 @@ function EnergyRelic:onLost()
 	maxEnergy = maxEnergy - 1
 end
 
-CoffeeDripper = EnergyRelic:new{name='Coffee Dripper',icon=173,description='Gain {202} at the start of your turn. You can no longer #4#Rest#12# at Rest Sites.'}
+CoffeeDripper = EnergyRelic:new{name='Coffee Dripper',icon=173,description='Gain {Energy} at the start of your turn. You can no longer #4#Rest#12# at Rest Sites.'}
 function CoffeeDripper:onModifyCampfireOptions(options)
 	for _, option in ipairs(options) do
 		if option.name == 'Rest' then
@@ -189,7 +183,7 @@ function CoffeeDripper:onModifyCampfireOptions(options)
 	end
 end
 
-FusionHammer = EnergyRelic:new{name='Fusion Hammer',icon=177,description='Gain {202} at the start of your turn. You can no longer #4#Smith#12# at Rest Sites.'}
+FusionHammer = EnergyRelic:new{name='Fusion Hammer',icon=177,description='Gain {Energy} at the start of your turn. You can no longer #4#Smith#12# at Rest Sites.'}
 function FusionHammer:onModifyCampfireOptions(options)
 	for _, option in ipairs(options) do
 		if option.name == 'Smith' then
@@ -199,7 +193,7 @@ function FusionHammer:onModifyCampfireOptions(options)
 	end
 end
 
-Ectoplasm = EnergyRelic:new{name='Ectoplasm',icon=175,description='Gain {202} at the start of your turn. You can no longer gain #4#Gold#12#.'}
+Ectoplasm = EnergyRelic:new{name='Ectoplasm',icon=175,description='Gain {Energy} at the start of your turn. You can no longer gain #4#Gold#12#.'}
 function Ectoplasm:onGainGold()
 	return 0
 end
@@ -239,12 +233,12 @@ function FaceOfCleric:onCombatEnd()
 	player:increaseMaxHp(1)
 end
 
-GremlinMask = Relic:new{name='Gremlin Visage',icon=190,tier='special',description='Start each combat with #11#1#12# {61}.'}
+GremlinMask = Relic:new{name='Gremlin Visage',icon=190,tier='special',description='Start each combat with #11#1#12# {Weak}.'}
 function GremlinMask:onCombatStart()
 	addAction(ApplyPowerAction:new(WeakPower:new(player,1,true)))
 end
 
-NlothsMask = Relic:new{name='N\'loth\'s Hungry Face',counter=1,icon=239,tier='special',description='The next non-Boss chest you open is empty.'}
+NlothsMask = Relic:new{name='N\'loth\'s Hungry Face',counter=1,icon=239,priority=80,tier='special',description='The next non-Boss chest you open is empty.'}
 function NlothsMask:onOpenNonBossChest(rewards)
 	if self.counter <= 0 then
 		return
@@ -277,7 +271,7 @@ end
 
 NlothsGift = Relic:new{name='N\'loth\'s Gift',icon=223,tier='special',description='Triple the chance of finding #4#Rare#12# cards from combat rewards.'}
 function NlothsGift:onModifyRareCardChance(chance)
-	if room.type ~= 'shop' or roomActionType == 'combat' then
+	if not isInShop() or roomActionType == 'combat' then
 		return chance * 3
 	end
 end
@@ -299,12 +293,12 @@ function PreservedInsect:onCombatStart()
 	end
 end
 
-Akabeko = Relic:new{name='Akabeko',icon=30,tier='common',description='Your first {57} each combat deals #11#8#12# additional damage.'}
+Akabeko = Relic:new{name='Akabeko',icon=30,tier='common',description='Your first {Attack} each combat deals #11#8#12# additional damage.'}
 function Akabeko:onCombatStart()
 	addAction(ApplyPowerAction:new(VigorPower:new(player,8)))
 end
 
-AncientTeaSet = Relic:new{name='Ancient Tea Set',icon=31,tier='common',description='Whenever you enter a Rest Site, start the next combat with {202} {202}.'}
+AncientTeaSet = Relic:new{name='Ancient Tea Set',icon=31,tier='common',description='Whenever you enter a Rest Site, start the next combat with {Energy} {Energy}.'}
 function AncientTeaSet:onEnterRoom(_,roomType)
 	if roomType == 'rest' then
 		self.saved = 1
@@ -318,7 +312,7 @@ function AncientTeaSet:onCombatStart()
 	end
 end
 
-ArtOfWar = Relic:new{name='Art of War',icon=32,tier='common',notPlayAttack=false,description='If you do not play any {57} during your turn, gain an additional {202} next turn.'}
+ArtOfWar = Relic:new{name='Art of War',icon=32,tier='common',notPlayAttack=false,description='If you do not play any {Attack} during your turn, gain an additional {Energy} next turn.'}
 function ArtOfWar:onCombatStart()
 	self.notPlayAttack = false
 end
@@ -336,7 +330,7 @@ function ArtOfWar:onUseCard(card)
 	end
 end
 
-BagOfMarbles = Relic:new{name='Bag of Marbles',icon=33,tier='common',description='At the start of each combat, apply #11#1#12# {60} to ALL enemies.'}
+BagOfMarbles = Relic:new{name='Bag of Marbles',icon=33,tier='common',description='At the start of each combat, apply #11#1#12# {Vulnerable} to ALL enemies.'}
 function BagOfMarbles:onCombatStart()
 	for _, enemy in ipairs(enemies) do
 		if enemy.alive then
@@ -394,7 +388,7 @@ function DreamCatcher:onRest(campfireEvent)
 	end)
 end
 
-HappyFlower = Relic:new{name='Happy Flower',icon=86,tier='common',counter=0,description='Every #11#3#12# turns, gain {202}.'}
+HappyFlower = Relic:new{name='Happy Flower',icon=86,tier='common',counter=0,description='Every #11#3#12# turns, gain {Energy}.'}
 function HappyFlower:onTurnStart()
 	self.counter = self.counter + 1
 	if self.counter == 3 then
@@ -410,7 +404,7 @@ function JuzuBracelet:modifyEventRoomType(result)
 	end
 end
 
-Lantern = Relic:new{name='Lantern',icon=88,tier='common',description='Start each combat with an additional {202}.'}
+Lantern = Relic:new{name='Lantern',icon=88,tier='common',description='Start each combat with an additional {Energy}.'}
 function Lantern:onCombatStart()
 	addAction(GainEnergyAction:new(1))
 end
@@ -443,7 +437,7 @@ function MealTicket:onEnterRoom(_,roomType)
 	end
 end
 
-Nunchaku = Relic:new{name='Nunchaku',icon=91,tier='common',counter=0,description='Every time you play #11#10#12# {57}, gain {202}.'}
+Nunchaku = Relic:new{name='Nunchaku',icon=91,tier='common',counter=0,description='Every time you play #11#10#12# {Attack}, gain {Energy}.'}
 function Nunchaku:onUseCard(card)
 	if card.type == 'attack' then
 		self.counter = self.counter + 1
@@ -454,12 +448,12 @@ function Nunchaku:onUseCard(card)
 	end
 end
 
-OddlySmoothStone = Relic:new{name='Oddly Smooth Stone',icon=92,tier='common',description='Start each combat with #11#1#12# {1}.'}
+OddlySmoothStone = Relic:new{name='Oddly Smooth Stone',icon=92,tier='common',description='Start each combat with #11#1#12# {Dexterity}.'}
 function OddlySmoothStone:onCombatStart()
 	addAction(ApplyPowerAction:new(DexterityPower:new(player,1)))
 end
 
-Omamori = Relic:new{name='Omamori',icon=93,tier='common',counter=2,description='Negate the next #11#2#12# {56} you obtain.'}
+Omamori = Relic:new{name='Omamori',icon=93,tier='common',counter=2,description='Negate the next #11#2#12# {Curse} you obtain.'}
 function Omamori:load(...)
 	Relic.load(self,...)
 	if self.counter == -1 then
@@ -478,14 +472,14 @@ function Omamori:onBeforeObtainCard(card)
 	end
 end
 
-Orichalcum = Relic:new{name='Orichalcum',icon=94,tier='common',description='If you end your turn without {47}, gain #11#6#12# {47}.'}
+Orichalcum = Relic:new{name='Orichalcum',icon=94,tier='common',description='If you end your turn without {Block}, gain #11#6#12# {Block}.'}
 function Orichalcum:onTurnEnd()
 	if player.block == 0 then
 		addAction(GainBlockAction:new{target=player,value=6})
 	end
 end
 
-PenNib = Relic:new{name='Pen Nib',icon=95,tier='common',counter=0,priority=200,description='Every #11#10th#12# {57} you play deals double damage.'}
+PenNib = Relic:new{name='Pen Nib',icon=95,tier='common',counter=0,priority=200,description='Every #11#10th#12# {Attack} you play deals double damage.'}
 function PenNib:onAttack(damage)
 	if self.counter == 9 then
 		return damage * 2
@@ -501,7 +495,7 @@ function PenNib:onUseCard(card)
 	end
 end
 
-SmilingMask = Relic:new{name='Smiling Mask',icon=110,tier='common',description='The Merchant\'s card removal service now always costs #11#50 #4#Gold.'}
+SmilingMask = Relic:new{name='Smiling Mask',icon=110,tier='common',priority=80,description='The Merchant\'s card removal service now always costs #11#50 #4#Gold.'}
 function SmilingMask:canSpwan()
 	return not isInShop()
 end
@@ -546,12 +540,12 @@ function ToyOrnithopter:onUsePotion(_,inCombat)
 	end
 end
 
-Vajra = Relic:new{name='Vajra',icon=115,tier='common',description='Start each combat with #11#1#12# {76<}.'}
+Vajra = Relic:new{name='Vajra',icon=115,tier='common',description='Start each combat with #11#1#12# {Strength}.'}
 function Vajra:onCombatStart()
 	addAction(ApplyPowerAction:new(StrengthPower:new(player,1)))
 end
 
-WarPaint = Relic:new{name='War Paint',icon=116,tier='common',description='Upon pickup, #4#Upgrade #11#2#12# random {58}.'}
+WarPaint = Relic:new{name='War Paint',icon=116,tier='common',description='Upon pickup, #4#Upgrade #11#2#12# random {Skill}.'}
 function WarPaint:onObtained()
 	local random = makeRand(act.id,room.id,7)
 	local cards = shallowcopy(deck)
@@ -563,7 +557,7 @@ function WarPaint:onObtained()
 	upgradeCardsWithEffect(toBeUpgraded)
 end
 
-Whetstone = Relic:new{name='Whetstone',icon=117,tier='common',description='Upon pickup, #4#Upgrade #11#2#12# random {57}.'}
+Whetstone = Relic:new{name='Whetstone',icon=117,tier='common',description='Upon pickup, #4#Upgrade #11#2#12# random {Attack}.'}
 function Whetstone:onObtained()
 	local random = makeRand(act.id,room.id,7)
 	local cards = shallowcopy(deck)
@@ -575,7 +569,7 @@ function Whetstone:onObtained()
 	upgradeCardsWithEffect(toBeUpgraded)
 end
 
-BlueCandle = Relic:new{name='Blue Candle',icon=118,tier='uncommon',description='#4#Unplayable#12# {56} can now be played. NL Whenever you play a {56}, lose #11#1#12# HP.'}
+BlueCandle = Relic:new{name='Blue Candle',icon=118,tier='uncommon',description='#4#Unplayable#12# {Curse} can now be played. NL Whenever you play a {Curse}, lose #11#1#12# HP.'}
 function BlueCandle:canUseCard(card)
 	if card.type == 'curse' and not card:baseCanUse(true) then
 		return true
@@ -648,19 +642,283 @@ function BottleRelic:load(meta)
 	end
 end
 
-BottledFlame = BottleRelic:new{name='Bottled Flame',icon=119,description='Upon pickup, choose a {57}. Start each combat with this card in your hand.'}
+BottledFlame = BottleRelic:new{name='Bottled Flame',icon=119,description='Upon pickup, choose a {Attack}. Start each combat with this card in your hand.'}
 function BottledFlame:condition(card)
 	return card.type == 'attack' and not card.linkedBottle
 end
 
-BottledLightning = BottleRelic:new{name='Bottled Lightning',icon=120,description='Upon pickup, choose a {58}. Start each combat with this card in your hand.'}
+BottledLightning = BottleRelic:new{name='Bottled Lightning',icon=120,description='Upon pickup, choose a {Skill}. Start each combat with this card in your hand.'}
 function BottledLightning:condition(card)
 	return card.type == 'skill' and not card.linkedBottle
 end
 
-BottledTornado = BottleRelic:new{name='Bottled Tornado',icon=121,description='Upon pickup, choose a {59}. Start each combat with this card in your hand.'}
+BottledTornado = BottleRelic:new{name='Bottled Tornado',icon=121,description='Upon pickup, choose a {Power}. Start each combat with this card in your hand.'}
 function BottledTornado:condition(card)
 	return card.type == 'power' and not card.linkedBottle
+end
+
+DarkstonePeriapt = Relic:new{name='Darkstone Periapt',icon=122,tier='uncommon',description='Whenever you obtain a {Curse}, increase your Max HP by #11#6#12#.'}
+function DarkstonePeriapt:onObtainCard(card)
+	if card.type == 'curse' then
+		player:increaseMaxHp(6)
+	end
+end
+
+GremlinHorn = Relic:new{name='Gremlin Horn',icon=126,tier='uncommon',description='Whenever an enemy dies, gain #11#1#12# {Energy} and draw #11#1#12# card.'}
+function GremlinHorn:onMonsterDeath()
+	addAction(GainEnergyAction:new(1))
+	addAction(DrawCardAction:new(1))
+end
+
+HornCleat = Relic:new{name='Horn Cleat',icon=127,tier='uncommon',description='At the start of your 2nd turn, gain #11#14#12# {Block}.'}
+function HornCleat:onCombatStart()
+	self.counter = 0
+end
+
+function HornCleat:onTurnStart(turn)
+	if turn < 2 then
+		self.counter = turn
+	elseif turn == 2 then
+		addAction(GainBlockAction:new{target=player,value=14})
+		self.counter = -1
+	end
+end
+
+function HornCleat:onCombatEnd()
+	self.counter = -1
+end
+
+FrozenEgg = Relic:new{name='Frozen Egg',icon=123,tier='uncommon',description='Whenever you add a {Power} into your deck, #4#Upgrade#12# it.'}
+function FrozenEgg:onPreviewObtainCard(card)
+	self:onObtainCard(card)
+end
+
+function FrozenEgg:onObtainCard(card)
+	if card.type == 'power' and not card.upgraded and card:canUpgrade() then
+		card:upgrade()
+		card:resetPowers()
+	end
+end
+
+MoltenEgg = Relic:new{name='Molten Egg',icon=124,tier='uncommon',description='Whenever you add a {Attack} into your deck, #4#Upgrade#12# it.'}
+function MoltenEgg:onPreviewObtainCard(card)
+	self:onObtainCard(card)
+end
+
+function MoltenEgg:onObtainCard(card)
+	if card.type == 'attack' and not card.upgraded and card:canUpgrade() then
+		card:upgrade()
+		card:resetPowers()
+	end
+end
+
+ToxicEgg = Relic:new{name='Toxic Egg',icon=125,tier='uncommon',description='Whenever you add a {Skill} into your deck, #4#Upgrade#12# it.'}
+function ToxicEgg:onPreviewObtainCard(card)
+	self:onObtainCard(card)
+end
+
+function ToxicEgg:onObtainCard(card)
+	if card.type == 'skill' and not card.upgraded and card:canUpgrade() then
+		card:upgrade()
+		card:resetPowers()
+	end
+end
+
+InkBottle = Relic:new{name='Ink Bottle',icon=128,counter=0,tier='uncommon',description='Whenever you play #11#10#12# cards, draw #11#1#12# card.'}
+function InkBottle:onUseCard()
+	self.counter = self.counter + 1
+	if self.counter == 10 then
+		self.counter = 0
+		addAction(DrawCardAction:new(1))
+	end
+end
+
+Kunai = Relic:new{name='Kunai',icon=134,tier='uncommon',description='Every time you play #11#3#12# {Attack} in a single turn, gain #11#1#12# {Dexterity}.'}
+function Kunai:onTurnStart()
+	self.counter = 0
+end
+
+function Kunai:onUseCard(card)
+	if card.type == 'attack' then
+		self.counter = self.counter + 1
+		if self.counter == 3 then
+			self.counter = 0
+			addAction(ApplyPowerAction:new(DexterityPower:new(player,1)))
+		end
+	end
+end
+
+function Kunai:onCombatEnd()
+	self.counter = -1
+end
+
+Shuriken = Relic:new{name='Shuriken',icon=135,tier='uncommon',description='Every time you play #11#3#12# {Attack} in a single turn, gain #11#1#12# {Strength}.'}
+function Shuriken:onTurnStart()
+	self.counter = 0
+end
+
+function Shuriken:onUseCard(card)
+	if card.type == 'attack' then
+		self.counter = self.counter + 1
+		if self.counter == 3 then
+			self.counter = 0
+			addAction(ApplyPowerAction:new(StrengthPower:new(player,1)))
+		end
+	end
+end
+
+function Shuriken:onCombatEnd()
+	self.counter = -1
+end
+
+OrnamentalFan = Relic:new{name='Ornamental Fan',icon=136,tier='uncommon',description='Every time you play #11#3#12# {Attack} in a single turn, gain #11#4#12# {Block}.'}
+function OrnamentalFan:onTurnStart()
+	self.counter = 0
+end
+
+function OrnamentalFan:onUseCard(card)
+	if card.type == 'attack' then
+		self.counter = self.counter + 1
+		if self.counter == 3 then
+			self.counter = 0
+			addAction(GainBlockAction:new{target=player,value=4})
+		end
+	end
+end
+
+function OrnamentalFan:onCombatEnd()
+	self.counter = -1
+end
+
+LetterOpener = Relic:new{name='Letter Opener',icon=129,tier='uncommon',description='Every time you play #11#3#12# {Skill} in a single turn, {Damage} #11#5#12# to all enemies.'}
+function LetterOpener:onTurnStart()
+	self.counter = 0
+end
+
+function LetterOpener:onUseCard(card)
+	if card.type == 'skill' then
+		self.counter = self.counter + 1
+		if self.counter == 3 then
+			self.counter = 0
+			addAction(DamageAllEnemiesAction:new{source=player,value=5,type='power'})
+		end
+	end
+end
+
+function LetterOpener:onCombatEnd()
+	self.counter = -1
+end
+
+Matryoshka = Relic:new{name='Matryoshka',icon=130,tier='uncommon',counter=2,description='The next #11#2#12# non-Boss chests you open contain #11#2 #4#Relics.'}
+function Matryoshka:load(...)
+	Relic.load(self,...)
+	if self.counter == -1 then
+		self.description = 'This relic has been used up.'
+	end
+end
+
+function Matryoshka:onOpenNonBossChest(rewards)
+	if self.counter <= 0 then
+		return
+	end
+	self.counter = self.counter - 1
+
+	local rand = makeRand(act.id,room.id,2)
+	local relic
+	if rand:rand() < 0.75 then
+		relic = getRandomRelic(rand,'common')
+	else
+		relic = getRandomRelic(rand,'uncommon')
+	end
+
+	addRelicReward(rewards,relic)
+	if self.counter == 0 then
+		self.counter = -1
+		self.description = 'This relic has been used up.'
+	end
+end
+
+MeatOnTheBone = Relic:new{name='Meat on the Bone',icon=131,tier='uncommon',description='If your HP is at or below #11#50%#12# at the end of combat, heal #11#12#12# HP.'}
+function MeatOnTheBone:onCombatEnd()
+	if player.hp <= player.maxHp * 0.5 then
+		player:heal(12)
+	end
+end
+
+MercuryHourglass = Relic:new{name='Mercury Hourglass',icon=132,tier='uncommon',description='At the start of your turn, {Damage} #11#3#12# to all enemies.'}
+function MercuryHourglass:onTurnStart()
+	addAction(DamageAllEnemiesAction:new{source=player,value=3,type='power'})
+end
+
+MummifiedHand = Relic:new{name='Mummified Hand',icon=133,tier='uncommon',description='Whenever you play a {Power}, a random card in your hand costs #11#0#12# for the turn.'}
+function MummifiedHand:onUseCard(card)
+	if card.type == 'power' then
+		addAction(AnonymousAction:new(function ()
+			local candidates = shallowcopy(hand)
+			table.retainIf(candidates,function(c) return c.card:getCost() > 0 end)
+			if #candidates > 0 then
+				local card = candidates[miscRand:randInt(#candidates)]
+				card.card.costForOneTurnPlay = 0
+			end
+		end))
+	end
+end
+
+Pantograph = Relic:new{name='Pantograph',icon=137,tier='uncommon',description='At the start of boss combats, heal #11#25#12# HP.'}
+function Pantograph:onCombatStart()
+	if table.anyMatch(enemies,function(enemy) return enemy.type == 'boss' end) then
+		player:heal(25)
+	end
+end
+
+Pear = Relic:new{name='Pear',icon=138,tier='uncommon',description='Upon pickup, raise your Max HP by #11#10#12#.'}
+function Pear:onObtained()
+	player:increaseMaxHp(10)
+end
+
+QuestionCard = Relic:new{name='Question Card',icon=139,tier='uncommon',description='Future card rewards have #11#1#12# additional card to choose from.'}
+function QuestionCard:modifyCardRewardCount(value)
+	return value + 1
+end
+
+StrikeDummy = Relic:new{name='Strike Dummy',icon=141,tier='uncommon',description='Cards containing \"Strike\" deal #11#3#12# additional damage.'}
+function StrikeDummy:onAttack(damage,_,card)
+	if table.indexOf(card.tags,'strike') then
+		return damage + 3
+	end
+end
+
+Sundial = Relic:new{name='Sundial',icon=142,tier='uncommon',counter=0,description='Every #11#3#12# times you shuffle your draw pile, gain {Energy} {Energy}.'}
+function Sundial:onShuffle()
+	self.counter = self.counter + 1
+	if self.counter == 3 then
+		self.counter = 0
+		addAction(GainEnergyAction:new(2))
+	end
+end
+
+TheCourier = Relic:new{name='The Courier',icon=143,tier='uncommon',description='The Merchant restocks cards, relics, and potions. All prices are reduced by #11#20%#12#.'}
+function TheCourier:canSpwan()
+	return not isInShop()
+end
+
+function TheCourier:modifyShopPrice(price)
+	return price * 0.8
+end
+
+WhiteBeastStatue = Relic:new{name='White Beast Statue',icon=144,tier='uncommon',description='Potions always appear in combat rewards.'}
+
+SingingBowlOption = ColorlessCard:new{baseCost=-2,rarity='special',type='skill',name='Singing Bowl',description='Raise your Max HP by #11#2#12# without adding cards.'}
+SingingBowl = Relic:new{name='Singing Bowl',icon=140,tier='uncommon',description='When adding cards into your deck, you may raise your Max HP by #11#2#12# instead.'}
+function SingingBowl:modifyCardReward(reward)
+	table.insert(reward.value,SingingBowlOption)
+end
+
+function SingingBowl:onBeforeObtainCard(card)
+	if card == SingingBowlOption then
+		player:increaseMaxHp(2)
+		return false
+	end
 end
 
 colorlessRelics = {
@@ -673,7 +931,9 @@ colorlessRelics = {
 	OddlySmoothStone,Omamori,Orichalcum,PenNib,SmilingMask,Strawberry,TheBoot,TinyChest,ToyOrnithopter,Vajra,WarPaint,
 	Whetstone,
 	-- uncommon
-	EternalFeather,BlueCandle,BottledFlame,BottledLightning,BottledTornado,
+	EternalFeather,BlueCandle,BottledFlame,BottledLightning,BottledTornado,DarkstonePeriapt,GremlinHorn,HornCleat,
+	FrozenEgg,MoltenEgg,ToxicEgg,InkBottle,Kunai,Shuriken,OrnamentalFan,LetterOpener,Matryoshka,MeatOnTheBone,MercuryHourglass,
+	MummifiedHand,Pantograph,Pear,QuestionCard,StrikeDummy,Sundial,TheCourier,WhiteBeastStatue,SingingBowl,
 	-- rare
 	Calipers,
 	-- boss

@@ -95,6 +95,7 @@ function ShuffleAction:tick()
 		table.insert(drawPile,table.remove(discardPile,i))
 	end
 	shuffleRand:shuffle(drawPile)
+	player:triggerEvent('onShuffle')
 	self.isDone = true
 end
 
@@ -616,7 +617,7 @@ function MakeTempCardToHandAction:tick()
 		end
 		for _ = 1,self.amount do
 			local card = self.card:copy()
-			local cardItem = self.cardItem:copy() or CardItem:new{x=0,y=136}
+			local cardItem = self.cardItem and self.cardItem:copy() or CardItem:new{x=0,y=136}
 			cardItem.card = card
 			cardItem.isNotInHand = false
 			card:applyPowers()

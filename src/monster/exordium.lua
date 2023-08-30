@@ -445,7 +445,7 @@ function FungiBeast:nextIntent()
 	})
 end
 
-SporeCloudPower = Power:new{icon=26,iconColorMap={[2]=6,[3]=5,[5]=4,[6]=3,[7]=4}}
+SporeCloudPower = Power:new{icon=Icon:new{image=26,colorMap={[2]=6,[3]=5,[5]=4,[6]=3,[7]=4}}}
 function SporeCloudPower:onDeath()
 	addAction(ApplyPowerAction:new(VulnerablePower:new(player,self.amount,inEnemyTurn)))
 end

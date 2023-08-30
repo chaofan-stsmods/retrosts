@@ -98,6 +98,7 @@ public class CompressMyCode {
         System.out.println("Num tree depth: " + root.depth());
         System.out.println("Longest word length: " + root.longestWord());
         System.out.println("Sum word length: " + root.wordSize());
+        System.out.println("Single count: " + wordCodes.values().stream().filter(t -> t.value == 1).count());
 
         Files.write(Paths.get(basePath + "\\compressed.lua"), sb.toString().getBytes(StandardCharsets.UTF_8));
         Files.write(Paths.get(basePath + "\\uncompressed.lua"), code.getBytes(StandardCharsets.UTF_8));

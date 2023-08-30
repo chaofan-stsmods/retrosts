@@ -29,7 +29,7 @@ end
 local cardPrice = {basic=9999,special=9999,common=50,uncommon=75,rare=150}
 local relicPrice = {basic=300,special=400,common=150,uncommon=250,rare=300,shop=150,boss=999}
 local potionPrice = {common=50,uncommon=75,rare=100}
-local mapPowerRarity = {common='uncommon',uncommon='rare',rare='rare'}
+local mapPowerRarity = {common='uncommon',uncommon='uncommon',rare='rare'}
 function MerchantEvent:generateGoods()
 	local random = self.random
 	local card1,card2,relics,potions = {},{},{},{}
@@ -50,6 +50,7 @@ function MerchantEvent:generateGoods()
 	for i,playerCardType in ipairs(card1) do
 		local card = playerCardType:new()
 		card1[i] = CardItem:new({card=card,x=120,y=-40,isNotInHand=true,basePrice=cardPrice[card.rarity]*random:randFloat(0.9,1.1)})
+		player:triggerEvent('onPreviewObtainCard',card)
 	end
 
 	local saleCardItem = card1[random:randInt(#card1)]
@@ -59,13 +60,13 @@ function MerchantEvent:generateGoods()
 	for i,playerCardType in ipairs(card2) do
 		local card = playerCardType:new()
 		card2[i] = CardItem:new({card=card,x=120,y=-40,isNotInHand=true,basePrice=cardPrice[card.rarity]*random:randFloat(0.9,1.1)*1.2})
+		player:triggerEvent('onPreviewObtainCard',card)
 	end
 
 	for i=1,3 do
 		local tier
 		if i<3 then
-			local roll = random:randInt(0,99)
-			tier = roll < 48 and 'common' or (roll < 82 and 'uncommon' or 'rare')
+			tier = self:rollRelicTier()
 		else
 			tier = 'shop'
 		end
@@ -84,6 +85,11 @@ function MerchantEvent:generateGoods()
 
 	self.cardRemoval = {basePrice=self:getCardRemovalPrice(),sold=false}
 	self:modifyPrices()
+end
+
+function MerchantEvent:rollRelicTier()
+	local roll = self.random:randInt(0,99)
+	return roll < 48 and 'common' or (roll < 82 and 'uncommon' or 'rare')
 end
 
 function MerchantEvent:modifyPrices()
@@ -117,14 +123,52 @@ function MerchantEvent:getCardRemovalPrice()
 end
 
 function MerchantEvent:showMerchant()
-	openWindowAbove(MerchantWindow:new{goods=self.goods,cardRemoval=self.cardRemoval})
+	openWindowAbove(MerchantWindow:new{goods=self.goods,cardRemoval=self.cardRemoval,event=self})
+end
+
+function MerchantEvent:tryRestock(type,item)
+	if not hasRelic(TheCourier) then
+		return
+	end
+
+	local result = nil
+	local random = self.random
+	if type == 'card' then
+		if item.colorName == 'colorless' then
+			local card = getColorlessCardType(random,generateColorlessCardRarity(random)):new()
+			result = CardItem:new({card=card,x=120,y=-40,isNotInHand=true,basePrice=cardPrice[card.rarity]*random:randFloat(0.9,1.1)*1.2})
+			player:triggerEvent('onPreviewObtainCard',card)
+		else
+			local cardType = getPlayerCardType(random,generateCardRarity(random),item.type)
+			if cardType == nil then
+				cardType = getPlayerCardType(random,mapPowerRarity[generateCardRarity(random)],item.type)
+			end
+			result = CardItem:new({card=cardType:new(),x=120,y=-40,isNotInHand=true,basePrice=cardPrice[cardType.rarity]*random:randFloat(0.9,1.1)})
+			player:triggerEvent('onPreviewObtainCard',result.card)
+		end
+
+	elseif type == 'relic' then
+		local relic = getRelicTypeByTier(self:rollRelicTier()):new()
+		relic.basePrice = relicPrice[relic.tier]*random:randFloat(0.95,1.05)
+		result = relic
+
+	elseif type == 'potion' then
+		local potion = getRandomPotionType(random):new()
+		potion.basePrice = potionPrice[potion.rarity]*random:randFloat(0.95,1.05)
+		result = potion
+	end
+
+	if result then
+		self:modifyPrice(result,type)
+		return result
+	end
 end
 
 -- window
 ---@class MerchantWindow : Window
 ---@field goods {card1:any[],card2:any[],relics:any[],potions:any[]}?
 ---@field cardRemoval {price:number,sold:boolean}?
-MerchantWindow = {name='MerchantWindow',goods=nil,cardRemoval=nil,selectionType='card1',selection=0,yOffset=-136}
+MerchantWindow = {name='MerchantWindow',goods=nil,cardRemoval=nil,selectionType='card1',event=nil,selection=0,yOffset=-136}
 Window:new(MerchantWindow)
 
 function MerchantWindow:onOpen()
@@ -289,8 +333,10 @@ function MerchantWindow:merchantControls()
 				cardItem.large = false
 				addEffect(CardEffect:new{cardItem=cardItem,pauseDuration=1,duration=20,tx=240,ty=0})
 				obtainCard(cardItem.card)
-				cardItem.sold = true
-				self.selection = 0
+				self.goods.card1[self.selection] = self.event:tryRestock('card',cardItem.card) or {sold=true}
+				if self.goods.card1[self.selection].sold then
+					self.selection = 0
+				end
 			end
 		end
 	elseif self.selectionType == 'card2' then
@@ -323,8 +369,10 @@ function MerchantWindow:merchantControls()
 				cardItem.large = false
 				addEffect(CardEffect:new{cardItem=cardItem,pauseDuration=1,duration=20,tx=240,ty=0})
 				obtainCard(cardItem.card)
-				cardItem.sold = true
-				self.selection = 0
+				self.goods.card2[self.selection] = self.event:tryRestock('card',cardItem.card) or {sold=true}
+				if self.goods.card2[self.selection].sold then
+					self.selection = 0
+				end
 			end
 		end
 	elseif self.selectionType == 'relic' then
@@ -335,7 +383,7 @@ function MerchantWindow:merchantControls()
 				return
 			end
 		end
-		
+
 		if btnp(0) then
 			self.selectionType = 'card1'
 			self.selection = self.selection < 3 and 3 or 4
@@ -367,8 +415,10 @@ function MerchantWindow:merchantControls()
 				relic.price = nil
 				relic.basePrice = nil
 				obtainRelic(relic)
-				self.goods.relics[self.selection] = {sold=true}
-				self.selection = 0
+				self.goods.relics[self.selection] = self.event:tryRestock('relic',relic) or {sold=true}
+				if self.goods.relics[self.selection].sold then
+					self.selection = 0
+				end
 			end
 		end
 	elseif self.selectionType == 'potion' then
@@ -404,8 +454,10 @@ function MerchantWindow:merchantControls()
 				loseGold(potion.price)
 				potion.price = nil
 				potion.basePrice = nil
-				self.goods.potions[self.selection] = {sold=true}
-				self.selection = 0
+				self.goods.potions[self.selection] = self.event:tryRestock('potion',potion) or {sold=true}
+				if self.goods.potions[self.selection].sold then
+					self.selection = 0
+				end
 			end
 		end
 	elseif self.selectionType == 'cardRemoval' then

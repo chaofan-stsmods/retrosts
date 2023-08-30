@@ -269,7 +269,7 @@ function generateCardTypesForReward(cardCount,random,affectRareChance,cardRarity
 end
 
 function generateCardRewards(rewards,random)
-	local cardCount = 3
+	local cardCount = player:triggerReducerEvent('modifyCardRewardCount',3)
 	local cardTypes = generateCardTypesForReward(cardCount,random,true)
 
 	local reward = {
@@ -285,9 +285,15 @@ function generateCardRewards(rewards,random)
 			card:upgrade()
 			card:resetPowers()
 		end
+		player:triggerEvent('onPreviewObtainCard',card)
 	end
 
+	player:triggerEvent('modifyCardReward',reward)
 	table.insert(rewards,reward)
+end
+
+function generateColorlessCardRarity(random)
+	return random:rand() < 0.3 and 'rare' or 'uncommon'
 end
 
 function generateCardRarity(random)
@@ -355,8 +361,8 @@ function getRelicTypeByTier(tier)
 	return relic
 end
 
-function getRandomRelic(random)
-	local tier = getRelicTier(random)
+function getRandomRelic(random,tier)
+	tier = tier or getRelicTier(random)
 	return getRelicTypeByTier(tier):new()
 end
 
@@ -371,8 +377,12 @@ end
 
 function generatePotionRewards(rewards,random)
 	local chance = 40 + potionRandOffset
+	if hasRelic(WhiteBeastStatue) then
+		chance = 100
+	end
+
 	if #rewards >= 4 then
-		return
+		chance = 0
 	end
 
 	if random:randInt(0,99) < chance then

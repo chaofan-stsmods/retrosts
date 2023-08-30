@@ -51,7 +51,7 @@ function Creature:drawHealthBar()
 	pix(x+8*width-3,y+8*self.height+2,4)
 	if self.block > 0 then
 		resetColor(1)
-		spr(47,x-4,y+8*self.height,0)
+		drawIcon(icons.Block,x-4,y+8*self.height)
 		local blockStr = tostring(self.block)
 		local strWidth = strWidth(blockStr)
 		printShadowed(blockStr,x-strWidth/2+1,y+8*self.height-7,11)
@@ -173,8 +173,10 @@ function Creature:triggerConditionEvent(name,default,...)
 end
 
 function Creature:onTurnStart(turn)
-	self.block = self.block - self:triggerReducerEvent('onBeforeTurnStartLoseBlock',self.block)
-	self:triggerEvent('onTurnStart')
+	addAction(AnonymousAction:new(function ()
+		self.block = self.block - self:triggerReducerEvent('onBeforeTurnStartLoseBlock',self.block)
+	end))
+	self:triggerEvent('onTurnStart',turn)
 end
 
 function Creature:onTurnEnd()

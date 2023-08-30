@@ -149,7 +149,7 @@ end
 CardItem = { x=0,y=136,tx=0,ty=136,large=false,isNotInHand=false,showWhiteCost=false,glow=nil,flipped=false }
 Object:new(CardItem)
 
-cardTypeToSprIndex = {attack=57,skill=58,power=59,status=55,curse=56}
+cardTypeToSprIndex = {attack=icons.Attack,skill=icons.Skill,power=icons.Power,status=icons.Status,curse=icons.Curse}
 cardRarityColor = {basic={14,15},common={14,15},special={14,15},uncommon={10,9},rare={4,3}}
 function CardItem:tick()
 	self.x = lerp(self.x,self.tx,0.2)
@@ -202,7 +202,6 @@ end
 function drawCardBack(card,large,l,t)
 	mapColor(14,card.color[1])
 	mapColor(15,card.color[2])
-	mapColor(3,card.typeIconColor)
 	mapColor(10,cardRarityColor[card.rarity][1])
 	mapColor(9,cardRarityColor[card.rarity][2])
 	if large then
@@ -229,7 +228,7 @@ function drawCardBack(card,large,l,t)
 	local typeLeft = card.baseCost >= -1 and l+8 or l+1
 	rect(typeLeft,t-4,8,6,14)
 	rect(typeLeft+1,t-5,6,1,14)
-	spr(cardTypeToSprIndex[card.type],typeLeft,t-6,0)
+	drawIcon(cardTypeToSprIndex[card.type],typeLeft,t-6,card.typeIconColor)
 	resetColors{3,9,10,14,15}
 end
 
@@ -301,7 +300,7 @@ function drawDescription(card,description,x,y,lineWidth,maxLine,color)
 			end
 
 			local lastStart = 1
-			local findStart,findEnd,findStr = findMinimal(word,{'({%d+<?})','(!%w!)','(#%d+#)'},lastStart)
+			local findStart,findEnd,findStr = findMinimal(word,{'({%w+})','(!%w!)','(#%d+#)'},lastStart)
 			while findStart and findEnd and findStr do
 				local strBeforeFind = word:sub(lastStart,findStart-1)
 				if #strBeforeFind > 0 then
@@ -312,20 +311,16 @@ function drawDescription(card,description,x,y,lineWidth,maxLine,color)
 					maxX = math.max(maxX,currentX)
 				end
 				if findStr:sub(1,1) == '{' then
-					local flip = findStr:sub(-2,-2) == '<'
-					local sprId = tonumber(findStr:sub(2,-2-(flip and 1 or 0)))
-					if sprId then
+					local iconName = findStr:sub(2,-2)
+					local isNumber = iconName:match('%d+') ~= nil
+					local sprId = isNumber and tonumber(iconName) or nil
+					local icon = icons[iconName] or sprId
+					if icon then
 						currentX,currentY = moveLimitLineWidth(currentX,currentY,x,8,lineWidth)
 						if currentY > maxY then
 							return maxX-x,maxY
 						end
-						if sprId >= 55 and sprId <= 59 then
-							mapColor(3,card.typeIconColor or color)
-							spr(sprId,currentX+xOffset,currentY+yOffset-2,0,1,flip and 1 or 0)
-							resetColor(3)
-						else
-							spr(sprId,currentX+xOffset,currentY+yOffset-2,0,1,flip and 1 or 0)
-						end
+						drawIcon(icon,currentX+xOffset,currentY+yOffset-2,card.typeIconColor or color)
 						currentX = currentX + 8
 						maxX = math.max(maxX,currentX)
 					end
@@ -355,7 +350,7 @@ function drawDescription(card,description,x,y,lineWidth,maxLine,color)
 					color = #colorStr == 0 and originalColor or tonumber(colorStr)
 				end
 				lastStart = findEnd + 1
-				findStart,findEnd,findStr = findMinimal(word,{'({%d+})','(!%w!)','(#%d+#)'},lastStart)
+				findStart,findEnd,findStr = findMinimal(word,{'({%w+})','(!%w!)','(#%d+#)'},lastStart)
 			end
 			local strAfterFind = word:sub(lastStart,#word)
 			if #strAfterFind > 0 then

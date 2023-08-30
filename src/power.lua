@@ -15,7 +15,7 @@ local function isCreature(obj)
 end
 
 Power = Object:new{
-	owner=nil,amount=0,stackable=true,debuff=false,turnBased=false,maxAmount=999,icon=40,iconflip=0,iconColorMap={},priority=100,
+	owner=nil,amount=0,stackable=true,debuff=false,turnBased=false,maxAmount=999,icon=40,priority=100,
 	onTurnStart=noop,
 	onTurnEnd=noop,
 	onAttacked=function(self,damage,source,card) return damage end,
@@ -34,13 +34,7 @@ function Power:new(owner,amount)
 end
 
 function Power:drawImage(x,y)
-	for key,value in pairs(self.iconColorMap) do
-		mapColor(key,value)
-	end
-	spr(self.icon,x,y,0,1,self.iconflip)
-	for key,_ in pairs(self.iconColorMap) do
-		resetColor(key)
-	end
+	drawIcon(self.icon,x,y)
 	if self.stackable and self.amount ~= 0 then
 		local color = self.turnBased and 12 or (self.amount > 0 and 5 or 3)
 		local glowColor = self.turnBased and 15 or (self.amount > 0 and 7 or 1)
@@ -91,7 +85,7 @@ function TurnBasedPower:onTurnEnd()
 	addAction(ReducePowerAction:new(self,1))
 end
 
-VulnerablePower = TurnBasedPower:new{debuff=true,icon=60,priority=150}
+VulnerablePower = TurnBasedPower:new{debuff=true,icon=icons.Vulnerable,priority=150}
 function VulnerablePower:onAttacked(damage)
 	return damage * self.owner:triggerReducerEvent('onModifyVulnerableFactor',1.5)
 end
@@ -110,22 +104,22 @@ function PositiveBuffNegativeDebuffPower:onAmountUpdated()
 	self.debuff = self.amount < 0
 end
 
-StrengthPower = PositiveBuffNegativeDebuffPower:new{icon=76,iconflip=1}
+StrengthPower = PositiveBuffNegativeDebuffPower:new{icon=icons.Strength}
 function StrengthPower:onAttack(damage)
 	return damage + self.amount
 end
 
-DexterityPower = PositiveBuffNegativeDebuffPower:new{icon=1}
+DexterityPower = PositiveBuffNegativeDebuffPower:new{icon=icons.Dexterity}
 function DexterityPower:onModifyBlock(block)
 	return block + self.amount
 end
 
-WeakPower = TurnBasedPower:new{debuff=true,icon=61,priority=150}
+WeakPower = TurnBasedPower:new{debuff=true,icon=icons.Weak,priority=150}
 function WeakPower:onAttack(damage)
 	return damage * 0.75
 end
 
-FrailPower = TurnBasedPower:new{debuff=true,icon=75,priority=150}
+FrailPower = TurnBasedPower:new{debuff=true,icon=icons.Frail,priority=150}
 function FrailPower:onModifyBlock(block)
 	return block * 0.75
 end
@@ -147,7 +141,7 @@ function NoDrawPower:onTurnEnd()
 	addAction(RemovePowerAction:new(self))
 end
 
-MetallicizePower = Power:new{icon=46,iconColorMap={[13]=12,[14]=13,[15]=14}}
+MetallicizePower = Power:new{icon=icons.Metallicize}
 function MetallicizePower:onTurnEnd()
 	addAction(GainBlockAction:new{target=self.owner,value=self.amount})
 end
@@ -205,7 +199,7 @@ function ConfusionPower:onDraw(card)
 	end
 end
 
-ShackledPower = Power:new{icon=204}
+ShackledPower = Power:new{icon=9}
 function ShackledPower:onTurnEnd()
 	addAction(ApplyPowerAction:new(StrengthPower:new(self.owner,self.amount)))
 	addAction(RemovePowerAction:new(self))

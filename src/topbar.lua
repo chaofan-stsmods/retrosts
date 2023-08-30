@@ -17,16 +17,24 @@ function drawTopBar()
 	rect(0,0,240,7,14)
 	rect(0,7,240,1,15)
 	map(0,0,30,1,0,0,0)
+	drawIcon(icons.Deck,216,0)
 	printShadowed(player.hp .. '/' .. player.maxHp,17,1,3)
 	printShadowed(tostring(gold),73,1,4)
 	printShadowed(tostring(floor),153,1,12)
 	printShadowed(#deck,225,1,12)
 	if ascension > 0 then
-		spr(9,168,0,0)
+		spr(5,168,0,0)
 		printShadowed(tostring(ascension),177,1,12)
 	end
 	drawPotions()
-	if topBarSelection.type == 'deck' then
+	drawRelics()
+	if topBarSelection.type == 'potion' and topBarSelection.index > 0 and topBarSelection.index <= #potions then
+		local potion = potions[topBarSelection.index]
+		drawSelectionBox(95+topBarSelection.index*8,0,10,9,nil,2)
+		if potion ~= PotionSlot then
+			drawItemTooltip(potion,95+topBarSelection.index*8,10)
+		end
+	elseif topBarSelection.type == 'deck' then
 		drawSelectionBox(215,0,10,9,nil,2)
 	elseif topBarSelection.type == 'map' then
 		drawSelectionBox(207,0,10,9,nil,2)
@@ -51,20 +59,12 @@ function drawTopBar()
 		spr(4,1,0,0,1,1)
 		resetColors{1,2,3,4}
 	end
-	drawRelics()
 end
 
 function drawPotions()
 	local x = 104
-	local y = 0
 	for i, potion in ipairs(potions) do
 		potion:drawImage(x,0)
-		if topBarSelection.type == 'potion' and topBarSelection.index == i then
-			drawSelectionBox(x-1,y,10,9,nil,2)
-			if potion ~= PotionSlot then
-				drawItemTooltip(potion,x-1,y+10)
-			end
-		end
 		x = x + 8
 	end
 end

@@ -66,6 +66,7 @@ end
 
 function Monster:die()
 	Creature.die(self)
+	player:triggerEvent('onMonsterDeath',self)
 	checkCombatEnd()
 end
 
@@ -82,7 +83,8 @@ function Monster:oneOfLastTwoIntentsIs(intent)
 end
 
 intentSpriteMap = {
-	attack={76},defend={47},attackDefend={47,76},buff={77},attackBuff={77,76},defendBuff={79},debuff={78},attackDebuff={78,76},
+	attack={icons.AttackIntent},defend={icons.Block},attackDefend={icons.Block,icons.AttackIntent},buff={77},
+	attackBuff={77,icons.AttackIntent},defendBuff={79},debuff={78},attackDebuff={78,icons.AttackIntent},
 	strongDebuff={78},escape={72},stun={23}
 }
 function Monster:drawIntent()
@@ -99,7 +101,7 @@ function Monster:drawIntent()
 			mapColor(5,12)
 		end
 		for i, intentSprite in ipairs(intentSprites) do
-			spr(intentSprite,intentX+(#intentSprites-i)*2,intentY-(#intentSprites-i)*2,0)
+			drawIcon(intentSprite,intentX+(#intentSprites-i)*2,intentY-(#intentSprites-i)*2)
 		end
 		if self.intentType == 'strongDebuff' then
 			resetColors{5,6,7}

@@ -67,7 +67,8 @@ end
 
 function Player:onTurnStart(turn)
 	if turn == 1 then
-		self:triggerEvent('onTurnStart')
+		-- to avoid lose block at combat start
+		self:triggerEvent('onTurnStart',turn)
 	else
 		Creature.onTurnStart(self,turn)
 	end

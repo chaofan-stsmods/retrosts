@@ -105,16 +105,12 @@ function drawOverlay()
 	local energyText = energy .. '/' .. maxEnergy
 	local width = strWidth(energyText)
 	printShadowed(energyText,16-width/2,105,12)
-	spr(38,0,128,0)
+	drawIcon(icons.DrawPile,0,128)
 	printShadowed(tostring(#drawPile),8,129,12)
 	if combatSelection.type == 'drawPile' then
 		drawSelectionBox(0,127,9+strWidth(tostring(#drawPile)),9,4,2)
 	end
-	mapColor(2,15)
-	mapColor(3,9)
-	mapColor(4,10)
-	spr(38,232,128,0,1,1)
-	resetColors{2,3,4}
+	drawIcon(icons.DiscardPile,232,128)
 	width = strWidth(tostring(#discardPile))
 	printShadowed(tostring(#discardPile),232-width,129,12)
 	if combatSelection.type == 'discardPile' then

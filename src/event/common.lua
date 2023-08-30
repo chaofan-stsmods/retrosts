@@ -327,6 +327,7 @@ function MatchAndKeep:initCards()
 	return table.map(cards,function (v,i)
 		local x = (i-1)%4
 		local y = math.floor((i-1)/4)
+		player:triggerEvent('onPreviewObtainCard',v)
 		return CardItem:new{card=v,x=120,y=-20,isNotInHand=true,tx=120-60+40*x,ty=35+40*y,flipped=true}
 	end)
 end

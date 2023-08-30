@@ -56,33 +56,33 @@ end
 
 RedCard = Card:new{color={2,1},costIcon=201,typeIconColor=4,colorName='red'}
 
-Strike = RedCard:new{ name='Strike',description='{63} !D!.',rarity='basic',baseCost=1,baseDamage=6,enemyTarget=true,upgrade={baseDamage=9},tags={'strike'} }
+Strike = RedCard:new{ name='Strike',description='{Damage} !D!.',rarity='basic',baseCost=1,baseDamage=6,enemyTarget=true,upgrade={baseDamage=9},tags={'strike'} }
 function Strike:use(target)
 	return { DamageAction:new{target=target,source=player,value=self.damage} }
 end
 
-Defend = RedCard:new{ name='Defend',description='Gain !B! {47}.',rarity='basic',type='skill',baseCost=1,baseBlock=5,playerTarget=true,upgrade={baseBlock=8},tags={'defend'} }
+Defend = RedCard:new{ name='Defend',description='Gain !B! {Block}.',rarity='basic',type='skill',baseCost=1,baseBlock=5,playerTarget=true,upgrade={baseBlock=8},tags={'defend'} }
 function Defend:use()
 	return { GainBlockAction:new{target=player,value=self.block} }
 end
 
 Bash = RedCard:new{
-	name='Bash',description='{63} !D!. NL Apply !M! {60}.',rarity='basic',baseCost=2,enemyTarget=true,baseDamage=8,baseMagic=2,
+	name='Bash',description='{Damage} !D!. NL Apply !M! {Vulnerable}.',rarity='basic',baseCost=2,enemyTarget=true,baseDamage=8,baseMagic=2,
 	upgrade={baseDamage=10,baseMagic=3},
 }
 function Bash:use(target)
 	return { DamageAction:new{target=target,source=player,value=self.damage}, ApplyPowerAction:new(VulnerablePower:new(target,self.magic)) }
 end
 
-BodySlam = RedCard:new{ name='Body Slam',description='{63} equal to your {47}.',rarity='common',baseCost=1,enemyTarget=true,upgrade={baseCost=0} }
+BodySlam = RedCard:new{ name='Body Slam',description='{Damage} equal to your {Block}.',rarity='common',baseCost=1,enemyTarget=true,upgrade={baseCost=0} }
 function BodySlam:applyPowers(target)
 	self.baseDamage = player.block
-	self.description='{63} equal to your {47}. NL ({63} !D!.)'
+	self.description='{Damage} equal to your {Block}. NL ({Damage} !D!.)'
 	RedCard.applyPowers(self,target)
 end
 
 function BodySlam:resetPowers()
-	self.description='{63} equal to your {47}.'
+	self.description='{Damage} equal to your {Block}.'
 	RedCard.resetPowers(self)
 end
 
@@ -91,7 +91,7 @@ function BodySlam:use(target)
 end
 
 Clash = RedCard:new{
-	name='Clash',description='Can only be played if every card in hand is {57}. NL {63} !D!.',rarity='common',
+	name='Clash',description='Can only be played if every card in hand is {Attack}. NL {Damage} !D!.',rarity='common',
 	baseCost=0,enemyTarget=true,baseDamage=14,upgrade={baseDamage=18}
 }
 function Clash:baseCanUse()
@@ -103,27 +103,27 @@ function Clash:use(target)
 end
 
 Cleave = RedCard:new{
-	name='Cleave',description='{63} !D! to all enemies.',rarity='common',baseCost=1,enemyTarget=true,toAllEnemies=true,baseDamage=8,upgrade={baseDamage=11}
+	name='Cleave',description='{Damage} !D! to all enemies.',rarity='common',baseCost=1,enemyTarget=true,toAllEnemies=true,baseDamage=8,upgrade={baseDamage=11}
 }
 function Cleave:use()
 	return { DamageAllEnemiesAction:new{source=player,value=self.multiDamage} }
 end
 
 Clothesline = RedCard:new{
-	name='Clothesline',description='{63} !D!. NL Apply !M! {61}.',rarity='common',baseCost=2,enemyTarget=true,baseDamage=12,baseMagic=2,
+	name='Clothesline',description='{Damage} !D!. NL Apply !M! {Weak}.',rarity='common',baseCost=2,enemyTarget=true,baseDamage=12,baseMagic=2,
 	upgrade={baseDamage=14,baseMagic=3},
 }
 function Clothesline:use(target)
 	return { DamageAction:new{target=target,source=player,value=self.damage}, ApplyPowerAction:new(WeakPower:new(target,self.magic)) }
 end
 
-Inflame = RedCard:new{ name='Inflame',description='Gain !M! {76<}.',rarity='uncommon',type='power',baseCost=1,playerTarget=true,baseMagic=2,upgrade={baseMagic=3} }
+Inflame = RedCard:new{ name='Inflame',description='Gain !M! {Strength}.',rarity='uncommon',type='power',baseCost=1,playerTarget=true,baseMagic=2,upgrade={baseMagic=3} }
 function Inflame:use()
 	return { ApplyPowerAction:new(StrengthPower:new(player,self.magic)) }
 end
 
 IronWave = RedCard:new{
-	name='Iron Wave',description='Gain !B! {47}. NL {63} !D!.',rarity='common',baseCost=1,baseDamage=5,baseBlock=5,
+	name='Iron Wave',description='Gain !B! {Block}. NL {Damage} !D!.',rarity='common',baseCost=1,baseDamage=5,baseBlock=5,
 	playerTarget=true,enemyTarget=true,upgrade={baseDamage=7,baseBlock=7}
 }
 function IronWave:use(target)
@@ -131,15 +131,15 @@ function IronWave:use(target)
 end
 
 PommelStrike = RedCard:new{
-	name='Pommel Strike',description='{63} !D!. NL Draw !M! card.',rarity='common',baseCost=1,baseDamage=9,baseMagic=1,
-	playerTarget=true,enemyTarget=true,upgrade={baseDamage=10,baseMagic=2,description='{63} !D!. NL Draw !M! cards.'},tags={'strike'}
+	name='Pommel Strike',description='{Damage} !D!. NL Draw !M! card.',rarity='common',baseCost=1,baseDamage=9,baseMagic=1,
+	playerTarget=true,enemyTarget=true,upgrade={baseDamage=10,baseMagic=2,description='{Damage} !D!. NL Draw !M! cards.'},tags={'strike'}
 }
 function PommelStrike:use(target)
 	return { DamageAction:new{target=target,source=player,value=self.damage}, DrawCardAction:new(self.magic) }
 end
 
 ShrugItOff = RedCard:new{
-	name='Shrug It Off',description='Gain !B! {47}. NL Draw !M! card.',rarity='common',type='skill',baseCost=1,baseBlock=8,baseMagic=1,
+	name='Shrug It Off',description='Gain !B! {Block}. NL Draw !M! card.',rarity='common',type='skill',baseCost=1,baseBlock=8,baseMagic=1,
 	playerTarget=true,upgrade={baseBlock=11}
 }
 function ShrugItOff:use()
@@ -147,7 +147,7 @@ function ShrugItOff:use()
 end
 
 SwordBoomerang = RedCard:new{
-	name='Sword Boomerang',description='{63} !D! to a random enemy !M! times.',rarity='common',baseCost=1,baseDamage=3,baseMagic=3,
+	name='Sword Boomerang',description='{Damage} !D! to a random enemy !M! times.',rarity='common',baseCost=1,baseDamage=3,baseMagic=3,
 	enemyTarget=true,toAllEnemies=true,upgrade={baseMagic=4}
 }
 function SwordBoomerang:use()
@@ -159,7 +159,7 @@ function SwordBoomerang:use()
 end
 
 Thunderclap = RedCard:new{
-	name='Thunderclap',description='{63} !D! and apply !M! {60} to all enemies.',rarity='common',baseCost=1,baseDamage=4,baseMagic=1,
+	name='Thunderclap',description='{Damage} !D! and apply !M! {Vulnerable} to all enemies.',rarity='common',baseCost=1,baseDamage=4,baseMagic=1,
 	enemyTarget=true,toAllEnemies=true,upgrade={baseDamage=7}
 }
 function Thunderclap:use()
@@ -171,13 +171,13 @@ function Thunderclap:use()
 	return result
 end
 
-TwinStrike = RedCard:new{ name='Twin Strike',description='{63} !D! twice.',rarity='common',baseCost=1,baseDamage=5,enemyTarget=true,upgrade={baseDamage=7},tags={'strike'} }
+TwinStrike = RedCard:new{ name='Twin Strike',description='{Damage} !D! twice.',rarity='common',baseCost=1,baseDamage=5,enemyTarget=true,upgrade={baseDamage=7},tags={'strike'} }
 function TwinStrike:use(target)
 	return { DamageAction:new{target=target,source=player,value=self.damage},DamageAction:new{target=target,source=player,value=self.damage} }
 end
 
 PerfectedStrike = RedCard:new{
-	name='Perfected Strike',description='{63} !D!. NL +!M! damage for ALL your "Strike" card.',rarity='common',
+	name='Perfected Strike',description='{Damage} !D!. NL +!M! damage for ALL your "Strike" card.',rarity='common',
 	baseCost=2,baseDamage=6,baseMagic=2,enemyTarget=true,upgrade={baseMagic=3},tags={'strike'}
 }
 function PerfectedStrike:applyPowers(target)
@@ -213,7 +213,7 @@ function PerfectedStrike:use(target)
 end
 
 HeavyBlade = RedCard:new{
-	name='Heavy Blade',description='{63} !D!. NL {76<} affects this card !M! times.',rarity='common',
+	name='Heavy Blade',description='{Damage} !D!. NL {Strength} affects this card !M! times.',rarity='common',
 	baseCost=2,baseDamage=14,baseMagic=3,enemyTarget=true,upgrade={baseMagic=5}
 }
 function HeavyBlade:applyPowers(target)
@@ -234,27 +234,27 @@ function HeavyBlade:use(target)
 end
 
 Bloodletting = RedCard:new{
-	name='Bloodletting',description='Lose 3 HP. NL Gain {202}{202}.',rarity='uncommon',type='skill',baseCost=0,
-	baseMagic=2,playerTarget=true,upgrade={baseMagic=3,description='Lose 3 HP. NL Gain {202}{202}{202}.'}
+	name='Bloodletting',description='Lose 3 HP. NL Gain {Energy}{Energy}.',rarity='uncommon',type='skill',baseCost=0,
+	baseMagic=2,playerTarget=true,upgrade={baseMagic=3,description='Lose 3 HP. NL Gain {Energy}{Energy}{Energy}.'}
 }
 function Bloodletting:use()
 	return { DamageAction:new{target=player,source=player,type='hpLoss',value=3}, GainEnergyAction:new(self.magic) }
 end
 
-Entrench = RedCard:new{ name='Entrench',description='Double your {47}.',rarity='uncommon',type='skill',baseCost=2,playerTarget=true,upgrade={baseCost=1} }
+Entrench = RedCard:new{ name='Entrench',description='Double your {Block}.',rarity='uncommon',type='skill',baseCost=2,playerTarget=true,upgrade={baseCost=1} }
 function Entrench:use()
 	return { AnonymousAction:new(function()
 		addAction(1,GainBlockAction:new{target=player,value=player.block})
 	end) }
 end
 
-Hemokinesis = RedCard:new{ name='Hemokinesis',description='Lose 2 HP. NL {63} !D!.',rarity='uncommon',baseCost=1,baseDamage=15,enemyTarget=true,upgrade={baseDamage=20} }
+Hemokinesis = RedCard:new{ name='Hemokinesis',description='Lose 2 HP. NL {Damage} !D!.',rarity='uncommon',baseCost=1,baseDamage=15,enemyTarget=true,upgrade={baseDamage=20} }
 function Hemokinesis:use(target)
 	return { DamageAction:new{target=player,source=player,type='hpLoss',value=2}, DamageAction:new{target=target,source=player,value=self.damage} }
 end
 
 Rampage = RedCard:new{
-	name='Rampage',description='{63} !D!. NL +!M! damage this combat.',rarity='uncommon',baseCost=1,baseDamage=8,baseMagic=5,
+	name='Rampage',description='{Damage} !D!. NL +!M! damage this combat.',rarity='uncommon',baseCost=1,baseDamage=8,baseMagic=5,
 	enemyTarget=true,upgrade={baseMagic=8}
 }
 function Rampage:use(target)
@@ -264,7 +264,7 @@ function Rampage:use(target)
 end
 
 SpotWeakness = RedCard:new{
-	name='Spot Weakness',description='If the enemy intends to attack, gain !M! {76<}.',rarity='uncommon',type='skill',
+	name='Spot Weakness',description='If the enemy intends to attack, gain !M! {Strength}.',rarity='uncommon',type='skill',
 	baseCost=1,playerTarget=true,enemyTarget=true,baseMagic=3,upgrade={baseMagic=4}
 }
 function SpotWeakness:use(target)
@@ -276,7 +276,7 @@ function SpotWeakness:use(target)
 end
 
 Uppercut = RedCard:new{
-	name='Uppercut',description='{63} !D!. NL Apply !M! {60} and {61}.',rarity='uncommon',baseCost=2,enemyTarget=true,baseDamage=13,baseMagic=1,
+	name='Uppercut',description='{Damage} !D!. NL Apply !M! {Vulnerable} and {Weak}.',rarity='uncommon',baseCost=2,enemyTarget=true,baseDamage=13,baseMagic=1,
 	upgrade={baseMagic=2},
 }
 function Uppercut:use(target)
@@ -288,7 +288,7 @@ function Uppercut:use(target)
 end
 
 Whirlwind = RedCard:new{
-	name='Whirlwind',description='{63} !D! to all enemies X times.',rarity='uncommon',baseCost=-1,enemyTarget=true,toAllEnemies=true,
+	name='Whirlwind',description='{Damage} !D! to all enemies X times.',rarity='uncommon',baseCost=-1,enemyTarget=true,toAllEnemies=true,
 	baseDamage=5,upgrade={baseDamage=8},
 }
 function Whirlwind:use(target,energyOnUse,free)
@@ -303,13 +303,13 @@ function Whirlwind:use(target,energyOnUse,free)
 	}
 end
 
-Bludgeon = RedCard:new{ name='Bludgeon',description='{63} !D!.',rarity='rare',baseCost=3,baseDamage=32,enemyTarget=true,upgrade={baseDamage=42} }
+Bludgeon = RedCard:new{ name='Bludgeon',description='{Damage} !D!.',rarity='rare',baseCost=3,baseDamage=32,enemyTarget=true,upgrade={baseDamage=42} }
 function Bludgeon:use(target)
 	return { DamageAction:new{target=target,source=player,value=self.damage} }
 end
 
 Offering = RedCard:new{
-	name='Offering',description='Lose 6 HP. NL Gain {202}{202}. NL Draw !M! cards. NL Exhaust.',rarity='rare',type='skill',baseCost=0,
+	name='Offering',description='Lose 6 HP. NL Gain {Energy}{Energy}. NL Draw !M! cards. NL Exhaust.',rarity='rare',type='skill',baseCost=0,
 	baseMagic=3,playerTarget=true,upgrade={baseMagic=5},exhaust=true,
 }
 function Offering:use()
@@ -317,8 +317,8 @@ function Offering:use()
 end
 
 LimitBreak = RedCard:new{
-	name='Limit Break',description='Double your {76<}. NL Exhaust.',rarity='rare',type='skill',baseCost=1,
-	playerTarget=true,upgrade={exhaust=false,description='Double your {76<}.'},exhaust=true,
+	name='Limit Break',description='Double your {Strength}. NL Exhaust.',rarity='rare',type='skill',baseCost=1,
+	playerTarget=true,upgrade={exhaust=false,description='Double your {Strength}.'},exhaust=true,
 }
 function LimitBreak:use()
 	return { AnonymousAction:new(function()
@@ -330,7 +330,7 @@ function LimitBreak:use()
 end
 
 Impervious = RedCard:new{
-	name='Impervious',description='Gain !B! {47}. NL Exhaust.',rarity='rare',type='skill',baseCost=2,baseBlock=30,
+	name='Impervious',description='Gain !B! {Block}. NL Exhaust.',rarity='rare',type='skill',baseCost=2,baseBlock=30,
 	playerTarget=true,upgrade={baseBlock=40},exhaust=true
 }
 function Impervious:use()
@@ -338,7 +338,7 @@ function Impervious:use()
 end
 
 Shockwave = RedCard:new{
-	name='Shockwave',description='Apply !M! {60} and {61} to all enemies. NL Exhaust.',rarity='uncommon',type='skill',baseCost=2,baseMagic=3,
+	name='Shockwave',description='Apply !M! {Vulnerable} and {Weak} to all enemies. NL Exhaust.',rarity='uncommon',type='skill',baseCost=2,baseMagic=3,
 	enemyTarget=true,toAllEnemies=true,upgrade={baseMagic=5},exhaust=true
 }
 function Shockwave:use()
@@ -351,7 +351,7 @@ function Shockwave:use()
 end
 
 SeeingRed = RedCard:new{
-	name='Seeing Red',description='Gain {202}{202}. NL Exhaust.',rarity='uncommon',type='skill',baseCost=1,
+	name='Seeing Red',description='Gain {Energy}{Energy}. NL Exhaust.',rarity='uncommon',type='skill',baseCost=1,
 	baseMagic=2,playerTarget=true,upgrade={baseCost=0},exhaust=true,
 }
 function SeeingRed:use()
@@ -359,7 +359,7 @@ function SeeingRed:use()
 end
 
 Pummel = RedCard:new{
-	name='Pummel',description='{63} !D!, !M! times. NL Exhaust.',rarity='uncommon',baseCost=1,baseDamage=2,baseMagic=4,
+	name='Pummel',description='{Damage} !D!, !M! times. NL Exhaust.',rarity='uncommon',baseCost=1,baseDamage=2,baseMagic=4,
 	enemyTarget=true,upgrade={baseMagic=5},exhaust=true,
 }
 function Pummel:use(target)
@@ -371,7 +371,7 @@ function Pummel:use(target)
 end
 
 Intimidate = RedCard:new{
-	name='Intimidate',description='Apply !M! {61} to all enemies. NL Exhaust.',rarity='uncommon',type='skill',baseCost=0,baseMagic=1,
+	name='Intimidate',description='Apply !M! {Weak} to all enemies. NL Exhaust.',rarity='uncommon',type='skill',baseCost=0,baseMagic=1,
 	enemyTarget=true,toAllEnemies=true,upgrade={baseMagic=2},exhaust=true
 }
 function Intimidate:use()
@@ -383,7 +383,7 @@ function Intimidate:use()
 end
 
 Disarm = RedCard:new{
-	name='Disarm',description='Enemy loses !M! {76<}. NL Exhaust.',rarity='uncommon',type='skill',baseCost=1,baseMagic=2,
+	name='Disarm',description='Enemy loses !M! {Strength}. NL Exhaust.',rarity='uncommon',type='skill',baseCost=1,baseMagic=2,
 	enemyTarget=true,upgrade={baseMagic=3},exhaust=true
 }
 function Disarm:use(target)
@@ -391,7 +391,7 @@ function Disarm:use(target)
 end
 
 Flex = RedCard:new{
-	name='Flex',description='Gain !M! temporary {76<}.',rarity='common',type='skill',baseCost=0,baseMagic=2,
+	name='Flex',description='Gain !M! temporary {Strength}.',rarity='common',type='skill',baseCost=0,baseMagic=2,
 	playerTarget=true,upgrade={baseMagic=4}
 }
 function Flex:use()
@@ -399,7 +399,7 @@ function Flex:use()
 end
 
 Anger = RedCard:new{
-	name='Anger',description='{63} !D!. NL Add a copy of this card into discard pile.',rarity='common',baseCost=0,
+	name='Anger',description='{Damage} !D!. NL Add a copy of this card into discard pile.',rarity='common',baseCost=0,
 	baseDamage=6,enemyTarget=true,upgrade={baseDamage=8}
 }
 function Anger:use(target)
@@ -407,8 +407,8 @@ function Anger:use(target)
 end
 
 Armaments = RedCard:new{
-	name='Armaments',description='Gain !B! {47}. NL Upgrade a card in hand for the combat.',rarity='common',type='skill',baseCost=1,baseBlock=5,
-	playerTarget=true,upgrade={description='Gain !B! {47}. NL Upgrade all cards in hand for the combat.'}
+	name='Armaments',description='Gain !B! {Block}. NL Upgrade a card in hand for the combat.',rarity='common',type='skill',baseCost=1,baseBlock=5,
+	playerTarget=true,upgrade={description='Gain !B! {Block}. NL Upgrade all cards in hand for the combat.'}
 }
 function Armaments:use()
 	return {
@@ -436,7 +436,7 @@ function Armaments:use()
 end
 
 PowerThrough = RedCard:new{
-	name='Power Through',description='Add !M! Wounds into hand. NL Gain !B! {47}.',rarity='uncommon',type='skill',baseCost=1,baseBlock=15,baseMagic=2,
+	name='Power Through',description='Add !M! Wounds into hand. NL Gain !B! {Block}.',rarity='uncommon',type='skill',baseCost=1,baseBlock=15,baseMagic=2,
 	upgrade={baseBlock=20},playerTarget=true
 }
 function PowerThrough:use()
@@ -452,8 +452,8 @@ function Havoc:use()
 end
 
 TrueGrit = RedCard:new{
-	name='True Grit',description='Gain !B! {47}. NL Exhaust a card at random.',rarity='common',type='skill',baseCost=1,baseBlock=7,
-	playerTarget=true,upgrade={baseBlock=9,description='Gain !B! {47}. NL Exhaust a card.'}
+	name='True Grit',description='Gain !B! {Block}. NL Exhaust a card at random.',rarity='common',type='skill',baseCost=1,baseBlock=7,
+	playerTarget=true,upgrade={baseBlock=9,description='Gain !B! {Block}. NL Exhaust a card.'}
 }
 function TrueGrit:use()
 	return {
@@ -505,7 +505,7 @@ function Warcry:use()
 end
 
 WildStrike = RedCard:new{
-	name='Wild Strike',description='{63} !D!. NL Shuffle a Wound into draw pile.',rarity='common',baseCost=1,baseDamage=12,
+	name='Wild Strike',description='{Damage} !D!. NL Shuffle a Wound into draw pile.',rarity='common',baseCost=1,baseDamage=12,
 	playerTarget=true,enemyTarget=true,upgrade={baseDamage=17},tags={'strike'}
 }
 function WildStrike:use(target)
@@ -521,7 +521,7 @@ function BattleTrance:use()
 end
 
 BloodForBlood = RedCard:new{
-	name='Blood for Blood',description='Costs 1 less {202} each time you lose HP this combat. NL {63} !D!.',rarity='uncommon',
+	name='Blood for Blood',description='Costs 1 less {Energy} each time you lose HP this combat. NL {Damage} !D!.',rarity='uncommon',
 	baseCost=4,baseDamage=18,enemyTarget=true
 }
 function BloodForBlood:use(target)
@@ -566,7 +566,7 @@ function BurningPact:use()
 end
 
 Carnage = RedCard:new{
-	name='Carnage',description='{63} !D!. NL Ethereal.',rarity='uncommon',baseCost=2,baseDamage=20,
+	name='Carnage',description='{Damage} !D!. NL Ethereal.',rarity='uncommon',baseCost=2,baseDamage=20,
 	enemyTarget=true,upgrade={baseDamage=28},ethereal=true
 }
 function Carnage:use(target)
@@ -574,7 +574,7 @@ function Carnage:use(target)
 end
 
 Dropkick = RedCard:new{
-	name='Dropkick',description='{63} !D!. NL If enemy has {60}, gain {202} and draw 1 card.',rarity='uncommon',baseCost=1,baseDamage=5,
+	name='Dropkick',description='{Damage} !D!. NL If enemy has {Vulnerable}, gain {Energy} and draw 1 card.',rarity='uncommon',baseCost=1,baseDamage=5,
 	enemyTarget=true,playerTarget=true,upgrade={baseDamage=8}
 }
 function Dropkick:use(target)
@@ -587,8 +587,8 @@ function Dropkick:use(target)
 end
 
 DualWield = RedCard:new{
-	name='Dual Wield',description='Choose a {57} or {59}. Add a copy of that card into hand.',rarity='uncommon',type='skill',baseCost=1,baseMagic=1,
-	playerTarget=true,upgrade={baseMagic=2,description='Choose a {57} or {59}. Add !M! copies of that card into hand.'}
+	name='Dual Wield',description='Choose a {Attack} or {Power}. Add a copy of that card into hand.',rarity='uncommon',type='skill',baseCost=1,baseMagic=1,
+	playerTarget=true,upgrade={baseMagic=2,description='Choose a {Attack} or {Power}. Add !M! copies of that card into hand.'}
 }
 function DualWield:use()
 	local function isAttackOrPower(cardItem) return cardItem.card.type == 'attack' or cardItem.card.type == 'power' end
@@ -613,7 +613,7 @@ function DualWield:use()
 end
 
 GhostlyArmor = RedCard:new{
-	name='Ghostly Armor',description='Gain !B! {47}. NL Ethereal.',rarity='uncommon',type='skill',baseCost=1,baseBlock=10,
+	name='Ghostly Armor',description='Gain !B! {Block}. NL Ethereal.',rarity='uncommon',type='skill',baseCost=1,baseBlock=10,
 	playerTarget=true,upgrade={baseBlock=13},ethereal=true
 }
 function GhostlyArmor:use()
@@ -621,20 +621,20 @@ function GhostlyArmor:use()
 end
 
 RecklessCharge = RedCard:new{
-	name='Reckless Charge',description='{63} !D!. NL Shuffle a Dazed into draw pile.',rarity='uncommon',baseCost=0,baseDamage=7,
+	name='Reckless Charge',description='{Damage} !D!. NL Shuffle a Dazed into draw pile.',rarity='uncommon',baseCost=0,baseDamage=7,
 	playerTarget=true,enemyTarget=true,upgrade={baseDamage=10}
 }
 function RecklessCharge:use(target)
 	return { DamageAction:new{target=target,source=player,value=self.damage}, MakeTempCardToDrawPileAction:new(Dazed:new()) }
 end
 
-Metallicize = RedCard:new{ name='Metallicize',description='At the end of turn, gain !M! {47}.',rarity='uncommon',type='power',baseCost=1,playerTarget=true,baseMagic=3,upgrade={baseMagic=4} }
+Metallicize = RedCard:new{ name='Metallicize',description='At the end of turn, gain !M! {Block}.',rarity='uncommon',type='power',baseCost=1,playerTarget=true,baseMagic=3,upgrade={baseMagic=4} }
 function Metallicize:use()
 	return { ApplyPowerAction:new(MetallicizePower:new(player,self.magic)) }
 end
 
 Rage = RedCard:new{
-	name='Rage',description='Whenever you play a {57} this turn, gain !M! {47}.',rarity='uncommon',type='skill',baseCost=0,baseMagic=3,
+	name='Rage',description='Whenever you play a {Attack} this turn, gain !M! {Block}.',rarity='uncommon',type='skill',baseCost=0,baseMagic=3,
 	playerTarget=true,upgrade={baseMagic=5}
 }
 function Rage:use()
@@ -653,7 +653,7 @@ function RagePower:onTurnEnd()
 end
 
 SecondWind = RedCard:new{
-	name='Second Wind',description='Exhaust all non-{57} in hand, gain !B! {47} for each card exhausted.',rarity='uncommon',type='skill',
+	name='Second Wind',description='Exhaust all non-{Attack} in hand, gain !B! {Block} for each card exhausted.',rarity='uncommon',type='skill',
 	baseCost=1,baseBlock=5,playerTarget=true,upgrade={baseBlock=7}
 }
 function SecondWind:use()
@@ -678,7 +678,7 @@ function SecondWind:use()
 end
 
 SeverSoul = RedCard:new{
-	name='Sever Soul',description='Exhaust all non-{57} in hand. NL {63} !D!.',rarity='uncommon',baseCost=2,baseDamage=16,
+	name='Sever Soul',description='Exhaust all non-{Attack} in hand. NL {Damage} !D!.',rarity='uncommon',baseCost=2,baseDamage=16,
 	playerTarget=true,enemyTarget=true,upgrade={baseDamage=22}
 }
 function SeverSoul:use(target)
@@ -700,8 +700,8 @@ function SeverSoul:use(target)
 end
 
 Sentinel = RedCard:new{
-	name='Sentinel',description='Gain !B! {47}. NL When this card is exhausted, gain {202}{202}.',rarity='uncommon',type='skill',baseCost=1,baseBlock=5,
-	baseMagic=2,playerTarget=true,upgrade={baseBlock=8,baseMagic=3,description='Gain !B! {47}. NL When this card is exhausted, gain {202}{202}{202}.'}
+	name='Sentinel',description='Gain !B! {Block}. NL When this card is exhausted, gain {Energy}{Energy}.',rarity='uncommon',type='skill',baseCost=1,baseBlock=5,
+	baseMagic=2,playerTarget=true,upgrade={baseBlock=8,baseMagic=3,description='Gain !B! {Block}. NL When this card is exhausted, gain {Energy}{Energy}{Energy}.'}
 }
 function Sentinel:use()
 	return { GainBlockAction:new{target=player,value=self.block} }
@@ -714,7 +714,7 @@ function Sentinel:onExhaust(card)
 end
 
 Barricade = RedCard:new{
-	name='Barricade',description='{47} is not removed at the start of turn.',rarity='rare',type='power',baseCost=3,playerTarget=true,
+	name='Barricade',description='{Block} is not removed at the start of turn.',rarity='rare',type='power',baseCost=3,playerTarget=true,
 	upgrade={baseCost=2}
 }
 function Barricade:use()
@@ -735,7 +735,7 @@ function DarkEmbracePower:onExhaust()
 end
 
 Combust = RedCard:new{
-	name='Combust',description='At the end of turn, lose 1 HP and {63} !M! to all enemies.',rarity='uncommon',type='power',baseCost=1,
+	name='Combust',description='At the end of turn, lose 1 HP and {Damage} !M! to all enemies.',rarity='uncommon',type='power',baseCost=1,
 	playerTarget=true,baseMagic=5,upgrade={baseMagic=7}
 }
 function Combust:use()
@@ -755,8 +755,8 @@ function CombustPower:onTurnEnd()
 end
 
 Evolve = RedCard:new{
-	name='Evolve',description='Whenever you draw a {55}, draw !M! card.',rarity='uncommon',type='power',baseCost=1,
-	playerTarget=true,baseMagic=1,upgrade={baseMagic=2,description='Whenever you draw a {55}, draw !M! cards.'}
+	name='Evolve',description='Whenever you draw a {Status}, draw !M! card.',rarity='uncommon',type='power',baseCost=1,
+	playerTarget=true,baseMagic=1,upgrade={baseMagic=2,description='Whenever you draw a {Status}, draw !M! cards.'}
 }
 function Evolve:use()
 	return { ApplyPowerAction:new(EvolvePower:new(player,self.magic)) }
@@ -770,7 +770,7 @@ function EvolvePower:onDraw(card)
 end
 
 FeelNoPain = RedCard:new{
-	name='Feel No Pain',description='Whenever a card is exhausted, gain !M! {47}.',rarity='uncommon',type='power',baseCost=1,playerTarget=true,
+	name='Feel No Pain',description='Whenever a card is exhausted, gain !M! {Block}.',rarity='uncommon',type='power',baseCost=1,playerTarget=true,
 	baseMagic=3,upgrade={baseMagic=4}
 }
 function FeelNoPain:use()
@@ -783,7 +783,7 @@ function FeelNoPainPower:onExhaust()
 end
 
 FireBreathing = RedCard:new{
-	name='Fire Breathing',description='Whenever you draw a {55} or {56}, {63} !M! to all enemies.',rarity='uncommon',type='power',baseCost=1,
+	name='Fire Breathing',description='Whenever you draw a {Status} or {Curse}, {Damage} !M! to all enemies.',rarity='uncommon',type='power',baseCost=1,
 	playerTarget=true,baseMagic=6,upgrade={baseMagic=10}
 }
 function FireBreathing:use()
@@ -798,7 +798,7 @@ function FireBreathingPower:onDraw(card)
 end
 
 FlameBarrier = RedCard:new{
-	name='Flame Barrier',description='Gain !B! {47}. NL Whenever attacked this turn, {63} !M! back.',rarity='uncommon',type='skill',baseCost=2,
+	name='Flame Barrier',description='Gain !B! {Block}. NL Whenever attacked this turn, {Damage} !M! back.',rarity='uncommon',type='skill',baseCost=2,
 	playerTarget=true,baseBlock=12,baseMagic=4,upgrade={baseBlock=16,baseMagic=6}
 }
 function FlameBarrier:use()
@@ -817,7 +817,7 @@ function FlameBarrierPower:onTurnStart()
 end
 
 Rupture = RedCard:new{
-	name='Rupture',description='Whenever you loss HP from a card, gain !M! {76<}.',rarity='uncommon',type='power',baseCost=1,
+	name='Rupture',description='Whenever you loss HP from a card, gain !M! {Strength}.',rarity='uncommon',type='power',baseCost=1,
 	playerTarget=true,baseMagic=1,upgrade={baseMagic=2}
 }
 function Rupture:use()
@@ -832,8 +832,8 @@ function RupturePower:onDamaged(value,source)
 end
 
 SearingBlow = RedCard:new{
-	name='Searing Blow',description='{63} !D!. NL Can be upgraded any number of times.',rarity='uncommon',baseCost=2,baseDamage=12,
-	playerTarget=true,enemyTarget=true,canUpgrade=true,numUpgraded=0,
+	name='Searing Blow',description='{Damage} !D!. NL Can be upgraded any number of times.',rarity='uncommon',baseCost=2,baseDamage=12,
+	enemyTarget=true,canUpgrade=true,numUpgraded=0,
 }
 function SearingBlow:use(target)
 	return { DamageAction:new{target=target,source=player,value=self.damage} }
@@ -859,7 +859,7 @@ function SearingBlow:load(meta)
 end
 
 Berserk = RedCard:new{
-	name='Berserk',description='Gain !M! {60}. NL At the start of turn, gain {202}.',rarity='rare',type='power',baseCost=0,
+	name='Berserk',description='Gain !M! {Vulnerable}. NL At the start of turn, gain {Energy}.',rarity='rare',type='power',baseCost=0,
 	playerTarget=true,baseMagic=2,upgrade={baseMagic=1}
 }
 function Berserk:use()
@@ -892,7 +892,7 @@ function BrutalityPower:onTurnStart()
 end
 
 DemonForm = RedCard:new{
-	name='Demon Form',description='At the start of turn, gain !M! {76<}.',rarity='rare',type='power',baseCost=3,
+	name='Demon Form',description='At the start of turn, gain !M! {Strength}.',rarity='rare',type='power',baseCost=3,
 	playerTarget=true,baseMagic=2,upgrade={baseMagic=3}
 }
 function DemonForm:use()
@@ -905,7 +905,7 @@ function DemonFormPower:onTurnStart()
 end
 
 Juggernaut = RedCard:new{
-	name='Juggernaut',description='Whenever you gain {47}, {63} !M! to a random enemy.',rarity='rare',type='power',baseCost=2,
+	name='Juggernaut',description='Whenever you gain {Block}, {Damage} !M! to a random enemy.',rarity='rare',type='power',baseCost=2,
 	playerTarget=true,baseMagic=5,upgrade={baseMagic=7}
 }
 function Juggernaut:use()
@@ -918,7 +918,7 @@ function JuggernautPower:onGainBlock()
 end
 
 FiendFire = RedCard:new{
-	name='Fiend Fire',description='Exhaust your hand, {63} !D! for each card exhausted. NL Exhaust.',rarity='rare',
+	name='Fiend Fire',description='Exhaust your hand, {Damage} !D! for each card exhausted. NL Exhaust.',rarity='rare',
 	baseCost=2,baseDamage=7,enemyTarget=true,upgrade={baseDamage=10},exhaust=true
 }
 function FiendFire:use(target)
@@ -941,7 +941,7 @@ function FiendFire:use(target)
 end
 
 Corruption = RedCard:new{
-	name='Corruption',description='{58} costs 0. NL Whenever you play a {58}, exhaust it.',rarity='rare',type='power',baseCost=3,
+	name='Corruption',description='{Skill} costs 0. NL Whenever you play a {Skill}, exhaust it.',rarity='rare',type='power',baseCost=3,
 	playerTarget=true,upgrade={baseCost=2}
 }
 function Corruption:use()
@@ -965,7 +965,7 @@ function CorruptionPower:onUseCard(card,target,useCardAction)
 end
 
 Immolate = RedCard:new{
-	name='Immolate',description='{63} !D! to all enemies. NL Add a Burn into discard pile.',rarity='rare',baseCost=2,
+	name='Immolate',description='{Damage} !D! to all enemies. NL Add a Burn into discard pile.',rarity='rare',baseCost=2,
 	enemyTarget=true,toAllEnemies=true,baseDamage=21,upgrade={baseDamage=28}
 }
 function Immolate:use()
@@ -973,8 +973,8 @@ function Immolate:use()
 end
 
 DoubleTap = RedCard:new{
-	name='Double Tap',description='This turn, your next {57} is played twice.',rarity='rare',type='skill',baseCost=1,baseMagic=1,
-	playerTarget=true,upgrade={baseMagic=2,description='This turn, your next !M! {57} is played twice.'}
+	name='Double Tap',description='This turn, your next {Attack} is played twice.',rarity='rare',type='skill',baseCost=1,baseMagic=1,
+	playerTarget=true,upgrade={baseMagic=2,description='This turn, your next !M! {Attack} is played twice.'}
 }
 function DoubleTap:use()
 	return { ApplyPowerAction:new(DoubleTapPower:new(player,self.magic)) }
@@ -997,7 +997,7 @@ function DoubleTapPower:onTurnEnd()
 end
 
 Feed = RedCard:new{
-	name='Feed',description='{63} !D!. NL If fatal, raise your max HP by !M!. NL Exhaust.',rarity='rare',baseCost=1,
+	name='Feed',description='{Damage} !D!. NL If fatal, raise your max HP by !M!. NL Exhaust.',rarity='rare',baseCost=1,
 	enemyTarget=true,baseDamage=10,baseMagic=3,upgrade={baseDamage=12,baseMagic=4},exhaust=true,canGenerateInCombat=false,
 }
 function Feed:use(target)
@@ -1011,7 +1011,7 @@ function Feed:use(target)
 end
 
 Reaper = RedCard:new{
-	name='Reaper',description='{63} !D! to all enemies. NL Heal HP equal to unblocked damage.',rarity='rare',baseCost=2,
+	name='Reaper',description='{Damage} !D! to all enemies. NL Heal HP equal to unblocked damage.',rarity='rare',baseCost=2,
 	enemyTarget=true,toAllEnemies=true,baseDamage=4,upgrade={baseDamage=5},exhaust=true,canGenerateInCombat=false,
 }
 function Reaper:use()
@@ -1027,7 +1027,7 @@ function Reaper:use()
 end
 
 InfernalBlade = RedCard:new{
-	name='Infernal Blade',description='Add a random {57} into hand. It costs 0 this turn. NL Exhaust.',rarity='uncommon',type='skill',baseCost=1,
+	name='Infernal Blade',description='Add a random {Attack} into hand. It costs 0 this turn. NL Exhaust.',rarity='uncommon',type='skill',baseCost=1,
 	playerTarget=true,upgrade={baseCost=0},exhaust=true,
 }
 function InfernalBlade:use()
@@ -1042,7 +1042,7 @@ function InfernalBlade:use()
 end
 
 Headbutt = RedCard:new{
-	name='Headbutt',description='{63} !D!. NL Put a card from discard pile on top of draw pile.',rarity='common',baseCost=1,
+	name='Headbutt',description='{Damage} !D!. NL Put a card from discard pile on top of draw pile.',rarity='common',baseCost=1,
 	enemyTarget=true,playerTarget=true,baseDamage=9,upgrade={baseDamage=12}
 }
 function Headbutt:use(target)
@@ -1124,7 +1124,7 @@ function BurningBlood:onCombatEnd()
 	player:heal(6)
 end
 
-RedSkull = RedRelic:new{name='Red Skull',icon=230,tier='common',activated=false,description='While your HP is at or below #11#50%#12#, you have #11#3#12# additional {76<}.'}
+RedSkull = RedRelic:new{name='Red Skull',icon=230,tier='common',activated=false,description='While your HP is at or below #11#50%#12#, you have #11#3#12# additional {Strength}.'}
 function RedSkull:onCombatStart()
 	if player.hp <= player.maxHp / 2 then
 		addAction(ApplyPowerAction:new(StrengthPower:new(player,3)))
@@ -1150,7 +1150,7 @@ end
 
 -- potions
 BloodPotion = Potion:new{
-	name='Blood Potion',icon=96,baseMagic=20,canUseOutsideCombat=true,rarity='common',color={13,13,12,12,13,13},
+	name='Blood Potion',icon=Icon:new{image=96,colorMap={13,13,12,12,13,13}},baseMagic=20,canUseOutsideCombat=true,rarity='common',
 	description='Heal for #11#!M!%#12# of your Max HP.'
 }
 function BloodPotion:use()
@@ -1158,14 +1158,14 @@ function BloodPotion:use()
 end
 
 HeartOfIron = Potion:new{
-	name='Heart of Iron',icon=106,baseMagic=6,rarity='rare',color={9,11,9,11},
-	description='Gain #11#!M!#12# {46}.' -- TODO icon
+	name='Heart of Iron',icon=Icon:new{image=106,colorMap={9,11,9,11}},baseMagic=6,rarity='rare',
+	description='Gain #11#!M!#12# {Metallicize}.'
 }
 function HeartOfIron:use()
 	return { ApplyPowerAction:new(MetallicizePower:new(player,self.magic)) }
 end
 
-Elixir = Potion:new{ name='Elixir',icon=104,rarity='uncommon',color={13,12},description='#4#Exhaust#12# any number of cards in your hand.' }
+Elixir = Potion:new{ name='Elixir',icon=Icon:new{image=104,colorMap={13,12}},rarity='uncommon',description='#4#Exhaust#12# any number of cards in your hand.' }
 function Elixir:use()
 	return {
 		AnonymousAction:new(function ()

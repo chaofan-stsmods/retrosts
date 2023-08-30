@@ -21,14 +21,14 @@ Dazed = ColorlessCard:new{ name='Dazed',description='Unplayable. NL Ethereal.',r
 Slimed = ColorlessCard:new{ name='Slimed',description='Exhaust.',rarity='special',baseCost=1,type='status',canUpgrade=false,exhaust=true,playerTarget=true }
 
 Burn = ColorlessCard:new{
-	name='Burn',description='Unplayable. NL At the end of turn, {63} !M! to you.',rarity='special',baseCost=-2,type='status',
+	name='Burn',description='Unplayable. NL At the end of turn, {Damage} !M! to you.',rarity='special',baseCost=-2,type='status',
 	baseCanUse=false,canUpgrade=false,baseMagic=2,upgrade={baseMagic=4},autoPlayOnEndTurn=true,playerTarget=true
 }
 function Burn:autoPlay()
 	return { DamageAction:new{source=player,target=player,value=self.magic,type='power'} }
 end
 
-Void = ColorlessCard:new{ name='Void',description='Unplayable. NL Ethereal. NL Whenever this card is drawn, lose {202}.',rarity='special',baseCost=-2,type='status',baseCanUse=false,canUpgrade=false,ethereal=true,playerTarget=true }
+Void = ColorlessCard:new{ name='Void',description='Unplayable. NL Ethereal. NL Whenever this card is drawn, lose {Energy}.',rarity='special',baseCost=-2,type='status',baseCanUse=false,canUpgrade=false,ethereal=true,playerTarget=true }
 function Void:onDraw(card)
 	if card == self then
 		addAction(GainEnergyAction:new(-1))
@@ -44,8 +44,8 @@ function BandageUp:use()
 end
 
 Blind = ColorlessCard:new{
-	name='Blind',description='Apply !M! {61}.',baseCost=0,type='skill',rarity='uncommon',
-	enemyTarget=true,baseMagic=2,upgrade={description='Apply !M! {61} to all enemies.',toAllEnemies=true}
+	name='Blind',description='Apply !M! {Weak}.',baseCost=0,type='skill',rarity='uncommon',
+	enemyTarget=true,baseMagic=2,upgrade={description='Apply !M! {Weak} to all enemies.',toAllEnemies=true}
 }
 function Blind:use(target)
 	if self.toAllEnemies then
@@ -60,7 +60,7 @@ function Blind:use(target)
 end
 
 Finesse = ColorlessCard:new{
-	name='Finesse',description='Gain !B! {47}. NL Draw a card.',baseCost=0,type='skill',rarity='uncommon',
+	name='Finesse',description='Gain !B! {Block}. NL Draw a card.',baseCost=0,type='skill',rarity='uncommon',
 	playerTarget=true,baseBlock=2,upgrade={baseBlock=4}
 }
 function Finesse:use()
@@ -76,7 +76,7 @@ function MasterOfStrategy:use()
 end
 
 HandOfGreed = ColorlessCard:new{
-	name='Hand of Greed',description='{63} !D!. NL If fatal, gain !M! Gold.',baseCost=2,rarity='rare',
+	name='Hand of Greed',description='{Damage} !D!. NL If fatal, gain !M! Gold.',baseCost=2,rarity='rare',
 	enemyTarget=true,baseMagic=20,baseDamage=20,upgrade={baseMagic=25,baseDamage=25}
 }
 function HandOfGreed:use(target)
@@ -133,17 +133,17 @@ function Regret:autoPlay()
 	return { DamageAction:new{source=player,target=player,value=#hand+1,type='hpLoss'} }
 end
 
-Decay = CurseCard:new{ name='Decay',description='Unplayable. NL At the end of turn, {63} 2 to you.',autoPlayOnEndTurn=true }
+Decay = CurseCard:new{ name='Decay',description='Unplayable. NL At the end of turn, {Damage} 2 to you.',autoPlayOnEndTurn=true }
 function Decay:autoPlay()
 	return { DamageAction:new{source=player,target=player,value=2,type='power'} }
 end
 
-Doubt = CurseCard:new{ name='Doubt',description='Unplayable. NL At the end of your turn, gain 1 {61}.',autoPlayOnEndTurn=true }
+Doubt = CurseCard:new{ name='Doubt',description='Unplayable. NL At the end of your turn, gain 1 {Weak}.',autoPlayOnEndTurn=true }
 function Doubt:autoPlay()
 	return { ApplyPowerAction:new(WeakPower:new(player,1,true)) }
 end
 
-Shame = CurseCard:new{ name='Shame',description='Unplayable. NL At the end of your turn, gain 1 {75}.',autoPlayOnEndTurn=true }
+Shame = CurseCard:new{ name='Shame',description='Unplayable. NL At the end of your turn, gain 1 {Frail}.',autoPlayOnEndTurn=true }
 function Shame:autoPlay()
 	return { ApplyPowerAction:new(FrailPower:new(player,1,true)) }
 end

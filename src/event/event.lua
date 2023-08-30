@@ -247,7 +247,7 @@ function TextEvent:drawBackground(below)
 	end
 	mapColor(14,0)
 	drawTooltipBox(4,28,29,13)
-	resetColors{14}
+	resetColor(14)
 	spr(396,1,20,0,1,0,0,2,2)
 	rect(17,20,120,11,4)
 	rect(17,31,120,1,3)
