@@ -505,6 +505,7 @@ function GameWindow:tickBelow()
 		for _, enemy in ipairs(enemies) do
 			if enemy.visible then
 				enemy:drawImage()
+				enemy:drawIntent()
 			end
 		end
 		resetColors()

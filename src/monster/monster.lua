@@ -121,7 +121,7 @@ function Monster:drawIntent()
 			damageStr = damageStr .. 'x' .. tostring(self.intentAttackCount)
 		end
 		local width = strWidth(damageStr,false,true)
-		print(damageStr,intentX-width/2,intentY+5,12,false,1,true)
+		print(damageStr,intentX-width/2,intentY+5,isDarken and 13 or 12,false,1,true)
 	end
 end
 

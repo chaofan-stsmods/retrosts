@@ -451,12 +451,14 @@ function GamblersBrew:use()
 			else
 				openWindowAbove(HandSelectWindow:new{cardItems=hand,title='Choose any Card to Discard',min=0},function (cards)
 					for i,cardItem in ipairs(cards) do
-						local cardIndex = table.indexOf(hand,cardItem)
 						addAction(i,DiscardAction:new{cardItem=cardItem,duration=1})
-						removeHand(cardIndex)
 					end
 					if #cards > 0 then
 						addAction(#cards+1,DrawCardAction:new(#cards))
+					end
+					for _,cardItem in ipairs(cards) do
+						local cardIndex = table.indexOf(hand,cardItem)
+						removeHand(cardIndex)
 					end
 				end)
 			end

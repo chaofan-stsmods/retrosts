@@ -45,7 +45,7 @@ function Ironclad:getMatchAndKeepCardType()
 end
 
 function Ironclad:getRelics()
-	return { BurningBlood,RedSkull }
+	return { BurningBlood,RedSkull,PaperPhrog,SelfFormingClay }
 end
 
 function Ironclad:getPotions()
@@ -1145,6 +1145,21 @@ function RedSkull:onDamaged()
 	if not self.activated and player.hp <= player.maxHp / 2 then
 		addAction(ApplyPowerAction:new(StrengthPower:new(player,3)))
 		self.activated = true
+	end
+end
+
+PaperPhrog = RedRelic:new{name='Paper Phrog',icon=214,tier='uncommon',description='Enemies with {Vulnerable} take #11#75%#12# more damage rather than #11#50%#12#.'}
+function PaperPhrog:onModifyVulnerableFactor(factor,isAttacking)
+	if isAttacking then
+		return factor + 0.25
+	end
+	return factor
+end
+
+SelfFormingClay = RedRelic:new{name='Self-Forming Clay',icon=198,tier='uncommon',description='Whenever you lose HP, gain #11#3#12# {Block} next turn.'}
+function SelfFormingClay:onDamaged(value)
+	if value > 0 then
+		addAction(ApplyPowerAction:new(GainBlockNextTurnPower:new(player,3)))
 	end
 end
 

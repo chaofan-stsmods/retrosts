@@ -411,7 +411,7 @@ function NewTurnAction:tick()
 		addAction(DrawCardAction:new(5+self.additionalCard))
 		player:triggerEvent('onTurnStartPostDraw', turn + 1)
 		if turn ~= 0 then
-			energy = maxEnergy
+			energy = player:triggerReducerEvent('onTurnStartResetEnergy',maxEnergy,energy)
 		end
 	end
 	Action.tick(self)

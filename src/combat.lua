@@ -70,12 +70,12 @@ function startCombat(encounter,completed)
 	for _,card in ipairs(innateCards) do
 		table.insert(drawPile,card)
 	end
+	if room.hasKey then
+		applyKeyBuff()
+	end
 	player:onCombatStart()
 	for _, enemy in ipairs(enemies) do
 		enemy:onCombatStart()
-	end
-	if room.hasKey then
-		applyKeyBuff()
 	end
 	energy = maxEnergy
 	addAction(NewTurnAction:new{additionalCard=math.max(0,#innateCards-5)})
@@ -322,6 +322,7 @@ end
 
 function removeHand(index)
 	table.remove(hand,index)
+	player:triggerEvent('onRemoveHand')
 	if combatSelection.type == 'hand' and combatSelection.index > index then
 		combatSelection.index = combatSelection.index - 1
 	elseif combatSelection.type == 'usecard' and combatSelection.handIndex > index then

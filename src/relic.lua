@@ -95,6 +95,14 @@ function hasRelic(relicType)
 	return table.anyMatch(relics,function(relic) return getmetatable(relic) == relicType end)
 end
 
+function getRelic(relicType)
+	for _,relic in ipairs(relics) do
+		if getmetatable(relic) == relicType then
+			return relic
+		end
+	end
+end
+
 Circlet = Relic:new{name='Circlet',description='Collect as many as you can.',icon=55,tier='special',counter=1}
 function Circlet:onBeforeObtainRelic(relic)
 	if getmetatable(relic) == Circlet then
@@ -114,11 +122,13 @@ end
 
 function NeowsLament:onCombatStart()
 	if self.counter ~= -1 then
-		for _, enemy in ipairs(enemies) do
-			if enemy.alive then
-				enemy.hp = 1
+		addAction(AnonymousAction:new(function ()
+			for _, enemy in ipairs(enemies) do
+				if enemy.alive then
+					enemy.hp = 1
+				end
 			end
-		end
+		end))
 		self.counter = self.counter - 1
 		if self.counter == 0 then
 			self.counter = -1
@@ -144,7 +154,7 @@ function OddMushroom:onModifyVulnerableFactor(factor,isAttacking)
 	if isAttacking then
 		return factor
 	end
-	return 1.25
+	return factor - 0.25
 end
 
 Anchor = Relic:new{name='Anchor',icon=27,tier='common',description='Start each combat with #11#10#12# {Block}.'}
@@ -379,8 +389,8 @@ DreamCatcher = Relic:new{name='Dream Catcher',icon=71,tier='common',description=
 function DreamCatcher:onRest(campfireEvent)
 	local rewards = {}
 	generateCardRewards(rewards,campfireEvent.random)
-	openWindowAbove(CardRewardWindow:new{cards=rewards[1].value,title='Dreaming?'}, function(cardItem)
-		if cardItem then
+	openWindowAbove(CardRewardWindow:new{cards=rewards[1].value,buttons=rewards[1].buttons,title='Dreaming?'}, function(cardItem)
+		if cardItem and getmetatable(cardItem) == CardItem then
 			cardItem.large = false
 			addEffect(CardEffect:new{cardItem=cardItem,pauseDuration=1,duration=20,tx=240,ty=0})
 			obtainCard(cardItem.card)
@@ -907,17 +917,307 @@ function TheCourier:modifyShopPrice(price)
 end
 
 WhiteBeastStatue = Relic:new{name='White Beast Statue',icon=144,tier='uncommon',description='Potions always appear in combat rewards.'}
-
-SingingBowlOption = ColorlessCard:new{baseCost=-2,rarity='special',type='skill',name='Singing Bowl',description='Raise your Max HP by #11#2#12# without adding cards.'}
-SingingBowl = Relic:new{name='Singing Bowl',icon=140,tier='uncommon',description='When adding cards into your deck, you may raise your Max HP by #11#2#12# instead.'}
-function SingingBowl:modifyCardReward(reward)
-	table.insert(reward.value,SingingBowlOption)
+function WhiteBeastStatue:modifyPotionChance()
+	return 100
 end
 
-function SingingBowl:onBeforeObtainCard(card)
-	if card == SingingBowlOption then
+SingingBowl = Relic:new{name='Singing Bowl',icon=140,tier='uncommon',description='When adding cards into your deck, you may raise your Max HP by #11#2#12# instead.'}
+function SingingBowl:modifyCardReward(reward)
+	reward.buttons = reward.buttons or {}
+	table.insert(reward.buttons,{title='+2 Max HP', onSelect=function ()
 		player:increaseMaxHp(2)
+	end})
+end
+
+BirdFacedUrn = Relic:new{name='Bird-Faced Urn',icon=145,tier='rare',description='Whenever you play a {Power}, heal #11#2#12# HP.'}
+function BirdFacedUrn:onUseCard(card)
+	if card.type == 'power' then
+		addAction(HealAction:new{target=player,value=2})
+	end
+end
+
+CaptainsWheel = Relic:new{name='Captain\'s Wheel',icon=146,tier='rare',description='At the start of your 3rd turn, gain #11#18#12# {Block}.'}
+function CaptainsWheel:onCombatStart()
+	self.counter = 0
+end
+
+function CaptainsWheel:onTurnStart(turn)
+	if turn < 3 then
+		self.counter = turn
+	elseif turn == 3 then
+		addAction(GainBlockAction:new{target=player,value=18})
+		self.counter = -1
+	end
+end
+
+function CaptainsWheel:onCombatEnd()
+	self.counter = -1
+end
+
+DeadBranch = Relic:new{name='Dead Branch',icon=147,tier='rare',description='Whenever you #4#Exhaust#12# a card, add a random card into your hand.'}
+function DeadBranch:onExhaust()
+	local cardType
+	repeat
+		cardType = getPlayerCardType(miscRand)
+	until cardType.canGenerateInCombat
+	addAction(MakeTempCardToHandAction:new(cardType:new()))
+end
+
+DuVuDoll = Relic:new{name='Du-Vu Doll',icon=148,tier='rare',counter=0,description='For each {Curse} in your deck, start each combat with #11#1#12# {Strength}.'}
+function DuVuDoll:onCombatStart()
+	if self.counter > 0 then
+		addAction(ApplyPowerAction:new(StrengthPower:new(player,self.counter)))
+	end
+end
+
+function DuVuDoll:onObtained()
+	self.counter = table.count(deck, function(card) return card.type == 'curse' end)
+end
+
+function DuVuDoll:onObtainCard(card)
+	if card.type == 'curse' then
+		self.counter = self.counter + 1
+	end
+end
+
+function DuVuDoll:onRemoveCard(card)
+	if card.type == 'curse' then
+		self.counter = self.counter - 1
+	end
+end
+
+FossilizedHelix = Relic:new{name='Fossilized Helix',icon=149,tier='rare',description='Prevent the first time you would lose HP each combat.'}
+function FossilizedHelix:onCombatStart()
+	addAction(ApplyPowerAction:new(BufferPower:new(player,1)))
+end
+
+GamblingChip = Relic:new{name='Gambling Chip',icon=150,tier='rare',priority=80,description='At the start of each combat, discard any number of cards, then draw that many cards.'}
+function GamblingChip:onTurnStartPostDraw(turn)
+	if turn > 1 then
+		return
+	end
+	addAction(AnonymousAction:new(function ()
+		if #hand == 0 then
+			return
+		else
+			openWindowAbove(HandSelectWindow:new{cardItems=hand,title='Choose any Card to Discard',min=0},function (cards)
+				for i,cardItem in ipairs(cards) do
+					addAction(i,DiscardAction:new{cardItem=cardItem,duration=1})
+				end
+				if #cards > 0 then
+					addAction(#cards+1,DrawCardAction:new(#cards))
+				end
+				for _,cardItem in ipairs(cards) do
+					local cardIndex = table.indexOf(hand,cardItem)
+					removeHand(cardIndex)
+				end
+			end)
+		end
+	end))
+end
+
+Ginger = Relic:new{name='Ginger',icon=151,tier='rare',description='You can no longer become {Weak}.'}
+function Ginger:onBeforeApplyPower(power)
+	if getmetatable(power) == WeakPower then
+		local owner = self.owner
+		addEffect(TextEffect:new{x=owner.x+owner.width*4,y=owner.y,text='Immune',color=12,ySpeed=-0.5})
 		return false
+	end
+end
+
+Turnip = Relic:new{name='Turnip',icon=166,tier='rare',description='You can no longer become {Frail}.'}
+function Turnip:onBeforeApplyPower(power)
+	if getmetatable(power) == FrailPower then
+		local owner = self.owner
+		addEffect(TextEffect:new{x=owner.x+owner.width*4,y=owner.y,text='Immune',color=12,ySpeed=-0.5})
+		return false
+	end
+end
+
+CampfireRelic = Relic:new{tags={'campfire'}}
+function CampfireRelic:canSpawn()
+	return table.count(relics, function (relic)
+		return table.anyMatch(relic.tags, function (tag)
+			return tag == 'campfire'
+		end)
+	end) < 2
+end
+
+Girya = CampfireRelic:new{name='Girya',icon=152,tier='rare',counter=0,description='You can now gain {Strength} at Rest Sites (up to 3 times).'}
+function Girya:onModifyCampfireOptions(options,event)
+	table.insert(options,{
+		name='Lift',description='Start battles with +1 Strength. (Max 3)',icon=388,
+		locked=self.counter>=3,
+		onSelect=function()
+			self.counter = self.counter + 1
+			event:completeCampfire()
+		end
+	})
+end
+
+function Girya:onCombatStart()
+	if self.counter > 0 then
+		addAction(ApplyPowerAction:new(StrengthPower:new(player,self.counter)))
+	end
+end
+
+IceCream = Relic:new{name='Ice Cream',icon=153,tier='rare',description='Energy is now conserved between turns.'}
+function IceCream:onTurnStartResetEnergy(targetEnergy,currentEnergy)
+	return targetEnergy + currentEnergy
+end
+
+IncenseBurner = Relic:new{name='Incense Burner',icon=154,tier='rare',counter=0,description='Every #11#6#12# turns, gain #11#1#12# {35}.'}
+function IncenseBurner:onTurnStart(turn)
+	self.counter = self.counter + 1
+	if self.counter == 6 then
+		self.counter = 0
+		addAction(ApplyPowerAction:new(IntangiblePower:new(player,1)))
+	end
+end
+
+LizardTail = Relic:new{name='Lizard Tail',icon=155,tier='rare',description='When you would die, heal to #11#50%#12# of your Max HP instead (works once).'}
+function LizardTail:onBeforeDeath()
+	if self.saved == 0 then
+		self.saved = 1
+		self.description = 'This relic has been used up.'
+		player:heal(math.max(1,math.floor(player.maxHp/2)))
+		return false
+	end
+end
+
+function LizardTail:load(...)
+	Relic.load(self,...)
+	if self.saved == 1 then
+		self.description = 'This relic has been used up.'
+	end
+end
+
+Mango = Relic:new{name='Mango',icon=156,tier='rare',description='Upon pickup, raise your Max HP by #11#14#12#.'}
+function Mango:onObtained()
+	player:increaseMaxHp(14)
+end
+
+OldCoin = Relic:new{name='Old Coin',icon=157,tier='rare',description='Upon pickup, gain #11#300 #4#Gold.'}
+function OldCoin:canSpwan()
+	return not isInShop()
+end
+
+function OldCoin:onObtained()
+	gainGold(300)
+end
+
+PeacePipe = Relic:new{name='Peace Pipe',icon=158,tier='rare',description='You can now remove cards from your deck at Rest Sites.'}
+function PeacePipe:onModifyCampfireOptions(options,event)
+	table.insert(options,{
+		name='Toke',description='Remove a card from your deck.',icon=416,
+		onSelect=function()
+			removeCardFromDeck(1,true,function (completed)
+				if completed then
+					event:completeCampfire()
+				end
+			end)
+		end
+	})
+end
+
+PocketWatch = Relic:new{name='Pocket Watch',icon=159,tier='rare',description='Whenever you play #11#3#12# or less cards during your turn, draw #11#3#12# additional cards at the start of your next turn.'}
+function PocketWatch:onCombatStart()
+	self.counter = 0
+end
+
+function PocketWatch:onTurnStart(turn)
+	if self.counter <= 3 and turn > 1 then
+		addAction(DrawCardAction:new(3))
+	end
+	self.counter = 0
+end
+
+function PocketWatch:onUseCard()
+	self.counter = self.counter + 1
+end
+
+function PocketWatch:onCombatEnd()
+	self.counter = -1
+end
+
+PrayerWheel = Relic:new{name='Prayer Wheel',icon=160,tier='rare',description='Normal enemies drop an additional card reward.'}
+
+Shovel = CampfireRelic:new{name='Shovel',icon=161,tier='rare',description='You can now #4#Dig#12# for relics at Rest Sites.'}
+function Shovel:onModifyCampfireOptions(options,event)
+	table.insert(options,{
+		name='Dig',description='Dig up a random relic.',icon=368,
+		onSelect=function()
+			local rewards = {}
+			addRelicReward(rewards,getRandomRelic(makeRand(act.id,room.id,7)))
+			local rewardWindow = RewardWindow:new{rewards=rewards,canClose=true,onProceed=function(self) self:close() end}
+			openWindowAbove(rewardWindow,function ()
+				event:completeCampfire()
+			end)
+		end
+	})
+end
+
+StoneCalendar = Relic:new{name='Stone Calendar',icon=162,tier='rare',description='At the end of turn #11#7#12#, {Damage} #11#52#12# to all enemies.'}
+function StoneCalendar:onTurnStart(turn)
+	self.counter = turn
+end
+
+function StoneCalendar:onTurnEnd()
+	if self.counter == 7 then
+		addAction(DamageAllEnemiesAction:new{source=player,value=52,type='power'})
+	end
+end
+
+function StoneCalendar:onCombatEnd()
+	self.counter = -1
+end
+
+ThreadAndNeedle = Relic:new{name='Thread and Needle',icon=163,tier='rare',description='Start each combat with 4 {62}.'}
+function ThreadAndNeedle:onCombatStart()
+	addAction(ApplyPowerAction:new(PlatedArmorPower:new(player,4)))
+end
+
+Torii = Relic:new{name='Torii',icon=164,tier='rare',description='Whenever you would receive #11#5#12# or less unblocked attack damage, reduce it to #11#1#12#.'}
+function Torii:onBeforeHpLoss(value,_,type)
+	if value <= 5 and value > 0 and type == 'attack' then
+		return 1
+	end
+end
+
+TungstenRod = Relic:new{name='Tungsten Rod',icon=165,tier='rare',priority=200,description='Whenever you would lose HP, lose #11#1#12# less HP.'}
+function TungstenRod:onBeforeHpLoss(value)
+	if value > 0 then
+		return value - 1
+	end
+end
+
+UnceasingTop = Relic:new{name='Unceasing Top',icon=167,tier='rare',description='Whenever you have no cards in hand during your turn, draw a card.'}
+function UnceasingTop:onRemoveHand()
+	if not inEnemyTurn and #hand == 0 and (#drawPile > 0 or #discardPile > 0) and
+		not table.anyMatch(actions,function (action) return getmetatable(action) == DrawCardAction end) then
+		addAction(DrawCardAction:new(1))
+	end
+end
+
+WingBoots = Relic:new{name='Wing Boots',icon=168,tier='rare',counter=3,description='You may ignore paths when choosing the next room to travel to #11#3#12# times.'}
+function WingBoots:canFly()
+	return self.counter > 0
+end
+
+function WingBoots:onFly()
+	if self.counter > 0 then
+		self.counter = self.counter - 1
+		if self.counter == 0 then
+			self.counter = -1
+			self.description = 'This relic has been used up.'
+		end
+	end
+end
+
+function WingBoots:load(...)
+	Relic.load(self,...)
+	if self.counter == -1 then
+		self.description = 'This relic has been used up.'
 	end
 end
 
@@ -935,7 +1235,9 @@ colorlessRelics = {
 	FrozenEgg,MoltenEgg,ToxicEgg,InkBottle,Kunai,Shuriken,OrnamentalFan,LetterOpener,Matryoshka,MeatOnTheBone,MercuryHourglass,
 	MummifiedHand,Pantograph,Pear,QuestionCard,StrikeDummy,Sundial,TheCourier,WhiteBeastStatue,SingingBowl,
 	-- rare
-	Calipers,
+	Calipers,BirdFacedUrn,CaptainsWheel,DeadBranch,DuVuDoll,FossilizedHelix,GamblingChip,Ginger,Turnip,Girya,IceCream,
+	IncenseBurner,LizardTail,Mango,OldCoin,PeacePipe,PocketWatch,PrayerWheel,Shovel,StoneCalendar,ThreadAndNeedle,Torii,
+	TungstenRod,UnceasingTop,WingBoots,
 	-- boss
 	CoffeeDripper,FusionHammer,Ectoplasm,
 }

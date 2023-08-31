@@ -86,8 +86,8 @@ function TurnBasedPower:onTurnEnd()
 end
 
 VulnerablePower = TurnBasedPower:new{debuff=true,icon=icons.Vulnerable,priority=150}
-function VulnerablePower:onAttacked(damage)
-	return damage * self.owner:triggerReducerEvent('onModifyVulnerableFactor',1.5)
+function VulnerablePower:onAttacked(damage,source)
+	return damage * source:triggerReducerEvent('onModifyVulnerableFactor',self.owner:triggerReducerEvent('onModifyVulnerableFactor',1.5),true)
 end
 
 RitualPower = Power:new{icon=73,skipFirst=false}
@@ -221,4 +221,36 @@ function ThornsPower:onDamaged(_,source,type)
 	if type == 'attack' then
 		addAction(DamageAction:new{source=self.owner,target=source,value=self.amount,type='power'})
 	end
+end
+
+GainBlockNextTurnPower = Power:new{icon=236}
+function GainBlockNextTurnPower:onTurnStart()
+	addAction(GainBlockAction:new{target=self.owner,value=self.amount})
+	addAction(RemovePowerAction:new(self))
+end
+
+BufferPower = Power:new{icon=0}
+function BufferPower:onBeforeHpLoss(value)
+	if value > 0 then
+		addAction(1,ReducePowerAction:new(self,1))
+		local owner = self.owner
+		addEffect(TextEffect:new{x=owner.x+owner.width*4,y=owner.y,text='Blocked',color=12,ySpeed=-0.5})
+		return 0
+	end
+end
+
+function BufferPower:drawImage(x,y)
+	for i=3,5 do
+		rect(x+5-i,y+i-3,5,6,i)
+	end
+	return Power.drawImage(self,x,y)
+end
+
+IntangiblePower = TurnBasedPower:new{icon=35,priority=200}
+function IntangiblePower:onAttacked()
+	return 1
+end
+
+function IntangiblePower:onBeforeDamaged()
+	return 1
 end

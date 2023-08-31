@@ -150,6 +150,30 @@ function drawBanner(x,y,w)
 	rect(x+24,y+11,(w-6)*8,1,3)
 end
 
+function drawButton(x,y,w,text,selected)
+	if selected then
+		mapColor(13,12)
+		mapColor(14,13)
+		mapColor(15,14)
+	end
+	mapColor(12,selected and 13 or 14)
+	spr(483,x,y,0)
+	spr(483,x+(w-1)*8,y,0,1,1)
+	mapColor(12,selected and 14 or 15)
+	spr(483,x,y+8,0,1,2)
+	spr(483,x+(w-1)*8,y+8,0,1,3)
+	resetColor(12)
+	for i = 1,w-2 do
+		spr(484,x+i*8,y,0)
+		spr(484,x+i*8,y+8,0,1,2)
+	end
+	if selected then
+		resetColors{13,14,15}
+	end
+	local textWidth = strWidth(text)
+	printShadowed(text,x+(w*8-textWidth)/2,y+5,12,15)
+end
+
 function sprmap(x, y, w, h, sx, sy, colorkey, scale, remap)
 	poke4(2*0x03FFC,3)
 	map(x, y, w, h, sx, sy, colorkey or -1, scale or 1, remap or nil)

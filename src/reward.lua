@@ -94,11 +94,13 @@ function RewardWindow:collectReward()
 		_G[reward.value] = true
 		self:collectRewardComplete()
 	elseif reward.type == 'card' then
-		openWindowAbove(CardRewardWindow:new{cards=reward.value},function (cardItem)
+		openWindowAbove(CardRewardWindow:new{cards=reward.value,buttons=reward.buttons},function (cardItem)
 			if cardItem then
-				cardItem.large = false
-				addEffect(CardEffect:new{cardItem=cardItem,pauseDuration=1,duration=20,tx=240,ty=0})
-				obtainCard(cardItem.card)
+				if getmetatable(cardItem) == CardItem then
+					cardItem.large = false
+					addEffect(CardEffect:new{cardItem=cardItem,pauseDuration=1,duration=20,tx=240,ty=0})
+					obtainCard(cardItem.card)
+				end
 				self:collectRewardComplete()
 			end
 		end)
@@ -150,6 +152,9 @@ function generateRewards(random)
 	generateGoldReward(rewards,random)
 	generateStolenGoldReward(rewards)
 	generateCardRewards(rewards,random)
+	if hasRelic(PrayerWheel) and isRoomType('monster') then
+		generateCardRewards(rewards,random)
+	end
 	generateRelicRewards(rewards,random)
 	generatePotionRewards(rewards,random)
 	return rewards
@@ -157,11 +162,11 @@ end
 
 function generateGoldReward(rewards,random)
 	local amount = nil
-	if room.type == 'monster' or room.eventType == 'monster' then
+	if isRoomType('monster') then
 		amount = random:randInt(10,20)
-	elseif room.type == 'elite' then
+	elseif isRoomType('elite') then
 		amount = random:randInt(25,35)
-	elseif room.type == 'boss' then
+	elseif isRoomType('boss') then
 		amount = random:randInt(95,105)
 		if ascension >= 13 then
 			amount = math.floor(amount*0.75+0.5)
@@ -377,9 +382,7 @@ end
 
 function generatePotionRewards(rewards,random)
 	local chance = 40 + potionRandOffset
-	if hasRelic(WhiteBeastStatue) then
-		chance = 100
-	end
+	chance = player:triggerReducerEvent('modifyPotionChance',chance)
 
 	if #rewards >= 4 then
 		chance = 0
@@ -399,7 +402,9 @@ function addPotionReward(rewards,potion)
 end
 
 -- cardselect
-CardRewardWindow = Window:new{name='CardRewardWindow',title='Choose a Card',cards=nil,selection=0,single=false,canClose=true}
+CardRewardWindow = Window:new{
+	name='CardRewardWindow',title='Choose a Card',cards=nil,buttons=nil,selectButton=false,selection=0,single=false,canClose=true
+}
 function CardRewardWindow:onOpen()
 	if roomActionType == 'combat' then
 		queueSync(2,combatSpriteBank)
@@ -408,6 +413,7 @@ function CardRewardWindow:onOpen()
 	end
 	queueSync(1,player.tileBank)
 	local replace = false
+	self.buttons = self.buttons or {}
 	for i, card in ipairs(self.cards) do
 		if getmetatable(card) ~= CardItem then
 			if not replace then
@@ -424,6 +430,7 @@ function CardRewardWindow:tick()
 	local width = strWidth(self.title)
 	printGlowed(self.title,120-width/2,21,12)
 	self:drawCards()
+	self:drawButtons()
 	self:cardRewardControls()
 	tickEffects()
 	tickTopBar(true)
@@ -434,15 +441,21 @@ function CardRewardWindow:drawCards()
 	for i, cardItem in ipairs(self.cards) do
 		local x = startX-48+i*48
 		cardItem.tx = x
-		if self.selection ~= i then
+		if self.selection ~= i or self.selectButton then
 			cardItem.large = false
 			cardItem:tick()
 		end
 	end
-	if self.selection <= #self.cards and self.selection > 0 then
+	if not self.selectButton and self.selection <= #self.cards and self.selection > 0 then
 		local cardItem = self.cards[self.selection]
 		cardItem.large = true
 		cardItem:tick()
+	end
+end
+
+function CardRewardWindow:drawButtons()
+	for i, button in ipairs(self.buttons) do
+		drawButton(88,100+(i-1)*20,8,button.title,self.selectButton and self.selection == i)
 	end
 end
 
@@ -452,21 +465,49 @@ function CardRewardWindow:cardRewardControls()
 		return
 	end
 
-	if self.selection == 0 and #self.cards > 0 then
-		self.selection = limit(self.selection,1,#self.cards)
-	end
-
-	if #self.cards > 0 then
-		if btnp(2) then
-			self.selection = limit(self.selection-1,1,#self.cards)
-		elseif btnp(3) then
-			self.selection = limit(self.selection+1,1,#self.cards)
+	if self.selectButton then
+		if self.selection == 0 and #self.buttons > 0 then
+			self.selection = limit(self.selection,1,#self.buttons)
 		end
-	end
 
-	if btnp(4) then
-		self:close(self.cards[self.selection])
-	elseif btnp(5) and self.canClose then
-		self:close(nil)
+		if btnp(1) then
+			self.selection = limit(self.selection+1,1,#self.buttons)
+		elseif btnp(0) then
+			local oldSelection = self.selection
+			self.selection = limit(self.selection-1,1,#self.buttons)
+			if self.selection == oldSelection then
+				self.selectButton = false
+				self.selection = 1
+			end
+		elseif btnp(4) then
+			local button = self.buttons[self.selection]
+			button:onSelect()
+			self:close(button)
+		elseif btnp(5) and self.canClose then
+			self:close(nil)
+		end
+	else
+		if self.selection == 0 and #self.cards > 0 then
+			self.selection = limit(self.selection,1,#self.cards)
+		end
+
+		if #self.cards > 0 then
+			if btnp(2) then
+				self.selection = limit(self.selection-1,1,#self.cards)
+			elseif btnp(3) then
+				self.selection = limit(self.selection+1,1,#self.cards)
+			end
+		end
+
+		if btnp(1) then
+			if #self.buttons > 0 then
+				self.selectButton = true
+				self.selection = 1
+			end
+		elseif btnp(4) then
+			self:close(self.cards[self.selection])
+		elseif btnp(5) and self.canClose then
+			self:close(nil)
+		end
 	end
 end

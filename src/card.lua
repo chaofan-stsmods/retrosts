@@ -412,6 +412,7 @@ end
 function removeCard(card)
 	table.remove(deck,table.indexOf(deck,card))
 	card:onRemoveFromDeck()
+	player:triggerEvent('onRemoveCard',card)
 end
 
 function removeCardFromDeck(amount,canClose,onClose,title)
@@ -802,7 +803,7 @@ end
 
 function HandSelectWindow:drawTitle()
 	local str = self.title:gsub('{#}',tostring(#self.selectedCards))
-	printShadowed(str,120-strWidth(str)/2,16,12)
+	printShadowed(str,120-strWidth(str)/2,18,12)
 end
 
 function HandSelectWindow:drawSelectedCards()
