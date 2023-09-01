@@ -418,6 +418,12 @@ function table.reduce(self,func,init)
 	return result
 end
 
+function table.reverse(self)
+	for i = 1,math.floor(#self/2) do
+		self[i],self[#self-i+1] = self[#self-i+1],self[i]
+	end
+end
+
 -- selection
 
 function keepCurrentIndexInTableIf(table,currentIndex,condition)

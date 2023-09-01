@@ -304,14 +304,14 @@ startGame(Ironclad,20)
 currentEvent = TreasureEvent:new()
 currentEvent:showRewards()
 nearestWindow.rewards = {}
-table.insert(deck,Bloodletting:new())
-table.insert(deck,Bloodletting:new())
-table.insert(deck,Anger:new())
-table.insert(deck,Bloodletting:new())
-table.insert(deck,ShrugItOff:new())
-addRelicReward(nearestWindow.rewards,BlackBlood:new())
-addRelicReward(nearestWindow.rewards,RunicCube:new())
-addRelicReward(nearestWindow.rewards,MarkOfPain:new())
+table.insert(deck,SecondWind:new())
+table.insert(deck,HeavyBlade:new())
+table.insert(deck,HeavyBlade:new())
+table.insert(deck,SecondWind:new())
+table.insert(deck,SecondWind:new())
+addRelicReward(nearestWindow.rewards,Necronomicon:new())
+addRelicReward(nearestWindow.rewards,Enchiridion:new())
+addRelicReward(nearestWindow.rewards,NilrysCodex:new())
 addRelicReward(nearestWindow.rewards,NeowsLament:new{counter=99})
 addPotionReward(nearestWindow.rewards,FruitJuice:new())
 --addPotionReward(nearestWindow.rewards,SmokeBomb:new())
@@ -538,7 +538,7 @@ window:onOpen()
 -- 063:00000fff0000fcdf0f0fcddffefcddf00feddf00feeef0000fefef0000f0f000
 -- 064:8011110881bcbb1801cbbc1081bbcb1881bcbb1801bbbc1081bbcb1880111108
 -- 065:0000bbcc000b99bb00bccb9b0bcfbc9bb9cbccb0b9bccb00cb99b000cbbb0000
--- 066:000002000000dd200000d2d2004ed2d004e4e2000e4e42220440000040000000
+-- 066:000002000000dd200000d2d2044e42d004e4e2000e4e42224e4e40004e000000
 -- 067:00000c40000200cc00222044022ccc44cc2c2c440c2cc044002c004d002004d0
 -- 068:000230002203403234ffff43811111188ffffff8344f4ff909ffff9009ffff90
 -- 069:000cc0d0020cc00000000a000fdffff0dffffffe0dddeee00eeee2e000000222
@@ -686,7 +686,7 @@ window:onOpen()
 -- 213:0000f0ff00ffdfed0fdfeded0fedeeedfdeeeedffedeeedffeeeddf0fdddff00
 -- 214:0000000000066600056666600556666655556660600550550066000006000000
 -- 215:00020500002277500222265707725757565657770575577f055777f00777ff00
--- 216:0000000000ce00000c4404c00442e44c0324e34444c443400044c4c400000000
+-- 216:0000000000c100000c4303c03434143c43421243022442204c44c4c400000000
 -- 217:88888888888888cc88888cdd8888cd22888cd22388cd22338cd222338cd22233
 -- 218:cddddddedddeeeee222222222223333222333322233333333333333333443344
 -- 219:88888888ee888888eee8888822ee8888222ee8883332fe8832332fe833232f08
@@ -723,7 +723,7 @@ window:onOpen()
 -- 252:cdd00cddcdd00cdd322003223220032232200322322222220322222000322200
 -- 253:0000200020023202420443042023440032024322042343404434344402c4cc20
 -- 254:0005555000555600044544605ccc6660cc7cc5667c7c7566c7c7c56005556600
--- 255:0002222022222c2022c222202222c1c2022c2c120221222202222ccc02cc2000
+-- 255:0012222022222c2022c222211222c1c2022c2c120221222202222ccc01cd2000
 -- </TILES1>
 
 -- <TILES2>

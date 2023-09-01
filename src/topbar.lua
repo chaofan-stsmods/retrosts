@@ -69,16 +69,19 @@ function drawPotions()
 	end
 end
 
+function getRelicX(index)
+	return 1-relicOffset+(index-1)*12
+end
+
 function drawRelics()
-	local x = 1-relicOffset
 	local y = 9
 	for i, relic in ipairs(relics) do
+		local x = getRelicX(i)
 		relic:drawImage(x,y)
 		if topBarSelection.type == 'relic' and topBarSelection.index == i then
 			drawSelectionBox(x-1,y-1,10,10,nil,2)
 			drawItemTooltip(relic,x-1,y+10)
 		end
-		x = x+12
 	end
 end
 

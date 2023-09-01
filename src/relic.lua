@@ -1324,7 +1324,7 @@ end
 
 SlaversCollar = Relic:new{name='Slaver\'s Collar',icon=182,tier='boss',activated=false,description='During Boss and Elite combats, gain {Energy} at the start of your turn.'}
 function SlaversCollar:onCombatStart()
-	if combatType == 'elite' then
+	if combatType == 'elite' or table.anyMatch(enemies,function (enemy) return enemy.type == 'boss' end) then
 		maxEnergy = maxEnergy + 1
 		self.activated = true
 	end
@@ -1391,10 +1391,175 @@ function VelvetChoker:onCombatEnd()
 	self.counter = -1
 end
 
+Cauldron = Relic:new{name='Cauldron',icon=48,tier='shop',description='Upon pickup, brews #11#5#12# random potions.'}
+function Cauldron:onObtained()
+	local rewards = {}
+	local random = makeRand(act.id,room.id,7)
+	for _=1,5 do
+		addPotionReward(rewards,getTrueRandomPotionType(random):new())
+	end
+	openWindowAbove(RewardWindow:new{rewards=rewards,canClose=true,title='Blup blip bloop!',onProceed=function(self) self:close() end})
+end
+
+ChemicalX = Relic:new{name='Chemical X',icon=49,tier='shop',description='The effects of your cost #11#X#12# cards are increased by #11#2#12#.'}
+function ChemicalX:modifyXCardAmount(amount)
+	return amount + 2
+end
+
+ClockworkSouvenir = Relic:new{name='Clockwork Souvenir',icon=50,tier='shop',description='Start each combat with #11#1#12# {22}.'}
+function ClockworkSouvenir:onCombatStart()
+	addAction(ApplyPowerAction:new(player,ArtifactPower:new(player,1)))
+end
+
+DollysMirror = Relic:new{name='Dolly\'s Mirror',icon=64,tier='shop',description='Upon pickup, obtain an additional copy of a card in your deck.'}
+function DollysMirror:onObtained()
+	duplicateCardFromDeck(1,false,nil,'Choose a Card to Copy')
+end
+
+FrozenEye = Relic:new{name='Frozen Eye',icon=65,tier='shop',description='When viewing your #4#Draw Pile#12#, the cards are now shown in order.'}
+
+HandDrill = Relic:new{name='Hand Drill',icon=66,tier='shop',description='Whenever you break an enemy\'s {Block}, apply #11#2#12# {Vulnerable}.'}
+function HandDrill:onBreakBlock(target)
+	addAction(ApplyPowerAction:new(player,VulnerablePower:new(target,2)))
+end
+
+LeesWaffle = Relic:new{name='Lee\'s Waffle',icon=80,tier='shop',description='Upon pickup, raise your Max HP by #11#7#12# and heal all HP.'}
+function LeesWaffle:onObtained()
+	player:increaseMaxHp(7)
+	player:heal(player.maxHp)
+end
+
+MedicalKit = Relic:new{name='Medical Kit',icon=81,tier='shop',description='Unplayable {Status} cards can now be played. Whenever you play a {Status} card, exhaust it.'}
+function MedicalKit:canUseCard(card)
+	if card.type == 'status' and not card:baseCanUse(true) then
+		return true
+	end
+end
+
+function MedicalKit:onUseCard(card,_,action)
+	if card.type == 'status' then
+		action.exhaust = true
+	end
+end
+
+MembershipCard = Relic:new{name='Membership Card',icon=82,tier='shop',description='#11#50%#12# discount on all products!'}
+function MembershipCard:modifyShopPrice(price)
+	return price * 0.5
+end
+
+function MembershipCard:onObtained()
+	if currentEvent and getmetatable(currentEvent) == MerchantEvent then
+		currentEvent:modifyPrices()
+	end
+end
+
+OrangePellets = Relic:new{
+	name='Orange Pellets',icon=53,tier='shop',power=false,attack=false,skill=false,
+	description='Whenever you play a {Power}, {Attack}, and {Skill} in the same turn, remove all of your debuffs.'
+}
+function OrangePellets:onTurnStart()
+	self.power = false
+	self.attack = false
+	self.skill = false
+end
+
+function OrangePellets:onUseCard(card)
+	if card.type == 'power' then
+		self.power = true
+	elseif card.type == 'attack' then
+		self.attack = true
+	elseif card.type == 'skill' then
+		self.skill = true
+	end
+	if self.power and self.attack and self.skill then
+		self.power = false
+		self.attack = false
+		self.skill = false
+		addAction(RemoveDebuffsAction:new(player))
+	end
+end
+
+Orrery = Relic:new{name='Orrery',icon=69,tier='shop',description='Upon pickup, choose and add #11#5#12# cards to your deck.'}
+function Orrery:onObtained()
+	local rewards = {}
+	local random = makeRand(act.id,room.id,7)
+	for _=1,5 do
+		generateCardRewards(rewards,random)
+	end
+	openWindowAbove(RewardWindow:new{rewards=rewards,canClose=true,title='Knowledge!',onProceed=function(self) self:close() end})
+end
+
+SlingOfCourage = Relic:new{name='Sling of Courage',icon=85,tier='shop',description='Start each Elite combat with #11#2#12# {Strength}.'}
+function SlingOfCourage:onCombatStart()
+	if combatType == 'elite' then
+		addAction(ApplyPowerAction:new(player,StrengthPower:new(player,2)))
+	end
+end
+
+StrangeSpoon = Relic:new{name='Strange Spoon',icon=205,tier='shop',description='Cards which exhaust when played will instead discard #11#50%#12# of the time.'}
+
+TheAbacus = Relic:new{name='The Abacus',icon=221,tier='shop',description='Whenever you shuffle your draw pile, gain #11#6#12# {Block}.'}
+function TheAbacus:onShuffle()
+	addAction(GainBlockAction:new{target=player,value=6})
+end
+
+Toolbox = Relic:new{name='Toolbox',icon=237,tier='shop',description='At the start of each combat, choose #11#1#12# of #11#3#12# random colorless cards and add the chosen card into your hand.'}
+function Toolbox:onCombatStart()
+	addAction(DiscoveryAction:new{colorless=true,amount=1})
+end
+
+Enchiridion = Relic:new{name='Enchiridion',icon=188,tier='special',description='At the start of each combat, add a random {Power} card into your hand. It costs #11#0#12# for that turn.'}
+function Enchiridion:onTurnStartPostDraw(turn)
+	if turn == 1 then
+		local card = getPlayerCardType(miscRand,nil,'power'):new()
+		card.costForOneTurnPlay = 0
+		addAction(MakeTempCardToHandAction:new(card,1,{cardItem=CardItem:new{card=card,x=getRelicX(table.indexOf(relics,self) or 1),y=13}}))
+	end
+end
+
+MarkOfTheBloom = Relic:new{name='Mark of the Bloom',icon=191,tier='special',priority=200,description='You can no longer heal.'}
+function MarkOfTheBloom:onBeforeHeal()
+	return 0
+end
+
+MutagenicStrength = Relic:new{name='Mutagenic Strength',icon=207,tier='special',description='Start each combat with #11#3#12# {Strength}. At the end of your first turn, lose #11#3#12# {Strength}.'}
+function MutagenicStrength:onCombatStart()
+	addAction(ApplyPowerAction:new(player,StrengthPower:new(player,3)))
+	addAction(ApplyPowerAction:new(player,LoseStrengthPower:new(player,3)))
+end
+
+Necronomicon = Relic:new{name='Necronomicon',icon=255,tier='special',activated=false,description='The first {Attack} played each turn that costs #11#2#12# or more is played twice. Upon pickup, obtain a special {Curse}.'}
+function Necronomicon:onObtained()
+	local cardItem = CardItem:new{card=Necronomicurse:new(),x=0,y=136,tx=120,ty=68,isNotInHand=true}
+	addEffect(CardEffect:new{cardItem=cardItem,pauseDuration=30,duration=50,tx=240,ty=0})
+	obtainCard(cardItem.card)
+end
+
+function Necronomicon:onTurnStart()
+	self.activated = true
+end
+
+function Necronomicon:onUseCard(card,target,useCardAction)
+	if card.type == 'attack' and card.cost >= 2 and self.activated and not useCardAction.isDoubleTap then
+		self.activated = false
+
+		local cardItem = useCardAction.cardItem:copy()
+		local action = UseCardAction:new{cardItem=cardItem,isDoubleTap=true,tempCard=true,free=true,target=target,energyOnUse=useCardAction.energyOnUse}
+		action.useCardPosition = fillCardPosition(cardItem,2)
+		table.insert(limbo,cardItem)
+		addAction(action)
+	end
+end
+
+NilrysCodex = Relic:new{name='Nilry\'s Codex',icon=206,tier='special',description='At the end of your turn, you may shuffle #11#1#12# of #11#3#12# random cards into your draw pile.'}
+function NilrysCodex:onTurnEnd()
+	addAction(DiscoveryAction:new{target='drawPile',canClose=true})
+end
+
 colorlessRelics = {
 	-- special
 	Circlet,NeowsLament,GoldenIdol,OddMushroom,WarpedTongs,SpiritPoop,CultistMask,FaceOfCleric,GremlinMask,NlothsMask,
-	SsserpentHead,NlothsGift,BloodyIdol,
+	SsserpentHead,NlothsGift,BloodyIdol,Enchiridion,MarkOfTheBloom,MutagenicStrength,Necronomicon,NilrysCodex,
 	-- common
 	Anchor,PotionBelt,PreservedInsect,Akabeko,AncientTeaSet,ArtOfWar,BagOfMarbles,BagOfPreparation,RegalPillow,BloodVial,
 	BronzeScales,CentennialPuzzle,CeramicFish,DreamCatcher,HappyFlower,JuzuBracelet,Lantern,MawBank,MealTicket,Nunchaku,
@@ -1411,4 +1576,7 @@ colorlessRelics = {
 	-- boss
 	CoffeeDripper,FusionHammer,Ectoplasm,Astrolabe,BlackStar,BustedCrown,CallingBell,CursedKey,EmptyCage,PandorasBox,
 	PhilosophersStone,RunicDome,RunicPryamid,SacredBark,SlaversCollar,SneckoEye,Sozu,TinyHouse,VelvetChoker,
+	-- shop
+	Cauldron,ChemicalX,ClockworkSouvenir,DollysMirror,FrozenEye,HandDrill,LeesWaffle,MedicalKit,MembershipCard,OrangePellets,
+	Orrery,SlingOfCourage,StrangeSpoon,TheAbacus,Toolbox,
 }

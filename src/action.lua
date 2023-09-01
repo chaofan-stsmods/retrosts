@@ -135,7 +135,7 @@ function UseCardAction:tick()
 				self.cardItem.isNotInHand = false
 				self.isDone = true
 			else
-				addAction(1,self:makeUseCardEndAction())
+				addAction(1,self:makeUseCardEndAction(false))
 			end
 			Action.tick(self)
 			return
@@ -164,7 +164,7 @@ function UseCardAction:tick()
 				enemy:triggerEvent('onUseCard',card,self.target,self)
 			end
 		end
-		addAction(#cardActions+1,self:makeUseCardEndAction())
+		addAction(#cardActions+1,self:makeUseCardEndAction(true))
 		local cost = card:getCost()
 		if cost > 0 and not self.free then
 			energy = energy - cost
@@ -173,26 +173,32 @@ function UseCardAction:tick()
 	Action.tick(self)
 end
 
-function UseCardAction:makeUseCardEndAction()
+function UseCardAction:makeUseCardEndAction(used)
 	return UseCardEndAction:new{
-		cardItem=self.cardItem,exhaust=self.exhaust,
+		cardItem=self.cardItem,exhaust=self.exhaust,used=used,
 		useCardPosition=self.useCardPosition,tempCard=self.tempCard,
 	}
 end
 
-UseCardEndAction = Action:new{cardItem=nil,exhaust=false,tempCard=false,duration=20}
+UseCardEndAction = Action:new{cardItem=nil,exhaust=false,tempCard=false,used=true,duration=20}
 function UseCardEndAction:tick()
 	local card = self.cardItem.card
-	local exhaust = card.exhaust or self.exhaust
-	if card.type == 'power' then
-		self.cardItem.tx = player.x+player.width*4
-		self.cardItem.ty = player.y+player.height*4
-	elseif exhaust or self.tempCard then
-		--self.cardItem.tx = 120
-		self.cardItem.ty = -32
-	else
-		self.cardItem.tx = 240
-		self.cardItem.ty = 136
+	if self.duration == self.startDuration then
+		local exhaust = card.exhaust or self.exhaust
+		if exhaust and not self.tempCard and self.used and hasRelic(StrangeSpoon) and miscRand:randBool() then
+			exhaust = false
+		end
+		self.exhaust = exhaust
+		if card.type == 'power' then
+			self.cardItem.tx = player.x+player.width*4
+			self.cardItem.ty = player.y+player.height*4
+		elseif exhaust or self.tempCard then
+			--self.cardItem.tx = 120
+			self.cardItem.ty = -32
+		else
+			self.cardItem.tx = 240
+			self.cardItem.ty = 136
+		end
 	end
 	Action.tick(self)
 	if self.isDone or (math.abs(self.cardItem.tx - self.cardItem.x) < 2 and math.abs(self.cardItem.ty - self.cardItem.y) < 2) then
@@ -204,7 +210,7 @@ function UseCardEndAction:tick()
 		card.costForOnePlay = nil
 		card:resetPowers()
 		if card.type ~= 'power' and not self.tempCard then
-			if exhaust then
+			if self.exhaust then
 				table.insert(exhaustPile,self.cardItem.card)
 				player:triggerEvent('onExhaust',card)
 			else
@@ -529,7 +535,9 @@ end
 function XCardAction:tick()
 	if self.duration == self.startDuration then
 		if self.callback then
-			local actions = self.callback(self.energyOnUse or energy) or {}
+			local amount = self.energyOnUse or energy
+			amount = player:triggerReducerEvent('modifyXCardAmount',amount)
+			local actions = self.callback(amount) or {}
 			for i = 1, #actions do
 				addAction(i,actions[i])
 			end
@@ -579,9 +587,11 @@ function fillCardPosition(cardItem,preferedPosition)
 end
 
 MakeTempCardToDiscardPileAction = Action:new{duration=10}
-function MakeTempCardToDiscardPileAction:new(card,amount)
-	amount = amount or 1
-	return Action.new(self,{card=card,amount=amount})
+function MakeTempCardToDiscardPileAction:new(card,amount,o)
+	o = o or {}
+	o.card = card
+	o.amount = amount or 1
+	return Action.new(self,o)
 end
 
 function MakeTempCardToDiscardPileAction:tick()
@@ -590,8 +600,9 @@ function MakeTempCardToDiscardPileAction:tick()
 			local card = self.card:copy()
 			table.insert(discardPile,card)
 			card:resetPowers()
-			local cardItem = CardItem:new{card=card,x=0,y=136,isNotInHand=true}
-			local effect = CardEffect:new{cardItem=cardItem,pauseDuration=30,duration=50,tx=240,ty=136}
+			local cardItem = self.cardItem and self.cardItem:copy() or CardItem:new{card=card,x=0,y=136,isNotInHand=true}
+			local additionalPause = self.pauseDuration or 0
+			local effect = CardEffect:new{cardItem=cardItem,pauseDuration=30+additionalPause,duration=50+additionalPause,tx=240,ty=136}
 			effect.useCardPosition = fillCardPosition(cardItem)
 			addEffect(effect)
 		end
@@ -644,7 +655,7 @@ function MakeTempCardToDrawPileAction:tick()
 			local card = self.card:copy()
 			table.insert(drawPile,miscRand:randInt(#drawPile+1),card)
 			card:resetPowers()
-			local cardItem = CardItem:new{card=card,x=0,y=136,isNotInHand=true}
+			local cardItem = self.cardItem and self.cardItem:copy() or CardItem:new{card=card,x=0,y=136,isNotInHand=true}
 			local additionalPause = self.pauseDuration or 0
 			local effect = CardEffect:new{cardItem=cardItem,pauseDuration=30+additionalPause,duration=50+additionalPause,tx=0,ty=136}
 			effect.useCardPosition = fillCardPosition(cardItem,self.cardPosition)
@@ -787,7 +798,7 @@ function RemoveDebuffsAction:tick()
 	Action.tick(self)
 end
 
-DiscoveryAction = Action:new{duration=1,amount=1,cost=nil,type=nil,rarity=nil,colorless=false}
+DiscoveryAction = Action:new{duration=1,amount=1,cost=nil,type=nil,rarity=nil,colorless=false,canClose=false,target='hand'}
 function DiscoveryAction:tick()
 	if self.duration == self.startDuration then
 		local cards = {}
@@ -802,9 +813,18 @@ function DiscoveryAction:tick()
 			until card.canGenerateInCombat and not table.anyMatch(cards,function (c) return getmetatable(c) == getmetatable(card) end)
 			cards[i] = card
 		end
-		openWindowAbove(CardRewardWindow:new{cards=cards,canClose=false},function (cardItem)
+		openWindowAbove(CardRewardWindow:new{cards=cards,canClose=self.canClose},function (cardItem)
+			if not cardItem then
+				return
+			end
 			cardItem.card.costForOneTurnPlay = self.cost
-			addAction(1,MakeTempCardToHandAction:new(cardItem.card,self.amount,{cardItem=cardItem}))
+			if self.target == 'hand' then
+				addAction(1,MakeTempCardToHandAction:new(cardItem.card,self.amount,{cardItem=cardItem}))
+			elseif self.target == 'drawPile' then
+				addAction(1,MakeTempCardToDrawPileAction:new(cardItem.card,self.amount,{cardItem=cardItem,pauseDuration=-29}))
+			elseif self.target == 'discardPile' then
+				addAction(1,MakeTempCardToDiscardPileAction:new(cardItem.card,self.amount,{cardItem=cardItem,pauseDuration=-29}))
+			end
 		end)
 	end
 	Action.tick(self)

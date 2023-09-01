@@ -274,7 +274,11 @@ function combatControls()
 			handUI.cursorOnSelf = true
 		elseif btnp(4) then
 			local cardItems = table.map(drawPile, function (card) return CardItem:new{card=card,x=0,y=136,isNotInHand=true} end)
-			table.sort(cardItems,function (a, b) return a.card.name < b.card.name end)
+			if hasRelic(FrozenEye) then
+				table.reverse(cardItems)
+			else
+				table.sort(cardItems,function (a, b) return a.card.name < b.card.name end)
+			end
 			local gridView = CardGridSelectWindow:new{title='Your Draw Pile',cardItems=cardItems,min=0,max=0,canClose=true}
 			openWindowAbove(gridView)
 		end

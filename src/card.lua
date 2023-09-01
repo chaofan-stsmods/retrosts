@@ -539,7 +539,7 @@ function transformCardsWithEffect(random,cardItems)
 	local startX,stepX = placeCardsInARow(#cardItems)
 	local transformedCards = {}
 	for i, cardItem in ipairs(cardItems) do
-		local randomCard = getTransformedCard(cardItem.card)
+		local randomCard = getTransformedCard(random,cardItem.card)
 		transformedCards[i] = randomCard
 		removeCard(cardItem.card)
 		obtainCard(randomCard)

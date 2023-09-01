@@ -114,6 +114,9 @@ function Creature:damage(source,value,type,action)
 			local blocked = math.min(value,self.block)
 			self.block = self.block - blocked
 			value = value - blocked
+			if self.block == 0 then
+				source:triggerEvent('onBreakBlock',self)
+			end
 			if value == 0 then
 				addEffect(TextEffect:new{x=self.x+self.width*4,y=self.y,text='Blocked',color=11,ySpeed=-0.5})
 			end

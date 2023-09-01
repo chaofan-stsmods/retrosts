@@ -162,6 +162,14 @@ end
 
 CurseOfTheBell = CurseCard:new{ name='Curse of the Bell',rarity='special',canRemove=false,description='Unplayable. NL Cannot be removed from your deck.' }
 
+Necronomicurse = CurseCard:new{ name='Necronomicurse',rarity='special',canRemove=false,description='Unplayable. NL There is no escape from this Curse.' }
+function Necronomicurse:onExhaust(card)
+	if card == self then
+		local card = Necronomicurse:new()
+		addAction(MakeTempCardToHandAction:new(card,1,{cardItem=CardItem:new{card=card,x=getRelicX(table.indexOf(relics,getRelic(Necronomicon)) or 1),y=13}}))
+	end
+end
+
 curseCards = {
-	AscendersBane,Injury,Clumsy,Writhe,Regret,Decay,Doubt,Pain,Shame,Parasite,CurseOfTheBell,
+	AscendersBane,Injury,Clumsy,Writhe,Regret,Decay,Doubt,Pain,Shame,Parasite,CurseOfTheBell,Necronomicurse,
 }

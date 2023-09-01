@@ -50,7 +50,8 @@ function Ironclad:getRelics()
 		RedSkull,
 		PaperPhrog,SelfFormingClay,
 		ChampionBelt,CharonsAshes,MagicFlower,
-		BlackBlood,RunicCube,MarkOfPain
+		BlackBlood,RunicCube,MarkOfPain,
+		Brimstone,
 	}
 end
 
@@ -991,7 +992,7 @@ function DoubleTapPower:onUseCard(card,target,useCardAction)
 	if card.type == 'attack' and not useCardAction.isDoubleTap then
 		local cardItem = useCardAction.cardItem:copy()
 		local action = UseCardAction:new{cardItem=cardItem,isDoubleTap=true,tempCard=true,free=true,target=target,energyOnUse=useCardAction.energyOnUse}
-		action.useCardPosition = fillCardPosition(cardItem)
+		action.useCardPosition = fillCardPosition(cardItem,2)
 		table.insert(limbo,cardItem)
 		addAction(ReducePowerAction:new(self,1))
 		addAction(action)
@@ -1219,6 +1220,16 @@ MarkOfPain = EnergyRelic:new{name='Mark of Pain',icon=199,colorName='red',tier='
 function MarkOfPain:onTurnStartPostDraw(turn)
 	if turn == 1 then
 		addAction(MakeTempCardToDrawPileAction:new(Wound:new(),2,{additionalPause=30}))
+	end
+end
+
+Brimstone = RedRelic:new{name='Brimstone',icon=216,tier='shop',description='At the start of your turn, gain #11#2#12# {Strength} and all enemies gain #11#1#12# {Strength}.'}
+function Brimstone:onTurnStart()
+	addAction(ApplyPowerAction:new(player,StrengthPower:new(player,2)))
+	for _,enemy in ipairs(enemies) do
+		if enemy.alive then
+			addAction(ApplyPowerAction:new(enemy,StrengthPower:new(enemy,1)))
+		end
 	end
 end
 
