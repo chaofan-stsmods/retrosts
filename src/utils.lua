@@ -119,7 +119,7 @@ end
 
 function drawItemTooltip(item,x,y,width,bottomAlign)
 	width = width or 10
-	local _,h = drawDescription(item,item.description,-80,0,(width-1)*8,999,12)
+	local _,h = drawDescription(item,item.description,-width*8,0,(width-1)*8,999,12)
 	local boxX = math.min(x,240-width*8)
 	if bottomAlign then
 		y = y-math.floor(h/8+2.5)*8
@@ -418,6 +418,8 @@ function table.reduce(self,func,init)
 	return result
 end
 
+---@generic T,U
+---@param self T[]
 function table.reverse(self)
 	for i = 1,math.floor(#self/2) do
 		self[i],self[#self-i+1] = self[#self-i+1],self[i]

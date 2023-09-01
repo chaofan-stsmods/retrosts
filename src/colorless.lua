@@ -170,6 +170,21 @@ function Necronomicurse:onExhaust(card)
 	end
 end
 
+Normality = CurseCard:new{ name='Normality',cardUsed=0,priority=20,description='Unplayable. NL  While in hand, you cannot play more than 3 cards this turn.' }
+function Normality:onTurnStart()
+	self.cardUsed = 0
+end
+
+function Normality:onUseCard()
+	self.cardUsed = self.cardUsed + 1
+end
+
+function Normality:canUseCard()
+	if self.cardUsed >= 3 and table.anyMatch(hand,function (cardItem) return cardItem.card == self end) then
+		return false
+	end
+end
+
 curseCards = {
-	AscendersBane,Injury,Clumsy,Writhe,Regret,Decay,Doubt,Pain,Shame,Parasite,CurseOfTheBell,Necronomicurse,
+	AscendersBane,Injury,Clumsy,Writhe,Regret,Decay,Doubt,Pain,Shame,Parasite,CurseOfTheBell,Necronomicurse,Normality,
 }

@@ -4,6 +4,7 @@
 cursorOnTopBar = false
 local topBarSelection = {type=nil,index=0}
 local relicOffset = 0
+local relicOffsetTarget = 0
 function tickTopBar(control)
 	drawTopBar()
 	if control then
@@ -74,13 +75,19 @@ function getRelicX(index)
 end
 
 function drawRelics()
+	relicOffset = lerp(relicOffset,relicOffsetTarget,0.1)
 	local y = 9
 	for i, relic in ipairs(relics) do
 		local x = getRelicX(i)
 		relic:drawImage(x,y)
 		if topBarSelection.type == 'relic' and topBarSelection.index == i then
 			drawSelectionBox(x-1,y-1,10,10,nil,2)
-			drawItemTooltip(relic,x-1,y+10)
+			drawItemTooltip(relic,math.max(0,x-1),y+10)
+			if x > 224 then
+				relicOffsetTarget = x + relicOffset - 224
+			elseif x < 1 then
+				relicOffsetTarget = x + relicOffset - 1
+			end
 		end
 	end
 end
@@ -113,7 +120,7 @@ function controlTopBar()
 			topBarSelection.index = limit(topBarSelection.index-1,1,#potions)
 		elseif btnp(1) then
 			topBarSelection.type = 'relic'
-			topBarSelection.index = 1
+			topBarSelection.index = limit(math.floor(relicOffset/12)+10,1,#relics)
 		elseif btnp(3) then
 			if topBarSelection.index == #potions then
 				topBarSelection.type = 'map'
@@ -197,7 +204,7 @@ function controlTopBar()
 			topBarSelection.index = #potions
 		elseif btnp(1) then
 			topBarSelection.type = 'relic'
-			topBarSelection.index = 1
+			topBarSelection.index = limit(math.floor(relicOffset/12)+18,1,#relics)
 		elseif btnp(3) then
 			topBarSelection.type = 'deck'
 			topBarSelection.index = #potions
@@ -217,7 +224,7 @@ function controlTopBar()
 			topBarSelection.type = 'map'
 		elseif btnp(1) then
 			topBarSelection.type = 'relic'
-			topBarSelection.index = 1
+			topBarSelection.index = limit(math.floor(relicOffset/12)+19,1,#relics)
 		elseif btnp(4) then
 			if getmetatable(nearestWindow) == CardGridSelectWindow and nearestWindow.isDeckView then
 				nearestWindow:close()
@@ -240,8 +247,14 @@ function controlTopBar()
 			end
 		end
 		if btnp(0) then
-			topBarSelection.type = 'potion'
-			topBarSelection.index = 1
+			if (topBarSelection.index-14)*12-relicOffset <= 0 then
+				topBarSelection.type = 'potion'
+				topBarSelection.index = 1
+			elseif (topBarSelection.index-18.5)*12-relicOffset < 0 then
+				topBarSelection.type = 'map'
+			else
+				topBarSelection.type = 'deck'
+			end
 		elseif btnp(2) then
 			topBarSelection.index = limit(topBarSelection.index-1,1,#relics)
 		elseif btnp(3) then

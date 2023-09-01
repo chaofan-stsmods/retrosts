@@ -125,7 +125,7 @@ function generateNeowRewards(options,random)
 			loseGold(gold)
 		end}
 	elseif nid == 3 then
-		negative = {description='[ #3#Obtain a curse ',onSelect=function ()
+		negative = {description='[ #3#Obtain a curse ',onSelectPhase2=function ()
 			local card = getCurseCardType(random):new()
 			local cardItem = CardItem:new{card=card,x=0,y=136,tx=120,ty=68,isNotInHand=true}
 			addEffect(CardEffect:new{cardItem=cardItem,pauseDuration=30,duration=50,tx=240,ty=0})
@@ -188,10 +188,15 @@ function generateNeowRewards(options,random)
 			removeCardFromDeck(2)
 		end}
 	end
-	
+
 	options[3] = {description=negative.description..option.description,onSelect=function ()
-		negative.onSelect()
+		if negative.onSelect then
+			negative.onSelect()
+		end
 		option.onSelect()
+		if negative.onSelectPhase2 then
+			negative.onSelectPhase2()
+		end
 	end}
 
 	options[4] = {description='[ #3#Lose your starting relic #5#Obtain a random boss relic #12#]',onSelect=function ()

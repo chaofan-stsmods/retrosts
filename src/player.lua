@@ -3,7 +3,7 @@
 
 ---@class Player : Creature
 Player = {
-	x=30,y=52,tileBank=1,name=nil,
+	x=26,y=52,tileBank=1,name=nil,
 }
 Creature:new(Player)
 
@@ -45,7 +45,7 @@ function Player:triggerEvent(name,...)
 end
 
 function Player:triggerConditionEvent(name,default,...)
-	for _, item in ipairs(sortByPriority(potions,relics,self.powers)) do
+	for _, item in ipairs(sortByPriority(potions,relics,self.powers,table.map(hand,function(cardItem) return cardItem.card end))) do
 		if item[name] then
 			local b = item[name](item,...)
 			if b ~= nil then

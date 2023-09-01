@@ -141,7 +141,7 @@ function MapWindow:drawRoom(room,rx,ry)
 		elseif mapScreenSelectionMode then
 			mapColor(15,13)
 		end
-		if room.hasKey and isRoomType('elite') then
+		if room.hasKey and room.type == 'elite' then
 			spr(roomIconMap.strongElite,rx,ry,12)
 		else
 			spr(roomIconMap[room.type] or 503,rx,ry,12)

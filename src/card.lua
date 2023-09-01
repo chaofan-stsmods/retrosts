@@ -11,7 +11,7 @@ Card = {
 	enemyTarget=false,playerTarget=false,toAllEnemies=false,
 	exhaust=false,ethereal=false,innate=false,autoPlayOnEndTurn=false,
 	upgrade=noop,upgraded=false,tags={},canGenerateInCombat=true,canRemove=true,linkedBottle=nil,
-	onRemoveFromDeck=noop,
+	onRemoveFromDeck=noop,priority=120,
 }
 Object:new(Card)
 
@@ -469,7 +469,7 @@ function upgradeCardFromDeck(amount,canClose,onClose)
 	end
 	local oldAmount = amount
 	amount = math.min(amount,#cardItems)
-	local gridView = CardGridSelectWindow:new{title='Choose a Card to Upgrade',cardItems=cardItems,min=amount,max=amount,canClose=canClose or false}
+	local gridView = CardGridSelectUpgradeWindow:new{title='Choose a Card to Upgrade',cardItems=cardItems,min=amount,max=amount,canClose=canClose or false}
 	if amount > 1 then
 		gridView.title = 'Choose Cards to Upgrade ({#}/'..oldAmount..')'
 	end
@@ -975,16 +975,8 @@ CardGridSelectWindow = Window:new{
 	name='CardGridSelectWindow',selectedCards=nil,title='Choose a card',cardItems=nil,single=false,
 	max=999,min=1,canClose=false,
 }
-function CardGridSelectWindow:onOpen()
-	if roomActionType == 'combat' then
-		queueSync(2,combatSpriteBank)
-	else
-		queueSync(2,currentEvent.spriteBank)
-	end
-	queueSync(1,player.tileBank)
-end
-
 function CardGridSelectWindow:new(o)
+	o.cardItems = o.cardItems or {}
 	local gridUI = CardGridUI:new(o.cardItems)
 	gridUI.cursorOnSelf = true
 	gridUI.top = 24
@@ -997,6 +989,15 @@ function CardGridSelectWindow:new(o)
 		r:gridUISelect(selection)
 	end
 	return r
+end
+
+function CardGridSelectWindow:onOpen()
+	if roomActionType == 'combat' then
+		queueSync(2,combatSpriteBank)
+	else
+		queueSync(2,currentEvent.spriteBank)
+	end
+	queueSync(1,player.tileBank)
 end
 
 function CardGridSelectWindow:tick()
@@ -1019,18 +1020,26 @@ function CardGridSelectWindow:gridUISelect(selection)
 	local selectionIndex = table.indexOf(self.selectedCards,cardItem)
 	if selectionIndex then
 		cardItem.glow = nil
-		table.remove(self.selectedCards,selectionIndex)
+		self:onUnselectCard(selectionIndex)
 	elseif self.max == 1 then
 		for i=#self.selectedCards,1,-1 do
 			self.selectedCards[i].glow = nil
-			table.remove(self.selectedCards,i)
+			self:onUnselectCard(i)
 		end
 		cardItem.glow = 11
-		table.insert(self.selectedCards,cardItem)
+		self:onSelectCard(cardItem)
 	elseif #self.selectedCards < self.max then
 		cardItem.glow = 11
-		table.insert(self.selectedCards,cardItem)
+		self:onSelectCard(cardItem)
 	end
+end
+
+function CardGridSelectWindow:onSelectCard(cardItem)
+	table.insert(self.selectedCards,cardItem)
+end
+
+function CardGridSelectWindow:onUnselectCard(index)
+	table.remove(self.selectedCards,index)
 end
 
 function CardGridSelectWindow:selectedCardsControls()
@@ -1055,4 +1064,38 @@ end
 
 function CardGridSelectWindow:cancel()
 	Window.close(self,nil)
+end
+
+CardGridSelectUpgradeWindow = CardGridSelectWindow:new{name='CardGridSelectUpgradeWindow',title='Choose a card to Upgrade',upgradedCards=nil}
+function CardGridSelectUpgradeWindow:onSelectCard(cardItem)
+	cardItem.originalCard = cardItem.card
+	cardItem.card = cardItem.card:copy()
+	cardItem.card:resetPowers()
+	cardItem.card:upgrade()
+	cardItem.card:showUpgrade()
+	table.insert(self.selectedCards,cardItem)
+end
+
+function CardGridSelectUpgradeWindow:onUnselectCard(index)
+	local cardItem = self.selectedCards[index]
+	cardItem.card = cardItem.originalCard
+	cardItem.originalCard = nil
+	table.remove(self.selectedCards,index)
+end
+
+function CardGridSelectUpgradeWindow:resetCards()
+	for _, cardItem in ipairs(self.selectedCards) do
+		cardItem.card = cardItem.originalCard
+		cardItem.originalCard = nil
+	end
+end
+
+function CardGridSelectUpgradeWindow:close(...)
+	self:resetCards()
+	CardGridSelectWindow.close(self,...)
+end
+
+function CardGridSelectUpgradeWindow:cancel(...)
+	self:resetCards()
+	CardGridSelectWindow.cancel(self,...)
 end

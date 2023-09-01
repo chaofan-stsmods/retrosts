@@ -36,7 +36,7 @@ function BossTreasureEvent:drawBackground()
 			self.relics[i]:drawImage(relicLocations[i][1],relicLocations[i][2])
 			if i == self.relicOption then
 				drawSelectionBox(relicLocations[i][1]-2,relicLocations[i][2]-2,12,12)
-				drawItemTooltip(self.relics[i],80,76)
+				drawItemTooltip(self.relics[i],64,134,14,true)
 			end
 		end
 	else

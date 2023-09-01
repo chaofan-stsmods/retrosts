@@ -208,7 +208,7 @@ function Ectoplasm:onGainGold()
 end
 
 function Ectoplasm:canSpawn()
-	return act.id == 1
+	return act.id <= 1
 end
 
 WarpedTongs = Relic:new{name='Warped Tongs',icon=45,tier='special',description='At the start of your turn, #4#Upgrade#12# a random card in your hand for the rest of combat.'}
@@ -286,12 +286,20 @@ function NlothsGift:onModifyRareCardChance(chance)
 end
 
 PotionBelt = Relic:new{name='Potion Belt',icon=11,tier='common',description='Upon pickup, gain #11#2#12# Potion slots.'}
+function PotionBelt:canSpawn()
+	return floor <= 48
+end
+
 function PotionBelt:onObtained()
 	table.insert(potions,PotionSlot)
 	table.insert(potions,PotionSlot)
 end
 
 PreservedInsect = Relic:new{name='Preserved Insect',icon=16,tier='common',description='Enemies in Elite combats have #11#25%#12# less HP.'}
+function PreservedInsect:canSpawn()
+	return floor <= 52
+end
+
 function PreservedInsect:onCombatStart()
 	if combatType == 'elite' then
 		for _, enemy in ipairs(enemies) do
@@ -308,6 +316,10 @@ function Akabeko:onCombatStart()
 end
 
 AncientTeaSet = Relic:new{name='Ancient Tea Set',icon=31,tier='common',description='Whenever you enter a Rest Site, start the next combat with {Energy} {Energy}.'}
+function AncientTeaSet:canSpawn()
+	return floor <= 48
+end
+
 function AncientTeaSet:onEnterRoom(_,roomType)
 	if roomType == 'rest' then
 		self.saved = 1
@@ -356,6 +368,9 @@ function BagOfPreparation:onTurnStartPostDraw(turn)
 end
 
 RegalPillow = Relic:new{name='Regal Pillow',icon=39,tier='common',description='Whenever you #4#Rest#12#, heal an additional #11#15#12# HP.'}
+function RegalPillow:canSpawn()
+	return floor <= 48
+end
 
 BloodVial = Relic:new{name='Blood Vial',icon=42,tier='common',description='At the start of each combat, heal #11#2#12# HP.'}
 function BloodVial:onCombatStart()
@@ -380,11 +395,19 @@ function CentennialPuzzle:onDamaged(value)
 end
 
 CeramicFish = Relic:new{name='Ceramic Fish',icon=70,tier='common',description='Whenever you add a card to your deck, gain #11#9 #4#Gold.'}
+function CeramicFish:canSpawn()
+	return floor <= 48
+end
+
 function CeramicFish:onObtainCard()
 	gainGold(9)
 end
 
 DreamCatcher = Relic:new{name='Dream Catcher',icon=71,tier='common',description='Whenever you #4#Rest#12#, you may add a card to your deck.'}
+function DreamCatcher:canSpawn()
+	return floor <= 48
+end
+
 function DreamCatcher:onRest(campfireEvent)
 	local rewards = {}
 	generateCardRewards(rewards,campfireEvent.random)
@@ -407,6 +430,10 @@ function HappyFlower:onTurnStart()
 end
 
 JuzuBracelet = Relic:new{name='Juzu Bracelet',icon=87,tier='common',description='Normal enemy combats are no longer encountered in #4#?#12# rooms.'}
+function JuzuBracelet:canSpawn()
+	return floor <= 48
+end
+
 function JuzuBracelet:modifyEventRoomType(result)
 	if result == 'monster' then
 		return 'event'
@@ -419,6 +446,10 @@ function Lantern:onCombatStart()
 end
 
 MawBank = Relic:new{name='Maw Bank',icon=89,tier='common',description='Whenever you climb a floor, gain #11#12 #4#Gold#12#. No longer works when you spend any #4#Gold#12# at a shop.'}
+function MawBank:canSpawn()
+	return floor <= 48 and not isRoomType('shop')
+end
+
 function MawBank:onEnterRoom()
 	if self.saved == 0 then
 		gainGold(12)
@@ -440,6 +471,10 @@ function MawBank:load(...)
 end
 
 MealTicket = Relic:new{name='Meal Ticket',icon=90,tier='common',description='Whenever you enter a shop, heal #11#15#12# HP.'}
+function MealTicket:canSpawn()
+	return floor <= 48
+end
+
 function MealTicket:onEnterRoom(_,roomType)
 	if roomType == 'shop' then
 		player:heal(15)
@@ -463,6 +498,10 @@ function OddlySmoothStone:onCombatStart()
 end
 
 Omamori = Relic:new{name='Omamori',icon=93,tier='common',counter=2,description='Negate the next #11#2#12# {Curse} you obtain.'}
+function Omamori:canSpawn()
+	return floor <= 48
+end
+
 function Omamori:load(...)
 	Relic.load(self,...)
 	if self.counter == -1 then
@@ -506,7 +545,7 @@ end
 
 SmilingMask = Relic:new{name='Smiling Mask',icon=110,tier='common',priority=80,description='The Merchant\'s card removal service now always costs #11#50 #4#Gold.'}
 function SmilingMask:canSpwan()
-	return not isRoomType('shop')
+	return not isRoomType('shop') and floor <= 48
 end
 
 function SmilingMask:modifyShopPrice(_,type)
@@ -667,6 +706,10 @@ function BottledTornado:condition(card)
 end
 
 DarkstonePeriapt = Relic:new{name='Darkstone Periapt',icon=122,tier='uncommon',description='Whenever you obtain a {Curse}, increase your Max HP by #11#6#12#.'}
+function DarkstonePeriapt:canSpawn()
+	return floor <= 48
+end
+
 function DarkstonePeriapt:onObtainCard(card)
 	if card.type == 'curse' then
 		player:increaseMaxHp(6)
@@ -698,6 +741,10 @@ function HornCleat:onCombatEnd()
 end
 
 FrozenEgg = Relic:new{name='Frozen Egg',icon=123,tier='uncommon',description='Whenever you add a {Power} into your deck, #4#Upgrade#12# it.'}
+function FrozenEgg:canSpawn()
+	return floor <= 48
+end
+
 function FrozenEgg:onPreviewObtainCard(card)
 	self:onObtainCard(card)
 end
@@ -710,6 +757,10 @@ function FrozenEgg:onObtainCard(card)
 end
 
 MoltenEgg = Relic:new{name='Molten Egg',icon=124,tier='uncommon',description='Whenever you add a {Attack} into your deck, #4#Upgrade#12# it.'}
+function MoltenEgg:canSpawn()
+	return floor <= 48
+end
+
 function MoltenEgg:onPreviewObtainCard(card)
 	self:onObtainCard(card)
 end
@@ -722,6 +773,10 @@ function MoltenEgg:onObtainCard(card)
 end
 
 ToxicEgg = Relic:new{name='Toxic Egg',icon=125,tier='uncommon',description='Whenever you add a {Skill} into your deck, #4#Upgrade#12# it.'}
+function ToxicEgg:canSpawn()
+	return floor <= 48
+end
+
 function ToxicEgg:onPreviewObtainCard(card)
 	self:onObtainCard(card)
 end
@@ -819,6 +874,10 @@ function LetterOpener:onCombatEnd()
 end
 
 Matryoshka = Relic:new{name='Matryoshka',icon=130,tier='uncommon',counter=2,description='The next #11#2#12# non-Boss chests you open contain #11#2 #4#Relics.'}
+function Matryoshka:canSpawn()
+	return floor <= 40
+end
+
 function Matryoshka:load(...)
 	Relic.load(self,...)
 	if self.counter == -1 then
@@ -848,6 +907,10 @@ function Matryoshka:onOpenNonBossChest(rewards)
 end
 
 MeatOnTheBone = Relic:new{name='Meat on the Bone',icon=131,tier='uncommon',description='If your HP is at or below #11#50%#12# at the end of combat, heal #11#12#12# HP.'}
+function MeatOnTheBone:canSpawn()
+	return floor <= 48
+end
+
 function MeatOnTheBone:onCombatEnd()
 	if player.hp <= player.maxHp * 0.5 then
 		player:heal(12)
@@ -886,6 +949,10 @@ function Pear:onObtained()
 end
 
 QuestionCard = Relic:new{name='Question Card',icon=139,tier='uncommon',description='Future card rewards have #11#1#12# additional card to choose from.'}
+function QuestionCard:canSpawn()
+	return floor <= 48
+end
+
 function QuestionCard:modifyCardRewardCount(value)
 	return value + 1
 end
@@ -908,7 +975,7 @@ end
 
 TheCourier = Relic:new{name='The Courier',icon=143,tier='uncommon',description='The Merchant restocks cards, relics, and potions. All prices are reduced by #11#20%#12#.'}
 function TheCourier:canSpwan()
-	return not isRoomType('shop')
+	return not isRoomType('shop') and floor <= 48
 end
 
 function TheCourier:modifyShopPrice(price)
@@ -921,6 +988,10 @@ function WhiteBeastStatue:modifyPotionChance()
 end
 
 SingingBowl = Relic:new{name='Singing Bowl',icon=140,tier='uncommon',description='When adding cards into your deck, you may raise your Max HP by #11#2#12# instead.'}
+function SingingBowl:canSpawn()
+	return floor <= 48
+end
+
 function SingingBowl:modifyCardReward(reward)
 	reward.buttons = reward.buttons or {}
 	table.insert(reward.buttons,{title='+2 Max HP', onSelect=function ()
@@ -1035,6 +1106,9 @@ end
 
 CampfireRelic = Relic:new{tags={'campfire'}}
 function CampfireRelic:canSpawn()
+	if floor >= 48 then
+		return false
+	end
 	return table.count(relics, function (relic)
 		return table.anyMatch(relic.tags, function (tag)
 			return tag == 'campfire'
@@ -1074,10 +1148,11 @@ function IncenseBurner:onTurnStart(turn)
 	end
 end
 
-LizardTail = Relic:new{name='Lizard Tail',icon=155,tier='rare',description='When you would die, heal to #11#50%#12# of your Max HP instead (works once).'}
+LizardTail = Relic:new{name='Lizard Tail',icon=155,tier='rare',counter=1,description='When you would die, heal to #11#50%#12# of your Max HP instead (works once).'}
 function LizardTail:onBeforeDeath()
 	if self.saved == 0 then
 		self.saved = 1
+		self.counter = -1
 		self.description = 'This relic has been used up.'
 		player:heal(math.max(1,math.floor(player.maxHp/2)))
 		return false
@@ -1098,7 +1173,7 @@ end
 
 OldCoin = Relic:new{name='Old Coin',icon=157,tier='rare',description='Upon pickup, gain #11#300 #4#Gold.'}
 function OldCoin:canSpwan()
-	return not isRoomType('shop')
+	return not isRoomType('shop') and floor <= 48
 end
 
 function OldCoin:onObtained()
@@ -1140,6 +1215,9 @@ function PocketWatch:onCombatEnd()
 end
 
 PrayerWheel = Relic:new{name='Prayer Wheel',icon=160,tier='rare',description='Normal enemies drop an additional card reward.'}
+function PrayerWheel:canSpawn()
+	return floor <= 48
+end
 
 Shovel = CampfireRelic:new{name='Shovel',icon=161,tier='rare',description='You can now #4#Dig#12# for relics at Rest Sites.'}
 function Shovel:onModifyCampfireOptions(options,event)
@@ -1199,6 +1277,10 @@ function UnceasingTop:onRemoveHand()
 end
 
 WingBoots = Relic:new{name='Wing Boots',icon=168,tier='rare',counter=3,description='You may ignore paths when choosing the next room to travel to #11#3#12# times.'}
+function WingBoots:canSpawn()
+	return floor <= 40
+end
+
 function WingBoots:canFly()
 	return self.counter > 0
 end
