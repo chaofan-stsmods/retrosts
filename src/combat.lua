@@ -27,6 +27,8 @@ limbo = {}
 energy = 3
 turn = 1
 inEnemyTurn = false
+combatType = 'monster'
+inCombat = false
 combatSpriteBank = 1
 local handUI = HandUI:new(hand)
 local combatSelection = {type='hand',index=1}
@@ -70,6 +72,7 @@ function startCombat(encounter,completed)
 	for _,card in ipairs(innateCards) do
 		table.insert(drawPile,card)
 	end
+	inCombat = true
 	if room.hasKey then
 		applyKeyBuff()
 	end
@@ -343,7 +346,7 @@ function checkCombatEnd()
 	end
 end
 
-local function combatEndImplement(escaped)
+local function normalCombatEnd(escaped)
 	completeRoom()
 	if escaped then
 		openWindowAbove(RewardWindow:new{rewards={},title='Fled...'})
@@ -355,27 +358,28 @@ end
 
 function combatEnd(escaped)
 	player:onCombatEnd()
+	inCombat = false
 	if roomActionType == 'eventCombat' then
 		currentEvent:onCombatEnd(escaped)
 	else
 		saveGame(true,escaped and 1 or 0)
-		combatEndImplement(escaped)
+		normalCombatEnd(escaped)
 	end
 end
 
 function loadCombatEnd(escaped)
-	combatEndImplement(escaped ~= 0)
+	normalCombatEnd(escaped ~= 0)
 end
 
 local keyBuffAppliers = {
-	function (m) addAction(ApplyPowerAction:new(StrengthPower:new(m,act.id+1))) end,
+	function (m) addAction(ApplyPowerAction:new(m,StrengthPower:new(m,act.id+1))) end,
 	function (m) addAction(AnonymousAction:new(function ()
 		local maxHpIncrease = math.floor(m.maxHp*0.25)
 		m:increaseMaxHp(maxHpIncrease)
 		addEffect(TextEffect:new{str='Max HP +'..tostring(maxHpIncrease),x=m.x+m.width*4,y=m.y,color=12})
 	end)) end,
-	function (m) addAction(ApplyPowerAction:new(MetallicizePower:new(m,2*(act.id+1)))) end,
-	function (m) addAction(ApplyPowerAction:new(RegenerateMonsterPower:new(m,2*act.id+1))) end,
+	function (m) addAction(ApplyPowerAction:new(m,MetallicizePower:new(m,2*(act.id+1)))) end,
+	function (m) addAction(ApplyPowerAction:new(m,RegenerateMonsterPower:new(m,2*act.id+1))) end,
 }
 function applyKeyBuff()
 	local roll = aiRand:randInt(1,4)
@@ -389,6 +393,7 @@ end
 function setupEnemies(encounter)
 	combatSpriteBank = encounter.spriteBank
 	encounter:setupEnemies(aiRand)
+	combatType = encounter.type
 end
 
 function getRandomAliveEnemy()

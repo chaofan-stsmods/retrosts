@@ -93,6 +93,8 @@ function Creature:decreaseMaxHp(value)
 end
 
 function Creature:heal(value)
+	value = self:triggerReducerEvent('onBeforeHeal',value)
+	value = math.floor(value)
 	local oldHp = self.hp
 	self.hp = math.min(self.hp+value,self.maxHp)
 	if value > 0 then

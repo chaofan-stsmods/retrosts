@@ -34,9 +34,13 @@ function getRandomPotionType(random,noFruit)
 end
 
 function obtainPotion(potion)
+	if not player:triggerConditionEvent('onBeforeObtainPotion',true,potion) then
+		return true
+	end
 	for i,v in ipairs(potions) do
 		if v == PotionSlot then
 			potions[i] = potion
+			potion:applyPowers()
 			return true
 		end
 	end
@@ -64,7 +68,7 @@ function Potion:new(o)
 end
 
 function Potion:applyPowers()
-	self.magic = self.baseMagic
+	self.magic = math.floor(player:triggerReducerEvent('modifyPotionValue',self.baseMagic))
 end
 
 local rainbowSpeed = 0.1
@@ -229,7 +233,7 @@ DexterityPotion = Potion:new{
 	description='Gain #11#!M!#12# {Dexterity}.'
 }
 function DexterityPotion:use()
-	return { ApplyPowerAction:new(DexterityPower:new(player,self.magic)) }
+	return { ApplyPowerAction:new(player,DexterityPower:new(player,self.magic)) }
 end
 
 StrengthPotion = Potion:new{
@@ -237,7 +241,7 @@ StrengthPotion = Potion:new{
 	description='Gain #11#!M!#12# {Strength}.'
 }
 function StrengthPotion:use()
-	return { ApplyPowerAction:new(StrengthPower:new(player,self.magic)) }
+	return { ApplyPowerAction:new(player,StrengthPower:new(player,self.magic)) }
 end
 
 EnergyPotion = Potion:new{
@@ -261,7 +265,7 @@ FearPotion = Potion:new{
 	description='Apply #11#!M!#12# {Vulnerable}.',enemyTarget=true,
 }
 function FearPotion:use(target)
-	return { ApplyPowerAction:new(VulnerablePower:new(target,self.magic)) }
+	return { ApplyPowerAction:new(player,VulnerablePower:new(target,self.magic)) }
 end
 
 FlexPotion = Potion:new{
@@ -270,8 +274,8 @@ FlexPotion = Potion:new{
 }
 function FlexPotion:use()
 	return {
-		ApplyPowerAction:new(StrengthPower:new(player,self.magic)),
-		ApplyPowerAction:new(LoseStrengthPower:new(player,self.magic)),
+		ApplyPowerAction:new(player,StrengthPower:new(player,self.magic)),
+		ApplyPowerAction:new(player,LoseStrengthPower:new(player,self.magic)),
 	}
 end
 
@@ -281,8 +285,8 @@ SpeedPotion = Potion:new{
 }
 function SpeedPotion:use()
 	return {
-		ApplyPowerAction:new(DexterityPower:new(player,self.magic)),
-		ApplyPowerAction:new(LoseDexterityPower:new(player,self.magic)),
+		ApplyPowerAction:new(player,DexterityPower:new(player,self.magic)),
+		ApplyPowerAction:new(player,LoseDexterityPower:new(player,self.magic)),
 	}
 end
 
@@ -299,7 +303,7 @@ WeakPotion = Potion:new{
 	description='Apply #11#!M!#12# {Weak}.',enemyTarget=true,
 }
 function WeakPotion:use(target)
-	return { ApplyPowerAction:new(WeakPower:new(target,self.magic)) }
+	return { ApplyPowerAction:new(player,WeakPower:new(target,self.magic)) }
 end
 
 CultistPotion = Potion:new{
@@ -307,7 +311,7 @@ CultistPotion = Potion:new{
 	description='Gain #11#!M!#12# {73}.',
 }
 function CultistPotion:use()
-	return { ApplyPowerAction:new(RitualPower:new(player,self.magic)) }
+	return { ApplyPowerAction:new(player,RitualPower:new(player,self.magic)) }
 end
 
 EntropicBrew = Potion:new{
@@ -389,7 +393,7 @@ AncientPotion = Potion:new{
 	description='Gain #11#!M!#12# {22}.'
 }
 function AncientPotion:use()
-	return { ApplyPowerAction:new(ArtifactPower:new(player,self.magic)) }
+	return { ApplyPowerAction:new(player,ArtifactPower:new(player,self.magic)) }
 end
 
 DistilledChaos = Potion:new{
@@ -416,7 +420,7 @@ function DuplicationPotion:applyPowers()
 end
 
 function DuplicationPotion:use()
-	return { ApplyPowerAction:new(DuplicationPower:new(player,self.magic)) }
+	return { ApplyPowerAction:new(player,DuplicationPower:new(player,self.magic)) }
 end
 
 DuplicationPower = Power:new{icon=20}
@@ -436,7 +440,7 @@ EssenceOfSteel = Potion:new{
 	description='Gain #11#!M!#12# {62}.'
 }
 function EssenceOfSteel:use()
-	return { ApplyPowerAction:new(PlatedArmorPower:new(player,self.magic)) }
+	return { ApplyPowerAction:new(player,PlatedArmorPower:new(player,self.magic)) }
 end
 
 GamblersBrew = Potion:new{
@@ -471,7 +475,7 @@ LiquidBronze = Potion:new{
 	description='Gain #11#!M!#12# {29}.'
 }
 function LiquidBronze:use()
-	return { ApplyPowerAction:new(ThornsPower:new(player,self.magic)) }
+	return { ApplyPowerAction:new(player,ThornsPower:new(player,self.magic)) }
 end
 
 RegenPotion = Potion:new{
@@ -479,7 +483,7 @@ RegenPotion = Potion:new{
 	description='Gain #11#!M!#12# {13}.'
 }
 function RegenPotion:use()
-	return { ApplyPowerAction:new(RegeneratePlayerPower:new(player,self.magic)) }
+	return { ApplyPowerAction:new(player,RegeneratePlayerPower:new(player,self.magic)) }
 end
 
 allPotions = {

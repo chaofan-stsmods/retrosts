@@ -96,7 +96,7 @@ function RitualPower:onTurnEnd()
 		self.skipFirst = false
 		return
 	end
-	addAction(ApplyPowerAction:new(StrengthPower:new(self.owner,self.amount)))
+	addAction(ApplyPowerAction:new(self.owner,StrengthPower:new(self.owner,self.amount)))
 end
 
 PositiveBuffNegativeDebuffPower = Power:new()
@@ -126,13 +126,13 @@ end
 
 LoseStrengthPower = Power:new{debuff=true,icon=14}
 function LoseStrengthPower:onTurnEnd()
-	addAction(ApplyPowerAction:new(StrengthPower:new(self.owner,-self.amount)))
+	addAction(ApplyPowerAction:new(self.owner,StrengthPower:new(self.owner,-self.amount)))
 	addAction(RemovePowerAction:new(self))
 end
 
 LoseDexterityPower = Power:new{debuff=true,icon=14}
 function LoseDexterityPower:onTurnEnd()
-	addAction(ApplyPowerAction:new(DexterityPower:new(self.owner,-self.amount)))
+	addAction(ApplyPowerAction:new(self.owner,DexterityPower:new(self.owner,-self.amount)))
 	addAction(RemovePowerAction:new(self))
 end
 
@@ -201,7 +201,7 @@ end
 
 ShackledPower = Power:new{icon=9}
 function ShackledPower:onTurnEnd()
-	addAction(ApplyPowerAction:new(StrengthPower:new(self.owner,self.amount)))
+	addAction(ApplyPowerAction:new(self.owner,StrengthPower:new(self.owner,self.amount)))
 	addAction(RemovePowerAction:new(self))
 end
 

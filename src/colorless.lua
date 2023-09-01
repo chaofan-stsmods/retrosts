@@ -51,11 +51,11 @@ function Blind:use(target)
 	if self.toAllEnemies then
 		local result = {}
 		for _, enemy in ipairs(enemies) do
-			table.insert(result,ApplyPowerAction:new(WeakPower:new(enemy,self.magic)))
+			table.insert(result,ApplyPowerAction:new(player,WeakPower:new(enemy,self.magic)))
 		end
 		return result
 	else
-		return { ApplyPowerAction:new(WeakPower:new(target,self.magic)) }
+		return { ApplyPowerAction:new(player,WeakPower:new(target,self.magic)) }
 	end
 end
 
@@ -140,12 +140,12 @@ end
 
 Doubt = CurseCard:new{ name='Doubt',description='Unplayable. NL At the end of your turn, gain 1 {Weak}.',autoPlayOnEndTurn=true }
 function Doubt:autoPlay()
-	return { ApplyPowerAction:new(WeakPower:new(player,1,true)) }
+	return { ApplyPowerAction:new(player,WeakPower:new(player,1,true)) }
 end
 
 Shame = CurseCard:new{ name='Shame',description='Unplayable. NL At the end of your turn, gain 1 {Frail}.',autoPlayOnEndTurn=true }
 function Shame:autoPlay()
-	return { ApplyPowerAction:new(FrailPower:new(player,1,true)) }
+	return { ApplyPowerAction:new(player,FrailPower:new(player,1,true)) }
 end
 
 Parasite = CurseCard:new{ name='Parasite',description='Unplayable. NL If transformed or removed from deck, lose 3 Max HP.' }
@@ -160,6 +160,8 @@ function Pain:onUseCard()
 	end
 end
 
+CurseOfTheBell = CurseCard:new{ name='Curse of the Bell',rarity='special',canRemove=false,description='Unplayable. NL Cannot be removed from your deck.' }
+
 curseCards = {
-	AscendersBane,Injury,Clumsy,Writhe,Regret,Decay,Doubt,Pain,Shame,Parasite,
+	AscendersBane,Injury,Clumsy,Writhe,Regret,Decay,Doubt,Pain,Shame,Parasite,CurseOfTheBell,
 }

@@ -307,10 +307,10 @@ function generateCardRarity(random)
 	local uncommonCardChance = 37
 	if room.type == 'boss' then
 		rareCardChance = 999
-	elseif room.type == 'elite' then
+	elseif isRoomType('elite') then
 		rareCardChance = 10
 		uncommonCardChance = 40
-	elseif isInShop() then
+	elseif isRoomType('shop') then
 		rareCardChance = 9
 	end
 	rareCardChance = player:triggerReducerEvent('onModifyRareCardChance',rareCardChance)
@@ -336,11 +336,14 @@ function getRelicTier(random)
 end
 
 function generateRelicRewards(rewards,random)
-	if room.type ~= 'elite' then
+	if not isRoomType('elite') then
 		return
 	end
 
 	addRelicReward(rewards,getRandomRelic(random):new())
+	if hasRelic(BlackStar) then
+		addRelicReward(rewards,getRandomNonCampfireRelic(random):new())
+	end
 
 	if room.hasKey then
 		table.insert(rewards,{title='Emerald key',icon=467,type='key',value='emeraldKeyObtained'})
@@ -380,6 +383,15 @@ function getRandomNonBottleRelic(random,tier)
 	return relicType:new()
 end
 
+function getRandomNonCampfireRelic(random,tier)
+	tier = tier or getRelicTier(random)
+	local relicType
+	repeat
+		relicType = getRelicTypeByTier(tier)
+	until table.indexOf(relicType.tags,'campfire') == nil
+	return relicType:new()
+end
+
 function generatePotionRewards(rewards,random)
 	local chance = 40 + potionRandOffset
 	chance = player:triggerReducerEvent('modifyPotionChance',chance)
@@ -390,6 +402,7 @@ function generatePotionRewards(rewards,random)
 
 	if random:randInt(0,99) < chance then
 		local potion = getRandomPotionType(random):new()
+		potion:applyPowers()
 		addPotionReward(rewards,potion)
 		potionRandOffset = potionRandOffset - 10
 	else

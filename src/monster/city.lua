@@ -46,7 +46,7 @@ function Byrd:drawImage()
 end
 
 function Byrd:onCombatStart()
-	addAction(ApplyPowerAction:new(FlightPower:new(self,ascension>=17 and 4 or 3)))
+	addAction(ApplyPowerAction:new(self,FlightPower:new(self,ascension>=17 and 4 or 3)))
 	Monster.onCombatStart(self)
 end
 
@@ -56,7 +56,7 @@ function Byrd:onFlightRemoved()
 end
 
 function Byrd:buff()
-	addAction(ApplyPowerAction:new(StrengthPower:new(self,1)))
+	addAction(ApplyPowerAction:new(self,StrengthPower:new(self,1)))
 	addAction(NextIntentAction:new(self))
 end
 
@@ -85,7 +85,7 @@ function Byrd:fly()
 	addAction(AnonymousAction:new(function ()
 		self.flying = true
 	end))
-	addAction(ApplyPowerAction:new(FlightPower:new(self,ascension>=17 and 4 or 3)))
+	addAction(ApplyPowerAction:new(self,FlightPower:new(self,ascension>=17 and 4 or 3)))
 	addAction(NextIntentAction:new(self))
 end
 
@@ -150,8 +150,8 @@ function SphericGuardian:drawImage()
 end
 
 function SphericGuardian:onCombatStart()
-	addAction(ApplyPowerAction:new(BarricadePower:new(self)))
-	addAction(ApplyPowerAction:new(ArtifactPower:new(self,3)))
+	addAction(ApplyPowerAction:new(self,BarricadePower:new(self)))
+	addAction(ApplyPowerAction:new(self,ArtifactPower:new(self,3)))
 	addAction(GainBlockAction:new{target=self,value=40})
 	Monster.onCombatStart(self)
 end
@@ -163,7 +163,7 @@ end
 
 function SphericGuardian:frailAttack()
 	addAction(DamageAction:new{target=player,source=self,value=self.intentDamage})
-	addAction(ApplyPowerAction:new(FrailPower:new(player,5,true)))
+	addAction(ApplyPowerAction:new(self,FrailPower:new(player,5,true)))
 	addAction(SetIntentAction:new(self,'dualAttack','attack',self.attackDmg,2))
 end
 
@@ -198,19 +198,19 @@ end
 
 function Chosen:hex()
 	self.usedHex = true
-	addAction(ApplyPowerAction:new(HexPower:new(player,1)))
+	addAction(ApplyPowerAction:new(self,HexPower:new(player,1)))
 	addAction(NextIntentAction:new(self))
 end
 
 function Chosen:debilitate()
 	addAction(DamageAction:new{target=player,source=self,value=self.intentDamage})
-	addAction(ApplyPowerAction:new(VulnerablePower:new(player,2,true)))
+	addAction(ApplyPowerAction:new(self,VulnerablePower:new(player,2,true)))
 	addAction(NextIntentAction:new(self))
 end
 
 function Chosen:debuff()
-	addAction(ApplyPowerAction:new(WeakPower:new(player,3,true)))
-	addAction(ApplyPowerAction:new(StrengthPower:new(self,3)))
+	addAction(ApplyPowerAction:new(self,WeakPower:new(player,3,true)))
+	addAction(ApplyPowerAction:new(self,StrengthPower:new(self,3)))
 	addAction(NextIntentAction:new(self))
 end
 
@@ -267,14 +267,14 @@ function ShellParasite:drawImage()
 end
 
 function ShellParasite:onCombatStart()
-	addAction(ApplyPowerAction:new(PlatedArmorPower:new(self,14)))
+	addAction(ApplyPowerAction:new(self,PlatedArmorPower:new(self,14)))
 	addAction(GainBlockAction:new{target=self,value=14})
 	Monster.onCombatStart(self)
 end
 
 function ShellParasite:fell()
 	addAction(DamageAction:new{target=player,source=self,value=self.intentDamage})
-	addAction(ApplyPowerAction:new(FrailPower:new(player,2,true)))
+	addAction(ApplyPowerAction:new(self,FrailPower:new(player,2,true)))
 	addAction(NextIntentAction:new(self))
 end
 
@@ -405,13 +405,13 @@ end
 
 function Mystic:attack()
 	addAction(DamageAction:new{target=player,source=self,value=self.intentDamage})
-	addAction(ApplyPowerAction:new(FrailPower:new(player,2)))
+	addAction(ApplyPowerAction:new(self,FrailPower:new(player,2)))
 	addAction(NextIntentAction:new(self))
 end
 
 function Mystic:strengthen()
 	for _,e in ipairs(enemies) do
-		addAction(ApplyPowerAction:new(StrengthPower:new(e,self.strAmt)))
+		addAction(ApplyPowerAction:new(self,StrengthPower:new(e,self.strAmt)))
 	end
 	addAction(NextIntentAction:new(self))
 end
@@ -446,7 +446,7 @@ function SnakePlant:drawImage()
 end
 
 function SnakePlant:onCombatStart()
-	addAction(ApplyPowerAction:new(MalleablePower:new(self,3)))
+	addAction(ApplyPowerAction:new(self,MalleablePower:new(self,3)))
 	Monster.onCombatStart(self)
 end
 
@@ -458,8 +458,8 @@ function SnakePlant:rainBlows()
 end
 
 function SnakePlant:spores()
-	addAction(ApplyPowerAction:new(FrailPower:new(player,2,true)))
-	addAction(ApplyPowerAction:new(WeakPower:new(player,2,true)))
+	addAction(ApplyPowerAction:new(self,FrailPower:new(player,2,true)))
+	addAction(ApplyPowerAction:new(self,WeakPower:new(player,2,true)))
 	addAction(NextIntentAction:new(self))
 end
 
@@ -517,9 +517,9 @@ end
 function Snecko:tail()
 	addAction(DamageAction:new{target=player,source=self,value=self.intentDamage})
 	if ascension >= 17 then
-		addAction(ApplyPowerAction:new(WeakPower:new(player,2,true)))
+		addAction(ApplyPowerAction:new(self,WeakPower:new(player,2,true)))
 	end
-	addAction(ApplyPowerAction:new(VulnerablePower:new(player,2,true)))
+	addAction(ApplyPowerAction:new(self,VulnerablePower:new(player,2,true)))
 	addAction(NextIntentAction:new(self))
 end
 
@@ -529,7 +529,7 @@ function Snecko:bite()
 end
 
 function Snecko:confuse()
-	addAction(ApplyPowerAction:new(ConfusionPower:new(player)))
+	addAction(ApplyPowerAction:new(self,ConfusionPower:new(player)))
 	addAction(NextIntentAction:new(self))
 end
 
@@ -594,7 +594,7 @@ end
 
 function Romeo:agonize()
 	addAction(DamageAction:new{target=player,source=self,value=self.intentDamage})
-	addAction(ApplyPowerAction:new(WeakPower:new(player,self.weakAmt,true)))
+	addAction(ApplyPowerAction:new(self,WeakPower:new(player,self.weakAmt,true)))
 	addAction(SetIntentAction:new(self,'slash','attack',self.slashDmg))
 end
 
@@ -640,7 +640,7 @@ function Bear:lunge()
 end
 
 function Bear:debuff()
-	addAction(ApplyPowerAction:new(DexterityPower:new(player,-self.dexReduction,true)))
+	addAction(ApplyPowerAction:new(self,DexterityPower:new(player,-self.dexReduction,true)))
 	addAction(SetIntentAction:new(self,'lunge','attackDefend',self.lungeDmg))
 end
 
@@ -671,7 +671,7 @@ function Taskmaster:attack()
 	addAction(DamageAction:new{target=player,source=self,value=self.intentDamage})
 	addAction(MakeTempCardToDiscardPileAction:new(Wound:new(),self.woundAmt))
 	if ascension >= 18 then
-		addAction(ApplyPowerAction:new(StrengthPower:new(self,1)))
+		addAction(ApplyPowerAction:new(self,StrengthPower:new(self,1)))
 	end
 	addAction(NextIntentAction:new(self))
 end
@@ -701,7 +701,7 @@ end
 function GremlinLeader:onCombatStart()
 	for _,e in ipairs(enemies) do
 		if e ~= self then
-			addAction(ApplyPowerAction:new(MinionPower:new(e)))
+			addAction(ApplyPowerAction:new(self,MinionPower:new(e)))
 		end
 	end
 	Monster.onCombatStart(self)
@@ -716,7 +716,7 @@ function GremlinLeader:buff()
 
 	addAction(TalkAction:new(self,str,{xOffset=8,yOffset=6}))
 	for _,e in ipairs(enemies) do
-		addAction(ApplyPowerAction:new(StrengthPower:new(e,self.strAmt)))
+		addAction(ApplyPowerAction:new(self,StrengthPower:new(e,self.strAmt)))
 		if e ~= self then
 			addAction(GainBlockAction:new{target=e,value=self.blockAmt})
 		end
@@ -760,7 +760,7 @@ function GremlinLeader:summon()
 				return false
 			end}))
 			addAction(SpawnMonsterAction:new{target=gremlin,index=index})
-			addAction(ApplyPowerAction:new(MinionPower:new(gremlin)))
+			addAction(ApplyPowerAction:new(self,MinionPower:new(gremlin)))
 		end
 	end
 	addAction(NextIntentAction:new(self))
@@ -813,7 +813,7 @@ function BookOfStabbing:drawImage()
 end
 
 function BookOfStabbing:onCombatStart()
-	addAction(ApplyPowerAction:new(PainfulStabsPower:new(self)))
+	addAction(ApplyPowerAction:new(self,PainfulStabsPower:new(self)))
 	Monster.onCombatStart(self)
 end
 
@@ -870,9 +870,9 @@ end
 function TheCollector:debuff()
 	self.debuffUsed = true
 	addAction(TalkAction:new(self,'@You@ @are@ @mine!@',{xOffset=8,yOffset=6}))
-	addAction(ApplyPowerAction:new(WeakPower:new(player,self.debuffAmt,true)))
-	addAction(ApplyPowerAction:new(VulnerablePower:new(player,self.debuffAmt,true)))
-	addAction(ApplyPowerAction:new(FrailPower:new(player,self.debuffAmt,true)))
+	addAction(ApplyPowerAction:new(self,WeakPower:new(player,self.debuffAmt,true)))
+	addAction(ApplyPowerAction:new(self,VulnerablePower:new(player,self.debuffAmt,true)))
+	addAction(ApplyPowerAction:new(self,FrailPower:new(player,self.debuffAmt,true)))
 	addAction(NextIntentAction:new(self))
 end
 
@@ -880,7 +880,7 @@ function TheCollector:defend()
 	addAction(GainBlockAction:new{target=self,value=self.blockAmt})
 	for _, enemy in ipairs(enemies) do
 		if enemy.alive then
-			addAction(ApplyPowerAction:new(StrengthPower:new(enemy,self.strAmt)))
+			addAction(ApplyPowerAction:new(self,StrengthPower:new(enemy,self.strAmt)))
 		end
 	end
 	addAction(NextIntentAction:new(self))
@@ -893,7 +893,7 @@ function TheCollector:summon()
 			local target = enemies[i]
 			torchHead.x,torchHead.y = target.x+target.width*4-torchHead.width*4,target.y+target.height*8-torchHead.height*8
 			addAction(SpawnMonsterAction:new{target=torchHead,index=i})
-			addAction(ApplyPowerAction:new(MinionPower:new(torchHead)))
+			addAction(ApplyPowerAction:new(self,MinionPower:new(torchHead)))
 		end
 	end
 	addAction(NextIntentAction:new(self))
@@ -970,7 +970,7 @@ function BronzeAutomaton:drawImage()
 end
 
 function BronzeAutomaton:onCombatStart()
-	addAction(ApplyPowerAction:new(ArtifactPower:new(self,3)))
+	addAction(ApplyPowerAction:new(self,ArtifactPower:new(self,3)))
 	Monster.onCombatStart(self)
 end
 
@@ -989,7 +989,7 @@ end
 
 function BronzeAutomaton:defend()
 	addAction(GainBlockAction:new{target=self,value=self.blockAmt})
-	addAction(ApplyPowerAction:new(StrengthPower:new(self,self.strAmt)))
+	addAction(ApplyPowerAction:new(self,StrengthPower:new(self,self.strAmt)))
 	addAction(NextIntentAction:new(self))
 end
 
@@ -999,7 +999,7 @@ function BronzeAutomaton:summon()
 		local target = enemies[i]
 		orb.x,orb.y = target.x+target.width*4-orb.width*4,target.y+target.height*8-orb.height*8
 		addAction(SpawnMonsterAction:new{target=orb,index=i})
-		addAction(ApplyPowerAction:new(MinionPower:new(orb)))
+		addAction(ApplyPowerAction:new(self,MinionPower:new(orb)))
 	end
 	addAction(NextIntentAction:new(self))
 end
@@ -1080,7 +1080,7 @@ function BronzeOrb:stasis()
 		addEffect(effect)
 		local power = StasisPower:new(self)
 		power.card = card
-		addAction(1,ApplyPowerAction:new(power))
+		addAction(1,ApplyPowerAction:new(self,power))
 	end))
 	addAction(NextIntentAction:new(self))
 end
@@ -1129,20 +1129,23 @@ end
 
 function TheChamp:enemyTurn()
 	self.numTurn = self.numTurn + 1
+	if hasRelic(ChampionBelt) and turn == 1 then
+		self:talk('@THAT\'S@ NL @MY@ @BELT!!@')
+	end
 	Monster.enemyTurn(self)
 end
 
 function TheChamp:forge()
 	self.remainingForge = self.remainingForge - 1
 	addAction(GainBlockAction:new{target=self,value=self.blockAmt})
-	addAction(ApplyPowerAction:new(MetallicizePower:new(self,self.forgeAmt)))
+	addAction(ApplyPowerAction:new(self,MetallicizePower:new(self,self.forgeAmt)))
 	addAction(NextIntentAction:new(self))
 end
 
 function TheChamp:slap()
 	addAction(DamageAction:new{target=player,source=self,value=self.intentDamage})
-	addAction(ApplyPowerAction:new(FrailPower:new(player,2,true)))
-	addAction(ApplyPowerAction:new(VulnerablePower:new(player,2,true)))
+	addAction(ApplyPowerAction:new(self,FrailPower:new(player,2,true)))
+	addAction(ApplyPowerAction:new(self,VulnerablePower:new(player,2,true)))
 	addAction(NextIntentAction:new(self))
 end
 
@@ -1168,8 +1171,8 @@ function TheChamp:taunt()
 
 	self.numTurn = 1
 	self:talk(text)
-	addAction(ApplyPowerAction:new(WeakPower:new(player,2,true)))
-	addAction(ApplyPowerAction:new(VulnerablePower:new(player,2,true)))
+	addAction(ApplyPowerAction:new(self,WeakPower:new(player,2,true)))
+	addAction(ApplyPowerAction:new(self,VulnerablePower:new(player,2,true)))
 	addAction(NextIntentAction:new(self))
 end
 
@@ -1183,12 +1186,12 @@ function TheChamp:anger()
 	self:talk(text)
 	addAction(RemoveDebuffsAction:new(self))
 	addAction(RemovePowerByTypeAction:new(self,ShackledPower))
-	addAction(ApplyPowerAction:new(StrengthPower:new(self,3*self.strAmt)))
+	addAction(ApplyPowerAction:new(self,StrengthPower:new(self,3*self.strAmt)))
 	addAction(NextIntentAction:new(self))
 end
 
 function TheChamp:gloat()
-	addAction(ApplyPowerAction:new(StrengthPower:new(self,self.strAmt)))
+	addAction(ApplyPowerAction:new(self,StrengthPower:new(self,self.strAmt)))
 	addAction(NextIntentAction:new(self))
 end
 
@@ -1240,11 +1243,11 @@ SneckoEncounter = Encounter:new{spriteBank=3,name='Snecko',enemyInfo={encItem(Sn
 -- event
 BanditsEncounter = Encounter:new{spriteBank=5,name='Bandits',enemyInfo={encItem(Pointy,-48,0),encItem(Romeo,0,0),encItem(Bear,48,1)}}
 ColosseumNobsEncounter = Encounter:new{spriteBank=1,name='ColosseumNob',enemyInfo={encItem(Taskmaster,-28,0),encItem(GremlinNob,20,2)}}
-ColosseumSlaversEncounter = Encounter:new{spriteBank=1,name='ColosseumSlavers',enemyInfo={encItem(SlaverBlue,-32,0),encItem(SlaverRed,24,1)}}
+ColosseumSlaversEncounter = Encounter:new{spriteBank=1,name='ColosseumSlavers',type='elite',enemyInfo={encItem(SlaverBlue,-32,0),encItem(SlaverRed,24,1)}}
 
 -- elite encounters
-SlaversEncounter = Encounter:new{spriteBank=1,name='Slavers',enemyInfo={encItem(SlaverBlue,-48,0),encItem(Taskmaster,0,0),encItem(SlaverRed,48,1)}}
-GremlinLeaderEncounter = Encounter:new{spriteBank=3,name='GremlinLeader'}
+SlaversEncounter = Encounter:new{spriteBank=1,name='Slavers',type='elite',enemyInfo={encItem(SlaverBlue,-48,0),encItem(Taskmaster,0,0),encItem(SlaverRed,48,1)}}
+GremlinLeaderEncounter = Encounter:new{spriteBank=3,name='GremlinLeader',type='elite'}
 function GremlinLeaderEncounter:setupEnemies(random)
 	self.enemyInfo = {}
 	self.enemyInfo[1] = encItem(MonsterSlot,-72,6)
@@ -1253,9 +1256,9 @@ function GremlinLeaderEncounter:setupEnemies(random)
 	self.enemyInfo[4] = encItem(GremlinLeader,50,7)
 	Encounter.setupEnemies(self,random)
 end
-BookOfStabbingEncounter = Encounter:new{spriteBank=5,name='BookOfStabbing',enemyInfo={encItem(BookOfStabbing,0,0)}}
+BookOfStabbingEncounter = Encounter:new{spriteBank=5,name='BookOfStabbing',type='elite',enemyInfo={encItem(BookOfStabbing,0,0)}}
 
 -- boss encounters
-TheCollectorEncounter = Encounter:new{spriteBank=5,name='TheCollector',enemyInfo={encItem(MonsterSlot,-58,1),encItem(MonsterSlot,-14,2),encItem(TheCollector,40,-3)},mapIcon=324}
-BronzeAutomatonEncounter = Encounter:new{spriteBank=4,name='BronzeAutomaton',enemyInfo={encItem(MonsterSlot,-48,-25),encItem(BronzeAutomaton,0,0),encItem(MonsterSlot,48,-23)},mapIcon=328}
-TheChampEncounter = Encounter:new{spriteBank=6,name='TheChamp',enemyInfo={encItem(TheChamp,0,0)},mapIcon=320}
+TheCollectorEncounter = Encounter:new{spriteBank=5,name='TheCollector',type='boss',enemyInfo={encItem(MonsterSlot,-58,1),encItem(MonsterSlot,-14,2),encItem(TheCollector,40,-3)},mapIcon=324}
+BronzeAutomatonEncounter = Encounter:new{spriteBank=4,name='BronzeAutomaton',type='boss',enemyInfo={encItem(MonsterSlot,-48,-25),encItem(BronzeAutomaton,0,0),encItem(MonsterSlot,48,-23)},mapIcon=328}
+TheChampEncounter = Encounter:new{spriteBank=6,name='TheChamp',type='boss',enemyInfo={encItem(TheChamp,0,0)},mapIcon=320}

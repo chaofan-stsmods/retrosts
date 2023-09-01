@@ -45,7 +45,13 @@ function Ironclad:getMatchAndKeepCardType()
 end
 
 function Ironclad:getRelics()
-	return { BurningBlood,RedSkull,PaperPhrog,SelfFormingClay }
+	return {
+		BurningBlood,
+		RedSkull,
+		PaperPhrog,SelfFormingClay,
+		ChampionBelt,CharonsAshes,MagicFlower,
+		BlackBlood,RunicCube,MarkOfPain
+	}
 end
 
 function Ironclad:getPotions()
@@ -56,12 +62,12 @@ end
 
 RedCard = Card:new{color={2,1},costIcon=201,typeIconColor=4,colorName='red'}
 
-Strike = RedCard:new{ name='Strike',description='{Damage} !D!.',rarity='basic',baseCost=1,baseDamage=6,enemyTarget=true,upgrade={baseDamage=9},tags={'strike'} }
+Strike = RedCard:new{ name='Strike',description='{Damage} !D!.',rarity='basic',baseCost=1,baseDamage=6,enemyTarget=true,upgrade={baseDamage=9},tags={'strike','basicStrike'} }
 function Strike:use(target)
 	return { DamageAction:new{target=target,source=player,value=self.damage} }
 end
 
-Defend = RedCard:new{ name='Defend',description='Gain !B! {Block}.',rarity='basic',type='skill',baseCost=1,baseBlock=5,playerTarget=true,upgrade={baseBlock=8},tags={'defend'} }
+Defend = RedCard:new{ name='Defend',description='Gain !B! {Block}.',rarity='basic',type='skill',baseCost=1,baseBlock=5,playerTarget=true,upgrade={baseBlock=8},tags={'basicDefend'} }
 function Defend:use()
 	return { GainBlockAction:new{target=player,value=self.block} }
 end
@@ -71,7 +77,7 @@ Bash = RedCard:new{
 	upgrade={baseDamage=10,baseMagic=3},
 }
 function Bash:use(target)
-	return { DamageAction:new{target=target,source=player,value=self.damage}, ApplyPowerAction:new(VulnerablePower:new(target,self.magic)) }
+	return { DamageAction:new{target=target,source=player,value=self.damage}, ApplyPowerAction:new(player,VulnerablePower:new(target,self.magic)) }
 end
 
 BodySlam = RedCard:new{ name='Body Slam',description='{Damage} equal to your {Block}.',rarity='common',baseCost=1,enemyTarget=true,upgrade={baseCost=0} }
@@ -114,12 +120,12 @@ Clothesline = RedCard:new{
 	upgrade={baseDamage=14,baseMagic=3},
 }
 function Clothesline:use(target)
-	return { DamageAction:new{target=target,source=player,value=self.damage}, ApplyPowerAction:new(WeakPower:new(target,self.magic)) }
+	return { DamageAction:new{target=target,source=player,value=self.damage}, ApplyPowerAction:new(player,WeakPower:new(target,self.magic)) }
 end
 
 Inflame = RedCard:new{ name='Inflame',description='Gain !M! {Strength}.',rarity='uncommon',type='power',baseCost=1,playerTarget=true,baseMagic=2,upgrade={baseMagic=3} }
 function Inflame:use()
-	return { ApplyPowerAction:new(StrengthPower:new(player,self.magic)) }
+	return { ApplyPowerAction:new(player,StrengthPower:new(player,self.magic)) }
 end
 
 IronWave = RedCard:new{
@@ -166,7 +172,7 @@ function Thunderclap:use()
 	local result = {}
 	table.insert(result,DamageAllEnemiesAction:new{source=player,value=self.multiDamage})
 	for _, enemy in ipairs(enemies) do
-		table.insert(result,ApplyPowerAction:new(VulnerablePower:new(enemy,self.magic)))
+		table.insert(result,ApplyPowerAction:new(player,VulnerablePower:new(enemy,self.magic)))
 	end
 	return result
 end
@@ -270,7 +276,7 @@ SpotWeakness = RedCard:new{
 function SpotWeakness:use(target)
 	return { AnonymousAction:new(function()
 		if target.intentType:sub(1,6) == 'attack' then
-			addAction(1,ApplyPowerAction:new(StrengthPower:new(player,self.magic)))
+			addAction(1,ApplyPowerAction:new(player,StrengthPower:new(player,self.magic)))
 		end
 	end) }
 end
@@ -282,8 +288,8 @@ Uppercut = RedCard:new{
 function Uppercut:use(target)
 	return {
 		DamageAction:new{target=target,source=player,value=self.damage},
-		ApplyPowerAction:new(VulnerablePower:new(target,self.magic)),
-		ApplyPowerAction:new(WeakPower:new(target,self.magic)),
+		ApplyPowerAction:new(player,VulnerablePower:new(target,self.magic)),
+		ApplyPowerAction:new(player,WeakPower:new(target,self.magic)),
 	}
 end
 
@@ -324,7 +330,7 @@ function LimitBreak:use()
 	return { AnonymousAction:new(function()
 		local strength = player:getPower(StrengthPower)
 		if strength then
-			addAction(1,ApplyPowerAction:new(StrengthPower:new(player,strength.amount)))
+			addAction(1,ApplyPowerAction:new(player,StrengthPower:new(player,strength.amount)))
 		end
 	end) }
 end
@@ -344,8 +350,8 @@ Shockwave = RedCard:new{
 function Shockwave:use()
 	local result = {}
 	for _, enemy in ipairs(enemies) do
-		table.insert(result,ApplyPowerAction:new(WeakPower:new(enemy,self.magic)))
-		table.insert(result,ApplyPowerAction:new(VulnerablePower:new(enemy,self.magic)))
+		table.insert(result,ApplyPowerAction:new(player,WeakPower:new(enemy,self.magic)))
+		table.insert(result,ApplyPowerAction:new(player,VulnerablePower:new(enemy,self.magic)))
 	end
 	return result
 end
@@ -377,7 +383,7 @@ Intimidate = RedCard:new{
 function Intimidate:use()
 	local result = {}
 	for _, enemy in ipairs(enemies) do
-		table.insert(result,ApplyPowerAction:new(WeakPower:new(enemy,self.magic)))
+		table.insert(result,ApplyPowerAction:new(player,WeakPower:new(enemy,self.magic)))
 	end
 	return result
 end
@@ -387,7 +393,7 @@ Disarm = RedCard:new{
 	enemyTarget=true,upgrade={baseMagic=3},exhaust=true
 }
 function Disarm:use(target)
-	return { ApplyPowerAction:new(StrengthPower:new(target,-self.magic)) }
+	return { ApplyPowerAction:new(player,StrengthPower:new(target,-self.magic)) }
 end
 
 Flex = RedCard:new{
@@ -395,7 +401,7 @@ Flex = RedCard:new{
 	playerTarget=true,upgrade={baseMagic=4}
 }
 function Flex:use()
-	return { ApplyPowerAction:new(StrengthPower:new(player,self.magic)),ApplyPowerAction:new(LoseStrengthPower:new(player,self.magic)) }
+	return { ApplyPowerAction:new(player,StrengthPower:new(player,self.magic)),ApplyPowerAction:new(player,LoseStrengthPower:new(player,self.magic)) }
 end
 
 Anger = RedCard:new{
@@ -517,7 +523,7 @@ BattleTrance = RedCard:new{
 	baseCost=0,baseMagic=3,playerTarget=true,upgrade={baseMagic=4}
 }
 function BattleTrance:use()
-	return { DrawCardAction:new(self.magic), ApplyPowerAction:new(NoDrawPower:new(player)) }
+	return { DrawCardAction:new(self.magic), ApplyPowerAction:new(player,NoDrawPower:new(player)) }
 end
 
 BloodForBlood = RedCard:new{
@@ -630,7 +636,7 @@ end
 
 Metallicize = RedCard:new{ name='Metallicize',description='At the end of turn, gain !M! {Block}.',rarity='uncommon',type='power',baseCost=1,playerTarget=true,baseMagic=3,upgrade={baseMagic=4} }
 function Metallicize:use()
-	return { ApplyPowerAction:new(MetallicizePower:new(player,self.magic)) }
+	return { ApplyPowerAction:new(player,MetallicizePower:new(player,self.magic)) }
 end
 
 Rage = RedCard:new{
@@ -638,7 +644,7 @@ Rage = RedCard:new{
 	playerTarget=true,upgrade={baseMagic=5}
 }
 function Rage:use()
-	return { ApplyPowerAction:new(RagePower:new(player,self.magic)) }
+	return { ApplyPowerAction:new(player,RagePower:new(player,self.magic)) }
 end
 
 RagePower = Power:new{icon=17}
@@ -718,7 +724,7 @@ Barricade = RedCard:new{
 	upgrade={baseCost=2}
 }
 function Barricade:use()
-	return { ApplyPowerAction:new(BarricadePower:new(player)) }
+	return { ApplyPowerAction:new(player,BarricadePower:new(player)) }
 end
 
 DarkEmbrace = RedCard:new{
@@ -726,7 +732,7 @@ DarkEmbrace = RedCard:new{
 	upgrade={baseCost=1}
 }
 function DarkEmbrace:use()
-	return { ApplyPowerAction:new(DarkEmbracePower:new(player,1)) }
+	return { ApplyPowerAction:new(player,DarkEmbracePower:new(player,1)) }
 end
 
 DarkEmbracePower = Power:new{icon=243}
@@ -739,7 +745,7 @@ Combust = RedCard:new{
 	playerTarget=true,baseMagic=5,upgrade={baseMagic=7}
 }
 function Combust:use()
-	return { ApplyPowerAction:new(CombustPower:new(player,self.magic)) }
+	return { ApplyPowerAction:new(player,CombustPower:new(player,self.magic)) }
 end
 
 CombustPower = Power:new{icon=19,hpLoss=1}
@@ -759,7 +765,7 @@ Evolve = RedCard:new{
 	playerTarget=true,baseMagic=1,upgrade={baseMagic=2,description='Whenever you draw a {Status}, draw !M! cards.'}
 }
 function Evolve:use()
-	return { ApplyPowerAction:new(EvolvePower:new(player,self.magic)) }
+	return { ApplyPowerAction:new(player,EvolvePower:new(player,self.magic)) }
 end
 
 EvolvePower = Power:new{icon=195}
@@ -774,7 +780,7 @@ FeelNoPain = RedCard:new{
 	baseMagic=3,upgrade={baseMagic=4}
 }
 function FeelNoPain:use()
-	return { ApplyPowerAction:new(FeelNoPainPower:new(player,self.magic)) }
+	return { ApplyPowerAction:new(player,FeelNoPainPower:new(player,self.magic)) }
 end
 
 FeelNoPainPower = Power:new{icon=211}
@@ -787,7 +793,7 @@ FireBreathing = RedCard:new{
 	playerTarget=true,baseMagic=6,upgrade={baseMagic=10}
 }
 function FireBreathing:use()
-	return { ApplyPowerAction:new(FireBreathingPower:new(player,self.magic)) }
+	return { ApplyPowerAction:new(player,FireBreathingPower:new(player,self.magic)) }
 end
 
 FireBreathingPower = Power:new{icon=227}
@@ -802,7 +808,7 @@ FlameBarrier = RedCard:new{
 	playerTarget=true,baseBlock=12,baseMagic=4,upgrade={baseBlock=16,baseMagic=6}
 }
 function FlameBarrier:use()
-	return { GainBlockAction:new{target=player,value=self.block}, ApplyPowerAction:new(FlameBarrierPower:new(player,self.magic)) }
+	return { GainBlockAction:new{target=player,value=self.block}, ApplyPowerAction:new(player,FlameBarrierPower:new(player,self.magic)) }
 end
 
 FlameBarrierPower = Power:new{icon=196}
@@ -821,13 +827,13 @@ Rupture = RedCard:new{
 	playerTarget=true,baseMagic=1,upgrade={baseMagic=2}
 }
 function Rupture:use()
-	return { ApplyPowerAction:new(RupturePower:new(player,self.magic)) }
+	return { ApplyPowerAction:new(player,RupturePower:new(player,self.magic)) }
 end
 
 RupturePower = Power:new{icon=212}
 function RupturePower:onDamaged(value,source)
 	if source == self.owner and value > 0 then
-		addAction(ApplyPowerAction:new(StrengthPower:new(self.owner,self.amount)))
+		addAction(ApplyPowerAction:new(player,StrengthPower:new(self.owner,self.amount)))
 	end
 end
 
@@ -863,7 +869,7 @@ Berserk = RedCard:new{
 	playerTarget=true,baseMagic=2,upgrade={baseMagic=1}
 }
 function Berserk:use()
-	return { ApplyPowerAction:new(VulnerablePower:new(player,self.magic)), ApplyPowerAction:new(BerserkPower:new(player,1)) }
+	return { ApplyPowerAction:new(player,VulnerablePower:new(player,self.magic)), ApplyPowerAction:new(player,BerserkPower:new(player,1)) }
 end
 
 BerserkPower = Power:new{icon=228}
@@ -876,7 +882,7 @@ Brutality = RedCard:new{
 	playerTarget=true,upgrade={innate=true,description='Innate. NL At the start of turn, lose 1 HP and draw a card.'}
 }
 function Brutality:use()
-	return { ApplyPowerAction:new(BrutalityPower:new(player,1)) }
+	return { ApplyPowerAction:new(player,BrutalityPower:new(player,1)) }
 end
 
 BrutalityPower = Power:new{icon=244,hpLoss=1}
@@ -896,12 +902,12 @@ DemonForm = RedCard:new{
 	playerTarget=true,baseMagic=2,upgrade={baseMagic=3}
 }
 function DemonForm:use()
-	return { ApplyPowerAction:new(DemonFormPower:new(player,self.magic)) }
+	return { ApplyPowerAction:new(player,DemonFormPower:new(player,self.magic)) }
 end
 
 DemonFormPower = Power:new{icon=197}
 function DemonFormPower:onTurnStart()
-	addAction(ApplyPowerAction:new(StrengthPower:new(player,self.amount)))
+	addAction(ApplyPowerAction:new(player,StrengthPower:new(player,self.amount)))
 end
 
 Juggernaut = RedCard:new{
@@ -909,7 +915,7 @@ Juggernaut = RedCard:new{
 	playerTarget=true,baseMagic=5,upgrade={baseMagic=7}
 }
 function Juggernaut:use()
-	return { ApplyPowerAction:new(JuggernautPower:new(player,self.magic)) }
+	return { ApplyPowerAction:new(player,JuggernautPower:new(player,self.magic)) }
 end
 
 JuggernautPower = Power:new{icon=213}
@@ -945,7 +951,7 @@ Corruption = RedCard:new{
 	playerTarget=true,upgrade={baseCost=2}
 }
 function Corruption:use()
-	return { ApplyPowerAction:new(CorruptionPower:new(player)) }
+	return { ApplyPowerAction:new(player,CorruptionPower:new(player)) }
 end
 
 CorruptionPower = Power:new{icon=229,stackable=false,priority=150}
@@ -977,7 +983,7 @@ DoubleTap = RedCard:new{
 	playerTarget=true,upgrade={baseMagic=2,description='This turn, your next !M! {Attack} is played twice.'}
 }
 function DoubleTap:use()
-	return { ApplyPowerAction:new(DoubleTapPower:new(player,self.magic)) }
+	return { ApplyPowerAction:new(player,DoubleTapPower:new(player,self.magic)) }
 end
 
 DoubleTapPower = Power:new{icon=20}
@@ -1127,7 +1133,7 @@ end
 RedSkull = RedRelic:new{name='Red Skull',icon=230,tier='common',activated=false,description='While your HP is at or below #11#50%#12#, you have #11#3#12# additional {Strength}.'}
 function RedSkull:onCombatStart()
 	if player.hp <= player.maxHp / 2 then
-		addAction(ApplyPowerAction:new(StrengthPower:new(player,3)))
+		addAction(ApplyPowerAction:new(player,StrengthPower:new(player,3)))
 		self.activated = true
 	else
 		self.activated = false
@@ -1136,14 +1142,14 @@ end
 
 function RedSkull:onHealed()
 	if self.activated and player.hp > player.maxHp / 2 then
-		addAction(ApplyPowerAction:new(StrengthPower:new(player,-3)))
+		addAction(ApplyPowerAction:new(player,StrengthPower:new(player,-3)))
 		self.activated = false
 	end
 end
 
 function RedSkull:onDamaged()
 	if not self.activated and player.hp <= player.maxHp / 2 then
-		addAction(ApplyPowerAction:new(StrengthPower:new(player,3)))
+		addAction(ApplyPowerAction:new(player,StrengthPower:new(player,3)))
 		self.activated = true
 	end
 end
@@ -1158,8 +1164,61 @@ end
 
 SelfFormingClay = RedRelic:new{name='Self-Forming Clay',icon=198,tier='uncommon',description='Whenever you lose HP, gain #11#3#12# {Block} next turn.'}
 function SelfFormingClay:onDamaged(value)
-	if value > 0 then
-		addAction(ApplyPowerAction:new(GainBlockNextTurnPower:new(player,3)))
+	if value > 0 and inCombat then
+		addAction(ApplyPowerAction:new(player,GainBlockNextTurnPower:new(player,3)))
+	end
+end
+
+ChampionBelt = RedRelic:new{name='Champion Belt',icon=247,tier='rare',description='Whenever you apply {Vulnerable}, also apply #11#1#12# {Weak}.'}
+function ChampionBelt:onAppliedPower(power)
+	if getmetatable(power) == VulnerablePower and power.owner ~= player then
+		addAction(ApplyPowerAction:new(player,WeakPower:new(power.owner,1)))
+	end
+end
+
+CharonsAshes = RedRelic:new{name='Charon\'s Ashes',icon=231,tier='rare',description='Whenever you exhaust a card, {Damage} #11#3#12# to all enemies.'}
+function CharonsAshes:onExhaust()
+	addAction(1,DamageAllEnemiesAction:new{source=player,value=3,type='power'})
+end
+
+MagicFlower = RedRelic:new{name='Magic Flower',icon=215,tier='rare',activated=false,description='Healing is #11#50%#12# more effective during combat.'}
+function MagicFlower:onBeforeHeal(value)
+	if inCombat then
+		return math.floor(value * 1.5 + 0.5)
+	end
+end
+
+BlackBlood = RedRelic:new{name='Black Blood',icon=246,tier='boss',description='Replaces #3#Burning Blood#12#. At the end of combat, heal #11#12#12# HP.'}
+function BlackBlood:canSpawn()
+	return hasRelic(BurningBlood)
+end
+
+function BlackBlood:onObtained()
+	local selfIndex = table.indexOf(relics,self)
+	local relic = getRelic(BurningBlood)
+	local index = table.indexOf(relics,relic)
+	if index then
+		table.remove(relics,selfIndex)
+		loseRelic(relic)
+		table.insert(relics,index,self)
+	end
+end
+
+function BlackBlood:onCombatEnd()
+	player:heal(12)
+end
+
+RunicCube = RedRelic:new{name='Runic Cube',icon=200,tier='boss',description='Whenever you lose HP, draw #11#1#12# card.'}
+function RunicCube:onDamaged(value)
+	if value > 0 and inCombat then
+		addAction(DrawCardAction:new(1))
+	end
+end
+
+MarkOfPain = EnergyRelic:new{name='Mark of Pain',icon=199,colorName='red',tier='boss',priority=80,description='Gain {Energy} at the start of your turn. At the start of combat, shuffle #11#2#12# Wounds into your draw pile.'}
+function MarkOfPain:onTurnStartPostDraw(turn)
+	if turn == 1 then
+		addAction(MakeTempCardToDrawPileAction:new(Wound:new(),2,{additionalPause=30}))
 	end
 end
 
@@ -1177,7 +1236,7 @@ HeartOfIron = Potion:new{
 	description='Gain #11#!M!#12# {Metallicize}.'
 }
 function HeartOfIron:use()
-	return { ApplyPowerAction:new(MetallicizePower:new(player,self.magic)) }
+	return { ApplyPowerAction:new(player,MetallicizePower:new(player,self.magic)) }
 end
 
 Elixir = Potion:new{ name='Elixir',icon=Icon:new{image=104,colorMap={13,12}},rarity='uncommon',description='#4#Exhaust#12# any number of cards in your hand.' }

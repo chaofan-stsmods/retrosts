@@ -55,6 +55,7 @@ local function loadListBits(index,fullList)
 	return result
 end
 
+---@type table<number,Card>
 local cardTypeMapForSave = nil
 local function assignCardIndex()
 	if cardTypeMapForSave ~= nil then
@@ -78,6 +79,7 @@ local function assignCardIndex()
 	end
 end
 
+---@type table<number,Relic>
 local relicTypeMapForSave = nil
 local function assignRelicIndex()
 	if relicTypeMapForSave ~= nil then
@@ -97,6 +99,7 @@ local function assignRelicIndex()
 	end
 end
 
+---@type table<number,Event>
 local eventTypeMapForSave = nil
 local function assignEventIndex()
 	if eventTypeMapForSave ~= nil then
@@ -176,7 +179,7 @@ function saveGame(completed,eventMeta)
 		if potion == PotionSlot then
 			pmem(index,0)
 		else
-			pmem(index,table.indexOf(potionPool,getmetatable(potion)))
+			pmem(index,table.indexOf(potionPool,getmetatable(potion)) or 0)
 		end
 		index = index + 1
 	end
@@ -219,6 +222,7 @@ function loadGame()
 	emeraldKeyObtained = val32 & (1<<17) ~= 0
 	sapphireKeyObtained = val32 & (1<<18) ~= 0
 	oneTimeEvents = loadListBits(index+6,getOneTimeEvents())
+	isCombat = false
 
 	-- act
 
@@ -305,6 +309,7 @@ function loadGame()
 			potions[i] = PotionSlot
 		else
 			potions[i] = potionPool[val32]:new()
+			potions[i]:applyPowers()
 		end
 		index = index + 1
 	end

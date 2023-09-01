@@ -15,15 +15,15 @@ function CorruptHeart:drawImage()
 end
 
 function CorruptHeart:onCombatStart()
-	addAction(ApplyPowerAction:new(InvinciblePower:new(self,ascension>=19 and 200 or 300)))
-	addAction(ApplyPowerAction:new(BeatOfDeathPower:new(self,ascension>=19 and 2 or 1)))
+	addAction(ApplyPowerAction:new(self,InvinciblePower:new(self,ascension>=19 and 200 or 300)))
+	addAction(ApplyPowerAction:new(self,BeatOfDeathPower:new(self,ascension>=19 and 2 or 1)))
 	Monster.onCombatStart(self)
 end
 
 function CorruptHeart:debuff()
-	addAction(ApplyPowerAction:new(VulnerablePower:new(player,2,true)))
-	addAction(ApplyPowerAction:new(WeakPower:new(player,2,true)))
-	addAction(ApplyPowerAction:new(FrailPower:new(player,2,true)))
+	addAction(ApplyPowerAction:new(self,VulnerablePower:new(player,2,true)))
+	addAction(ApplyPowerAction:new(self,WeakPower:new(player,2,true)))
+	addAction(ApplyPowerAction:new(self,FrailPower:new(player,2,true)))
 	addAction(MakeTempCardToDrawPileAction:new(Dazed:new(),1,{pauseDuration=40,cardPosition=4}))
 	addAction(MakeTempCardToDrawPileAction:new(Slimed:new(),1,{pauseDuration=35,cardPosition=2}))
 	addAction(MakeTempCardToDrawPileAction:new(Wound:new(),1,{pauseDuration=30,cardPosition=1}))
@@ -51,17 +51,17 @@ function CorruptHeart:buff()
 	self.numBuffed = self.numBuffed + 1
 	local strPower = self:getPower(StrengthPower)
 	local strAmt = 2 + (strPower and strPower.amount < 0 and -strPower.amount or 0)
-	addAction(ApplyPowerAction:new(StrengthPower:new(self,strAmt)))
+	addAction(ApplyPowerAction:new(self,StrengthPower:new(self,strAmt)))
 	if self.numBuffed == 1 then
-		addAction(ApplyPowerAction:new(ArtifactPower:new(self,2)))
+		addAction(ApplyPowerAction:new(self,ArtifactPower:new(self,2)))
 	elseif self.numBuffed == 2 then
-		addAction(ApplyPowerAction:new(BeatOfDeathPower:new(self,1)))
+		addAction(ApplyPowerAction:new(self,BeatOfDeathPower:new(self,1)))
 	elseif self.numBuffed == 3 then
-		addAction(ApplyPowerAction:new(PainfulStabsPower:new(self)))
+		addAction(ApplyPowerAction:new(self,PainfulStabsPower:new(self)))
 	elseif self.numBuffed == 4 then
-		addAction(ApplyPowerAction:new(StrengthPower:new(self,10)))
+		addAction(ApplyPowerAction:new(self,StrengthPower:new(self,10)))
 	else
-		addAction(ApplyPowerAction:new(StrengthPower:new(self,50)))
+		addAction(ApplyPowerAction:new(self,StrengthPower:new(self,50)))
 	end
 end
 
@@ -117,4 +117,4 @@ function BeatOfDeathPower:onUseCard()
 end
 
 -- encounters
-CorruptHeartEncounter = Encounter:new{spriteBank=5,name='CorruptHeart',enemyInfo={encItem(CorruptHeart,0,4)},mapIcon=332}
+CorruptHeartEncounter = Encounter:new{spriteBank=5,name='CorruptHeart',type='boss',enemyInfo={encItem(CorruptHeart,0,4)},mapIcon=332}

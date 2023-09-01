@@ -504,7 +504,8 @@ function upgradeCardsWithEffect(cardItems)
 	end
 end
 
-function transformCardFromDeck(amount,random,canClose,onClose)
+function transformCardFromDeck(amount,random,canClose,onClose,title)
+	title = title or 'Choose a Card to Transform'
 	local cardItems = table.map(deck, function (card) return CardItem:new{card=card,x=240,y=0,isNotInHand=true} end)
 	table.retainIf(cardItems,function (cardItem) return cardItem.card.canRemove end)
 	if #cardItems == 0 then
@@ -515,7 +516,7 @@ function transformCardFromDeck(amount,random,canClose,onClose)
 	end
 	local oldAmount = amount
 	amount = math.min(amount,#cardItems)
-	local gridView = CardGridSelectWindow:new{title='Choose a Card to Transform',cardItems=cardItems,min=amount,max=amount,canClose=canClose or false}
+	local gridView = CardGridSelectWindow:new{title=title,cardItems=cardItems,min=amount,max=amount,canClose=canClose or false}
 	if amount > 1 then
 		gridView.title = 'Choose Cards to Transform ({#}/'..oldAmount..')'
 	end
@@ -526,38 +527,49 @@ function transformCardFromDeck(amount,random,canClose,onClose)
 			end
 			return
 		end
-		local startX,stepX = placeCardsInARow(#cards)
-		for i, cardItem in ipairs(cards) do
-			local thisCardTypes
-			if cardItem.card.colorName == 'colorless' then
-				thisCardTypes = shallowcopy(getColorlessCards())
-				table.retainIf(thisCardTypes,function (card) return card.rarity == 'common' or card.rarity == 'uncommon' or card.rarity == 'rare' end)
-			elseif cardItem.card.colorName == 'curse' then
-				thisCardTypes = shallowcopy(getCurseCards())
-				table.retainIf(thisCardTypes,function (card) return card.rarity == 'common' or card.rarity == 'uncommon' or card.rarity == 'rare' end)
-			else
-				thisCardTypes = shallowcopy(player:getCards())
-				table.retainIf(thisCardTypes,function (card) return card.rarity == 'common' or card.rarity == 'uncommon' or card.rarity == 'rare' end)
-			end
-			table.retainIf(thisCardTypes,function (card) return getmetatable(cardItem.card) ~= card end)
-			local randomCard = thisCardTypes[random:randInt(#thisCardTypes)]:new()
-			removeCard(cardItem.card)
-			obtainCard(randomCard)
-			cardItem.tx = startX+stepX*i
-			cardItem.ty = 68
-			cardItem.large = false
-			addEffect(CardEffect:new{cardItem=cardItem,pauseDuration=30,duration=50,tx=240,ty=0})
-			addEffect(AnonymousEffect:new{duration=10,callback=function (duration)
-				if duration == 1 then
-					cardItem.card = randomCard
-				end
-			end})
-		end
+		local transformedCards = transformCardsWithEffect(random,cards)
 		if onClose then
-			onClose(true)
+			onClose(true,transformedCards)
 		end
 	end)
 	return true
+end
+
+function transformCardsWithEffect(random,cardItems)
+	local startX,stepX = placeCardsInARow(#cardItems)
+	local transformedCards = {}
+	for i, cardItem in ipairs(cardItems) do
+		local randomCard = getTransformedCard(cardItem.card)
+		transformedCards[i] = randomCard
+		removeCard(cardItem.card)
+		obtainCard(randomCard)
+		cardItem.tx = startX+stepX*i
+		cardItem.ty = 68
+		cardItem.large = false
+		addEffect(CardEffect:new{cardItem=cardItem,pauseDuration=30,duration=50,tx=240,ty=0})
+		addEffect(AnonymousEffect:new{duration=10,callback=function (duration)
+			if duration == 1 then
+				cardItem.card = randomCard
+			end
+		end})
+	end
+	return transformedCards
+end
+
+function getTransformedCard(random,card)
+	local thisCardTypes
+	if card.colorName == 'colorless' then
+		thisCardTypes = shallowcopy(getColorlessCards())
+		table.retainIf(thisCardTypes,function (c) return c.rarity == 'common' or c.rarity == 'uncommon' or c.rarity == 'rare' end)
+	elseif card.colorName == 'curse' then
+		thisCardTypes = shallowcopy(getCurseCards())
+		table.retainIf(thisCardTypes,function (c) return c.rarity == 'common' or c.rarity == 'uncommon' or c.rarity == 'rare' end)
+	else
+		thisCardTypes = shallowcopy(player:getCards())
+		table.retainIf(thisCardTypes,function (c) return c.rarity == 'common' or c.rarity == 'uncommon' or c.rarity == 'rare' end)
+	end
+	table.retainIf(thisCardTypes,function (c) return getmetatable(card) ~= c end)
+	return thisCardTypes[random:randInt(#thisCardTypes)]:new()
 end
 
 function duplicateCardFromDeck(amount,canClose,onClose,title)

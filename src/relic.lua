@@ -109,7 +109,6 @@ function Circlet:onBeforeObtainRelic(relic)
 		self.counter = self.counter + 1
 		return false
 	end
-	return nil
 end
 
 NeowsLament = Relic:new{name='Neow\'s Lament',description='Enemies in your first #11#3#12# combats will have #11#1#12# HP.',icon=68,tier='special',counter=3}
@@ -245,7 +244,7 @@ end
 
 GremlinMask = Relic:new{name='Gremlin Visage',icon=190,tier='special',description='Start each combat with #11#1#12# {Weak}.'}
 function GremlinMask:onCombatStart()
-	addAction(ApplyPowerAction:new(WeakPower:new(player,1,true)))
+	addAction(ApplyPowerAction:new(player,WeakPower:new(player,1,true)))
 end
 
 NlothsMask = Relic:new{name='N\'loth\'s Hungry Face',counter=1,icon=239,priority=80,tier='special',description='The next non-Boss chest you open is empty.'}
@@ -281,7 +280,7 @@ end
 
 NlothsGift = Relic:new{name='N\'loth\'s Gift',icon=223,tier='special',description='Triple the chance of finding #4#Rare#12# cards from combat rewards.'}
 function NlothsGift:onModifyRareCardChance(chance)
-	if not isInShop() or roomActionType == 'combat' then
+	if not isRoomType('shop') or roomActionType == 'combat' then
 		return chance * 3
 	end
 end
@@ -294,7 +293,7 @@ end
 
 PreservedInsect = Relic:new{name='Preserved Insect',icon=16,tier='common',description='Enemies in Elite combats have #11#25%#12# less HP.'}
 function PreservedInsect:onCombatStart()
-	if room.type == 'elite' then
+	if combatType == 'elite' then
 		for _, enemy in ipairs(enemies) do
 			if enemy.alive then
 				enemy.hp = math.min(enemy.hp, math.ceil(enemy.maxHp * 0.75))
@@ -305,7 +304,7 @@ end
 
 Akabeko = Relic:new{name='Akabeko',icon=30,tier='common',description='Your first {Attack} each combat deals #11#8#12# additional damage.'}
 function Akabeko:onCombatStart()
-	addAction(ApplyPowerAction:new(VigorPower:new(player,8)))
+	addAction(ApplyPowerAction:new(player,VigorPower:new(player,8)))
 end
 
 AncientTeaSet = Relic:new{name='Ancient Tea Set',icon=31,tier='common',description='Whenever you enter a Rest Site, start the next combat with {Energy} {Energy}.'}
@@ -344,7 +343,7 @@ BagOfMarbles = Relic:new{name='Bag of Marbles',icon=33,tier='common',description
 function BagOfMarbles:onCombatStart()
 	for _, enemy in ipairs(enemies) do
 		if enemy.alive then
-			addAction(ApplyPowerAction:new(VulnerablePower:new(enemy,1)))
+			addAction(ApplyPowerAction:new(player,VulnerablePower:new(enemy,1)))
 		end
 	end
 end
@@ -365,7 +364,7 @@ end
 
 BronzeScales = Relic:new{name='Bronze Scales',icon=43,tier='common',description='Start each combat with 3 {29}.'}
 function BronzeScales:onCombatStart()
-	addAction(ApplyPowerAction:new(ThornsPower:new(player,3)))
+	addAction(ApplyPowerAction:new(player,ThornsPower:new(player,3)))
 end
 
 CentennialPuzzle = Relic:new{name='Centennial Puzzle',icon=44,tier='common',activated=false,description='The first time you lose HP each combat, draw #11#3#12# card.'}
@@ -427,7 +426,7 @@ function MawBank:onEnterRoom()
 end
 
 function MawBank:onLoseGold()
-	if isInShop() then
+	if isRoomType('shop') then
 		self.saved = 1
 		self.description = 'This relic has been used up.'
 	end
@@ -460,7 +459,7 @@ end
 
 OddlySmoothStone = Relic:new{name='Oddly Smooth Stone',icon=92,tier='common',description='Start each combat with #11#1#12# {Dexterity}.'}
 function OddlySmoothStone:onCombatStart()
-	addAction(ApplyPowerAction:new(DexterityPower:new(player,1)))
+	addAction(ApplyPowerAction:new(player,DexterityPower:new(player,1)))
 end
 
 Omamori = Relic:new{name='Omamori',icon=93,tier='common',counter=2,description='Negate the next #11#2#12# {Curse} you obtain.'}
@@ -507,7 +506,7 @@ end
 
 SmilingMask = Relic:new{name='Smiling Mask',icon=110,tier='common',priority=80,description='The Merchant\'s card removal service now always costs #11#50 #4#Gold.'}
 function SmilingMask:canSpwan()
-	return not isInShop()
+	return not isRoomType('shop')
 end
 
 function SmilingMask:modifyShopPrice(_,type)
@@ -552,7 +551,7 @@ end
 
 Vajra = Relic:new{name='Vajra',icon=115,tier='common',description='Start each combat with #11#1#12# {Strength}.'}
 function Vajra:onCombatStart()
-	addAction(ApplyPowerAction:new(StrengthPower:new(player,1)))
+	addAction(ApplyPowerAction:new(player,StrengthPower:new(player,1)))
 end
 
 WarPaint = Relic:new{name='War Paint',icon=116,tier='common',description='Upon pickup, #4#Upgrade #11#2#12# random {Skill}.'}
@@ -753,7 +752,7 @@ function Kunai:onUseCard(card)
 		self.counter = self.counter + 1
 		if self.counter == 3 then
 			self.counter = 0
-			addAction(ApplyPowerAction:new(DexterityPower:new(player,1)))
+			addAction(ApplyPowerAction:new(player,DexterityPower:new(player,1)))
 		end
 	end
 end
@@ -772,7 +771,7 @@ function Shuriken:onUseCard(card)
 		self.counter = self.counter + 1
 		if self.counter == 3 then
 			self.counter = 0
-			addAction(ApplyPowerAction:new(StrengthPower:new(player,1)))
+			addAction(ApplyPowerAction:new(player,StrengthPower:new(player,1)))
 		end
 	end
 end
@@ -909,7 +908,7 @@ end
 
 TheCourier = Relic:new{name='The Courier',icon=143,tier='uncommon',description='The Merchant restocks cards, relics, and potions. All prices are reduced by #11#20%#12#.'}
 function TheCourier:canSpwan()
-	return not isInShop()
+	return not isRoomType('shop')
 end
 
 function TheCourier:modifyShopPrice(price)
@@ -966,7 +965,7 @@ end
 DuVuDoll = Relic:new{name='Du-Vu Doll',icon=148,tier='rare',counter=0,description='For each {Curse} in your deck, start each combat with #11#1#12# {Strength}.'}
 function DuVuDoll:onCombatStart()
 	if self.counter > 0 then
-		addAction(ApplyPowerAction:new(StrengthPower:new(player,self.counter)))
+		addAction(ApplyPowerAction:new(player,StrengthPower:new(player,self.counter)))
 	end
 end
 
@@ -988,7 +987,7 @@ end
 
 FossilizedHelix = Relic:new{name='Fossilized Helix',icon=149,tier='rare',description='Prevent the first time you would lose HP each combat.'}
 function FossilizedHelix:onCombatStart()
-	addAction(ApplyPowerAction:new(BufferPower:new(player,1)))
+	addAction(ApplyPowerAction:new(player,BufferPower:new(player,1)))
 end
 
 GamblingChip = Relic:new{name='Gambling Chip',icon=150,tier='rare',priority=80,description='At the start of each combat, discard any number of cards, then draw that many cards.'}
@@ -1057,7 +1056,7 @@ end
 
 function Girya:onCombatStart()
 	if self.counter > 0 then
-		addAction(ApplyPowerAction:new(StrengthPower:new(player,self.counter)))
+		addAction(ApplyPowerAction:new(player,StrengthPower:new(player,self.counter)))
 	end
 end
 
@@ -1071,7 +1070,7 @@ function IncenseBurner:onTurnStart(turn)
 	self.counter = self.counter + 1
 	if self.counter == 6 then
 		self.counter = 0
-		addAction(ApplyPowerAction:new(IntangiblePower:new(player,1)))
+		addAction(ApplyPowerAction:new(player,IntangiblePower:new(player,1)))
 	end
 end
 
@@ -1099,14 +1098,14 @@ end
 
 OldCoin = Relic:new{name='Old Coin',icon=157,tier='rare',description='Upon pickup, gain #11#300 #4#Gold.'}
 function OldCoin:canSpwan()
-	return not isInShop()
+	return not isRoomType('shop')
 end
 
 function OldCoin:onObtained()
 	gainGold(300)
 end
 
-PeacePipe = Relic:new{name='Peace Pipe',icon=158,tier='rare',description='You can now remove cards from your deck at Rest Sites.'}
+PeacePipe = CampfireRelic:new{name='Peace Pipe',icon=158,tier='rare',description='You can now remove cards from your deck at Rest Sites.'}
 function PeacePipe:onModifyCampfireOptions(options,event)
 	table.insert(options,{
 		name='Toke',description='Remove a card from your deck.',icon=416,
@@ -1174,7 +1173,7 @@ end
 
 ThreadAndNeedle = Relic:new{name='Thread and Needle',icon=163,tier='rare',description='Start each combat with 4 {62}.'}
 function ThreadAndNeedle:onCombatStart()
-	addAction(ApplyPowerAction:new(PlatedArmorPower:new(player,4)))
+	addAction(ApplyPowerAction:new(player,PlatedArmorPower:new(player,4)))
 end
 
 Torii = Relic:new{name='Torii',icon=164,tier='rare',description='Whenever you would receive #11#5#12# or less unblocked attack damage, reduce it to #11#1#12#.'}
@@ -1221,6 +1220,177 @@ function WingBoots:load(...)
 	end
 end
 
+Astrolabe = Relic:new{name='Astrolabe',icon=169,tier='boss',description='Upon pickup, transform #11#3#12# cards then upgrade them.'}
+function Astrolabe:onObtained()
+	transformCardFromDeck(3,makeRand(act.id,room.id,7),false,function (completed,transformedCards)
+		if completed then
+			for _,card in ipairs(transformedCards) do
+				if card:canUpgrade() then
+					card:upgrade()
+					card:resetPowers()
+				end
+			end
+		end
+	end,'Choose a Card for '..self.name)
+end
+
+BlackStar = Relic:new{name='Black Star',icon=170,tier='boss',description='Elites drop an additional relic when defeated.'}
+
+BustedCrown = EnergyRelic:new{name='Busted Crown',icon=171,tier='boss',description='Gain {Energy} at the start of your turn. Future card rewards have #11#2#12# less cards to choose from.'}
+function BustedCrown:modifyCardRewardCount(value)
+	return value - 2
+end
+
+CallingBell = Relic:new{name='Calling Bell',icon=172,tier='boss',description='Upon pickup, obtain a unique {Curse} and #11#3#12# relics.'}
+function CallingBell:onObtained()
+	local rewards = {}
+	local random = makeRand(act.id,room.id,7)
+
+	openWindowAbove(CardRewardWindow:new{cards={CurseOfTheBell:new()},title='The Bell Tolls...',canClose=false},function (cardItem)
+		if cardItem then
+			cardItem.large = false
+			addEffect(CardEffect:new{cardItem=cardItem,pauseDuration=1,duration=20,tx=240,ty=0})
+			obtainCard(cardItem.card)
+		end
+
+		addRelicReward(rewards,getRandomRelic(random,'common'))
+		addRelicReward(rewards,getRandomRelic(random,'uncommon'))
+		addRelicReward(rewards,getRandomRelic(random,'rare'))
+		openWindowAbove(RewardWindow:new{rewards=rewards,canClose=true,onProceed=function(self) self:close() end})
+	end)
+end
+
+CursedKey = EnergyRelic:new{name='Cursed Key',icon=174,tier='boss',description='Gain {Energy} at the start of your turn. Whenever you open a non-Boss chest, obtain a {Curse}.'}
+function CursedKey:onOpenNonBossChest()
+	local random = makeRand(act.id,room.id,7)
+	local cardItem = CardItem:new{card=getCurseCardType(random):new(),x=0,y=136,tx=120,ty=68,isNotInHand=true}
+	addEffect(CardEffect:new{cardItem=cardItem,pauseDuration=30,duration=50,tx=240,ty=0})
+	obtainCard(cardItem.card)
+end
+
+EmptyCage = Relic:new{name='Empty Cage',icon=176,tier='boss',description='Upon pickup, remove #11#2#12# cards from your deck.'}
+function EmptyCage:onObtained()
+	if #deck > 0 then
+		removeCardFromDeck(2,false)
+	end
+end
+
+PandorasBox = Relic:new{name='Pandora\'s Box',icon=178,tier='boss',description='Upon pickup, Transform all Strike and Defend cards.'}
+function PandorasBox:onObtained()
+	local basicCards = {}
+	for i=#deck,1,-1 do
+		local card = deck[i]
+		if table.anyMatch(card.tags,function (tag) return tag == 'basicStrike' or tag == 'basicDefend' end) then
+			table.insert(basicCards,card)
+			removeCard(card)
+		end
+	end
+	local random = makeRand(act.id,room.id,7)
+	local transformedCards = {}
+	for i,card in ipairs(basicCards) do
+		transformedCards[i] = CardItem:new{card=getTransformedCard(random,card),x=0,y=136,isNotInHand=true}
+	end
+	openWindowAbove(
+		CardGridSelectWindow:new{cardItems=transformedCards,title='Pandora\'s Box has been opened...',min=0,max=0,canClose=true},
+		function ()
+			for _,cardItem in ipairs(transformedCards) do
+				addEffect(CardEffect:new{cardItem=cardItem,pauseDuration=1,duration=20,tx=240,ty=0})
+				obtainCard(cardItem.card)
+			end
+		end)
+end
+
+PhilosophersStone = EnergyRelic:new{name='Philosopher\'s Stone',icon=179,tier='boss',description='Gain {Energy} at the start of your turn. All enemies start each combat with #11#1#12# {Strength}.'}
+function PhilosophersStone:onCombatStart()
+	for _,enemy in ipairs(enemies) do
+		addAction(ApplyPowerAction:new(player,StrengthPower:new(enemy,1)))
+	end
+end
+
+RunicDome = EnergyRelic:new{name='Runic Dome',icon=180,tier='boss',description='Gain {Energy} at the start of your turn. You can no longer see enemy intents.'}
+
+RunicPryamid = Relic:new{name='Runic Pyramid',icon=181,tier='boss',description='At the end of your turn, you no longer discard your hand.'}
+
+SacredBark = Relic:new{name='Sacred Bark',icon=220,tier='boss',description='Double the effectiveness of potions.'}
+function SacredBark:onObtained()
+	for _,potion in ipairs(potions) do
+		potion:applyPowers()
+	end
+end
+
+function SacredBark:modifyPotionValue(value)
+	return value * 2
+end
+
+SlaversCollar = Relic:new{name='Slaver\'s Collar',icon=182,tier='boss',activated=false,description='During Boss and Elite combats, gain {Energy} at the start of your turn.'}
+function SlaversCollar:onCombatStart()
+	if combatType == 'elite' then
+		maxEnergy = maxEnergy + 1
+		self.activated = true
+	end
+end
+
+function SlaversCollar:onCombatEnd()
+	if self.activated then
+		maxEnergy = maxEnergy - 1
+		self.activated = false
+	end
+end
+
+SneckoEye = Relic:new{name='Snecko Eye',icon=183,tier='boss',priority=60,description='At the start of each turn, draw #11#2#12# additional cards. Start each combat with {36}.'}
+function SneckoEye:onCombatStart()
+	addAction(ApplyPowerAction:new(player,ConfusionPower:new(player)))
+end
+
+function SneckoEye:onTurnStartPostDraw()
+	addAction(DrawCardAction:new(2))
+end
+
+Sozu = EnergyRelic:new{name='Sozu',icon=184,tier='boss',description='Gain {Energy} at the start of your turn. You can no longer obtain potions.'}
+function Sozu:onBeforeObtainPotion()
+	return false
+end
+
+TinyHouse = Relic:new{
+	name='Tiny House',icon=185,tier='boss',
+	description='Upon pickup, obtain #11#1#12# potion. NL Gain #11#50 #4#Gold#12#. NL Raise your Max HP by #11#5#12#. NL Obtain #11#1#12# card. NL Upgrade #11#1#12# random card.'
+}
+function TinyHouse:onObtained()
+	local rewards = {}
+	local random = makeRand(act.id,room.id,7)
+	addGoldReward(rewards,50,nil,false)
+	addPotionReward(rewards,getTrueRandomPotionType(random):new())
+	player:increaseMaxHp(5)
+	generateCardRewards(rewards,random)
+
+	local cards = shallowcopy(deck)
+	table.retainIf(cards,function(c) return c:canUpgrade() end)
+	if #cards > 0 then
+		upgradeCardsWithEffect({CardItem:new{card=cards[random:randInt(#cards)],x=240,y=0,isNotInHand=true}})
+	end
+
+	openWindowAbove(RewardWindow:new{rewards=rewards,canClose=true,title='Tiny House!',onProceed=function(self) self:close() end})
+end
+
+VelvetChoker = EnergyRelic:new{name='Velvet Choker',icon=186,tier='boss',priority=0,description='Gain {Energy} at the start of your turn. You can no longer play more than #11#6#12# cards per turn.'}
+function VelvetChoker:onUseCard()
+	self.counter = self.counter + 1
+end
+
+function VelvetChoker:canUseCard()
+	if self.counter >= 6 then
+		return false
+	end
+end
+
+function VelvetChoker:onTurnStart()
+	self.counter = 0
+end
+
+function VelvetChoker:onCombatEnd()
+	self.counter = -1
+end
+
 colorlessRelics = {
 	-- special
 	Circlet,NeowsLament,GoldenIdol,OddMushroom,WarpedTongs,SpiritPoop,CultistMask,FaceOfCleric,GremlinMask,NlothsMask,
@@ -1239,5 +1409,6 @@ colorlessRelics = {
 	IncenseBurner,LizardTail,Mango,OldCoin,PeacePipe,PocketWatch,PrayerWheel,Shovel,StoneCalendar,ThreadAndNeedle,Torii,
 	TungstenRod,UnceasingTop,WingBoots,
 	-- boss
-	CoffeeDripper,FusionHammer,Ectoplasm,
+	CoffeeDripper,FusionHammer,Ectoplasm,Astrolabe,BlackStar,BustedCrown,CallingBell,CursedKey,EmptyCage,PandorasBox,
+	PhilosophersStone,RunicDome,RunicPryamid,SacredBark,SlaversCollar,SneckoEye,Sozu,TinyHouse,VelvetChoker,
 }

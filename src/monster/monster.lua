@@ -91,6 +91,9 @@ function Monster:drawIntent()
 	if not self.showIntent then
 		return
 	end
+	if not self.lockIntentDamage and hasRelic(RunicDome) then
+		return
+	end
 	local intentX = self.x+self.width*4-4
 	local intentY = self.y-16
 	local intentSprites = intentSpriteMap[self.intentType]

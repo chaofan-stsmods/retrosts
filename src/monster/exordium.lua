@@ -26,7 +26,7 @@ end
 function Cultist:buff()
 	local power = RitualPower:new(self,self.ritual)
 	power.skipFirst = true
-	addAction(ApplyPowerAction:new(power))
+	addAction(ApplyPowerAction:new(self,power))
 	addAction(SetIntentAction:new(self,'attack','attack',6,1))
 end
 
@@ -52,7 +52,7 @@ function LouseNormal:init(random)
 end
 
 function LouseNormal:onCombatStart()
-	addAction(ApplyPowerAction:new(CurlUpPower:new(self,self.curlUp)))
+	addAction(ApplyPowerAction:new(self,CurlUpPower:new(self,self.curlUp)))
 	Monster.onCombatStart(self)
 end
 
@@ -62,7 +62,7 @@ function LouseNormal:drawImage()
 end
 
 function LouseNormal:buff()
-	addAction(ApplyPowerAction:new(StrengthPower:new(self,ascension >= 17 and 4 or 3)))
+	addAction(ApplyPowerAction:new(self,StrengthPower:new(self,ascension >= 17 and 4 or 3)))
 	addAction(NextIntentAction:new(self))
 end
 
@@ -97,7 +97,7 @@ function LouseDefensive:drawImage()
 end
 
 function LouseDefensive:debuff()
-	addAction(ApplyPowerAction:new(WeakPower:new(player,2,true)))
+	addAction(ApplyPowerAction:new(self,WeakPower:new(player,2,true)))
 	addAction(NextIntentAction:new(self))
 end
 
@@ -131,7 +131,7 @@ end
 
 function JawWorm:onCombatStart()
 	if act.id > 1 then
-		addAction(ApplyPowerAction:new(StrengthPower:new(self,self.bellowStr)))
+		addAction(ApplyPowerAction:new(self,StrengthPower:new(self,self.bellowStr)))
 		addAction(GainBlockAction:new{target=self,value=self.bellowBlock})
 	end
 	Monster.onCombatStart(self)
@@ -149,7 +149,7 @@ function JawWorm:thrash()
 end
 
 function JawWorm:bellow()
-	addAction(ApplyPowerAction:new(StrengthPower:new(self,self.bellowStr)))
+	addAction(ApplyPowerAction:new(self,StrengthPower:new(self,self.bellowStr)))
 	addAction(GainBlockAction:new{target=self,value=self.bellowBlock})
 	addAction(NextIntentAction:new(self))
 end
@@ -208,7 +208,7 @@ function SpikeSlimeM:attack()
 end
 
 function SpikeSlimeM:debuff()
-	addAction(ApplyPowerAction:new(FrailPower:new(player,1,true)))
+	addAction(ApplyPowerAction:new(self,FrailPower:new(player,1,true)))
 	addAction(NextIntentAction:new(self))
 end
 
@@ -237,7 +237,7 @@ function SpikeSlimeL:attack()
 end
 
 function SpikeSlimeL:debuff()
-	addAction(ApplyPowerAction:new(FrailPower:new(player,ascension >= 17 and 3 or 2,true)))
+	addAction(ApplyPowerAction:new(self,FrailPower:new(player,ascension >= 17 and 3 or 2,true)))
 	addAction(NextIntentAction:new(self))
 end
 
@@ -293,7 +293,7 @@ function AcidSlimeS:attack()
 end
 
 function AcidSlimeS:debuff()
-	addAction(ApplyPowerAction:new(WeakPower:new(player,1,true)))
+	addAction(ApplyPowerAction:new(self,WeakPower:new(player,1,true)))
 	addAction(SetIntentAction:new(self,'attack','attack',self.dmg))
 end
 
@@ -331,7 +331,7 @@ function AcidSlimeM:wound()
 end
 
 function AcidSlimeM:debuff()
-	addAction(ApplyPowerAction:new(WeakPower:new(player,1,true)))
+	addAction(ApplyPowerAction:new(self,WeakPower:new(player,1,true)))
 	addAction(NextIntentAction:new(self))
 end
 
@@ -378,7 +378,7 @@ function AcidSlimeL:wound()
 end
 
 function AcidSlimeL:debuff()
-	addAction(ApplyPowerAction:new(WeakPower:new(player,2,true)))
+	addAction(ApplyPowerAction:new(self,WeakPower:new(player,2,true)))
 	addAction(NextIntentAction:new(self))
 end
 
@@ -420,7 +420,7 @@ function FungiBeast:init(random)
 end
 
 function FungiBeast:onCombatStart()
-	addAction(ApplyPowerAction:new(SporeCloudPower:new(self,2)))
+	addAction(ApplyPowerAction:new(self,SporeCloudPower:new(self,2)))
 	Monster.onCombatStart(self)
 end
 
@@ -434,7 +434,7 @@ function FungiBeast:attack()
 end
 
 function FungiBeast:buff()
-	addAction(ApplyPowerAction:new(StrengthPower:new(self,self.strAmt)))
+	addAction(ApplyPowerAction:new(self,StrengthPower:new(self,self.strAmt)))
 	addAction(NextIntentAction:new(self))
 end
 
@@ -447,7 +447,7 @@ end
 
 SporeCloudPower = Power:new{icon=Icon:new{image=26,colorMap={[2]=6,[3]=5,[5]=4,[6]=3,[7]=4}}}
 function SporeCloudPower:onDeath()
-	addAction(ApplyPowerAction:new(VulnerablePower:new(player,self.amount,inEnemyTurn)))
+	addAction(ApplyPowerAction:new(self.owner,VulnerablePower:new(player,self.amount,inEnemyTurn)))
 end
 
 SlaverBlue = Monster:new{ maxHp=50,width=4,height=4,stabDmg=12,rakeDmg=7 }
@@ -470,7 +470,7 @@ end
 
 function SlaverBlue:rake()
 	addAction(DamageAction:new{target=player,source=self,value=self.intentDamage})
-	addAction(ApplyPowerAction:new(WeakPower:new(player,ascension>=17 and 2 or 1,true)))
+	addAction(ApplyPowerAction:new(self,WeakPower:new(player,ascension>=17 and 2 or 1,true)))
 	addAction(NextIntentAction:new(self))
 end
 
@@ -504,13 +504,13 @@ end
 
 function SlaverRed:scrape()
 	addAction(DamageAction:new{target=player,source=self,value=self.intentDamage})
-	addAction(ApplyPowerAction:new(VulnerablePower:new(player,ascension>=17 and 2 or 1,true)))
+	addAction(ApplyPowerAction:new(self,VulnerablePower:new(player,ascension>=17 and 2 or 1,true)))
 	addAction(NextIntentAction:new(self))
 end
 
 function SlaverRed:entangle()
 	self.usedEntangle = true
-	addAction(ApplyPowerAction:new(EntanglePower:new(player,1,true)))
+	addAction(ApplyPowerAction:new(self,EntanglePower:new(player,1,true)))
 	addAction(NextIntentAction:new(self))
 end
 
@@ -550,7 +550,7 @@ function Looter:init(random)
 end
 
 function Looter:onCombatStart()
-	addAction(ApplyPowerAction:new(ThieveryPower:new(self,self.goldAmt)))
+	addAction(ApplyPowerAction:new(self,ThieveryPower:new(self,self.goldAmt)))
 	Monster.onCombatStart(self)
 end
 
@@ -624,13 +624,13 @@ end
 
 function GremlinNob:bellow()
 	self.usedBellow = true
-	addAction(ApplyPowerAction:new(AngerPower:new(self,ascension>=18 and 3 or 2)))
+	addAction(ApplyPowerAction:new(self,AngerPower:new(self,ascension>=18 and 3 or 2)))
 	addAction(NextIntentAction:new(self))
 end
 
 function GremlinNob:bash()
 	addAction(DamageAction:new{target=player,source=self,value=self.intentDamage})
-	addAction(ApplyPowerAction:new(VulnerablePower:new(player,2,true)))
+	addAction(ApplyPowerAction:new(self,VulnerablePower:new(player,2,true)))
 	addAction(NextIntentAction:new(self))
 end
 
@@ -659,7 +659,7 @@ end
 AngerPower = Power:new{icon=17}
 function AngerPower:onUseCard(card)
 	if card.type == 'skill' then
-		addAction(ApplyPowerAction:new(StrengthPower:new(self.owner,self.amount)))
+		addAction(ApplyPowerAction:new(self.owner,StrengthPower:new(self.owner,self.amount)))
 	end
 end
 
@@ -706,9 +706,9 @@ end
 
 function GremlinFat:attack()
 	addAction(DamageAction:new{target=player,source=self,value=self.intentDamage})
-	addAction(ApplyPowerAction:new(WeakPower:new(player,1,true)))
+	addAction(ApplyPowerAction:new(self,WeakPower:new(player,1,true)))
 	if ascension >= 17 then
-		addAction(ApplyPowerAction:new(FrailPower:new(player,1,true)))
+		addAction(ApplyPowerAction:new(self,FrailPower:new(player,1,true)))
 	end
 	addAction(NextIntentAction:new(self))
 end
@@ -726,7 +726,7 @@ function GremlinWarrior:init(random)
 end
 
 function GremlinWarrior:onCombatStart()
-	addAction(ApplyPowerAction:new(AngryPower:new(self,ascension >= 17 and 2 or 1)))
+	addAction(ApplyPowerAction:new(self,AngryPower:new(self,ascension >= 17 and 2 or 1)))
 	Monster.onCombatStart(self)
 end
 
@@ -750,7 +750,7 @@ end
 AngryPower = Power:new{icon=17}
 function AngryPower:onDamaged(value,source,type)
 	if value > 0 and source == player and type == 'attack' then
-		addAction(1,ApplyPowerAction:new(StrengthPower:new(self.owner,self.amount)))
+		addAction(1,ApplyPowerAction:new(self.owner,StrengthPower:new(self.owner,self.amount)))
 	end
 end
 
@@ -854,7 +854,7 @@ function Sentry:drawImage()
 end
 
 function Sentry:onCombatStart()
-	addAction(ApplyPowerAction:new(ArtifactPower:new(self,1)))
+	addAction(ApplyPowerAction:new(self,ArtifactPower:new(self,1)))
 	Monster.onCombatStart(self)
 end
 
@@ -899,7 +899,7 @@ end
 
 function Lagavulin:onCombatStart()
 	if self.sleepCooldown > 0 then
-		addAction(ApplyPowerAction:new(MetallicizePower:new(self,self.metallicizeAmt)))
+		addAction(ApplyPowerAction:new(self,MetallicizePower:new(self,self.metallicizeAmt)))
 		addAction(GainBlockAction:new{target=self,value=self.metallicizeAmt})
 	end
 	Monster.onCombatStart(self)
@@ -920,8 +920,8 @@ function Lagavulin:attack()
 end
 
 function Lagavulin:debuff()
-	addAction(ApplyPowerAction:new(DexterityPower:new(player,self.debuffAmt)))
-	addAction(ApplyPowerAction:new(StrengthPower:new(player,self.debuffAmt)))
+	addAction(ApplyPowerAction:new(self,DexterityPower:new(player,self.debuffAmt)))
+	addAction(ApplyPowerAction:new(self,StrengthPower:new(player,self.debuffAmt)))
 	addAction(NextIntentAction:new(self))
 end
 
@@ -961,7 +961,7 @@ function SlimeBoss:drawImage()
 end
 
 function SlimeBoss:onCombatStart()
-	addAction(ApplyPowerAction:new(SplitPower:new(self)))
+	addAction(ApplyPowerAction:new(self,SplitPower:new(self)))
 	Monster.onCombatStart(self)
 end
 
@@ -1071,7 +1071,7 @@ end
 function Hexaghost:buff()
 	addAction(ActivateFireAction:new{target=self,fireIndex=self.fireCount+1})
 	addAction(GainBlockAction:new{target=self,value=12})
-	addAction(ApplyPowerAction:new(StrengthPower:new(self,self.strAmt)))
+	addAction(ApplyPowerAction:new(self,StrengthPower:new(self,self.strAmt)))
 	addAction(NextIntentAction:new(self))
 end
 
@@ -1176,7 +1176,7 @@ function TheGuardian:drawImage()
 end
 
 function TheGuardian:onCombatStart()
-	addAction(ApplyPowerAction:new(ModeShiftPower:new(self,self.modeShiftAmount)))
+	addAction(ApplyPowerAction:new(self,ModeShiftPower:new(self,self.modeShiftAmount)))
 	Monster.onCombatStart(self)
 end
 
@@ -1191,8 +1191,8 @@ function TheGuardian:bash()
 end
 
 function TheGuardian:ventSteam()
-	addAction(ApplyPowerAction:new(WeakPower:new(player,2,true)))
-	addAction(ApplyPowerAction:new(VulnerablePower:new(player,2,true)))
+	addAction(ApplyPowerAction:new(self,WeakPower:new(player,2,true)))
+	addAction(ApplyPowerAction:new(self,VulnerablePower:new(player,2,true)))
 	addAction(SetIntentAction:new(self,'whirlwind','attack',self.whirlwindDmg,5))
 end
 
@@ -1207,7 +1207,7 @@ function TheGuardian:enterDefensiveMode()
 	addAction(AnonymousAction:new(function ()
 		self.enteringDefensiveMode = false
 	end))
-	addAction(ApplyPowerAction:new(SharpHidePower:new(self,ascension>=19 and 4 or 3)))
+	addAction(ApplyPowerAction:new(self,SharpHidePower:new(self,ascension>=19 and 4 or 3)))
 	addAction(SetIntentAction:new(self,'roll','attack',self.rollDmg))
 end
 
@@ -1225,7 +1225,7 @@ function TheGuardian:twinSlam()
 	end))
 	local power = self:getPower(SharpHidePower)
 	addAction(ReducePowerAction:new(power,power.amount))
-	addAction(ApplyPowerAction:new(ModeShiftPower:new(self,self.modeShiftAmount)))
+	addAction(ApplyPowerAction:new(self,ModeShiftPower:new(self,self.modeShiftAmount)))
 	addAction(SetIntentAction:new(self,'whirlwind','attack',self.whirlwindDmg,5))
 end
 
@@ -1346,16 +1346,16 @@ function GremlinGangEncounter:setupEnemies(random)
 end
 
 -- elite encounters
-GremlinNobEncounter = Encounter:new{spriteBank=1,name='GremlinNob',enemyInfo={encItem(GremlinNob)}}
-ThreeSentryEncounter = Encounter:new{spriteBank=3,name='ThreeSentry',enemyInfo={encItem(Sentry,-44,0),encItem(Sentry,0,3,{attackFirst=true}),encItem(Sentry,44,-1)}}
-LagavulinEncounter = Encounter:new{spriteBank=3,name='Lagavulin',enemyInfo={encItem(Lagavulin)}}
+GremlinNobEncounter = Encounter:new{spriteBank=1,name='GremlinNob',type='elite',enemyInfo={encItem(GremlinNob)}}
+ThreeSentryEncounter = Encounter:new{spriteBank=3,name='ThreeSentry',type='elite',enemyInfo={encItem(Sentry,-44,0),encItem(Sentry,0,3,{attackFirst=true}),encItem(Sentry,44,-1)}}
+LagavulinEncounter = Encounter:new{spriteBank=3,name='Lagavulin',type='elite',enemyInfo={encItem(Lagavulin)}}
 
 -- event encounters
-LagavulinStrongEncounter = Encounter:new{spriteBank=3,name='Lagavulin',enemyInfo={encItem(Lagavulin,0,0,{sleepCooldown=0})}}
-GremlinNobEventEncounter = Encounter:new{spriteBank=3,name='GremlinNob',enemyInfo={encItem(GremlinNob)}}
+LagavulinStrongEncounter = Encounter:new{spriteBank=3,name='Lagavulin',type='elite',enemyInfo={encItem(Lagavulin,0,0,{sleepCooldown=0})}}
+GremlinNobEventEncounter = Encounter:new{spriteBank=3,name='GremlinNob',type='elite',enemyInfo={encItem(GremlinNob)}}
 ThreeFungiBeastEncounter = Encounter:new{spriteBank=1,name='ThreeFungiBeast',enemyInfo={encItem(FungiBeast,-48,0),encItem(FungiBeast,0,1),encItem(FungiBeast,48,3)}}
 
 -- boss encounters
-SlimeBossEncounter = Encounter:new{spriteBank=4,name='SlimeBoss',enemyInfo={encItem(SlimeBoss,0,8)},mapIcon=257}
-HexaghostEncounter = Encounter:new{spriteBank=4,name='Hexaghost',enemyInfo={encItem(Hexaghost,0,0)},mapIcon=261}
-TheGuardianEncounter = Encounter:new{spriteBank=4,name='TheGuardian',enemyInfo={encItem(TheGuardian,0,0)},mapIcon=265}
+SlimeBossEncounter = Encounter:new{spriteBank=4,name='SlimeBoss',type='boss',enemyInfo={encItem(SlimeBoss,0,8)},mapIcon=257}
+HexaghostEncounter = Encounter:new{spriteBank=4,name='Hexaghost',type='boss',enemyInfo={encItem(Hexaghost,0,0)},mapIcon=261}
+TheGuardianEncounter = Encounter:new{spriteBank=4,name='TheGuardian',type='boss',enemyInfo={encItem(TheGuardian,0,0)},mapIcon=265}

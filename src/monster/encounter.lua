@@ -3,7 +3,7 @@
 
 currentEncounter = nil
 
-Encounter = Object:new{spriteBank=0,enemyInfo=nil,name=''}
+Encounter = Object:new{spriteBank=0,enemyInfo=nil,name='',type='monster'}
 function Encounter:new(o)
 	local r = Object.new(self,o)
 	o.enemyInfo = o.enemyInfo or {}

@@ -313,7 +313,9 @@ function EndTurnAction:tick()
 		end
 		addAction(AutoPlayOnEndTurnAction:new())
 		addAction(ExhaustEtherealCardsAction:new())
-		addAction(DiscardAllCardsAction:new())
+		if not hasRelic(RunicPryamid) then
+			addAction(DiscardAllCardsAction:new())
+		end
 		player:onTurnEnd()
 		for _, enemy in ipairs(enemies) do
 			if enemy.alive then
@@ -446,8 +448,8 @@ function ReducePowerAction:tick()
 end
 
 ApplyPowerAction = Action:new{duration=10}
-function ApplyPowerAction:new(power)
-	return Action.new(self,{power=power})
+function ApplyPowerAction:new(source,power)
+	return Action.new(self,{source=source,power=power})
 end
 
 function ApplyPowerAction:tick()
@@ -469,6 +471,7 @@ function ApplyPowerAction:tick()
 			owner:addPower(power)
 		end
 		owner:applyPowers()
+		self.source:triggerEvent('onAppliedPower',power)
 	end
 	Action.tick(self)
 end

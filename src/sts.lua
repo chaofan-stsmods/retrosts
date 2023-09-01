@@ -118,6 +118,7 @@ function startGame(character,ascensionLevel)
 	currentEvent = NeowEvent:new()
 	cursorOnTopBar = false
 	oneTimeEvents = shallowcopy(getOneTimeEvents())
+	isCombat = false
 	startAct(1)
 	saveGame()
 	switchWindow(GameWindow:new())
@@ -279,15 +280,12 @@ function isRoomType(type)
 	return room.type == type or (room.type == 'event' and room.eventType == type)
 end
 
-function isInShop()
-	return isRoomType('shop')
-end
-
 -- main
 
 queueSync(32,1)
---[[startAct(2)
-startGame(Ironclad,1)
+--[[
+startGame(Ironclad,20)
+startAct(2)
 roomActionType = 'combat'
 table.insert(deck,BattleTrance:new())
 table.insert(deck,Pummel:new())
@@ -296,24 +294,26 @@ table.insert(deck,Disarm:new())
 table.insert(deck,Disarm:new())
 table.insert(deck,Offering:new())
 table.insert(deck,Offering:new())
-maxEnergy = 4
+obtainRelic(ChampionBelt:new())
 startCombat(TheChampEncounter)
-addAction(ApplyPowerAction:new(StrengthPower:new(player,30)))
-addAction(ApplyPowerAction:new(MetallicizePower:new(player,300)))
+addAction(ApplyPowerAction:new(player,StrengthPower:new(player,30)))
+addAction(ApplyPowerAction:new(player,MetallicizePower:new(player,300)))
 --]]
 --[[
 startGame(Ironclad,20)
 currentEvent = TreasureEvent:new()
 currentEvent:showRewards()
 nearestWindow.rewards = {}
+table.insert(deck,Bloodletting:new())
+table.insert(deck,Bloodletting:new())
 table.insert(deck,Anger:new())
-table.insert(deck,Anger:new())
-table.insert(deck,SecondWind:new())
-table.insert(deck,SecondWind:new())
-addRelicReward(nearestWindow.rewards,WingBoots:new())
-addRelicReward(nearestWindow.rewards,PocketWatch:new())
+table.insert(deck,Bloodletting:new())
+table.insert(deck,ShrugItOff:new())
+addRelicReward(nearestWindow.rewards,BlackBlood:new())
+addRelicReward(nearestWindow.rewards,RunicCube:new())
+addRelicReward(nearestWindow.rewards,MarkOfPain:new())
 addRelicReward(nearestWindow.rewards,NeowsLament:new{counter=99})
---addPotionReward(nearestWindow.rewards,GamblersBrew:new())
+addPotionReward(nearestWindow.rewards,FruitJuice:new())
 --addPotionReward(nearestWindow.rewards,SmokeBomb:new())
 --addPotionReward(nearestWindow.rewards,SmokeBomb:new())
 --]]
@@ -658,7 +658,7 @@ window:onOpen()
 -- 183:00cccd000c44ccd0c4fd4cddc4df4cdecc44cddeccccdcde0dcdcde000deee00
 -- 184:000005600000566000056500005660000565e000776ed000770ed000000dd000
 -- 185:0000c0000032c00003e3c2223e43222de4b4eccde444ebcde4f4ecc0e4f4e000
--- 186:0040000004000000004442200440112221000002210000222222222000222200
+-- 186:0040000004000000004442200440112221000002210000222222222101222210
 -- 187:000bcc00b9bbbbc00bbbbbb0bbbbfbb0bbbbbbb00bbbb2bb00b0b20b00000b00
 -- 188:0aaeeaa0eaeecea0eeeecee0eeeecee0eeebbbe0eaeeaea0eaaeeaa0ecccccc0
 -- 189:00242400044242400aa424a0aaaa44aaaa9aaaaaa09aaaa44009aa0440000000
@@ -690,6 +690,7 @@ window:onOpen()
 -- 217:88888888888888cc88888cdd8888cd22888cd22388cd22338cd222338cd22233
 -- 218:cddddddedddeeeee222222222223333222333322233333333333333333443344
 -- 219:88888888ee888888eee8888822ee8888222ee8883332fe8832332fe833232f08
+-- 220:000000000000000003000000330004043330044c422334c40442444c000444c0
 -- 221:00000000222222222e4e4e42222222222eee4ee22e4e4e422e4eee4222222222
 -- 222:000330000000200003022000300222002222220302f2f2230022222000200000
 -- 223:03200033322222220cc222c00d22c22d0c2cd22d0c2dd2dd00ccddd0000cdd00
@@ -714,7 +715,7 @@ window:onOpen()
 -- 243:0101010018181810018181811181818181888881188888100188881000188100
 -- 244:01100110122112811222228188222811f188811f0f1111f000f21f00000f1f00
 -- 245:0000200000002000020220003423230002333200024443020224324300222030
--- 246:0000100000001000010110001e1818000188810101eee811011e81e800111081
+-- 246:0000100000001000010110001d1818000188810101ddd811011d81d800111081
 -- 247:0000000000eee0000efffee0df444ffdd44e44dd044e44d00044400000000000
 -- 249:8ee222338ee2233288ee2233888ee2228888ee2288888fee8888880088888888
 -- 250:333443332344333223333332333333222233322222222222ffffffff00000000
