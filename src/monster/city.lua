@@ -184,7 +184,7 @@ function SphericGuardian:nextIntent()
 	self:setIntent('defend','defend')
 end
 
-Chosen = Monster:new{ maxHp=99,width=4,height=4,zapDmg=18,debilitateDmg=10,pokeDmg=5,usedHex=false }
+Chosen = Monster:new{ maxHp=99,width=6,height=4,zapDmg=18,debilitateDmg=10,pokeDmg=5,usedHex=false }
 function Chosen:init(random)
 	self.maxHp = ascension >= 7 and random:randInt(98,103) or random:randInt(95,99)
 	if ascension >= 2 then
@@ -193,7 +193,7 @@ function Chosen:init(random)
 end
 
 function Chosen:drawImage()
-	sprmap(24,23,3,self.height,self.x+6,self.y,0)
+	sprmap(24,23,3,self.height,self.x+14,self.y,0)
 end
 
 function Chosen:hex()

@@ -451,10 +451,10 @@ function removeCardFromDeck(amount,canClose,onClose,title)
 	return true
 end
 
-function removeCardsWithEffect(cards,duration)
+function removeCardsWithEffect(cardItems,duration)
 	duration = duration or 10
-	local startX,stepX = placeCardsInARow(#cards)
-	for i, cardItem in ipairs(cards) do
+	local startX,stepX = placeCardsInARow(#cardItems)
+	for i, cardItem in ipairs(cardItems) do
 		removeCard(cardItem.card)
 		cardItem.tx = startX+stepX*i
 		cardItem.ty = 68

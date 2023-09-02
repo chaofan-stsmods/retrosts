@@ -298,7 +298,7 @@ function TheNest:onOption(selection)
 		self.screen = 'donationbox'
 		self.options = {
 			{description='[Smash and Grab] #5#Obtain '..self.goldAmt..' Gold.'},
-			{description='[Stay in Line] #5#Obtain Ritual Dagger. #3#Lose 6 HP.',cardItem=CardItem:new{card=RitualDagger:new()}},
+			{description='[Stay in Line] #5#Obtain #12#Ritual Dagger. #3#Lose 6 HP.',cardItem=CardItem:new{card=RitualDagger:new()}},
 		}
 	elseif self.screen == 'donationbox' then
 		if selection == 1 then

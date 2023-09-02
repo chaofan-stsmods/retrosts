@@ -181,9 +181,26 @@ function Bite:use(target)
 	}
 end
 
+Madness = ColorlessCard:new{
+	name='Madness',description='Reduce the cost of a random card in hand to 0 this combat. NL Exhaust.',baseCost=1,type='skill',
+	rarity='special',playerTarget=true,exhaust=true,upgrade={baseCost=0},
+}
+function Madness:use()
+	return {AnonymousAction:new(function ()
+		local candidates = shallowcopy(hand)
+		table.retainIf(candidates,function(c) return c.card:getCost() > 0 end)
+		if #candidates > 0 then
+			local card = candidates[miscRand:randInt(#candidates)]
+			card.card.baseCost = 0
+			card.card.cost = 0
+			card.card.baseCostModified = true
+		end
+	end)}
+end
+
 colorlessCards = {
 	Wound,Dazed,Burn,Slimed,Void,BandageUp,Blind,Finesse,MasterOfStrategy,HandOfGreed,ThinkingAhead,
-	JAX,Apparition,RitualDagger,Bite,
+	JAX,Apparition,RitualDagger,Bite,Madness,
 }
 
 CurseCard = Card:new{color={15,0},costIcon=46,typeIconColor=13,colorName='curse',type='curse',rarity='common',baseCost=-2,baseCanUse=false,canUpgrade=false,playerTarget=true}

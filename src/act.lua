@@ -187,7 +187,15 @@ function TheCity:drawBackground()
 	end
 end
 
-TheBeyond = Act:new{id=3,title='The Beyond',smallTitle='Act 3',cardUpgradedChance=0.5}
+TheBeyond = Act:new{
+	id=3,title='The Beyond',smallTitle='Act 3',cardUpgradedChance=0.5,
+	weakEncounters={
+		{item=OrbWalkerEncounter,power=2},
+	},
+	events={
+		Falling,TheMoaiHead,SensoryStone,TombOfLordRedMask,WindingHalls,MindBloom,MysteriousSphere,
+	}
+}
 function TheBeyond:drawBackground()
 	sprmap(90,0,30,17,0,0)
 end

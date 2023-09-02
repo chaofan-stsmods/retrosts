@@ -273,9 +273,12 @@ function generateCardTypesForReward(cardCount,random,affectRareChance,cardRarity
 	return cardTypes
 end
 
-function generateCardRewards(rewards,random)
+function generateCardRewards(rewards,random,colorless)
 	local cardCount = player:triggerReducerEvent('modifyCardRewardCount',3)
-	local cardTypes = generateCardTypesForReward(cardCount,random,true)
+	local cardTypes = generateCardTypesForReward(
+		cardCount,random,true,
+		colorless and generateColorlessCardRarity or generateCardRarity,
+		colorless and getColorlessCards() or player:getCards())
 
 	local reward = {
 		title='Add a card to deck',
@@ -286,7 +289,7 @@ function generateCardRewards(rewards,random)
 	for i, cardType in ipairs(cardTypes) do
 		local card = cardType:new()
 		reward.value[i] = card
-		if card.rarity ~= 'rare' and card:canUpgrade() and random:rand() < act.cardUpgradedChance * (ascension >= 12 and 0.5 or 1) then
+		if card.rarity ~= 'rare' and not colorless and card:canUpgrade() and random:rand() < act.cardUpgradedChance * (ascension >= 12 and 0.5 or 1) then
 			card:upgrade()
 			card:resetPowers()
 		end
