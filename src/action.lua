@@ -641,7 +641,7 @@ function MakeTempCardToHandAction:tick()
 	Action.tick(self)
 end
 
-MakeTempCardToDrawPileAction = Action:new{duration=10}
+MakeTempCardToDrawPileAction = Action:new{duration=10,putOnTop=false}
 function MakeTempCardToDrawPileAction:new(card,amount,o)
 	o = o or {}
 	o.card = card
@@ -653,7 +653,11 @@ function MakeTempCardToDrawPileAction:tick()
 	if self.duration == self.startDuration then
 		for _ = 1,self.amount do
 			local card = self.card:copy()
-			table.insert(drawPile,miscRand:randInt(#drawPile+1),card)
+			if self.putOnTop then
+				table.insert(drawPile,card)
+			else
+				table.insert(drawPile,miscRand:randInt(#drawPile+1),card)
+			end
 			card:resetPowers()
 			local cardItem = self.cardItem and self.cardItem:copy() or CardItem:new{card=card,x=0,y=136,isNotInHand=true}
 			local additionalPause = self.pauseDuration or 0
@@ -866,8 +870,8 @@ function PlayerEscapeAction:tick()
 	if self.duration == self.startDuration then
 		local target = player:copy()
 		player.visible = false
-		target.flipped = true
-		addEffect(CreatureEffect:new{target=target,x=target.x,y=target.y,xSpeed=-1})
+		target.flipped = not target.flipped
+		addEffect(CreatureEffect:new{target=target,x=target.x,y=target.y,xSpeed=target.flipped and -1 or 1})
 	end
 	Action.tick(self)
 end

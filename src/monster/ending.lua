@@ -116,5 +116,207 @@ function BeatOfDeathPower:onUseCard()
 	addAction(DamageAction:new{target=player,source=self.owner,value=self.amount,type='power'})
 end
 
+SpireShield = Monster:new{ maxHp=110,width=6,height=4,bashDmg=12,smashDmg=34,numTurn=1 }
+function SpireShield:init()
+	self.maxHp = ascension >= 8 and 125 or 110
+	if ascension >= 3 then
+		self.bashDmg = 14
+		self.smashDmg = 38
+	end
+end
+
+function SpireShield:drawImage()
+	sprmap(84,17,5,4,self.x+6,self.y,0)
+end
+
+function SpireShield:onCombatStart()
+	addAction(ApplyPowerAction:new(self,SurroundedPower:new(player)))
+	addAction(ApplyPowerAction:new(self,BackAttackPower:new(self)))
+	addAction(ApplyPowerAction:new(self,ArtifactPower:new(self,ascension >= 18 and 2 or 1)))
+	Monster.onCombatStart(self)
+end
+
+function SpireShield:enemyTurn()
+	self.numTurn = self.numTurn + 1
+	if self.numTurn == 4 then
+		self.numTurn = 1
+	end
+	Monster.enemyTurn(self)
+end
+
+function SpireShield:smash()
+	addAction(DamageAction:new{target=player,source=self,value=self.intentDamage})
+	if ascension >= 18 then
+		addAction(GainBlockAction:new{target=self,value=99})
+	else
+		addAction(GainBlockAction:new{target=self,value=self.intentDamage})
+	end
+	addAction(NextIntentAction:new(self))
+end
+
+function SpireShield:bash()
+	addAction(DamageAction:new{target=player,source=self,value=self.intentDamage})
+	addAction(ApplyPowerAction:new(self,StrengthPower:new(player,-1)))
+	addAction(NextIntentAction:new(self))
+end
+
+function SpireShield:defend()
+	for _,enemy in ipairs(enemies) do
+		if enemy.alive then
+			addAction(GainBlockAction:new{target=enemy,value=30})
+		end
+	end
+	addAction(NextIntentAction:new(self))
+end
+
+function SpireShield:nextIntent()
+	if self.numTurn == 1 then
+		if aiRand:randBool() then
+			self:setIntent('bash','attackDebuff',self.bashDmg)
+		else
+			self:setIntent('defend','defend')
+		end
+	elseif self.numTurn == 2 then
+		if self:lastIntentIs('bash') then
+			self:setIntent('defend','defend')
+		else
+			self:setIntent('bash','attackDebuff',self.bashDmg)
+		end
+	else
+		self:setIntent('smash','attackDefend',self.smashDmg)
+	end
+end
+
+function SpireShield:die()
+	Monster.die(self)
+	player.flipped = false
+	addAction(RemovePowerByTypeAction:new(player,SurroundedPower))
+	for _,enemy in ipairs(enemies) do
+		if enemy.alive then
+			addAction(RemovePowerByTypeAction:new(enemy,BackAttackRightPower))
+		end
+	end
+end
+
+SpireSpear = Monster:new{ maxHp=160,width=6,height=4,burnDmg=5,skewerCount=3,numTurn=1 }
+function SpireSpear:init()
+	self.maxHp = ascension >= 8 and 180 or 160
+	if ascension >= 3 then
+		self.burnDmg = 6
+		self.skewerCount = 4
+	end
+end
+
+function SpireSpear:drawImage()
+	sprmap(79,22,7,4,self.x-12,self.y,0)
+end
+
+function SpireSpear:onCombatStart()
+	addAction(ApplyPowerAction:new(self,ArtifactPower:new(self,ascension >= 18 and 2 or 1)))
+	Monster.onCombatStart(self)
+end
+
+function SpireSpear:enemyTurn()
+	self.numTurn = self.numTurn + 1
+	if self.numTurn == 4 then
+		self.numTurn = 1
+	end
+	Monster.enemyTurn(self)
+end
+
+function SpireSpear:skewer()
+	for _=1,self.intentAttackCount do
+		addAction(DamageAction:new{target=player,source=self,value=self.intentDamage})
+	end
+	addAction(NextIntentAction:new(self))
+end
+
+function SpireSpear:burn()
+	for _=1,self.intentAttackCount do
+		addAction(DamageAction:new{target=player,source=self,value=self.intentDamage})
+	end
+	addAction(MakeTempCardToDrawPileAction:new(Burn:new(),2,{putOnTop=ascension>=18}))
+	addAction(NextIntentAction:new(self))
+end
+
+function SpireSpear:buff()
+	for _,enemy in ipairs(enemies) do
+		if enemy.alive then
+			addAction(ApplyPowerAction:new(self,StrengthPower:new(enemy,2)))
+		end
+	end
+	addAction(NextIntentAction:new(self))
+end
+
+function SpireSpear:nextIntent()
+	if self.numTurn == 1 then
+		if self:lastIntentIs('burn') then
+			self:setIntent('buff','buff')
+		else
+			self:setIntent('burn','attackDebuff',self.burnDmg,2)
+		end
+	elseif self.numTurn == 2 then
+		self:setIntent('skewer','attack',10,self.skewerCount)
+	else
+		if aiRand:randBool() then
+			self:setIntent('buff','buff')
+		else
+			self:setIntent('burn','attackDebuff',self.burnDmg,2)
+		end
+	end
+end
+
+function SpireSpear:die()
+	Monster.die(self)
+	addAction(RemovePowerByTypeAction:new(player,SurroundedPower))
+	for _,enemy in ipairs(enemies) do
+		if enemy.alive then
+			player.flipped = true
+			addAction(RemovePowerByTypeAction:new(enemy,BackAttackPower))
+		end
+	end
+end
+
+SurroundedPower = Power:new{icon=416,faceLeft=false,stackable=false}
+function SurroundedPower:onUseCard(_,target)
+	if target == nil then
+		return
+	end
+	local newFaceLeft = target.x < self.owner.x
+	if newFaceLeft ~= self.faceLeft then
+		self.faceLeft = newFaceLeft
+		self.owner.flipped = self.faceLeft
+		for _, enemy in ipairs(enemies) do
+			if enemy.alive then
+				if newFaceLeft then
+					if enemy.x > self.owner.x then
+						addAction(ApplyPowerAction:new(self.owner,BackAttackRightPower:new(enemy)))
+					else
+						addAction(RemovePowerByTypeAction:new(enemy,BackAttackPower))
+					end
+				else
+					if enemy.x > self.owner.x then
+						addAction(RemovePowerByTypeAction:new(enemy,BackAttackRightPower))
+					else
+						addAction(ApplyPowerAction:new(self.owner,BackAttackPower:new(enemy)))
+					end
+				end
+			end
+		end
+	end
+end
+
+BackAttackPower = Power:new{icon=353,priority=150,stackable=false}
+function BackAttackPower:onAttack(damage)
+	return damage * 1.5
+end
+
+BackAttackRightPower = BackAttackPower:new{icon=Icon:new{image=353,flip=true}}
+
 -- encounters
 CorruptHeartEncounter = Encounter:new{spriteBank=5,name='CorruptHeart',type='boss',enemyInfo={encItem(CorruptHeart,0,4)},mapIcon=332}
+ShieldAndSpearEncounter = Encounter:new{spriteBank=6,name='ShieldAndSpear',type='elite',enemyInfo={encItem(SpireShield,-116,1),encItem(SpireSpear,26,1)}}
+function ShieldAndSpearEncounter:setupEnemies(random)
+	player.x = 120-player.width*4
+	Encounter.setupEnemies(self,random)
+end

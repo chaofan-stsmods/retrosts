@@ -121,6 +121,13 @@ function Player:getPronouns()
 	return {vampires='brother'}
 end
 
+function Player:resetPosition()
+	self.x = 26
+	self.y = 52
+	self.flipped = false
+	self.visible = true
+end
+
 function sortByPriority(...)
 	local result = {}
 	local args = {...}

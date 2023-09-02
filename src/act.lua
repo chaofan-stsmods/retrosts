@@ -202,12 +202,36 @@ end
 
 TheEnding = Act:new{
 	id=4,title='The Ending',smallTitle='Final Act',cardUpgradedChance=0.5,commonRelicChance=0,uncommonRelicChance=100,
+	eliteEncounters={
+		{item=ShieldAndSpearEncounter,power=1},
+	},
 	bossEncounters={
 		{item=CorruptHeartEncounter,power=1},
 	},
 }
 function TheEnding:drawBackground()
 	sprmap(120,0,30,17,0,0)
+end
+
+function TheEnding:generateMap()
+	local map = {}
+	local width = 7
+	local height = 3
+	fillMap(map,width,height)
+
+	map[1][4].type = 'rest'
+	map[2][4].type = 'shop'
+	map[3][4].type = 'elite'
+
+	local bossRoom = {id=height*width+1,x=1,y=height+1,previous={},next={},type='boss',hasEdge=false,completed=false}
+	addMapEdge(map[1][4],map[2][4])
+	addMapEdge(map[2][4],map[3][4])
+	addMapEdge(map[3][4],bossRoom)
+
+	local specialRooms = {bossRoom}
+	assignSpecialRoomIds(specialRooms)
+
+	return map,specialRooms
 end
 
 acts = { Exordium,TheCity,TheBeyond,TheEnding }

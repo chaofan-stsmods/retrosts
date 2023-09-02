@@ -354,7 +354,7 @@ SmokeBomb = Potion:new{
 	useTitle='Throw',
 }
 function SmokeBomb:canUse()
-	return table.allMatch(enemies,function (e) return e.type ~= 'boss' end)
+	return table.allMatch(enemies,function (e) return e.type ~= 'boss' end) and not player:getPower(SurroundedPower)
 end
 
 function SmokeBomb:use()

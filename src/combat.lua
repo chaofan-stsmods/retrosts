@@ -150,8 +150,13 @@ function drawHand()
 			else
 				local enemy = enemies[combatSelection.index]
 				drawSelectionBox(enemy.x,enemy.y,8*enemy.width,8*enemy.height)
-				drawBezier(20,cardItem.x,cardItem.y-10,math.min(cardItem.x-5,enemy.x-20),enemy.y+enemy.height*4-5,enemy.x+enemy.width*4-4,enemy.y+enemy.height*4)
-				spr(74,enemy.x+enemy.width*4-8,enemy.y+enemy.height*4-4,0)
+				if enemy.x > player.x then
+					drawBezier(20,cardItem.x,cardItem.y-10,math.min(cardItem.x-5,enemy.x-20),enemy.y+enemy.height*4-5,enemy.x+enemy.width*4-4,enemy.y+enemy.height*4)
+					spr(74,enemy.x+enemy.width*4-8,enemy.y+enemy.height*4-4,0)
+				else
+					drawBezier(20,cardItem.x,cardItem.y-10,math.max(cardItem.x+5,enemy.x+enemy.width*8+20),enemy.y+enemy.height*4-5,enemy.x+enemy.width*4+4,enemy.y+enemy.height*4)
+					spr(74,enemy.x+enemy.width*4,enemy.y+enemy.height*4-4,0,1,1)
+				end
 			end
 		end
 	end

@@ -47,9 +47,7 @@ function MapWindow:drawMap(y)
 		end
 	end
 	local bossDrawY = y+self.bossPosition
-	if self.bossY <= currentRoomY then
-		resetColor(15)
-	end
+	mapColor(15,self.bossY <= currentRoomY and 15 or 13)
 	if y > -64 then
 		if (mapScreenY == self.bossY and mapScreenSelectionMode) or
 			(currentRoomY == self.bossY and not mapScreenSelectionMode) then
@@ -153,7 +151,7 @@ function MapWindow:drawRoom(room,rx,ry)
 		if room.completed then
 			spr(304,rx+4,ry+6,12)
 		end
-		if room.y == 15 then
+		if room.y == self.bossY-1 then
 			if room.x <= 2 then
 				rightEdge(rx,ry)
 			elseif room.x <= 5 then
@@ -187,20 +185,7 @@ end
 
 function generateMap(random,width,height,count)
 	local map = {}
-	for i=1,height do
-		map[i] = {}
-		for j=1,width do
-			local room = {id=(i-1)*width+j,x=j,y=i,previous={},next={},type=nil,hasEdge=false,hasKey=false,completed=false}
-			if i == 1 then
-				room.type = 'monster'
-			elseif i == height then
-				room.type = 'rest'
-			elseif i == 9 then
-				room.type = 'treasure'
-			end
-			map[i][j] = room
-		end
-	end
+	fillMap(map,width,height)
 
 	local rows = {}
 	for i=1,width do rows[i] = i end
@@ -263,12 +248,27 @@ function generateMap(random,width,height,count)
 	local bossTreasureRoom = {id=height*width+2,x=1,y=height+2,previous={},next={},type='bossTreasure',hasEdge=false,completed=false}
 	addMapEdge(bossRoom,bossTreasureRoom)
 
-	local otherRooms = {bossRoom,bossTreasureRoom}
-	for i, room in ipairs(otherRooms) do
-		room.specialRoomId = i
-	end
+	local specialRooms = {bossRoom,bossTreasureRoom}
+	assignSpecialRoomIds(specialRooms)
 
-	return map,otherRooms
+	return map,specialRooms
+end
+
+function fillMap(map,width,height)
+	for i=1,height do
+		map[i] = {}
+		for j=1,width do
+			local room = {id=(i-1)*width+j,x=j,y=i,previous={},next={},type=nil,hasEdge=false,hasKey=false,completed=false}
+			if i == 1 then
+				room.type = 'monster'
+			elseif i == height then
+				room.type = 'rest'
+			elseif i == 9 then
+				room.type = 'treasure'
+			end
+			map[i][j] = room
+		end
+	end
 end
 
 function generatePath(random,map,startX,width,height)
@@ -340,4 +340,10 @@ function canAssignRoom(room,roomType)
 		end
 	end
 	return true
+end
+
+function assignSpecialRoomIds(specialRooms)
+	for i, room in ipairs(specialRooms) do
+		room.specialRoomId = i
+	end
 end
