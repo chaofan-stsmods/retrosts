@@ -410,7 +410,12 @@ function obtainCard(card)
 end
 
 function removeCard(card)
-	table.remove(deck,table.indexOf(deck,card))
+	removeCardByIndex(table.indexOf(deck,card))
+end
+
+function removeCardByIndex(index)
+	local card = deck[index]
+	table.remove(deck,index)
 	card:onRemoveFromDeck()
 	player:triggerEvent('onRemoveCard',card)
 end
@@ -608,6 +613,12 @@ function duplicateCardFromDeck(amount,canClose,onClose,title)
 		end
 	end)
 	return true
+end
+
+function obtainCardWithEffect(card,x,y)
+	local cardItem = CardItem:new{card=card,x=0,y=136,tx=x or 120,ty=y or 68,isNotInHand=true}
+	addEffect(CardEffect:new{cardItem=cardItem,pauseDuration=30,duration=50,tx=240,ty=0})
+	obtainCard(cardItem.card)
 end
 
 -- hand ui

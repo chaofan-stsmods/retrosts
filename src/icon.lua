@@ -5,7 +5,7 @@ local rainbow =  {8,2,3,4,5,11,10}
 local rainbow2 = {1,1,2,3,6,10,9}
 
 ---@class Icon : Object
-Icon = {image=0,colorMap={},colorKey=0,pixels={},flip=false,typeIcon=nil,isRainbow=false,rainbowLength=#rainbow}
+Icon = {image=0,colorMap={},transparentColor=0,pixels={},flip=false,typeIcon=nil,isRainbow=false,rainbowLength=#rainbow}
 Object:new(Icon)
 
 function Icon:draw(x,y,rainbowTimer)
@@ -18,7 +18,7 @@ function Icon:draw(x,y,rainbowTimer)
 			mapColor(key,value)
 		end
 	end
-	spr(self.image,x,y,self.colorKey,1,self.flip and 1 or 0)
+	spr(self.image,x,y,self.transparentColor,1,self.flip and 1 or 0)
 	for _, pixel in ipairs(self.pixels) do
 		pix(x+pixel[1],y+pixel[2],pixel[3])
 	end
@@ -60,9 +60,9 @@ icons = {
 	Status = Icon:new{image=55,typeIcon=3},
 	Curse = Icon:new{image=56,typeIcon=3},
 
-	DrawPile = Icon:new{image=38,colorMap={[5]=4,[6]=3},flip=true},
-	DiscardPile = Icon:new{image=38,colorMap={[4]=10,[5]=10,[3]=9,[6]=9,[2]=15}},
-	Deck = Icon:new{image=38,colorMap={[5]=15,[6]=15,[12]=15},pixels={{5,0,15}}},
+	DrawPile = Icon:new{image=38,colorMap={[5]=4,[6]=3},flip=true,transparentColor={0,15}},
+	DiscardPile = Icon:new{image=38,colorMap={[4]=10,[5]=10,[3]=9,[6]=9,[2]=15},transparentColor={0,15}},
+	Deck = Icon:new{image=38,colorMap={[5]=15,[6]=15,[12]=15}},
 
 	Vulnerable = Icon:new{image=60},
 	Weak = Icon:new{image=61},

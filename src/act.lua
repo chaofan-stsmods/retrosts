@@ -174,6 +174,10 @@ TheCity = Act:new{
 		{item=BronzeAutomatonEncounter,power=1},
 		{item=TheChampEncounter,power=1},
 	},
+	events={
+		PleadingVagrant,AncientWriting,OldBeggar,CursedTome,Augmenter,ForgottenAltar,CouncilOfGhosts,TheNest,TheLibrary,
+		TheMausoleum,Vampires,MaskedBandits,TheColosseum,
+	}
 }
 function TheCity:drawBackground()
 	sprmap(60,0,30,17,0,0)

@@ -25,9 +25,7 @@ function BigFish:onOption(selection)
 			local relic = getRandomNonBottleRelic(self.random)
 			obtainRelic(relic)
 
-			local cardItem = CardItem:new{card=Regret:new(),x=0,y=136,tx=120,ty=68,isNotInHand=true}
-			addEffect(CardEffect:new{cardItem=cardItem,pauseDuration=30,duration=50,tx=240,ty=0})
-			obtainCard(cardItem.card)
+			obtainCardWithEffect(Regret:new())
 			self.description = 'You grab the box. Inside you find a #4#relic!#12#'..
 				' NL However, you really craved the donut... NL You are filled with ~sadness,~ but mostly #2#regret.'
 		end
@@ -177,9 +175,7 @@ function TheSsssserpent:onOption(selection)
 	elseif self.screen == 'agree' then
 		gainGold(self.goldReward)
 
-		local cardItem = CardItem:new{card=Doubt:new(),x=0,y=136,tx=120,ty=68,isNotInHand=true}
-		addEffect(CardEffect:new{cardItem=cardItem,pauseDuration=30,duration=50,tx=240,ty=0})
-		obtainCard(cardItem.card)
+		obtainCardWithEffect(Doubt:new())
 
 		self.description = 'The serpent rears its head and blasts a stream of #4#gold#12# upwards! NL It is amazing and terrifying simultaneously. NL You gather all the #4#gold#12#, thank the snake, and get going.'
 		self.screen = 'leave'
@@ -337,9 +333,7 @@ function GoldenIdolEvent:onOption(selection)
 		end
 	elseif self.screen == 'escape' then
 		if selection == 1 then
-			local cardItem = CardItem:new{card=Injury:new(),x=0,y=136,tx=120,ty=68,isNotInHand=true}
-			addEffect(CardEffect:new{cardItem=cardItem,pauseDuration=30,duration=50,tx=240,ty=0})
-			obtainCard(cardItem.card)
+			obtainCardWithEffect(Injury:new())
 			self.description = '@RUUUUUUUUUUN!@ NL You barely leap into a side passageway as the boulder rushes by. Unfortunately it feels like you sprained something however.'
 		elseif selection == 2 then
 			player:damage(player,self.hpLoss)
@@ -483,16 +477,16 @@ function DeadAdventurer:load(eventMeta)
 			end
 		end
 		addGoldReward(rewards,eventGold)
+		generateCardRewards(rewards,random)
 		if hasRelic then
 			addRelicReward(rewards,self.relicReward)
 		end
-		generateCardRewards(rewards,random)
 		generatePotionRewards(rewards,random)
 		openWindowAbove(RewardWindow:new{rewards=rewards})
 	end
 end
 
-Mushrooms = CombatTextEvent:new{screen='intro',spriteBank=1,healAmt=0,encounter=nil}
+Mushrooms = CombatTextEvent:new{screen='intro',spriteBank=1,healAmt=0,encounter=ThreeFungiBeastEncounter}
 function Mushrooms:init()
 	self.random = makeRand(act.id,room.id,1)
 	self.rewardRandom = makeRand(act.id,room.id,2)
@@ -502,7 +496,6 @@ function Mushrooms:init()
 		{description='[Stomp] #3#Anger the Mushrooms.'},
 		{description='[Eat] #5#Heal '..self.healAmt..' HP. #3#Become Cursed - Parasite.',cardItem=CardItem:new{card=Parasite:new()}},
 	}
-	self.encounter = ThreeFungiBeastEncounter
 end
 
 function Mushrooms:isAvailable()
@@ -540,9 +533,7 @@ function Mushrooms:onOption(selection)
 			setupEnemies(self.encounter)
 		elseif selection == 2 then
 			player:heal(self.healAmt)
-			local cardItem = CardItem:new{card=Parasite:new(),x=0,y=136,tx=120,ty=68,isNotInHand=true}
-			addEffect(CardEffect:new{cardItem=cardItem,pauseDuration=30,duration=50,tx=240,ty=0})
-			obtainCard(cardItem.card)
+			obtainCardWithEffect(Parasite:new())
 			self.description = 'You give in to the unnatural desire to eat. As you consume mushroom after mushroom, you feel yourself entering into a daze and pass out. As you awake, you feel very odd. NL You #5#Heal #10#25%#12# of your HP, but you also get #2#infected.'
 			self.options = {{description='[Leave]'}}
 			self.screen = 'leave'
@@ -575,8 +566,8 @@ function Mushrooms:load(escaped)
 		local random = self.rewardRandom
 		local rewards = {}
 		addGoldReward(rewards,random:randInt(20,30))
-		addRelicReward(rewards,OddMushroom:new())
 		generateCardRewards(rewards,random)
+		addRelicReward(rewards,OddMushroom:new())
 		generatePotionRewards(rewards,random)
 		openWindowAbove(RewardWindow:new{rewards=rewards})
 	end

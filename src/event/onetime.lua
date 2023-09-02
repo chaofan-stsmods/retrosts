@@ -30,9 +30,7 @@ function OminousForge:onOption(selection)
 			end)
 		elseif selection == 2 then
 			obtainRelic(WarpedTongs:new())
-			local cardItem = CardItem:new{card=Pain:new(),x=0,y=136,tx=120,ty=68,isNotInHand=true}
-			addEffect(CardEffect:new{cardItem=cardItem,pauseDuration=30,duration=50,tx=240,ty=0})
-			obtainCard(cardItem.card)
+			obtainCardWithEffect(Pain:new())
 
 			self.screen = 'leave'
 			self.description = 'You decide to see if you can find anything of use. After uncovering tarps, looking through boxes, and checking nooks and crannies, you find a dust covered ~#4#relic!#12#~ ' ..
@@ -378,9 +376,7 @@ function KnowingSkull:onOption(selection)
 			self.description = '\"YOU MORTALS NEVER CHANGE. IT IS DONE.\" NL #4#Gold#12# rains down on you!'
 		elseif selection == 3 then
 			local card = getColorlessCardType(self.random,'uncommon'):new()
-			local cardItem = CardItem:new{card=card,x=0,y=136,tx=120,ty=68,isNotInHand=true}
-			addEffect(CardEffect:new{cardItem=cardItem,pauseDuration=30,duration=50,tx=240,ty=0})
-			obtainCard(cardItem.card)
+			obtainCardWithEffect(card)
 			player:damage(player,self.cardCost,'hpLoss')
 			self.cardCost = self.cardCost+1
 			self.options[3].description = '[Success?] #5#Get a Colorless Card. #3#Lose '..self.cardCost..' HP.'
@@ -455,9 +451,7 @@ function NoteForYourself:onOption(selection)
 		self.screen = 'choose'
 	elseif self.screen == 'choose' then
 		if selection == 1 then
-			local cardItem = CardItem:new{card=self.card,x=0,y=136,tx=120,ty=68,isNotInHand=true}
-			addEffect(CardEffect:new{cardItem=cardItem,pauseDuration=30,duration=50,tx=240,ty=0})
-			obtainCard(self.card)
+			obtainCardWithEffect(self.card)
 			removeCardFromDeck(1,false,function (completed,cardItems)
 				self.description = 'What is going on?'
 				if completed then

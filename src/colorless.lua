@@ -115,8 +115,75 @@ function ThinkingAhead:use()
 	}
 end
 
+JAX = ColorlessCard:new{
+	name='J.A.X.',description='Lose 3 HP. NL Gain !M! {Strength}.',baseCost=0,type='skill',rarity='special',
+	playerTarget=true,baseMagic=2,upgrade={baseMagic=3},
+}
+function JAX:use()
+	return {
+		DamageAction:new{source=player,target=player,value=3,type='hpLoss'},
+		ApplyPowerAction:new(player,StrengthPower:new(player,self.magic))
+	}
+end
+
+Apparition = ColorlessCard:new{
+	name='Apparition',description='Ethereal. NL Gain 1 {35}. NL Exhaust.',baseCost=1,type='skill',rarity='special',
+	playerTarget=true,upgrade={ethereal=false,description='Gain 1 {35}. NL Exhaust.'},exhaust=true,ethereal=true,
+}
+function Apparition:use()
+	return { ApplyPowerAction:new(player,IntangiblePower:new(player,1)) }
+end
+
+RitualDagger = ColorlessCard:new{
+	name='Ritual Dagger',description='{Damage} !D!. NL If Fatal, this card +!M! damage permanently. NL Exhaust.',
+	baseCost=1,baseDamage=15,baseMagic=3,type='attack',rarity='special',enemyTarget=true,upgrade={baseMagic=5},exhaust=true,
+	source=nil,
+}
+function RitualDagger:use(target)
+	local damageAction = DamageAction:new{source=player,target=target,value=self.damage}
+	return {
+		damageAction,
+		FatalAction:new{target=target,action=damageAction,callback=function ()
+			self.baseDamage = self.baseDamage + self.magic
+			self:applyPowers()
+			if self.source and table.indexOf(deck,self.source) then
+				self.source.baseDamage = self.source.baseDamage + self.magic
+				self.source:resetPowers()
+			end
+		end}
+	}
+end
+
+function RitualDagger:copy()
+	local copied = ColorlessCard.copy(self)
+	copied.source = self
+	return copied
+end
+
+function RitualDagger:save()
+	return ColorlessCard.save(self) | (self.baseDamage << 1)
+end
+
+function RitualDagger:load(meta)
+	ColorlessCard.load(self,meta & 1)
+	self.baseDamage = meta >> 1
+	self.damage = self.baseDamage
+end
+
+Bite = ColorlessCard:new{
+	name='Bite',description='{Damage} !D!. NL Heal !M! HP.',baseCost=1,baseDamage=7,baseMagic=2,type='attack',rarity='special',
+	enemyTarget=true,upgrade={baseDamage=8,baseMagic=3},
+}
+function Bite:use(target)
+	return {
+		DamageAction:new{source=player,target=target,value=self.damage},
+		HealAction:new{target=player,value=self.magic}
+	}
+end
+
 colorlessCards = {
-	Wound,Dazed,Burn,Slimed,Void,BandageUp,Blind,Finesse,MasterOfStrategy,HandOfGreed,ThinkingAhead
+	Wound,Dazed,Burn,Slimed,Void,BandageUp,Blind,Finesse,MasterOfStrategy,HandOfGreed,ThinkingAhead,
+	JAX,Apparition,RitualDagger,Bite,
 }
 
 CurseCard = Card:new{color={15,0},costIcon=46,typeIconColor=13,colorName='curse',type='curse',rarity='common',baseCost=-2,baseCanUse=false,canUpgrade=false,playerTarget=true}

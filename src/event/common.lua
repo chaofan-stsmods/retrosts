@@ -25,9 +25,7 @@ function GoldenShrine:onOption(selection)
 			self.description = 'As your hand touches the shrine, #4#gold#12# rains from the ceiling ~showering~ ~you~ ~in~ ~riches.~'
 		elseif selection == 2 then
 			gainGold(275)
-			local cardItem = CardItem:new{card=Regret:new(),x=0,y=136,tx=120,ty=68,isNotInHand=true}
-			addEffect(CardEffect:new{cardItem=cardItem,pauseDuration=30,duration=50,tx=240,ty=0})
-			obtainCard(cardItem.card)
+			obtainCardWithEffect(Regret:new())
 			self.description = 'Each time you strike the shrine, #4#gold#12# pours forth again and again! NL NL As you pocket the riches, something #2#weighs heavily on you.'
 		else
 			self.description = 'You ignore the shrine.'
@@ -239,8 +237,19 @@ function WheelOfChange:drawWheel()
 		tri(x1,y1,x4,y4,x3,y3,4)
 	end
 	for i=1,6 do
-		local x1,y1 = cx+(radius*0.6)*math.sin(rotation+(i-0.5)*step/2),cy-(radius*0.6)*math.cos(rotation+(i-0.5)*step/2)
-		spr(wheelIcons[i],x1-8,y1-8,0,2)
+		local r = rotation+(i-0.5)*step/2
+		local x1,y1 = cx+(radius*0.6)*math.sin(r),cy-(radius*0.6)*math.cos(r)
+		if ttri then
+			local d1,d2,d3,d4=math.sin(r-3.14159265/4),-math.cos(r-3.14159265/4),math.sin(r+3.14159265/4),-math.cos(r+3.14159265/4)
+			local d = 1.414*8
+			d1,d2,d3,d4 = d1*d,d2*d,d3*d,d4*d
+			local icon = wheelIcons[i]
+			local u,v = 8*(icon%16),8*math.floor(icon/16)
+			ttri(x1+d1,y1+d2,x1+d3,y1+d4,x1-d1,y1-d2,u,v,u+8,v,u+8,v+8,0,0)
+			ttri(x1+d1,y1+d2,x1-d3,y1-d4,x1-d1,y1-d2,u,v,u,v+8,u+8,v+8,0,0)
+		else
+			spr(wheelIcons[i],x1-8,y1-8,0,2)
+		end
 	end
 end
 
@@ -283,9 +292,7 @@ function WheelOfChange:relic()
 end
 
 function WheelOfChange:curse()
-	local cardItem = CardItem:new{card=Decay:new(),x=0,y=136,tx=120,ty=68,isNotInHand=true}
-	addEffect(CardEffect:new{cardItem=cardItem,pauseDuration=30,duration=50,tx=240,ty=0})
-	obtainCard(cardItem.card)
+	obtainCardWithEffect(Decay:new())
 end
 
 function WheelOfChange:remove()

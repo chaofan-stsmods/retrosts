@@ -340,9 +340,9 @@ function generateRelicRewards(rewards,random)
 		return
 	end
 
-	addRelicReward(rewards,getRandomRelic(random):new())
+	addRelicReward(rewards,getRandomRelic(random))
 	if hasRelic(BlackStar) then
-		addRelicReward(rewards,getRandomNonCampfireRelic(random):new())
+		addRelicReward(rewards,getRandomNonCampfireRelic(random))
 	end
 
 	if room.hasKey then

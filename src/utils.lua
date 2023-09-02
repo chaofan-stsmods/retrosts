@@ -1,6 +1,9 @@
 -- utils
 ---@diagnostic disable: lowercase-global
 
+local darkenColorList = {0,0,15,14,14,14,15,0,15,15,14,14,14,14,15,0}
+--{0,0,1,2,3,6,7,0,1,15,9,10,13,14,15,0}
+
 function strWidth(str,fixed,small,scale)
 	scale = scale or 1
 	return print(str,0,-8*scale,0,fixed,scale,small)
@@ -27,6 +30,10 @@ end
 
 function printShadowed(str,x,y,color,shadowColor,scale,small)
 	scale = scale or 1
+	if isDarken then
+		color = darkenColorList[color+1]
+		shadowColor = darkenColorList[(shadowColor or 15)+1]
+	end
 	print(str,x+1,y+1,shadowColor or 15,false,scale,small)
 	print(str,x,y,color,false,scale,small)
 end
@@ -187,8 +194,6 @@ function flipRemap(x,w)
 end
 
 isDarken = false
-local darkenColorList = {0,0,15,14,14,14,15,0,15,15,14,14,14,14,15,0}
---{0,0,1,2,3,6,7,0,1,15,9,10,13,14,15,0}
 function mapColor(from,to)
 	poke4(PALETTE_MAP*2+from,isDarken and darkenColorList[to+1] or to)
 end

@@ -283,6 +283,15 @@ end
 -- main
 
 queueSync(32,1)
+----[[
+startGame(Ironclad,20)
+startAct(2)
+obtainRelic(Girya:new{counter=99})
+obtainRelic(SlingOfCourage:new())
+obtainRelic(PreservedInsect:new())
+obtainRelic(SlaversCollar:new())
+currentEvent = TheColosseum:new()
+--]]
 --[[
 startGame(Ironclad,20)
 startAct(2)
@@ -294,8 +303,8 @@ table.insert(deck,Disarm:new())
 table.insert(deck,Disarm:new())
 table.insert(deck,Offering:new())
 table.insert(deck,Offering:new())
-obtainRelic(ChampionBelt:new())
-startCombat(TheChampEncounter)
+obtainRelic(Turnip:new())
+startCombat(SphericGuardianEncounter)
 addAction(ApplyPowerAction:new(player,StrengthPower:new(player,30)))
 addAction(ApplyPowerAction:new(player,MetallicizePower:new(player,300)))
 --]]
@@ -309,7 +318,7 @@ table.insert(deck,Normality:new())
 table.insert(deck,Normality:new())
 table.insert(deck,Anger:new())
 table.insert(deck,Anger:new())
-addRelicReward(nearestWindow.rewards,Necronomicon:new())
+addRelicReward(nearestWindow.rewards,WingBoots:new())
 addRelicReward(nearestWindow.rewards,Enchiridion:new())
 addRelicReward(nearestWindow.rewards,NilrysCodex:new())
 addRelicReward(nearestWindow.rewards,NeowsLament:new{counter=99})
@@ -510,7 +519,7 @@ window:onOpen()
 -- 035:00c555000c556555c55556555757655656565656505655605065655600055605
 -- 036:0044440004444440044004403330443300344003030440300000000003044030
 -- 037:1111110033344110000000110000000100000001000000110000011011111100
--- 038:000050000005445000544245054424446442443cc33443c00cc33c00000cc000
+-- 038:00005f000005445000544245054424446442443cc33443c00cc33c00000cc000
 -- 039:0000040000022200022121102222422242122124012222100022100000040000
 -- 040:0022220002111120211111122111111221111112211111120211112000222200
 -- 041:00000f000000fdf0000fdddf00fdedf00fdedf00fdedf000fddf00000ff00000

@@ -496,7 +496,7 @@ function GameWindow:tick()
 end
 
 function GameWindow:tickBelow()
-	if roomActionType == 'combat' then
+	if roomActionType == 'combat' or roomActionType == 'eventCombat' then
 		darkenColors()
 		act:drawBackground()
 		if player.visible then

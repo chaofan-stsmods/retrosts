@@ -51,9 +51,7 @@ function generateNeowRewards(options,random)
 	elseif oid == 2 then
 		option = {description='[ #5#Obtain a random rare card #12#]',onSelect=function ()
 			local card = getPlayerCardType(random,'rare'):new()
-			local cardItem = CardItem:new{card=card,x=0,y=136,tx=120,ty=68,isNotInHand=true}
-			addEffect(CardEffect:new{cardItem=cardItem,pauseDuration=30,duration=50,tx=240,ty=0})
-			obtainCard(cardItem.card)
+			obtainCardWithEffect(card)
 		end}
 	elseif oid == 3 then
 		option = {description='[ #5#Remove a card from your deck #12#]',onSelect=function ()
@@ -127,9 +125,7 @@ function generateNeowRewards(options,random)
 	elseif nid == 3 then
 		negative = {description='[ #3#Obtain a curse ',onSelectPhase2=function ()
 			local card = getCurseCardType(random):new()
-			local cardItem = CardItem:new{card=card,x=0,y=136,tx=120,ty=68,isNotInHand=true}
-			addEffect(CardEffect:new{cardItem=cardItem,pauseDuration=30,duration=50,tx=240,ty=0})
-			obtainCard(cardItem.card)
+			obtainCardWithEffect(card)
 		end}
 	elseif nid == 4 then
 		local damage = math.floor(player.hp/10)*3

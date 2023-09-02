@@ -351,7 +351,7 @@ function ArtOfWar:onUseCard(card)
 	end
 end
 
-BagOfMarbles = Relic:new{name='Bag of Marbles',icon=33,tier='common',description='At the start of each combat, apply #11#1#12# {Vulnerable} to ALL enemies.'}
+BagOfMarbles = Relic:new{name='Bag of Marbles',icon=33,tier='common',description='At the start of each combat, apply #11#1#12# {Vulnerable} to all enemies.'}
 function BagOfMarbles:onCombatStart()
 	for _, enemy in ipairs(enemies) do
 		if enemy.alive then
@@ -1089,7 +1089,7 @@ end
 Ginger = Relic:new{name='Ginger',icon=151,tier='rare',description='You can no longer become {Weak}.'}
 function Ginger:onBeforeApplyPower(power)
 	if getmetatable(power) == WeakPower then
-		local owner = self.owner
+		local owner = player
 		addEffect(TextEffect:new{x=owner.x+owner.width*4,y=owner.y,text='Immune',color=12,ySpeed=-0.5})
 		return false
 	end
@@ -1098,7 +1098,7 @@ end
 Turnip = Relic:new{name='Turnip',icon=166,tier='rare',description='You can no longer become {Frail}.'}
 function Turnip:onBeforeApplyPower(power)
 	if getmetatable(power) == FrailPower then
-		local owner = self.owner
+		local owner = player
 		addEffect(TextEffect:new{x=owner.x+owner.width*4,y=owner.y,text='Immune',color=12,ySpeed=-0.5})
 		return false
 	end
@@ -1364,7 +1364,7 @@ function PandorasBox:onObtained()
 		local card = deck[i]
 		if table.anyMatch(card.tags,function (tag) return tag == 'basicStrike' or tag == 'basicDefend' end) then
 			table.insert(basicCards,card)
-			removeCard(card)
+			removeCardByIndex(i)
 		end
 	end
 	local random = makeRand(act.id,room.id,7)
@@ -1612,9 +1612,7 @@ end
 
 Necronomicon = Relic:new{name='Necronomicon',icon=255,tier='special',activated=false,description='The first {Attack} played each turn that costs #11#2#12# or more is played twice. Upon pickup, obtain a special {Curse}.'}
 function Necronomicon:onObtained()
-	local cardItem = CardItem:new{card=Necronomicurse:new(),x=0,y=136,tx=120,ty=68,isNotInHand=true}
-	addEffect(CardEffect:new{cardItem=cardItem,pauseDuration=30,duration=50,tx=240,ty=0})
-	obtainCard(cardItem.card)
+	obtainCardWithEffect(Necronomicurse:new())
 end
 
 function Necronomicon:onTurnStart()
@@ -1638,10 +1636,19 @@ function NilrysCodex:onTurnEnd()
 	addAction(DiscoveryAction:new{target='drawPile',canClose=true})
 end
 
+RedMask = Relic:new{name='Red Mask',icon=222,tier='special',description='At the start of each combat, apply #11#1#12# {Weak} to all enemies.'}
+function RedMask:onCombatStart()
+	for _, enemy in ipairs(enemies) do
+		if enemy.alive then
+			addAction(ApplyPowerAction:new(player,WeakPower:new(enemy,1)))
+		end
+	end
+end
+
 colorlessRelics = {
 	-- special
 	Circlet,NeowsLament,GoldenIdol,OddMushroom,WarpedTongs,SpiritPoop,CultistMask,FaceOfCleric,GremlinMask,NlothsMask,
-	SsserpentHead,NlothsGift,BloodyIdol,Enchiridion,MarkOfTheBloom,MutagenicStrength,Necronomicon,NilrysCodex,
+	SsserpentHead,NlothsGift,BloodyIdol,Enchiridion,MarkOfTheBloom,MutagenicStrength,Necronomicon,NilrysCodex,RedMask,
 	-- common
 	Anchor,PotionBelt,PreservedInsect,Akabeko,AncientTeaSet,ArtOfWar,BagOfMarbles,BagOfPreparation,RegalPillow,BloodVial,
 	BronzeScales,CentennialPuzzle,CeramicFish,DreamCatcher,HappyFlower,JuzuBracelet,Lantern,MawBank,MealTicket,Nunchaku,

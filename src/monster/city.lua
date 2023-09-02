@@ -1242,8 +1242,8 @@ SneckoEncounter = Encounter:new{spriteBank=3,name='Snecko',enemyInfo={encItem(Sn
 
 -- event
 BanditsEncounter = Encounter:new{spriteBank=5,name='Bandits',enemyInfo={encItem(Pointy,-48,0),encItem(Romeo,0,0),encItem(Bear,48,1)}}
-ColosseumNobsEncounter = Encounter:new{spriteBank=1,name='ColosseumNob',enemyInfo={encItem(Taskmaster,-28,0),encItem(GremlinNob,20,2)}}
-ColosseumSlaversEncounter = Encounter:new{spriteBank=1,name='ColosseumSlavers',type='elite',enemyInfo={encItem(SlaverBlue,-32,0),encItem(SlaverRed,24,1)}}
+ColosseumNobsEncounter = Encounter:new{spriteBank=1,name='ColosseumNob',type='elite',enemyInfo={encItem(Taskmaster,-28,0),encItem(GremlinNob,20,2)}}
+ColosseumSlaversEncounter = Encounter:new{spriteBank=1,name='ColosseumSlavers',enemyInfo={encItem(SlaverBlue,-32,0),encItem(SlaverRed,24,1)}}
 
 -- elite encounters
 SlaversEncounter = Encounter:new{spriteBank=1,name='Slavers',type='elite',enemyInfo={encItem(SlaverBlue,-48,0),encItem(Taskmaster,0,0),encItem(SlaverRed,48,1)}}

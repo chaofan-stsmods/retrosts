@@ -117,6 +117,10 @@ function Player:talk(str,duration)
 	addAction(TalkAction:new(self,str,{duration=duration}))
 end
 
+function Player:getPronouns()
+	return {vampires='brother'}
+end
+
 function sortByPriority(...)
 	local result = {}
 	local args = {...}
