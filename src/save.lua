@@ -222,7 +222,7 @@ function loadGame()
 	emeraldKeyObtained = val32 & (1<<17) ~= 0
 	sapphireKeyObtained = val32 & (1<<18) ~= 0
 	oneTimeEvents = loadListBits(index+6,getOneTimeEvents())
-	isCombat = false
+	inCombat = false
 
 	-- act
 

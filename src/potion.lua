@@ -79,8 +79,7 @@ end
 
 function Potion:canUse()
 	return (self.canUseOutsideCombat and (currentEvent == nil or currentEvent.canOperatePotion)) or
-		(roomActionType == 'combat' and getmetatable(nearestWindow) == GameWindow and
-			not inEnemyTurn and table.anyMatch(enemies,function (e) return e.alive end))
+		(inCombat and not inEnemyTurn and table.anyMatch(enemies,function (e) return e.alive end))
 end
 
 function Potion:canDiscard()
@@ -354,7 +353,8 @@ SmokeBomb = Potion:new{
 	useTitle='Throw',
 }
 function SmokeBomb:canUse()
-	return table.allMatch(enemies,function (e) return e.type ~= 'boss' end) and not player:getPower(SurroundedPower)
+	return inCombat and not inEnemyTurn and table.anyMatch(enemies,function (e) return e.alive end) and
+		table.allMatch(enemies,function (e) return e.type ~= 'boss' end) and not player:getPower(SurroundedPower)
 end
 
 function SmokeBomb:use()

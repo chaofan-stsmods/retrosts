@@ -192,6 +192,9 @@ TheBeyond = Act:new{
 	weakEncounters={
 		{item=OrbWalkerEncounter,power=2},
 	},
+	eliteEncounters={
+		{item=ReptomancerEncounter,power=1},
+	},
 	events={
 		Falling,TheMoaiHead,SensoryStone,TombOfLordRedMask,WindingHalls,MindBloom,MysteriousSphere,
 	}

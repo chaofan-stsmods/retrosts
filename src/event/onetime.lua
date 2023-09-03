@@ -443,7 +443,7 @@ end
 
 function NoteForYourself:onOption(selection)
 	if self.screen == 'intro' then
-		self.description = 'You find a folded note and a #ycard inside. It reads, NL \"The Heart awaits.\" NL NL This is your handwriting.'
+		self.description = 'You find a folded note and a #4#card#12# inside. It reads, NL \"The Heart awaits.\" NL NL This is your handwriting.'
 		self.options = {
 			{description='[Take and Give] #5#Receive '..self.card.name..' and Store a Card.',cardItem=CardItem:new{card=self.card}},
 			{description='[Ignore]'}

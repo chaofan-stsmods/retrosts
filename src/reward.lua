@@ -368,7 +368,7 @@ function getRelicTypeByTier(tier)
 		else
 			relic = table.remove(relicPools[tier],#relicPools[tier])
 		end
-	until relic:canSpwan()
+	until relic:canSpawn()
 	return relic
 end
 

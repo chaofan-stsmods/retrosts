@@ -11,7 +11,7 @@ Relic = {
 }
 Object:new(Relic)
 
-function Relic:canSpwan()
+function Relic:canSpawn()
 	return true
 end
 
@@ -544,7 +544,7 @@ function PenNib:onUseCard(card)
 end
 
 SmilingMask = Relic:new{name='Smiling Mask',icon=110,tier='common',priority=80,description='The Merchant\'s card removal service now always costs #11#50 #4#Gold.'}
-function SmilingMask:canSpwan()
+function SmilingMask:canSpawn()
 	return not isRoomType('shop') and floor <= 48
 end
 
@@ -652,7 +652,7 @@ function BottleRelic:onLost()
 	self:unlinkCard()
 end
 
-function BottleRelic:canSpwan()
+function BottleRelic:canSpawn()
 	return table.anyMatch(deck,function(card) return card.rarity ~= 'basic' and self:condition(card) end)
 end
 
@@ -974,7 +974,7 @@ function Sundial:onShuffle()
 end
 
 TheCourier = Relic:new{name='The Courier',icon=143,tier='uncommon',description='The Merchant restocks cards, relics, and potions. All prices are reduced by #11#20%#12#.'}
-function TheCourier:canSpwan()
+function TheCourier:canSpawn()
 	return not isRoomType('shop') and floor <= 48
 end
 
@@ -1172,7 +1172,7 @@ function Mango:onObtained()
 end
 
 OldCoin = Relic:new{name='Old Coin',icon=157,tier='rare',description='Upon pickup, gain #11#300 #4#Gold.'}
-function OldCoin:canSpwan()
+function OldCoin:canSpawn()
 	return not isRoomType('shop') and floor <= 48
 end
 

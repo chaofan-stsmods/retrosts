@@ -11,7 +11,13 @@ function CorruptHeart:init()
 end
 
 function CorruptHeart:drawImage()
-	sprmap(62,17,9,10,self.x,self.y-24,0)
+	sprmap(62,17,9,10,self.x+2,self.y-24,0)
+end
+
+function CorruptHeart:drawIntent()
+	self.y = self.y + 8
+	Monster.drawIntent(self)
+	self.y = self.y - 8
 end
 
 function CorruptHeart:onCombatStart()
@@ -63,6 +69,7 @@ function CorruptHeart:buff()
 	else
 		addAction(ApplyPowerAction:new(self,StrengthPower:new(self,50)))
 	end
+	addAction(NextIntentAction:new(self))
 end
 
 function CorruptHeart:nextIntent(first)
