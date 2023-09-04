@@ -416,7 +416,7 @@ NewTurnAction = Action:new{duration=10,secondary=true,additionalCard=0}
 function NewTurnAction:tick()
 	if self.duration == self.startDuration then
 		player:onTurnStart(turn + 1)
-		addAction(DrawCardAction:new(5+self.additionalCard))
+		addAction(DrawCardAction:new(player:triggerReducerEvent('modifyTurnStartDrawCount',5+self.additionalCard)))
 		player:triggerEvent('onTurnStartPostDraw', turn + 1)
 		if turn ~= 0 then
 			energy = player:triggerReducerEvent('onTurnStartResetEnergy',maxEnergy,energy)
@@ -462,6 +462,10 @@ function ApplyPowerAction:tick()
 	if self.duration == self.startDuration then
 		local power = self.power
 		local owner = power.owner
+		if not owner.canInteract then
+			self.isDone = true
+			return
+		end
 		if not owner:triggerConditionEvent('onBeforeApplyPower',true,power) then
 			Action.tick(self)
 			return

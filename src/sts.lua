@@ -297,14 +297,14 @@ startAct(3)
 roomActionType = 'combat'
 table.insert(deck,BattleTrance:new())
 table.insert(deck,Pummel:new())
-table.insert(deck,Pummel:new())
-table.insert(deck,Disarm:new())
+table.insert(deck,Rupture:new())
+table.insert(deck,Rupture:new())
 table.insert(deck,Disarm:new())
 table.insert(deck,Offering:new())
 table.insert(deck,Offering:new())
 potions[1] = SmokeBomb:new()
-startCombat(NemesisEncounter)
-addAction(ApplyPowerAction:new(player,StrengthPower:new(player,30)))
+startCombat(TimeEaterEncounter)
+addAction(ApplyPowerAction:new(player,StrengthPower:new(player,300)))
 addAction(ApplyPowerAction:new(player,MetallicizePower:new(player,300)))
 --]]
 --[[
@@ -1502,8 +1502,8 @@ window:onOpen()
 -- 153:0066555366655555555555565555566067766660733333337222222257766660
 -- 154:3000000003300000000000000000000000300000330000002333300000000300
 -- 155:00000000000b000000bcb000bcccccb000bcb000000b00000000000000000000
--- 156:0f0000000ef000000fef000000ff000000fef000000ef000000fe0000000e000
--- 157:00fe000000fe000000fef00000fef00000fef00000fef000000fe000000f0000
+-- 156:fef00000fdef0000fedef0000feef0000fedef0000fdef0000fed0000000d000
+-- 157:0fedf0000fedf0000fedef000fedef000fedef000fedef0000ffd0000000d000
 -- 158:0022212100221111004340400043404000033000000440000334300004444000
 -- 159:1111434040434047404337700033300000033400000044770033430000444400
 -- 160:00002222000222200000dd200000d00000000d0000000d000000ddd0000dd000

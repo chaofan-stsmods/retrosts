@@ -495,7 +495,7 @@ function ReactivePower:onDamaged()
 	addAction(NextIntentAction:new(self.owner,false,false))
 end
 
-Reptomancer = Monster:new{ maxHp=190,width=6,height=5,strikeDmg=13,biteDmg=30,daggerCount=1 }
+Reptomancer = Monster:new{ maxHp=190,width=6,height=5,strikeDmg=13,biteDmg=30,daggerCount=1,type='elite' }
 function Reptomancer:init(random)
 	self.maxHp = ascension >= 8 and random:randInt(190,200) or random:randInt(180,190)
 	if ascension >= 3 then
@@ -605,7 +605,7 @@ function SnakeDagger:nextIntent(first)
 	end
 end
 
-GiantHead = Monster:new{ maxHp=500,width=9,height=5,glareDmg=13,attackDmg=30,countdown=5,maxAttackDmg=60 }
+GiantHead = Monster:new{ maxHp=500,width=9,height=5,glareDmg=13,attackDmg=30,countdown=5,maxAttackDmg=60,type='elite' }
 function GiantHead:init()
 	self.maxHp = ascension >= 8 and 520 or 500
 	self.attackDmg = ascension >= 3 and 40 or 30
@@ -677,7 +677,7 @@ function SlowPower:onUseCard()
 	self.amount = self.amount + 1
 end
 
-Nemesis = Monster:new{ maxHp=185,width=6,height=6,fireDmg=6,scytheDmg=45 }
+Nemesis = Monster:new{ maxHp=185,width=6,height=6,fireDmg=6,scytheDmg=45,type='elite' }
 function Nemesis:init()
 	self.maxHp = ascension >= 8 and 200 or 185
 	self.fireDmg = ascension >= 3 and 7 or 6
@@ -724,6 +724,334 @@ function Nemesis:nextIntent(first)
 			{'burn','debuff',power=35,limit=1},
 		})
 	end
+end
+
+AwakenedOne = Monster:new{ maxHp=300,width=8,height=3,slashDmg=20,soulStrikeDmg=6,echoDmg=40,sludgeDmg=18,tackleDmg=10,awakened=false,type='boss' }
+function AwakenedOne:init()
+	self.maxHp = ascension >= 9 and 320 or 300
+end
+
+function AwakenedOne:drawImage()
+	sprmap(6,25,8,3,self.x+3,self.y,0)
+	if self.awakened then
+		rect(self.x-1,self.y+15,15,1,11)
+		rect(self.x+6,self.y+10,1,11,11)
+		spr(411,self.x+3,self.y+12,0)
+
+		spr(412,self.x+8,self.y-4,0)
+		spr(412,self.x+12,self.y-6,0)
+		spr(412,self.x+8,self.y+4,0,1,1)
+		spr(412,self.x+14,self.y+2,0,1,1)
+		spr(412,self.x+24,self.y-5,0,1,1)
+		spr(412,self.x+30,self.y-3,0,1,1)
+		spr(413,self.x+16,self.y-5,0)
+		spr(413,self.x+20,self.y-5,0,1,1)
+	end
+end
+
+function AwakenedOne:onCombatStart()
+	addAction(ApplyPowerAction:new(self,RegenerateMonsterPower:new(self,ascension>=19 and 15 or 10)))
+	addAction(ApplyPowerAction:new(self,CuriosityPower:new(self,ascension>=19 and 2 or 1)))
+	addAction(ApplyPowerAction:new(self,UnawakenedPower:new(self)))
+	if ascension >= 4 then
+		addAction(ApplyPowerAction:new(self,StrengthPower:new(self,2)))
+	end
+	Monster.onCombatStart(self)
+end
+
+function AwakenedOne:slash()
+	addAction(DamageAction:new{target=player,source=self,value=self.intentDamage})
+	addAction(NextIntentAction:new(self))
+end
+
+function AwakenedOne:soulStrike()
+	for _=1,self.intentAttackCount do
+		addAction(DamageAction:new{target=player,source=self,value=self.intentDamage})
+	end
+	addAction(NextIntentAction:new(self))
+end
+
+function AwakenedOne:echo()
+	addAction(DamageAction:new{target=player,source=self,value=self.intentDamage})
+	addAction(NextIntentAction:new(self))
+end
+
+function AwakenedOne:sludge()
+	addAction(DamageAction:new{target=player,source=self,value=self.intentDamage})
+	addAction(MakeTempCardToDrawPileAction:new(Void:new()))
+	addAction(NextIntentAction:new(self))
+end
+
+function AwakenedOne:tackle()
+	for _=1,self.intentAttackCount do
+		addAction(DamageAction:new{target=player,source=self,value=self.intentDamage})
+	end
+	addAction(NextIntentAction:new(self))
+end
+
+function AwakenedOne:rebirth()
+	addAction(AnonymousAction:new(function ()
+		self.canInteract = true
+		self.awakened = true
+	end))
+	addAction(HealAction:new{target=self,value=self.maxHp})
+	addAction(SetIntentAction:new(self,'echo','attack',self.echoDmg))
+end
+
+function AwakenedOne:nextIntent(first)
+	if first then
+		self:setIntent('slash','attack',self.slashDmg)
+	else
+		if self.awakened then
+			self:rollIntent({
+				{'sludge','attackDebuff',self.sludgeDmg,power=50,limit=2},
+				{'tackle','attack',self.tackleDmg,3,power=50,limit=2},
+			})
+		else
+			self:rollIntent({
+				{'soulStrike','attack',self.soulStrikeDmg,4,power=25,limit=1},
+				{'slash','attack',power=75,limit=2}
+			})
+		end
+	end
+end
+
+function AwakenedOne:die()
+	Monster.die(self)
+	local talked = false
+	if not self.alive then
+		for _,enemy in ipairs(enemies) do
+			if enemy.alive and enemy ~= self then
+				if not talked then
+					addAction(TalkAction:new(enemy,'~No~ ~.~ ~.~ ~.~ ~no~ ~.~ ~.~ NL ~.~ ~.~ ~no~ ~.~ ~.~ ~.~',{duration=120}))
+					talked = true
+				end
+				addAction(EscapeAction:new{target=enemy})
+			end
+		end
+	end
+end
+
+CuriosityPower = Power:new{icon=434}
+function CuriosityPower:onUseCard(card)
+	if card.type == 'power' then
+		addAction(ApplyPowerAction:new(self.owner,StrengthPower:new(self.owner,self.amount)))
+	end
+end
+
+UnawakenedPower = Power:new{icon=435,stackable=false}
+function UnawakenedPower:onDeath()
+	self.owner.alive = true
+	self.owner.visible = true
+	table.retainIf(self.owner.powers,function (power)
+		local powerType = getmetatable(power)
+		return not power.debuff and powerType ~= ShackledPower and powerType ~= CuriosityPower and powerType ~= UnawakenedPower
+	end)
+	addAction(TalkAction:new(self.owner,'~Grr~ ~.~ ~.~ ~.~',{duration=120}))
+	addAction(SetIntentAction:new(self.owner,'rebirth','unknown',0,0,false))
+end
+
+Donu = Monster:new{ maxHp=250,width=8,height=5,beamDmg=10,type='boss' }
+function Donu:init()
+	self.maxHp = ascension >= 9 and 265 or 250
+	if ascension >= 4 then
+		self.beamDmg = 12
+	end
+end
+
+function Donu:drawImage()
+	sprmap(79,26,5,5,self.x+12,self.y,0)
+end
+
+function Donu:onCombatStart()
+	addAction(ApplyPowerAction:new(self,ArtifactPower:new(self,ascension>=19 and 3 or 2)))
+	Monster.onCombatStart(self)
+end
+
+function Donu:beam()
+	for _=1,self.intentAttackCount do
+		addAction(DamageAction:new{target=player,source=self,value=self.intentDamage})
+	end
+	addAction(NextIntentAction:new(self))
+end
+
+function Donu:buff()
+	for _,enemy in ipairs(enemies) do
+		if enemy.alive then
+			addAction(ApplyPowerAction:new(enemy,StrengthPower:new(enemy,3)))
+		end
+	end
+	addAction(NextIntentAction:new(self))
+end
+
+function Donu:nextIntent()
+	if self:lastIntentIs('buff') then
+		self:setIntent('beam','attack',self.beamDmg,2)
+	else
+		self:setIntent('buff','buff')
+	end
+end
+
+Deca = Monster:new{ maxHp=250,width=8,height=5,beamDmg=10,type='boss' }
+function Deca:init()
+	self.maxHp = ascension >= 9 and 265 or 250
+	if ascension >= 4 then
+		self.beamDmg = 12
+	end
+end
+
+function Deca:drawImage()
+	sprmap(84,26,5,5,self.x+12,self.y,0)
+end
+
+function Deca:onCombatStart()
+	addAction(ApplyPowerAction:new(self,ArtifactPower:new(self,ascension>=19 and 3 or 2)))
+	Monster.onCombatStart(self)
+end
+
+function Deca:beam()
+	for _=1,self.intentAttackCount do
+		addAction(DamageAction:new{target=player,source=self,value=self.intentDamage})
+	end
+	addAction(MakeTempCardToDiscardPileAction:new(Dazed:new(),2))
+	addAction(NextIntentAction:new(self))
+end
+
+function Deca:defend()
+	for _,enemy in ipairs(enemies) do
+		if enemy.alive then
+			addAction(GainBlockAction:new{target=enemy,value=16})
+			if ascension >= 19 then
+				addAction(ApplyPowerAction:new(enemy,PlatedArmorPower:new(enemy,3)))
+			end
+		end
+	end
+	addAction(NextIntentAction:new(self))
+end
+
+function Deca:nextIntent()
+	if self:lastIntentIs('beam') then
+		self:setIntent('defend','buff')
+	else
+		self:setIntent('beam','attack',self.beamDmg,2)
+	end
+end
+
+TimeEater = Monster:new{ maxHp=456,width=8,height=5,reverbDmg=7,headSlamDmg=26,usedHaste=false,firstTurn=true,type='boss' }
+function TimeEater:init()
+	self.maxHp = ascension >= 9 and 480 or 456
+	if ascension >= 4 then
+		self.reverbDmg = 8
+		self.headSlamDmg = 32
+	end
+end
+
+function TimeEater:drawImage()
+	sprmap(89,17,6,6,self.x+8,self.y-3,0)
+end
+
+function TimeEater:onCombatStart()
+	addAction(ApplyPowerAction:new(self,TimeWarpPower:new(self,0)))
+	Monster.onCombatStart(self)
+end
+
+function TimeEater:enemyTurn()
+	if self.firstTurn then
+		addAction(TalkAction:new(self,'~Ah...~ NL ~..company...~',{duration=120}))
+		self.firstTurn = false
+	end
+	Monster.enemyTurn(self)
+end
+
+function TimeEater:reverb()
+	for _=1,self.intentAttackCount do
+		addAction(DamageAction:new{target=player,source=self,value=self.intentDamage})
+	end
+	addAction(NextIntentAction:new(self))
+end
+
+function TimeEater:headSlam()
+	addAction(DamageAction:new{target=player,source=self,value=self.intentDamage})
+	addAction(ApplyPowerAction:new(self,DrawReductionPower:new(player,2)))
+	if ascension >= 19 then
+		addAction(MakeTempCardToDiscardPileAction:new(Slimed:new(),2))
+	end
+	addAction(NextIntentAction:new(self))
+end
+
+function TimeEater:defendDebuff()
+	addAction(GainBlockAction:new{target=self,value=20})
+	addAction(ApplyPowerAction:new(player,VulnerablePower:new(player,1,true)))
+	addAction(ApplyPowerAction:new(player,WeakPower:new(player,1,true)))
+	if ascension >= 19 then
+		addAction(ApplyPowerAction:new(player,FrailPower:new(player,1,true)))
+	end
+	addAction(NextIntentAction:new(self))
+end
+
+function TimeEater:haste()
+	self.usedHaste = true
+	addAction(TalkAction:new(self,'~Foolish..~ NL @FOOOLISH!@',{duration=120}))
+	addAction(RemoveDebuffsAction:new(self))
+	addAction(RemovePowerByTypeAction:new(self,ShackledPower))
+	addAction(HealAction:new{target=self,value=math.floor(self.maxHp/2-self.hp)})
+	if ascension >= 19 then
+		addAction(GainBlockAction:new{target=self,value=self.headSlamDmg})
+	end
+	addAction(NextIntentAction:new(self))
+end
+
+function TimeEater:nextIntent()
+	if self.hp < self.maxHp / 2 and not self.usedHaste then
+		self:setIntent('haste','buff')
+	else
+		self:rollIntent{
+			{'reverb','attack',self.reverbDmg,3,power=45,limit=2},
+			{'headSlam','attackDebuff',self.headSlamDmg,power=35,limit=1},
+			{'defendDebuff','defendDebuff',power=20,limit=1},
+		}
+	end
+end
+
+TimeWarpPower = Power:new{icon=404}
+function TimeWarpPower:onUseCard()
+	self.amount = self.amount + 1
+	if self.amount == 12 then
+		self.amount = 0
+		addAction(ApplyPowerAction:new(self.owner,StrengthPower:new(self.owner,2)))
+		if not inEnemyTurn then
+			inEnemyTurn = true
+			addEffect(TimeWarpEffect:new())
+			addAction(EndTurnAction:new())
+		end
+	end
+end
+
+require 'effect'
+TimeWarpEffect = Effect:new{x=120,y=160,vx=-0.1,vy=-7,rotation=-0.4,duration=120}
+function TimeWarpEffect:tick()
+	Effect.tick(self)
+	if self.duration > 80 then
+		return
+	end
+
+	self.y = self.y + self.vy
+	self.vy = self.vy + 0.23
+	self.rotation = self.rotation + 0.1
+
+	local x1,y1,r = self.x,self.y,self.rotation
+	local d1,d2,d3,d4=math.sin(r-3.14159265/4),-math.cos(r-3.14159265/4),math.sin(r+3.14159265/4),-math.cos(r+3.14159265/4)
+	local d = 1.414*32
+	d1,d2,d3,d4 = d1*d,d2*d,d3*d,d4*d
+	local icon = 404
+	local u,v = 8*(icon%16),8*math.floor(icon/16)
+	ttri(x1+d1,y1+d2,x1+d3,y1+d4,x1-d1,y1-d2,u,v,u+8,v,u+8,v+8,0,0)
+	ttri(x1+d1,y1+d2,x1-d3,y1-d4,x1-d1,y1-d2,u,v,u,v+8,u+8,v+8,0,0)
+end
+
+DrawReductionPower = TurnBasedPower:new{icon=405,debuff=true}
+function DrawReductionPower:modifyTurnStartDrawCount(count)
+	return count - 1
 end
 
 -- encounters
@@ -778,6 +1106,11 @@ ReptomancerEncounter = Encounter:new{
 }
 GiantHeadEncounter = Encounter:new{spriteBank=7,name='GiantHead',type='elite',enemyInfo={encItem(GiantHead,0,0)}}
 NemesisEncounter = Encounter:new{spriteBank=7,name='Nemesis',type='elite',enemyInfo={encItem(Nemesis,0,0)}}
+
+-- boss
+AwakenedOneEncounter = Encounter:new{spriteBank=1,name='AwakenedOne',type='boss',enemyInfo={encItem(Cultist,-60,2),encItem(Cultist,-15,1),encItem(AwakenedOne,42,0)},mapIcon=384}
+DonuAndDecaEncounter = Encounter:new{spriteBank=6,name='DonuAndDeca',type='boss',enemyInfo={encItem(Deca,-34,0),encItem(Donu,34,0)},mapIcon=392}
+TimeEaterEncounter = Encounter:new{spriteBank=6,name='TimeEater',type='boss',enemyInfo={encItem(TimeEater,0,0)},mapIcon=388}
 
 -- events
 TwoOrbWalkersEncounter = Encounter:new{spriteBank=6,name='TwoOrbWalkers',enemyInfo={encItem(OrbWalker,-32,0),encItem(OrbWalker,32,0)}}

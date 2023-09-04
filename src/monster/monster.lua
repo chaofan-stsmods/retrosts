@@ -85,7 +85,7 @@ end
 intentSpriteMap = {
 	attack={icons.AttackIntent},defend={icons.Block},attackDefend={icons.Block,icons.AttackIntent},buff={77},
 	attackBuff={77,icons.AttackIntent},defendBuff={79},debuff={78},attackDebuff={78,icons.AttackIntent},
-	strongDebuff={78},escape={72},stun={23}
+	strongDebuff={78},escape={72},stun={23},defendDebuff={78,icons.Block},
 }
 function Monster:drawIntent()
 	if not self.showIntent then

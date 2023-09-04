@@ -491,7 +491,7 @@ function Mushrooms:init()
 	self.random = makeRand(act.id,room.id,1)
 	self.rewardRandom = makeRand(act.id,room.id,2)
 	self.healAmt = math.floor(player.maxHp*0.25)
-	self.description = 'You enter a corridor full of ~#10#hypnotizing~ ~colored~ ~mushrooms.#12#~ NL Due to your lack of specialization in mycology you are unable to identify the specimens. NL You want to escape, but feel oddly compelled to eat a #10#~mushroom...~'
+	self.description = 'You enter a corridor full of ~#10#hypnotizing~ ~colored~ ~mushrooms.#12#~ NL Due to your lack of specialization in mycology you are unable to identify the specimens. NL You want to escape, but feel oddly compelled to eat a ~#10#mushroom...~'
 	self.options = {
 		{description='[Stomp] #3#Anger the Mushrooms.'},
 		{description='[Eat] #5#Heal '..self.healAmt..' HP. #3#Become Cursed - Parasite.',cardItem=CardItem:new{card=Parasite:new()}},

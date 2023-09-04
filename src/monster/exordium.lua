@@ -20,7 +20,11 @@ function Cultist:onCombatStart()
 end
 
 function Cultist:drawImage()
-	sprmap(5,17,self.width,self.height,self.x,self.y,0)
+	if self.flipped then
+		sprmap(5,17,self.width,self.height,self.x,self.y,0,1,flipRemap(5,self.width))
+	else
+		sprmap(5,17,self.width,self.height,self.x,self.y,0)
+	end
 end
 
 function Cultist:buff()

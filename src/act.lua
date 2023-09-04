@@ -213,6 +213,11 @@ TheBeyond = Act:new{
 		{item=GiantHeadEncounter,power=1},
 		{item=NemesisEncounter,power=1},
 	},
+	bossEncounters={
+		{item=AwakenedOneEncounter,power=1},
+		{item=DonuAndDecaEncounter,power=1},
+		{item=TimeEaterEncounter,power=1},
+	},
 	events={
 		Falling,TheMoaiHead,SensoryStone,TombOfLordRedMask,WindingHalls,MindBloom,MysteriousSphere,
 	}

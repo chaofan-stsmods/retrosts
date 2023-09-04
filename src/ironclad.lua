@@ -981,7 +981,7 @@ end
 
 DoubleTap = RedCard:new{
 	name='Double Tap',description='This turn, your next {Attack} is played twice.',rarity='rare',type='skill',baseCost=1,baseMagic=1,
-	playerTarget=true,upgrade={baseMagic=2,description='This turn, your next !M! {Attack} is played twice.'}
+	playerTarget=true,upgrade={baseMagic=2,description='This turn, your next !M! {Attack} are played twice.'}
 }
 function DoubleTap:use()
 	return { ApplyPowerAction:new(player,DoubleTapPower:new(player,self.magic)) }
