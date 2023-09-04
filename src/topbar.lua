@@ -178,9 +178,9 @@ function controlTopBar()
 			topBarSelection.index = 1
 			return
 		end
-		local function enemyIsAlive(i) return enemies[i].alive end
-		if topBarSelection.index == 0 or not enemies[topBarSelection.index].alive then
-			topBarSelection.index = nextOrOtherIndexInTableIf(enemies,topBarSelection.index,enemyIsAlive)
+		local function enemyCanInteract(i) return enemies[i].canInteract end
+		if topBarSelection.index == 0 or not enemies[topBarSelection.index].canInteract then
+			topBarSelection.index = nextOrOtherIndexInTableIf(enemies,topBarSelection.index,enemyCanInteract)
 			if topBarSelection.index == 0 then
 				topBarSelection.type = 'potionMenu'
 				topBarSelection.index = 1
@@ -188,9 +188,9 @@ function controlTopBar()
 			end
 		end
 		if btnp(2) then
-			topBarSelection.index = previousOrOtherIndexInTableIf(enemies,topBarSelection.index,enemyIsAlive)
+			topBarSelection.index = previousOrOtherIndexInTableIf(enemies,topBarSelection.index,enemyCanInteract)
 		elseif btnp(3) then
-			topBarSelection.index = nextOrOtherIndexInTableIf(enemies,topBarSelection.index,enemyIsAlive)
+			topBarSelection.index = nextOrOtherIndexInTableIf(enemies,topBarSelection.index,enemyCanInteract)
 		elseif btnp(4) then
 			addAction(UsePotionAction:new{potion=potion,target=enemies[topBarSelection.index]})
 			exitTopBar()

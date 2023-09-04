@@ -123,7 +123,7 @@ function NeowsLament:onCombatStart()
 	if self.counter ~= -1 then
 		addAction(AnonymousAction:new(function ()
 			for _, enemy in ipairs(enemies) do
-				if enemy.alive then
+				if enemy.canInteract then
 					enemy.hp = 1
 				end
 			end
@@ -303,7 +303,7 @@ end
 function PreservedInsect:onCombatStart()
 	if combatType == 'elite' then
 		for _, enemy in ipairs(enemies) do
-			if enemy.alive then
+			if enemy.canInteract then
 				enemy.hp = math.min(enemy.hp, math.ceil(enemy.maxHp * 0.75))
 			end
 		end
@@ -354,7 +354,7 @@ end
 BagOfMarbles = Relic:new{name='Bag of Marbles',icon=33,tier='common',description='At the start of each combat, apply #11#1#12# {Vulnerable} to all enemies.'}
 function BagOfMarbles:onCombatStart()
 	for _, enemy in ipairs(enemies) do
-		if enemy.alive then
+		if enemy.canInteract then
 			addAction(ApplyPowerAction:new(player,VulnerablePower:new(enemy,1)))
 		end
 	end
@@ -1389,6 +1389,10 @@ function PhilosophersStone:onCombatStart()
 	end
 end
 
+function PhilosophersStone:onSpawnMonster(enemy)
+	addAction(ApplyPowerAction:new(player,StrengthPower:new(enemy,1)))
+end
+
 RunicDome = EnergyRelic:new{name='Runic Dome',icon=180,tier='boss',description='Gain {Energy} at the start of your turn. You can no longer see enemy intents.'}
 
 RunicPryamid = Relic:new{name='Runic Pyramid',icon=181,tier='boss',description='At the end of your turn, you no longer discard your hand.'}
@@ -1639,7 +1643,7 @@ end
 RedMask = Relic:new{name='Red Mask',icon=222,tier='special',description='At the start of each combat, apply #11#1#12# {Weak} to all enemies.'}
 function RedMask:onCombatStart()
 	for _, enemy in ipairs(enemies) do
-		if enemy.alive then
+		if enemy.canInteract then
 			addAction(ApplyPowerAction:new(player,WeakPower:new(enemy,1)))
 		end
 	end

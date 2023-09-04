@@ -4,7 +4,7 @@
 ---@class Creature : Object
 ---@field visible boolean
 Creature = {
-	hp=100,maxHp=100,x=0,y=0,width=3,height=3,block=0,powerIndex=0,powers={},alive=true,visible=true,flipped=false,
+	hp=100,maxHp=100,x=0,y=0,width=3,height=3,block=0,powerIndex=0,powers={},alive=true,visible=true,flipped=false,canInteract=true,
 	applyPowers=noop,
 	onCombatStart=noop,
 	drawImage=noop,
@@ -24,8 +24,10 @@ end
 function Creature:tick()
 	if self.visible then
 		self:drawImage(self.x,self.y)
-		self:drawHealthBar()
-		self:drawPowers()
+		if self.canInteract then
+			self:drawHealthBar()
+			self:drawPowers()
+		end
 	end
 end
 
@@ -104,10 +106,10 @@ function Creature:heal(value)
 end
 
 function Creature:damage(source,value,type,action)
-	if not source.alive or not self.alive then
+	type = type or 'attack'
+	if (not source.alive and type == 'attack') or not self.canInteract then
 		return
 	end
-	type = type or 'attack'
 	value = self:triggerReducerEvent('onBeforeDamaged',value,source,type,action)
 	if type ~= 'hpLoss' then
 		if self.block > 0 then
@@ -143,9 +145,10 @@ function Creature:damage(source,value,type,action)
 end
 
 function Creature:die()
-	self:triggerEvent('onDeath')
 	self.alive = false
 	self.visible = false
+	self.canInteract = false
+	self:triggerEvent('onDeath',self)
 end
 
 function Creature:triggerEvent(name,...)

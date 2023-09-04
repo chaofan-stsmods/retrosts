@@ -219,7 +219,7 @@ end
 ThornsPower = Power:new{icon=29}
 function ThornsPower:onDamaged(_,source,type)
 	if type == 'attack' then
-		addAction(DamageAction:new{source=self.owner,target=source,value=self.amount,type='power'})
+		addAction(1,DamageAction:new{source=self.owner,target=source,value=self.amount,type='power'})
 	end
 end
 

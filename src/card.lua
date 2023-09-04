@@ -63,7 +63,7 @@ function Card:applyPowers(target)
 		local minDamage = 9999999
 		local maxDamage = 0
 		for i,enemy in ipairs(enemies) do
-			if enemy.alive then
+			if enemy.canInteract then
 				local targetDamage = damage
 				targetDamage = enemy:triggerReducerEvent('onAttacked',targetDamage,player,self)
 				targetDamage = math.floor(targetDamage)

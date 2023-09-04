@@ -816,7 +816,7 @@ end
 function GremlinTsundere:defend()
 	addAction(AnonymousAction:new(function ()
 		local targets = shallowcopy(enemies)
-		table.retainIf(targets,function(e) return e.alive and e ~= self end)
+		table.retainIf(targets,function(e) return e.canInteract and e ~= self end)
 		local target
 		if #targets > 0 then
 			target = targets[aiRand:randInt(#targets)]
@@ -834,7 +834,7 @@ function GremlinTsundere:attack()
 end
 
 function GremlinTsundere:nextIntent()
-	if table.count(enemies,function(e) return e.alive end) > 1 then
+	if table.count(enemies,function(e) return e.canInteract end) > 1 then
 		self:setIntent('defend','defend')
 	else
 		self:setIntent('attack','attack',self.dmg)

@@ -1227,7 +1227,7 @@ Brimstone = RedRelic:new{name='Brimstone',icon=216,tier='shop',description='At t
 function Brimstone:onTurnStart()
 	addAction(ApplyPowerAction:new(player,StrengthPower:new(player,2)))
 	for _,enemy in ipairs(enemies) do
-		if enemy.alive then
+		if enemy.canInteract then
 			addAction(ApplyPowerAction:new(enemy,StrengthPower:new(enemy,1)))
 		end
 	end

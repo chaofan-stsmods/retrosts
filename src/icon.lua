@@ -5,7 +5,7 @@ local rainbow =  {8,2,3,4,5,11,10}
 local rainbow2 = {1,1,2,3,6,10,9}
 
 ---@class Icon : Object
-Icon = {image=0,colorMap={},transparentColor=0,pixels={},flip=false,typeIcon=nil,isRainbow=false,rainbowLength=#rainbow}
+Icon = {image=0,colorMap={},transparentColor=0,flip=false,typeIcon=nil,isRainbow=false,rainbowLength=#rainbow}
 Object:new(Icon)
 
 function Icon:draw(x,y,rainbowTimer)
@@ -19,9 +19,6 @@ function Icon:draw(x,y,rainbowTimer)
 		end
 	end
 	spr(self.image,x,y,self.transparentColor,1,self.flip and 1 or 0)
-	for _, pixel in ipairs(self.pixels) do
-		pix(x+pixel[1],y+pixel[2],pixel[3])
-	end
 	for key, _ in pairs(self.colorMap) do
 		resetColor(key)
 	end

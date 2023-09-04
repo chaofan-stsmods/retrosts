@@ -26,7 +26,7 @@ function Monster:applyPowers()
 	damage = self:triggerReducerEvent('onAttack',damage,player)
 	damage = player:triggerReducerEvent('onAttacked',damage,self)
 
-	self.intentDamage = math.floor(damage)
+	self.intentDamage = math.max(0,math.floor(damage))
 end
 
 function Monster:onCombatStart()
@@ -222,6 +222,7 @@ function SpawnMonsterAction:tick()
 			enemies[self.index] = self.target
 		end
 		self.target:onCombatStart()
+		player:triggerEvent('onSpawnMonster',self.target)
 	end
 	Action.tick(self)
 end

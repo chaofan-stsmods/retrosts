@@ -143,7 +143,7 @@ function drawHand()
 			if card.toAllEnemies then
 				for i = 1,#enemies do
 					local enemy = enemies[i]
-					if enemy.alive then
+					if enemy.canInteract then
 						drawSelectionBox(enemy.x,enemy.y,8*enemy.width,8*enemy.height)
 					end
 				end
@@ -168,7 +168,7 @@ function drawLimbo()
 	end
 end
 
-local function enemyIsAlive(i) return enemies[i].alive end
+local function enemyCanInteract(i) return enemies[i].canInteract end
 
 function handUISelect(selection)
 	if not hand[selection].card:canUse() then
@@ -176,7 +176,7 @@ function handUISelect(selection)
 	end
 
 	combatSelection.handIndex = selection
-	combatSelection.index = nextOrOtherIndexInTableIf(enemies,0,enemyIsAlive)
+	combatSelection.index = nextOrOtherIndexInTableIf(enemies,0,enemyCanInteract)
 	local card = hand[combatSelection.handIndex].card
 	combatSelection.singleEnemy = card.enemyTarget and not card.toAllEnemies
 	if combatSelection.index == 0 and combatSelection.singleEnemy then
@@ -236,8 +236,8 @@ function combatControls()
 			combatSelection.handIndex = nil
 			return
 		end
-		if combatSelection.index == 0 or not enemyIsAlive(combatSelection.index) then
-			combatSelection.index = nextOrOtherIndexInTableIf(enemies,combatSelection.index,enemyIsAlive)
+		if combatSelection.index == 0 or not enemyCanInteract(combatSelection.index) then
+			combatSelection.index = nextOrOtherIndexInTableIf(enemies,combatSelection.index,enemyCanInteract)
 			if combatSelection.index == 0 and combatSelection.singleEnemy then
 				combatSelection.type = 'hand'
 				handUI.cursorOnSelf = true
@@ -247,13 +247,13 @@ function combatControls()
 			end
 		end
 		if btnp(2) then
-			combatSelection.index = previousOrOtherIndexInTableIf(enemies,combatSelection.index,enemyIsAlive)
+			combatSelection.index = previousOrOtherIndexInTableIf(enemies,combatSelection.index,enemyCanInteract)
 			local card = hand[combatSelection.handIndex].card
 			if card.enemyTarget and not card.toAllEnemies then
 				card:applyPowers(enemies[combatSelection.index])
 			end
 		elseif btnp(3) then
-			combatSelection.index = nextOrOtherIndexInTableIf(enemies,combatSelection.index,enemyIsAlive)
+			combatSelection.index = nextOrOtherIndexInTableIf(enemies,combatSelection.index,enemyCanInteract)
 			local card = hand[combatSelection.handIndex].card
 			if card.enemyTarget and not card.toAllEnemies then
 				card:applyPowers(enemies[combatSelection.index])
@@ -315,7 +315,7 @@ function combatControls()
 
 	if btnp(7) and not inEnemyTurn then
 		inEnemyTurn = true
-		addAction(EndTurnAction:new{secondary=true})
+		addAction(EndTurnAction:new())
 	end
 end
 
@@ -405,10 +405,10 @@ function setupEnemies(encounter)
 	combatType = encounter.type
 end
 
-function getRandomAliveEnemy()
+function getRandomInteractableEnemy()
 	local aliveEnemies = {}
 	for i, enemy in ipairs(enemies) do
-		if enemy.alive then
+		if enemy.canInteract then
 			table.insert(aliveEnemies,table.pack(enemy,i))
 		end
 	end

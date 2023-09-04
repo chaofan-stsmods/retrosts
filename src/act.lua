@@ -191,9 +191,27 @@ TheBeyond = Act:new{
 	id=3,title='The Beyond',smallTitle='Act 3',cardUpgradedChance=0.5,
 	weakEncounters={
 		{item=OrbWalkerEncounter,power=2},
+		{item=ThreeDarklingsEncounter,power=2},
+		{item=ThreeShapesEncounter,power=2},
+	},
+	strongEncounters={
+		{item=ThreeDarklingsEncounter,power=1},
+		{item=FourShapesEncounter,power=1},
+		{item=SphereAndTwoShapesEncounter,power=1},
+		{item=ThreeJawWormEncounter,power=1},
+		{item=SpireGrowthEncounter,power=1},
+		{item=TransientEncounter,power=1},
+		{item=TheMawEncounter,power=1},
+		{item=WrithingMassEncounter,power=1},
+	},
+	exclusiveEncounters={
+		[ThreeDarklingsEncounter]={ThreeDarklingsEncounter},
+		[ThreeShapesEncounter]={FourShapesEncounter},
 	},
 	eliteEncounters={
 		{item=ReptomancerEncounter,power=1},
+		{item=GiantHeadEncounter,power=1},
+		{item=NemesisEncounter,power=1},
 	},
 	events={
 		Falling,TheMoaiHead,SensoryStone,TombOfLordRedMask,WindingHalls,MindBloom,MysteriousSphere,

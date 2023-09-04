@@ -124,13 +124,13 @@ function UseCardAction:tick()
 			return
 		end
 		if self.randomTarget and card.enemyTarget and not card.toAllEnemies then
-			local target = getRandomAliveEnemy()
+			local target = getRandomInteractableEnemy()
 			if target then
 				self.target = target
 			end
 		end
 		card:applyPowers(self.target)
-		if not self.forceUse and (not card:canUse(self.free) or (self.target ~= nil and not self.target.alive)) then
+		if not self.forceUse and (not card:canUse(self.free) or (self.target ~= nil and not self.target.canInteract)) then
 			if self.fromHand and handIndex then
 				self.cardItem.isNotInHand = false
 				self.isDone = true
@@ -227,7 +227,7 @@ function UsePotionAction:tick()
 	if self.duration == self.startDuration then
 		local potion = self.potion
 		local potionIndex = table.indexOf(potions,potion)
-		if not potion:canUse() or not potionIndex or (self.target ~= nil and not self.target.alive) then
+		if not potion:canUse() or not potionIndex or (self.target ~= nil and not self.target.canInteract) then
 			self.isDone = true
 			return
 		end
@@ -244,7 +244,7 @@ end
 
 DamageAction = Action:new{source=nil,target=nil,value=nil,type=nil,duration=10}
 function DamageAction:tick()
-	if not self.source.alive then
+	if not self.source.alive and (self.type or 'attack') == 'attack' then
 		self.isDone = true
 		return
 	end
@@ -256,13 +256,13 @@ end
 
 DamageAllEnemiesAction = Action:new{source=nil,value=nil,type=nil,duration=10}
 function DamageAllEnemiesAction:tick()
-	if not self.source.alive then
+	if not self.source.alive and (self.type or 'attack') == 'attack' then
 		self.isDone = true
 		return
 	end
 	if self.duration == self.startDuration then
 		for i, enemy in ipairs(enemies) do
-			if enemy.alive then
+			if enemy.canInteract then
 				if type(self.value) == 'number' then
 					enemy:damage(self.source,self.value,self.type,self)
 				else
@@ -276,12 +276,12 @@ end
 
 DamageRandomEnemyAction = Action:new{source=nil,value=nil,type=nil,duration=10}
 function DamageRandomEnemyAction:tick()
-	if not self.source.alive then
+	if not self.source.alive and (self.type or 'attack') == 'attack' then
 		self.isDone = true
 		return
 	end
 	if self.duration == self.startDuration then
-		local target,index = getRandomAliveEnemy()
+		local target,index = getRandomInteractableEnemy()
 		if target then
 			if type(self.value) == 'number' then
 				target:damage(self.source,self.value,self.type,self)
@@ -295,7 +295,7 @@ end
 
 GainBlockAction = Action:new{target=nil,value=nil,duration=10}
 function GainBlockAction:tick()
-	if self.duration == self.startDuration and self.target.alive then
+	if self.duration == self.startDuration and self.target.canInteract then
 		local oldBlock = self.target.block
 		self.target.block = math.min(self.target.block+self.value,999)
 		self.target:triggerEvent('onGainBlock',self.target.block-oldBlock)
@@ -311,7 +311,7 @@ function HealAction:tick()
 	Action.tick(self)
 end
 
-EndTurnAction = Action:new{duration=10}
+EndTurnAction = Action:new{duration=10,secondary=true}
 function EndTurnAction:tick()
 	if self.duration == self.startDuration then
 		for i = #secondaryActions,1,-1 do

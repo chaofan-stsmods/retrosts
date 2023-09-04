@@ -79,7 +79,7 @@ end
 
 function Potion:canUse()
 	return (self.canUseOutsideCombat and (currentEvent == nil or currentEvent.canOperatePotion)) or
-		(inCombat and not inEnemyTurn and table.anyMatch(enemies,function (e) return e.alive end))
+		(inCombat and not inEnemyTurn and table.anyMatch(enemies,function (e) return e.canInteract end))
 end
 
 function Potion:canDiscard()
