@@ -357,11 +357,19 @@ end
 
 local function normalCombatEnd(escaped)
 	completeRoom()
-	if escaped then
-		openWindowAbove(RewardWindow:new{rewards={},title='Fled...'})
+	if room.noReward then
+		addEffect(AnonymousEffect:new{duration=2,callback=function (duration)
+			if duration <= 1 then
+				act:roomProceed()
+			end
+		end})
 	else
-		local rewards = generateRewards(rewardRand)
-		openWindowAbove(RewardWindow:new{rewards=rewards})
+		if escaped then
+			openWindowAbove(RewardWindow:new{rewards={},title='Fled...'})
+		else
+			local rewards = generateRewards(rewardRand)
+			openWindowAbove(RewardWindow:new{rewards=rewards})
+		end
 	end
 end
 

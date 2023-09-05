@@ -21,17 +21,17 @@ function Falling:onOption(selection)
 			self.screen = 'emptyLand'
 		else
 			if self.skill then
-				self.options[1] = {description='[Land] #2#Lose '..self.skill.name..'.',cardItem=CardItem:new{card=self.skill}}
+				self.options[1] = {description='[Land] #3#Lose '..self.skill.name..'.',cardItem=CardItem:new{card=self.skill}}
 			else
 				self.options[1] = {description='[Locked] Requires: Skill Card',locked=true}
 			end
 			if self.power then
-				self.options[2] = {description='[Channel] #2#Lose '..self.power.name..'.',cardItem=CardItem:new{card=self.power}}
+				self.options[2] = {description='[Channel] #3#Lose '..self.power.name..'.',cardItem=CardItem:new{card=self.power}}
 			else
 				self.options[2] = {description='[Locked] Requires: Power Card',locked=true}
 			end
 			if self.attack then
-				self.options[3] = {description='[Strike] #2#Lose '..self.attack.name..'.',cardItem=CardItem:new{card=self.attack}}
+				self.options[3] = {description='[Strike] #3#Lose '..self.attack.name..'.',cardItem=CardItem:new{card=self.attack}}
 			else
 				self.options[3] = {description='[Locked] Requires: Attack Card',locked=true}
 			end
@@ -400,5 +400,54 @@ function MysteriousSphere:load(escaped)
 		addRelicReward(rewards,getRandomRelic(random,'rare'))
 		generatePotionRewards(rewards,random)
 		openWindowAbove(RewardWindow:new{rewards=rewards})
+	end
+end
+
+CorruptHeartEvent = CombatTextEvent:new{name='Corrupt Heart',spriteBank=5,screen='intro',heartEscaping=false,heartY=4}
+function CorruptHeartEvent:init()
+	self.description = '@tu-thump@ ... @tu-thump@ ... @tu-thump@ ... NL A deep pulsing dread can be felt throughout the room... NL Is this the ~#3#heart#12#~ of the Spire? The source of this evil?'
+	self.options = {{description='[Continue]'}}
+	setupEnemies(CorruptHeartEncounter)
+end
+
+function CorruptHeartEvent:drawForeground()
+	player:drawImage()
+	if self.heartEscaping and self.heartY > -100 then
+		self.heartY = self.heartY - 0.8
+	end
+	sprmap(62,17,9,10,136,self.heartY,0)
+end
+
+function CorruptHeartEvent:onOption()
+	if self.screen == 'intro' then
+		self.description = player:getSpireHeartText()
+		self.options = {{description='[Attack] #11#???'}}
+		self.screen = 'attack'
+	elseif self.screen == 'attack' then
+		self.description = 'You deal #11#'..tostring(999)..'#12# damage! NL The heart @#3#squirms#12#@ and ~#3#bleeds#12#~ ...but is ultimately still pounding. NL Are your mightiest attacks not enough?'
+		self.options = {{description='[Continue]'}}
+		self.screen = 'postAttack'
+	elseif self.screen == 'postAttack' then
+		if rubyKeyObtained and emeraldKeyObtained and sapphireKeyObtained then
+			self.description = 'You ask yourself, ~\"Have~ ~I~ ~been~ ~here~ ~before?\"~'..
+				' NL The heart pulses louder and louder as your ~#8#consciousness~ ~begins~ ~to~ ~fade...#12#~'..
+				' NL A sudden burst of @#4#energy#12#@ emanates from inside you, @#11#jolting#12#@ you awake.'..
+				' NL The heart #5#retreats#12# upwards! A large door is revealed in its place.'
+			self.options = {{description='[Approach Door]'}}
+			self.screen = 'goToEnding'
+			self.heartEscaping = true
+		else
+			self.description = 'You ask yourself, ~\"Have~ ~I~ ~been~ ~here~ ~before?\"~ NL You feel that you have dealt a total of #11#'..tostring(9999)..'#12# damage to the heart. NL The heart pulses louder and louder as your ~#4#consciousness~ ~fades...~'
+			self.options = {{description='[Sleep]'}}
+			self.screen = 'victory?'
+		end
+	elseif self.screen == 'goToEnding' then
+		startAct(act.id+1)
+		room.completed = true
+		prepareMapSelection()
+		openWindowAbove(MapWindow:new{canClose=false})
+	elseif self.screen == 'victory?' then
+		clearSavedGame()
+		switchWindow(LoseWindow:new{title='Victory?'})
 	end
 end

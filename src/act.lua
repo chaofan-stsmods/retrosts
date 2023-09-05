@@ -52,8 +52,12 @@ function Act:exclusiveListCheck(candidate,encounters)
 	return table.indexOf(exclusiveEncounters,candidate) == nil
 end
 
-function Act:bossRoomProceed()
-	enterRoom(1)
+function Act:roomProceed()
+	if room.type == 'boss' then
+		enterRoom(1)
+	else
+		openWindowAbove(MapWindow:new())
+	end
 end
 
 function Act:generateMap(random)
@@ -86,6 +90,8 @@ function generateEncountersByList(random,result,source,count,exclusiveCheck)
 		exclusiveCheck = function (candidate,encounters)
 			return defaultExclusiveCheck(candidate,encounters,oldCheck)
 		end
+	else
+		skipCheck = #source <= 1
 	end
 	for i = 1,count do
 		local candidate
@@ -224,6 +230,36 @@ TheBeyond = Act:new{
 }
 function TheBeyond:drawBackground()
 	sprmap(90,0,30,17,0,0)
+end
+
+function TheBeyond:generateMap(random)
+	local width,height = 7,15
+	local map,specialRooms = generateMap(random,7,15,6)
+	local bossRoom = specialRooms[1]
+	bossRoom.next = {}
+	bossRoom.noReward = true
+	bossRoom.firstBoss = true
+	specialRooms = {bossRoom}
+	if ascension >= 20 then
+		local bossRoom2 = {id=height*width+2,x=1,y=height+2,previous={},next={},type='boss',hasEdge=false,completed=false,noReward=true}
+		addMapEdge(bossRoom,bossRoom2)
+		specialRooms[2] = bossRoom2
+		bossRoom = bossRoom2
+	end
+	local heartRoom = {id=height*width+3,x=1,y=height+3,previous={},next={},type='heart',hasEdge=false,completed=false}
+	table.insert(specialRooms,heartRoom)
+	addMapEdge(bossRoom,heartRoom)
+	assignSpecialRoomIds(specialRooms)
+	return map,specialRooms
+end
+
+function TheBeyond:roomProceed()
+	if room.type == 'boss' and ascension >= 20 and room.firstBoss then
+		nextBossEncounterIndex = nextBossEncounterIndex + 1
+		enterRoom(1)
+	else
+		Act.roomProceed(self)
+	end
 end
 
 TheEnding = Act:new{

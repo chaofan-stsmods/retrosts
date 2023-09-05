@@ -452,7 +452,7 @@ end
 MaskedBandits = CombatTextEvent:new{name='Masked Bandits',spriteBank=5,screen='intro',encounter=BanditsEncounter,enemyKilled=false}
 function MaskedBandits:init()
 	self.rewardRandom = makeRand(act.id,room.id,1)
-	self.description = 'You encounter a group of bandits wearing large #2#red masks#12#. NL \"Hello, pay up to pass... a reasonable fee of @ALL@ your #4#gold#12# will do! Heh heh!\"'
+	self.description = 'You encounter a group of bandits wearing large #3#red masks#12#. NL \"Hello, pay up to pass... a reasonable fee of @ALL@ your #4#gold#12# will do! Heh heh!\"'
 	self.options = {
 		{description='[Pay] #3#Lose ALL#12# of your #4#Gold.'},
 		{description='[Fight!]'},
@@ -484,7 +484,7 @@ function MaskedBandits:onOption(selection)
 			startCombat(self.encounter)
 		end
 	elseif self.screen == 'paid1' then
-		self.description = 'Hey #10#Bear#12#, hey! NL This guy gave us all his #4#gold#12#! What a sucker, right? NL Get this, I just had to ask nicely. Who knew?! NL I certainly didn\'t! What a chump!'
+		self.description = 'Hey #11#Bear#12#, hey! NL This guy gave us all his #4#gold#12#! What a sucker, right? NL Get this, I just had to ask nicely. Who knew?! NL I certainly didn\'t! What a chump!'
 		self.screen = 'paid2'
 		self.options = {{description='[Continue]'}}
 	elseif self.screen == 'paid2' then
@@ -492,7 +492,7 @@ function MaskedBandits:onOption(selection)
 		self.screen = 'paid3'
 		self.options = {{description='[Leave]'}}
 	elseif self.screen == 'paid3' then
-		self.description = 'Oh? You\'re still here? NL Did you overhear something? Didn\'t think so. NL @#2#*snerk*#12#@ ~...loser....~ @Hahaha@ ~haaah~'
+		self.description = 'Oh? You\'re still here? NL Did you overhear something? Didn\'t think so. NL @#3#*snerk*#12#@ ~...loser....~ @Hahaha@ ~haaah~'
 		self.screen = 'leave'
 		completeRoom()
 		openWindowAbove(MapWindow:new())

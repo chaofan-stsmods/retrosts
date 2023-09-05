@@ -5,12 +5,16 @@ local redCards
 Ironclad = Player:new{ maxHp=80,width=6,height=4,tileBank=1,name='Ironclad' }
 function Ironclad:drawImage()
 	if self.flipped then
-		map(0,17,5,2,self.x+16,self.y,0,1,flipRemap(0,5))
-		map(0,19,5,2,self.x+12,self.y+16,0,1,flipRemap(0,5))
+		map(0,9,5,2,self.x+16,self.y,0,1,flipRemap(0,5))
+		map(0,11,5,2,self.x+12,self.y+16,0,1,flipRemap(0,5))
 	else
-		map(0,17,5,2,self.x-8,self.y,0)
-		map(0,19,5,2,self.x-4,self.y+16,0)
+		map(0,9,5,2,self.x-8,self.y,0)
+		map(0,11,5,2,self.x-4,self.y+16,0)
 	end
+end
+
+function Ironclad:drawCorpse()
+	map(0,13,7,3,self.x-4,self.y+20,0)
 end
 
 function Ironclad:getStartDeck()
@@ -57,6 +61,10 @@ end
 
 function Ironclad:getPotions()
 	return { BloodPotion,HeartOfIron,Elixir }
+end
+
+function Ironclad:getSpireHeartText()
+	return 'NL You ready your blade...'
 end
 
 -- cards

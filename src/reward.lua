@@ -138,11 +138,7 @@ function RewardWindow:onComplete()
 end
 
 function RewardWindow:onProceed()
-	if room.type == 'boss' then
-		act:bossRoomProceed()
-		return
-	end
-	openWindowAbove(MapWindow:new())
+	act:roomProceed()
 end
 
 -- generate

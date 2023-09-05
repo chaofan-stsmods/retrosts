@@ -263,9 +263,13 @@ end
 
 -- combat text event
 
-CombatTextEvent = Event:new{description=''}
+CombatTextEvent = Event:new{description='',hideBackground=false}
 function CombatTextEvent:drawBackground(below)
-	act:drawBackground()
+	if self.hideBackground then
+		cls(0)
+	else
+		act:drawBackground()
+	end
 	self:drawForeground(below)
 	if below then
 		drawDescription(nil,self.description,9,20,222,999,14)

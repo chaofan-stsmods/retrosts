@@ -6,7 +6,7 @@ local topBarSelection = {type=nil,index=0}
 local relicOffset = 0
 local relicOffsetTarget = 0
 function tickTopBar(control)
-	drawTopBar()
+	drawTopBar(control)
 	if control then
 		controlTopBar()
 	else
@@ -14,7 +14,7 @@ function tickTopBar(control)
 	end
 end
 
-function drawTopBar()
+function drawTopBar(control)
 	rect(0,0,240,7,14)
 	rect(0,7,240,1,15)
 	map(0,0,30,1,0,0,0)
@@ -27,8 +27,10 @@ function drawTopBar()
 		spr(5,168,0,0)
 		printShadowed(tostring(ascension),177,1,12)
 	end
-	drawPotions()
-	drawRelics()
+	if control then
+		drawPotions()
+		drawRelics()
+	end
 	if topBarSelection.type == 'potion' and topBarSelection.index > 0 and topBarSelection.index <= #potions then
 		local potion = potions[topBarSelection.index]
 		drawSelectionBox(95+topBarSelection.index*8,0,10,9,nil,2)

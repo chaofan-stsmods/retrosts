@@ -452,24 +452,23 @@ function PotionLabWindow:new()
 	return ItemCollectionWindow.new(self,potionWithPools)
 end
 
-LoseWindow = Window:new{name='LoseWindow'}
+LoseWindow = Window:new{name='LoseWindow',title='You Lose!'}
 function LoseWindow:onOpen()
-	queueSync(1,player.tileBank)
+	queueSync(1,5)
 end
 
 function LoseWindow:tick()
 	darkenColors()
 	act:drawBackground()
 	resetColors()
-	--player:drawImage()
+	player:drawCorpse()
 	for i=1,#enemies do
 		enemies[i]:drawImage()
 	end
 	tickEffects()
-	tickTopBar()
-	local str = 'You Lose!'
-	local strWidth = strWidth(str,false,false,3)
-	printShadowed('You Lose!',120-strWidth/2,30,3,1,3)
+	tickTopBar(false)
+	drawBanner(56,18,16)
+	printGlowed(self.title,120-strWidth(self.title)/2,21,12)
 	if btnp(4) or btnp(5) then
 		switchWindow(TitleWindow:new())
 	end

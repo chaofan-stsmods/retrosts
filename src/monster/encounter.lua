@@ -23,7 +23,7 @@ function Encounter:setupEnemies(random)
 	end
 end
 
-MonsterSlot = Monster:new{alive=false,visible=false}
+MonsterSlot = Monster:new{alive=false,visible=false,canInteract=false}
 
 function encItem(monsterType,xOffset,yOffset,additional)
 	xOffset = xOffset or 0

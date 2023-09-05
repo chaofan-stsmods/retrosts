@@ -353,9 +353,9 @@ end
 DeadAdventurer = CombatTextEvent:new{screen='intro',spriteBank=3,encounter=nil,encounterChance=25,rewards=nil,numRewards=0,relicReward=nil}
 local deadAdventurerEncounters = {ThreeSentryEncounter,GremlinNobEventEncounter,LagavulinStrongEncounter}
 local deadAdventurerDescriptions = {
-	'the armor and face appear to be @#2#scoured@ @by@ @flames.@ ',
-	'it looks as though he\'s been @#2#gouged@ @and@ @trampled#12#@ by a horned beast. ',
-	'he looks to have been @#2#eviscerated@ @and@ @chopped#12#@ by giant claws. ',
+	'the armor and face appear to be @#3#scoured@ @by@ @flames.@ ',
+	'it looks as though he\'s been @#3#gouged@ @and@ @trampled#12#@ by a horned beast. ',
+	'he looks to have been @#3#eviscerated@ @and@ @chopped#12#@ by giant claws. ',
 }
 local deadAdventurerRewards = {
 	{description='You found some #4#gold!#12# NL Continue searching?',action='gold'},
@@ -368,7 +368,7 @@ function DeadAdventurer:init()
 	local roll = self.random:randInt(1,3)
 	self.encounter = deadAdventurerEncounters[roll]
 	self.encounterChance = ascension >= 15 and 35 or 25
-	self.description = 'You come across a #2#dead adventurer#12# on the floor. NL His #10#pants#12# have been stolen! Also, '..
+	self.description = 'You come across a #3#dead adventurer#12# on the floor. NL His #11#pants#12# have been stolen! Also, '..
 		deadAdventurerDescriptions[roll]..'NL Though his #4#possessions are still intact,#12# you\'re in no mind to find out what happened here...'
 	self.options = {
 		{description='[Search] #5#Find Loot. #3#'..self.encounterChance..'%: monster returns.'},
@@ -491,7 +491,7 @@ function Mushrooms:init()
 	self.random = makeRand(act.id,room.id,1)
 	self.rewardRandom = makeRand(act.id,room.id,2)
 	self.healAmt = math.floor(player.maxHp*0.25)
-	self.description = 'You enter a corridor full of ~#10#hypnotizing~ ~colored~ ~mushrooms.#12#~ NL Due to your lack of specialization in mycology you are unable to identify the specimens. NL You want to escape, but feel oddly compelled to eat a ~#10#mushroom...~'
+	self.description = 'You enter a corridor full of ~#11#hypnotizing~ ~colored~ ~mushrooms.#12#~ NL Due to your lack of specialization in mycology you are unable to identify the specimens. NL You want to escape, but feel oddly compelled to eat a ~#10#mushroom...~'
 	self.options = {
 		{description='[Stomp] #3#Anger the Mushrooms.'},
 		{description='[Eat] #5#Heal '..self.healAmt..' HP. #3#Become Cursed - Parasite.',cardItem=CardItem:new{card=Parasite:new()}},
@@ -528,13 +528,13 @@ function Mushrooms:onOption(selection)
 	if self.screen == 'intro' then
 		if selection == 1 then
 			self.screen = 'beforeFight'
-			self.description = '@#2#Ambushed!!#12#@ NL Rodents infested by the mushrooms appear out of nowhere!'
+			self.description = '@#3#Ambushed!!#12#@ NL Rodents infested by the mushrooms appear out of nowhere!'
 			self.options = {{description='[Fight]'}}
 			setupEnemies(self.encounter)
 		elseif selection == 2 then
 			player:heal(self.healAmt)
 			obtainCardWithEffect(Parasite:new())
-			self.description = 'You give in to the unnatural desire to eat. As you consume mushroom after mushroom, you feel yourself entering into a daze and pass out. As you awake, you feel very odd. NL You #5#Heal #10#25%#12# of your HP, but you also get #2#infected.'
+			self.description = 'You give in to the unnatural desire to eat. As you consume mushroom after mushroom, you feel yourself entering into a daze and pass out. As you awake, you feel very odd. NL You #5#Heal #11#25%#12# of your HP, but you also get #3#infected.'
 			self.options = {{description='[Leave]'}}
 			self.screen = 'leave'
 		end

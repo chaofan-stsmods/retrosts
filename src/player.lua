@@ -3,7 +3,7 @@
 
 ---@class Player : Creature
 Player = {
-	x=26,y=52,tileBank=1,name=nil,
+	x=26,y=52,tileBank=1,name=nil,drawCorpse=noop,
 }
 Creature:new(Player)
 
@@ -126,6 +126,10 @@ function Player:resetPosition()
 	self.y = 52
 	self.flipped = false
 	self.visible = true
+end
+
+function Player:getSpireHeartText()
+	return 'NL You meet Spire Heart.'
 end
 
 function sortByPriority(...)
