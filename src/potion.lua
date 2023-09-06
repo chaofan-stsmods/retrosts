@@ -155,7 +155,7 @@ function AttackPotion:applyPowers()
 end
 
 function AttackPotion:use()
-	return { DiscoveryAction:new{amount=self.magic,type='attack',cost=0} }
+	return { DiscoveryAction:new{amount=self.magic,type='attack',canClose=true,cost=0} }
 end
 
 SkillPotion = Potion:new{
@@ -170,7 +170,7 @@ function SkillPotion:applyPowers()
 end
 
 function SkillPotion:use()
-	return { DiscoveryAction:new{amount=self.magic,type='skill',cost=0} }
+	return { DiscoveryAction:new{amount=self.magic,type='skill',canClose=true,cost=0} }
 end
 
 PowerPotion = Potion:new{
@@ -185,7 +185,7 @@ function PowerPotion:applyPowers()
 end
 
 function PowerPotion:use()
-	return { DiscoveryAction:new{amount=self.magic,type='power',cost=0} }
+	return { DiscoveryAction:new{amount=self.magic,type='power',canClose=true,cost=0} }
 end
 
 ColorlessPotion = Potion:new{

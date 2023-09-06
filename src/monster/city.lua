@@ -118,7 +118,7 @@ function FlightPower:onAttacked(damage)
 end
 
 function FlightPower:onTurnStart()
-	self:setAmount(self.initialAmount)
+	self.amount = self.initialAmount
 end
 
 function FlightPower:onDamaged(value,source,type)

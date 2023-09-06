@@ -2,12 +2,13 @@
 ---@diagnostic disable: lowercase-global
 
 ---@class Card : Object
+---@field costForOnePlay integer?
 ---@field costForOneTurnPlay integer?
 Card = {
 	name='',description='',type='attack',rarity='common',
 	color={2,1},costIcon=201,typeIconColor=4,colorName='',
 	baseCost=0,cost=0,costForOneTurnPlay=nil,costForOnePlay=nil,baseCostModified=false,
-	damage=0,baseDamage=0,block=0,baseBlock=0,magic=0,baseMagic=0,multiDamage={},
+	damage=0,baseDamage=0,block=0,baseBlock=0,magic=0,baseMagic=0,multiDamage={},attackCount=1,
 	enemyTarget=false,playerTarget=false,toAllEnemies=false,
 	exhaust=false,ethereal=false,innate=false,autoPlayOnEndTurn=false,
 	upgrade=noop,upgraded=false,tags={},canGenerateInCombat=true,canRemove=true,linkedBottle=nil,
@@ -56,9 +57,13 @@ end
 
 function Card:applyPowers(target)
 	local damage = self.baseDamage
+	local hasTarget = target ~= nil
+	if target == true then
+		target = nil
+	end
 
 	damage = player:triggerReducerEvent('onAttack',damage,target,self)
-	if self.toAllEnemies then
+	if self.toAllEnemies and hasTarget then
 		self.multiDamage = {}
 		local minDamage = 9999999
 		local maxDamage = 0
@@ -178,7 +183,7 @@ function CardItem:tick()
 
 		stackClip(l+1,t,self.large and 54 or 30,self.large and 56 or 40)
 		drawTitle(self,l,t)
-		drawDescription(self.card,self.card.description,l+3,t+10,self.large and 51 or 27,self.large and 999 or 3)
+		drawDescription(self.card,self.card.description,l+3,t+10,self.large and 53 or 29,self.large and 999 or 3)
 		popClip()
 
 		if self.card.linkedBottle and getmetatable(nearestWindow) == CardGridSelectWindow then
@@ -226,10 +231,28 @@ function drawCardBack(card,large,l,t)
 		map(10,2,4,5,l,t,0,1,function(tile,x) return tile,x==13 and 1 or 0 end)
 	end
 	local typeLeft = card.baseCost >= -1 and l+8 or l+1
-	rect(typeLeft,t-4,8,6,14)
-	rect(typeLeft+1,t-5,6,1,14)
+	local typeWidth = 8
+	local damageStr = ''
+	if card.type == 'attack' then
+		damageStr = tostring(card.damage)
+		if type(card.attackCount) ~= 'number' or card.attackCount > 1 then
+			damageStr = damageStr .. 'x' .. tostring(card.attackCount)
+		end
+		typeWidth = typeWidth + strWidth(damageStr,false,true) + 1
+	end
+	rect(typeLeft,t-4,typeWidth,6,14)
+	rect(typeLeft+1,t-5,typeWidth-2,1,14)
 	drawIcon(cardTypeToSprIndex[card.type],typeLeft,t-6,card.typeIconColor)
 	resetColors{3,9,10,14,15}
+	if card.type == 'attack' then
+		local color = 12
+		if card.damage > card.baseDamage then
+			color = 5
+		elseif card.damage < card.baseDamage then
+			color = 3
+		end
+		print(damageStr,typeLeft+8,t-4,color,false,1,true)
+	end
 end
 
 function drawCost(card,l,t,isNotInHand,showWhiteCost)

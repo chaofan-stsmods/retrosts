@@ -221,7 +221,7 @@ function WarpedTongs:onTurnStartPostDraw()
 		end
 		local card
 		if #candidates == 1 then
-			card = candidates[0]
+			card = candidates[1]
 		else
 			card = candidates[miscRand:randInt(#candidates)]
 		end
@@ -1026,10 +1026,7 @@ end
 
 DeadBranch = Relic:new{name='Dead Branch',icon=147,tier='rare',description='Whenever you #4#Exhaust#12# a card, add a random card into your hand.'}
 function DeadBranch:onExhaust()
-	local cardType
-	repeat
-		cardType = getPlayerCardType(miscRand)
-	until cardType.canGenerateInCombat
+	local cardType = getPlayerCardType(miscRand,nil,nil,true)
 	addAction(MakeTempCardToHandAction:new(cardType:new()))
 end
 

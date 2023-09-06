@@ -16,12 +16,12 @@ require 'save'
 require 'window'
 require 'creature'
 require 'icon'
+require 'power'
+require 'action'
 require 'card'
 require 'colorless'
 require 'relic'
-require 'power'
 require 'potion'
-require 'action'
 require 'player'
 require 'ironclad'
 require 'monster.all'
@@ -286,7 +286,7 @@ end
 -- main
 
 queueSync(32,1)
-----[[
+--[[
 startGame(Ironclad,20)
 startAct(3)
 obtainRelic(Girya:new{counter=99})
@@ -295,20 +295,23 @@ currentEvent = CorruptHeartEvent:new()
 --[[
 startGame(Ironclad,20)
 startAct(3)
-obtainRelic(NeowsLament:new{counter=99})
-obtainRelic(Girya:new{counter=320})
---[[
+--obtainRelic(NeowsLament:new{counter=99})
+--obtainRelic(Girya:new{counter=320})
+obtainRelic(FrozenEye:new())
 roomActionType = 'combat'
-table.insert(deck,BattleTrance:new())
-table.insert(deck,Pummel:new())
-table.insert(deck,Rupture:new())
-table.insert(deck,Rupture:new())
-table.insert(deck,Disarm:new())
-table.insert(deck,Offering:new())
-table.insert(deck,Offering:new())
+local function addCard(cardType)
+	local c1 = cardType:new()
+	table.insert(deck,c1:copy())
+	c1:upgrade()
+	c1:resetPowers()
+	table.insert(deck,c1)
+end
+addCard(Transmutation)
+addCard(Violence)
 potions[1] = SmokeBomb:new()
-startCombat(TimeEaterEncounter)
-addAction(ApplyPowerAction:new(player,StrengthPower:new(player,300)))
+maxEnergy = 6
+startCombat(CultistEncounter)
+--addAction(ApplyPowerAction:new(player,StrengthPower:new(player,300)))
 addAction(ApplyPowerAction:new(player,MetallicizePower:new(player,300)))
 --]]
 --[[

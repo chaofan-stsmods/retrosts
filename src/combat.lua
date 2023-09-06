@@ -151,10 +151,10 @@ function drawHand()
 				local enemy = enemies[combatSelection.index]
 				drawSelectionBox(enemy.x,enemy.y,8*enemy.width,8*enemy.height)
 				if enemy.x > player.x then
-					drawBezier(20,cardItem.x,cardItem.y-10,math.min(cardItem.x-5,enemy.x-20),enemy.y+enemy.height*4-5,enemy.x+enemy.width*4-4,enemy.y+enemy.height*4)
+					drawBezier(20,cardItem.x,cardItem.y-23,math.min(cardItem.x-5,enemy.x-20),enemy.y+enemy.height*4-5,enemy.x+enemy.width*4-4,enemy.y+enemy.height*4)
 					spr(74,enemy.x+enemy.width*4-8,enemy.y+enemy.height*4-4,0)
 				else
-					drawBezier(20,cardItem.x,cardItem.y-10,math.max(cardItem.x+5,enemy.x+enemy.width*8+20),enemy.y+enemy.height*4-5,enemy.x+enemy.width*4+4,enemy.y+enemy.height*4)
+					drawBezier(20,cardItem.x,cardItem.y-23,math.max(cardItem.x+5,enemy.x+enemy.width*8+20),enemy.y+enemy.height*4-5,enemy.x+enemy.width*4+4,enemy.y+enemy.height*4)
 					spr(74,enemy.x+enemy.width*4,enemy.y+enemy.height*4-4,0,1,1)
 				end
 			end
@@ -186,6 +186,8 @@ function handUISelect(selection)
 		handUI.cursorOnSelf = false
 		if combatSelection.singleEnemy then
 			card:applyPowers(enemies[combatSelection.index])
+		elseif card.enemyTarget and card.toAllEnemies then
+			card:applyPowers(true)
 		end
 		pauseControl = true
 	end
@@ -215,7 +217,7 @@ function combatControls()
 		handUI.cursorOnSelf = true
 		handUI.hideSelection = false
 		if not handUI.justChangedSelection then
-			if handUI.selection == 1 and btnp(2) then
+			if handUI.selection <= 1 and btnp(2) then
 				combatSelection.type = 'drawPile'
 				handUI.cursorOnSelf = false
 				handUI.hideSelection = true
@@ -238,7 +240,7 @@ function combatControls()
 		end
 		if combatSelection.index == 0 or not enemyCanInteract(combatSelection.index) then
 			combatSelection.index = nextOrOtherIndexInTableIf(enemies,combatSelection.index,enemyCanInteract)
-			if combatSelection.index == 0 and combatSelection.singleEnemy then
+			if combatSelection.index == 0 then
 				combatSelection.type = 'hand'
 				handUI.cursorOnSelf = true
 				hand[combatSelection.handIndex].card:applyPowers()

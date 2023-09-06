@@ -1241,7 +1241,7 @@ ModeShiftPower = Power:new{icon=261}
 function ModeShiftPower:onDamaged(value)
 	local owner = self.owner
 	if self.amount > value then
-		self:setAmount(self.amount - value)
+		self.amount = self.amount - value
 	elseif owner.alive and not owner.enteringDefensiveMode then
 		addAction(RemovePowerAction:new(self))
 		addAction(GainBlockAction:new{target=owner,value=20})

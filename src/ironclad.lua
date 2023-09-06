@@ -92,13 +92,7 @@ end
 BodySlam = RedCard:new{ name='Body Slam',description='{Damage} equal to your {Block}.',rarity='common',baseCost=1,enemyTarget=true,upgrade={baseCost=0} }
 function BodySlam:applyPowers(target)
 	self.baseDamage = player.block
-	self.description='{Damage} equal to your {Block}. NL ({Damage} !D!.)'
 	RedCard.applyPowers(self,target)
-end
-
-function BodySlam:resetPowers()
-	self.description='{Damage} equal to your {Block}.'
-	RedCard.resetPowers(self)
 end
 
 function BodySlam:use(target)
@@ -163,7 +157,7 @@ end
 
 SwordBoomerang = RedCard:new{
 	name='Sword Boomerang',description='{Damage} !D! to a random enemy !M! times.',rarity='common',baseCost=1,baseDamage=3,baseMagic=3,
-	enemyTarget=true,toAllEnemies=true,upgrade={baseMagic=4}
+	enemyTarget=true,toAllEnemies=true,upgrade={baseMagic=4,attackCount=4},attackCount=3,
 }
 function SwordBoomerang:use()
 	local result = {}
@@ -186,7 +180,10 @@ function Thunderclap:use()
 	return result
 end
 
-TwinStrike = RedCard:new{ name='Twin Strike',description='{Damage} !D! twice.',rarity='common',baseCost=1,baseDamage=5,enemyTarget=true,upgrade={baseDamage=7},tags={'strike'} }
+TwinStrike = RedCard:new{
+	name='Twin Strike',description='{Damage} !D! twice.',rarity='common',baseCost=1,baseDamage=5,enemyTarget=true,
+	upgrade={baseDamage=7},tags={'strike'},attackCount=2,
+}
 function TwinStrike:use(target)
 	return { DamageAction:new{target=target,source=player,value=self.damage},DamageAction:new{target=target,source=player,value=self.damage} }
 end
@@ -304,7 +301,7 @@ end
 
 Whirlwind = RedCard:new{
 	name='Whirlwind',description='{Damage} !D! to all enemies X times.',rarity='uncommon',baseCost=-1,enemyTarget=true,toAllEnemies=true,
-	baseDamage=5,upgrade={baseDamage=8},
+	baseDamage=5,upgrade={baseDamage=8},attackCount='X',
 }
 function Whirlwind:use(target,energyOnUse,free)
 	return {
@@ -375,7 +372,7 @@ end
 
 Pummel = RedCard:new{
 	name='Pummel',description='{Damage} !D!, !M! times. NL Exhaust.',rarity='uncommon',baseCost=1,baseDamage=2,baseMagic=4,
-	enemyTarget=true,upgrade={baseMagic=5},exhaust=true,
+	enemyTarget=true,upgrade={baseMagic=5,attackCount=5},exhaust=true,attackCount=4,
 }
 function Pummel:use(target)
 	local result = {}
@@ -678,7 +675,7 @@ function SecondWind:use()
 			local targetCards = shallowcopy(hand)
 			table.retainIf(targetCards,isNotAttack)
 			miscRand:shuffle(targetCards)
-			
+
 			for _ = 1,#targetCards do
 				addAction(1,GainBlockAction:new{target=player,value=self.block})
 			end
@@ -1046,11 +1043,7 @@ InfernalBlade = RedCard:new{
 	playerTarget=true,upgrade={baseCost=0},exhaust=true,
 }
 function InfernalBlade:use()
-	local attackCardTypes = shallowcopy(redCards)
-	table.retainIf(attackCardTypes,function (cardType)
-		return cardType.type == 'attack' and cardType.rarity ~= 'basic' and cardType.canGenerateInCombat
-	end)
-	local randomType = attackCardTypes[miscRand:randInt(#attackCardTypes)]
+	local randomType = getPlayerCardType(miscRand,nil,'attack',true)
 	local card = randomType:new()
 	card.costForOneTurnPlay = 0
 	return { MakeTempCardToHandAction:new(card,1) }

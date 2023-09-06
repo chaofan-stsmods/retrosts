@@ -59,6 +59,11 @@ function Action:tick()
 	end
 end
 
+WaitAction = Action:new()
+function WaitAction:new(duration)
+	return Action.new(self,{duration=duration})
+end
+
 DrawCardAction = Action:new()
 function DrawCardAction:new(numCards)
 	return Action.new(self,{numCards=numCards,duration=3})
@@ -129,7 +134,11 @@ function UseCardAction:tick()
 				self.target = target
 			end
 		end
-		card:applyPowers(self.target)
+		if self.target == nil and card.enemyTarget and card.toAllEnemies then
+			card:applyPowers(true)
+		else
+			card:applyPowers(self.target)
+		end
 		if not self.forceUse and (not card:canUse(self.free) or (self.target ~= nil and not self.target.canInteract)) then
 			if self.fromHand and handIndex then
 				self.cardItem.isNotInHand = false
@@ -473,7 +482,7 @@ function ApplyPowerAction:tick()
 
 		local existingPower = owner:getPower(getmetatable(power))
 		if existingPower then
-			existingPower:setAmount(existingPower.amount + power.amount)
+			existingPower:stackPower(power)
 			if existingPower.amount == 0 then
 				owner:removePower(existingPower)
 			end
@@ -825,7 +834,9 @@ function DiscoveryAction:tick()
 			if not cardItem then
 				return
 			end
-			cardItem.card.costForOneTurnPlay = self.cost
+			if cardItem.card:getCost() >= 0 then
+				cardItem.card.costForOneTurnPlay = self.cost
+			end
 			if self.target == 'hand' then
 				addAction(1,MakeTempCardToHandAction:new(cardItem.card,self.amount,{cardItem=cardItem}))
 			elseif self.target == 'drawPile' then
@@ -857,6 +868,37 @@ function DiscardAction:tick()
 		table.insert(discardPile,card)
 		cardItem.large = false
 		local effect = CardEffect:new{cardItem=cardItem,pauseDuration=30,duration=50,tx=240,ty=136}
+		if self.show then
+			effect.useCardPosition = fillCardPosition(cardItem)
+		else
+			effect.pauseDuration = 1
+			effect.duration = 20
+			effect.startDuration = 20
+		end
+		addEffect(effect)
+	end
+	Action.tick(self)
+end
+
+PutCardInDrawPileAction = Action:new{duration=30,position=nil,cardItem=nil,show=false}
+function PutCardInDrawPileAction:new(o)
+	table.insert(limbo,o.cardItem)
+	return Action.new(self,o)
+end
+
+function PutCardInDrawPileAction:tick()
+	if self.duration == self.startDuration then
+		local cardItem = self.cardItem
+		local card = cardItem.card
+		card:resetPowers()
+		local limboIndex = table.indexOf(limbo,cardItem)
+		if limboIndex then
+			table.remove(limbo,limboIndex)
+		end
+		card.costForOneTurnPlay = nil
+		table.insert(drawPile,self.position or (#drawPile+1),card)
+		cardItem.large = false
+		local effect = CardEffect:new{cardItem=cardItem,pauseDuration=30,duration=50,tx=0,ty=136}
 		if self.show then
 			effect.useCardPosition = fillCardPosition(cardItem)
 		else

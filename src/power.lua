@@ -47,6 +47,10 @@ function Power:drawImage(x,y)
 	end
 end
 
+function Power:stackPower(power)
+	self:setAmount(self.amount + power.amount)
+end
+
 function Power:setAmount(newAmount)
 	local oldAmount = self.amount
 	self.amount = limit(newAmount,-self.maxAmount,self.maxAmount)
@@ -253,4 +257,9 @@ end
 
 function IntangiblePower:onBeforeDamaged()
 	return 1
+end
+
+NoBlockPower = TurnBasedPower:new{icon=25,priority=200}
+function NoBlockPower:onModifyBlock()
+	return 0
 end
