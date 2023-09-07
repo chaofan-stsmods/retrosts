@@ -132,6 +132,10 @@ function Player:getSpireHeartText()
 	return 'NL You meet Spire Heart.'
 end
 
+function Player:getEnding()
+	return IroncladEnding:new()
+end
+
 function sortByPriority(...)
 	local result = {}
 	local args = {...}

@@ -12,7 +12,7 @@ Card = {
 	enemyTarget=false,playerTarget=false,toAllEnemies=false,
 	exhaust=false,ethereal=false,innate=false,autoPlayOnEndTurn=false,
 	upgrade=noop,upgraded=false,tags={},canGenerateInCombat=true,canRemove=true,linkedBottle=nil,
-	onRemoveFromDeck=noop,priority=120,
+	onRemoveFromDeck=noop,priority=120,descriptionWidth=53,
 }
 Object:new(Card)
 
@@ -183,7 +183,7 @@ function CardItem:tick()
 
 		stackClip(l+1,t,self.large and 54 or 30,self.large and 56 or 40)
 		drawTitle(self,l,t)
-		drawDescription(self.card,self.card.description,l+3,t+10,self.large and 53 or 29,self.large and 999 or 3)
+		drawDescription(self.card,self.card.description,l+3,t+9,self.large and 53 or 29,self.large and 999 or 3)
 		popClip()
 
 		if self.card.linkedBottle and getmetatable(nearestWindow) == CardGridSelectWindow then
@@ -242,7 +242,7 @@ function drawCardBack(card,large,l,t)
 	end
 	rect(typeLeft,t-4,typeWidth,6,14)
 	rect(typeLeft+1,t-5,typeWidth-2,1,14)
-	drawIcon(cardTypeToSprIndex[card.type],typeLeft,t-6,card.typeIconColor)
+	drawIcon(cardTypeToSprIndex[card.type],typeLeft,t-5,card.typeIconColor)
 	resetColors{3,9,10,14,15}
 	if card.type == 'attack' then
 		local color = 12
@@ -343,8 +343,8 @@ function drawDescription(card,description,x,y,lineWidth,maxLine,color)
 						if currentY > maxY then
 							return maxX-x,maxY
 						end
-						drawIcon(icon,currentX+xOffset,currentY+yOffset-2,card.typeIconColor or color)
-						currentX = currentX + 8
+						drawIcon(icon,currentX+xOffset,currentY+yOffset-1,card.typeIconColor or color)
+						currentX = currentX + 9
 						maxX = math.max(maxX,currentX)
 					end
 				elseif findStr:sub(1,1) == '!' then

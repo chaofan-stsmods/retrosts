@@ -93,6 +93,11 @@ function CorruptHeart:nextIntent(first)
 	end
 end
 
+function CorruptHeart:die()
+	Monster.die(self)
+	self.visible = true
+end
+
 InvinciblePower = Power:new{icon=430}
 function InvinciblePower:new(owner,amount)
 	local result = Power.new(self,owner,amount)

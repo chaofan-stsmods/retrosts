@@ -19,8 +19,8 @@ function Act:new(o)
 end
 
 function Act:playEntryEffect()
-	addEffect(TextEffect:new{duration=120,color=11,text=self.smallTitle,x=120,y=17,small=false,shadow=15})
-	addEffect(TextEffect:new{duration=120,color=4,text=self.title,x=120,y=24,small=false,scale=3,shadow=15})
+	--addEffect(TextEffect:new{duration=120,color=11,text=self.smallTitle,x=120,y=17,small=false,shadow=15})
+	--addEffect(TextEffect:new{duration=120,color=4,text=self.title,x=120,y=24,small=false,scale=3,shadow=15})
 end
 
 function Act:generateEncounters(random)
@@ -142,7 +142,7 @@ Exordium = Act:new{
 	}
 }
 function Exordium:drawBackground()
-	sprmap(30,0,30,17,0,0)
+	sprmap(0,68,30,17,0,0)
 end
 
 TheCity = Act:new{
@@ -186,7 +186,7 @@ TheCity = Act:new{
 	}
 }
 function TheCity:drawBackground()
-	sprmap(60,0,30,17,0,0)
+	sprmap(0,85,30,17,0,0)
 	if currentEncounter == TheCollectorEncounter and #enemies == 3 then
 		local collector = enemies[3]
 		sprmap(71,17,8,10,collector.x+4,collector.y-16,8)
@@ -229,7 +229,7 @@ TheBeyond = Act:new{
 	}
 }
 function TheBeyond:drawBackground()
-	sprmap(90,0,30,17,0,0)
+	sprmap(0,102,30,17,0,0)
 end
 
 function TheBeyond:generateMap(random)
@@ -272,7 +272,7 @@ TheEnding = Act:new{
 	},
 }
 function TheEnding:drawBackground()
-	sprmap(120,0,30,17,0,0)
+	sprmap(30,0,30,17,0,0)
 end
 
 function TheEnding:generateMap()
@@ -285,12 +285,15 @@ function TheEnding:generateMap()
 	map[2][4].type = 'shop'
 	map[3][4].type = 'elite'
 
-	local bossRoom = {id=height*width+1,x=1,y=height+1,previous={},next={},type='boss',hasEdge=false,completed=false}
+	local bossRoom = {id=height*width+1,x=1,y=height+1,previous={},next={},type='boss',hasEdge=false,completed=false,noReward=true}
 	addMapEdge(map[1][4],map[2][4])
 	addMapEdge(map[2][4],map[3][4])
 	addMapEdge(map[3][4],bossRoom)
 
-	local specialRooms = {bossRoom}
+	local endingRoom = {id=height*width+2,x=1,y=height+2,previous={},next={},type='ending',hasEdge=false,completed=false}
+	addMapEdge(bossRoom,endingRoom)
+
+	local specialRooms = {bossRoom,endingRoom}
 	assignSpecialRoomIds(specialRooms)
 
 	return map,specialRooms

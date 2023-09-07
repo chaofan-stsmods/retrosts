@@ -267,10 +267,9 @@ function FlashOfSteel:use(target)
 	return { DamageAction:new{source=player,target=target,value=self.damage}, DrawCardAction:new(1) }
 end
 
--- TODO upgraded description is too long
 ForeThought = ColorlessCard:new{
-	name='Forethought',description='Put a card to bottom of draw pile. It costs 0 until played.',baseCost=0,type='skill',rarity='uncommon',
-	playerTarget=true,upgrade={description='Put any number of cards to the bottom of draw pile. They cost 0 until played.'},
+	name='Forethought',description='Put a card to the bottom of draw pile. It costs 0 until played.',baseCost=0,type='skill',rarity='uncommon',
+	playerTarget=true,upgrade={description='Put any num- ber of cards to the bottom of draw pile. They cost 0 until played.',descriptionWidth=54},
 }
 function ForeThought:use()
 	return {
@@ -653,11 +652,10 @@ function TheBombPower:onTurnEnd()
 	end
 end
 
--- TODO description is too long
 Transmutation = ColorlessCard:new{
 	name='Transmutation',description='Add X random colorless cards to hand. They cost 0 this turn. NL Exhaust.',
 	baseCost=-1,type='skill',rarity='rare',playerTarget=true,exhaust=true,
-	upgrade={description='Add X random upgraded colorless cards to hand. They cost 0 this turn. NL Exhaust.'},
+	upgrade={description='Add X random upgraded col- orless cards to hand. They cost 0 this turn. Exhaust.'},
 }
 function Transmutation:use(_,energyOnUse,free)
 	local upgraded = self.upgraded

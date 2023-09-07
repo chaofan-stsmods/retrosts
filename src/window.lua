@@ -462,8 +462,10 @@ function LoseWindow:tick()
 	act:drawBackground()
 	resetColors()
 	player:drawCorpse()
-	for i=1,#enemies do
-		enemies[i]:drawImage()
+	for _,enemy in ipairs(enemies) do
+		if enemy.visible then
+			enemy:drawImage()
+		end
 	end
 	tickEffects()
 	tickTopBar(false)
@@ -512,5 +514,19 @@ function GameWindow:tickBelow()
 		darkenColors()
 		eventBelow()
 		resetColors()
+	end
+end
+
+VictoryWindow = Window:new{name='LoseWindow',title='Victory!'}
+function VictoryWindow:tick()
+	darkenColors()
+	currentEvent:tick()
+	resetColors()
+	tickEffects()
+	tickTopBar(false)
+	drawBanner(56,18,16)
+	printGlowed(self.title,120-strWidth(self.title)/2,21,12)
+	if btnp(4) or btnp(5) then
+		switchWindow(TitleWindow:new())
 	end
 end

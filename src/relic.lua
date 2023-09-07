@@ -992,6 +992,20 @@ function SingingBowl:canSpawn()
 	return floor <= 48
 end
 
+function SingingBowl:onObtained()
+	local w = window
+	while w ~= nil do
+		if getmetatable(w) == RewardWindow then
+			for _,reward in ipairs(w.rewards) do
+				if reward.type == 'card' then
+					self:modifyCardReward(reward)
+				end
+			end
+		end
+		w = w.child
+	end
+end
+
 function SingingBowl:modifyCardReward(reward)
 	reward.buttons = reward.buttons or {}
 	table.insert(reward.buttons,{title='+2 Max HP', onSelect=function ()
@@ -1147,7 +1161,7 @@ end
 
 LizardTail = Relic:new{name='Lizard Tail',icon=155,tier='rare',counter=1,description='When you would die, heal to #11#50%#12# of your Max HP instead (works once).'}
 function LizardTail:onBeforeDeath()
-	if self.saved == 0 then
+	if self.saved == 0 and player.hp <= 0 then
 		self.saved = 1
 		self.counter = -1
 		self.description = 'This relic has been used up.'

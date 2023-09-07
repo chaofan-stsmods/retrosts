@@ -10,7 +10,7 @@ function event()
 		cls(0)
 	end
 	tickEffects()
-	tickTopBar(true)
+	tickTopBar(currentEvent.controlTopBar)
 end
 
 function eventBelow()
@@ -128,7 +128,7 @@ end
 
 ---@class Event : Object
 Event = {
-	spriteBank=nil,options={},selectedOption=0,canOperatePotion=true,
+	spriteBank=nil,options={},selectedOption=0,canOperatePotion=true,controlTopBar=true,
 	onOption=noop,init=noop,drawForeground=noop,onCombatEnd=noop,load=noop,
 }
 Object:new(Event)

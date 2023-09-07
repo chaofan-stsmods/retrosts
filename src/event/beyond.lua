@@ -72,7 +72,7 @@ TheMoaiHead = TextEvent:new{name='The Moai Head',screen='intro',maxHpLoss=0}
 function TheMoaiHead:init()
 	self.random = makeRand(act.id,room.id,1)
 	self.maxHpLoss = ascension >= 15 and math.floor(player.maxHp*0.18+0.5) or math.floor(player.maxHp*0.125+0.5)
-	self.description = 'You stumble across something that feels *very* out of place. Before you, an enormous stony head emerges from a large wall segment that does not shift and change like the rest of this area. NL The head\'s mouth is wide open, and it reveals large intimidating teeth stained red with blood. The surface of the statue is riddled with pictographs that seem to indicate people throwing themselves into the mouth of this head and being devoured. Why would anyone do that?'
+	self.description = 'You stumble across something that feels *very* out of place. Before you, an enormous stony head emerges from a large wall segment that does not shift and change like the rest of this area. The head\'s mouth is wide open, and it reveals large intimidating teeth stained red with blood. The surface of the statue is riddled with pictographs that seem to indicate people throwing themselves into the mouth of this head and being devoured. Why would anyone do that?'
 	self.options = {
 		{description='[Jump Inside] #5#Heal to full HP. #3#Lose '..self.maxHpLoss..' Max HP.'},
 		{description='[Offer: Golden Idol] #5#Gain 333 Gold. #3#Lose Golden Idol.'},
@@ -92,7 +92,6 @@ function TheMoaiHead:onOption(selection)
 		if selection == 1 then
 			player:decreaseMaxHp(self.maxHpLoss)
 			player:heal(player.maxHp)
-			-- TODO description is too long
 			self.description = 'At first when you step up into the mouth of the statue, nothing happens. As you start to feel more than a little foolish, the huge molars slam down from above, crushing you whole. NL @Darkness.@ NL Sometime later from within the dark, you see a sliver of light, and hear what you now realize is the sound of stony teeth slowly rising upwards. NL NL You leave confused.'
 		elseif selection == 2 then
 			loseRelic(getRelic(GoldenIdol))
