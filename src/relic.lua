@@ -740,53 +740,52 @@ function HornCleat:onCombatEnd()
 	self.counter = -1
 end
 
-FrozenEgg = Relic:new{name='Frozen Egg',icon=123,tier='uncommon',description='Whenever you add a {Power} into your deck, #4#Upgrade#12# it.'}
-function FrozenEgg:canSpawn()
+EggRelic = Relic:new{cardType=''}
+function EggRelic:canSpawn()
 	return floor <= 48
 end
 
-function FrozenEgg:onPreviewObtainCard(card)
+function EggRelic:onPreviewObtainCard(card)
 	self:onObtainCard(card)
 end
 
-function FrozenEgg:onObtainCard(card)
-	if card.type == 'power' and not card.upgraded and card:canUpgrade() then
+function EggRelic:onObtainCard(card)
+	if card.type == self.cardType and not card.upgraded and card:canUpgrade() then
 		card:upgrade()
 		card:resetPowers()
 	end
 end
 
-MoltenEgg = Relic:new{name='Molten Egg',icon=124,tier='uncommon',description='Whenever you add a {Attack} into your deck, #4#Upgrade#12# it.'}
-function MoltenEgg:canSpawn()
-	return floor <= 48
-end
-
-function MoltenEgg:onPreviewObtainCard(card)
-	self:onObtainCard(card)
-end
-
-function MoltenEgg:onObtainCard(card)
-	if card.type == 'attack' and not card.upgraded and card:canUpgrade() then
-		card:upgrade()
-		card:resetPowers()
+function EggRelic:onObtained()
+	local w = window
+	while w ~= nil do
+		if getmetatable(w) == RewardWindow then
+			for _,reward in ipairs(w.rewards) do
+				if reward.type == 'card' then
+					for _,card in ipairs(reward.value) do
+						self:onPreviewObtainCard(card)
+					end
+				end
+			end
+		end
+		w = w.child
+	end
+	if currentEvent ~= nil and getmetatable(currentEvent) == MerchantEvent then
+		trace('good')
+		for _,cardItem in ipairs(currentEvent.goods.card1) do
+			self:onPreviewObtainCard(cardItem.card)
+		end
+		for _,cardItem in ipairs(currentEvent.goods.card2) do
+			self:onPreviewObtainCard(cardItem.card)
+		end
 	end
 end
 
-ToxicEgg = Relic:new{name='Toxic Egg',icon=125,tier='uncommon',description='Whenever you add a {Skill} into your deck, #4#Upgrade#12# it.'}
-function ToxicEgg:canSpawn()
-	return floor <= 48
-end
+FrozenEgg = EggRelic:new{name='Frozen Egg',icon=123,tier='uncommon',cardType='power',description='Whenever you add a {Power} into your deck, #4#Upgrade#12# it.'}
 
-function ToxicEgg:onPreviewObtainCard(card)
-	self:onObtainCard(card)
-end
+MoltenEgg = EggRelic:new{name='Molten Egg',icon=124,tier='uncommon',cardType='attack',description='Whenever you add a {Attack} into your deck, #4#Upgrade#12# it.'}
 
-function ToxicEgg:onObtainCard(card)
-	if card.type == 'skill' and not card.upgraded and card:canUpgrade() then
-		card:upgrade()
-		card:resetPowers()
-	end
-end
+ToxicEgg = EggRelic:new{name='Toxic Egg',icon=125,tier='uncommon',cardType='skill',description='Whenever you add a {Skill} into your deck, #4#Upgrade#12# it.'}
 
 InkBottle = Relic:new{name='Ink Bottle',icon=128,counter=0,tier='uncommon',description='Whenever you play #11#10#12# cards, draw #11#1#12# card.'}
 function InkBottle:onUseCard()
@@ -1281,9 +1280,13 @@ end
 
 UnceasingTop = Relic:new{name='Unceasing Top',icon=167,tier='rare',description='Whenever you have no cards in hand during your turn, draw a card.'}
 function UnceasingTop:onRemoveHand()
-	if not inEnemyTurn and #hand == 0 and (#drawPile > 0 or #discardPile > 0) and
-		not table.anyMatch(actions,function (action) return getmetatable(action) == DrawCardAction end) then
-		addAction(DrawCardAction:new(1))
+	if not inEnemyTurn and #hand == 0 then
+		addAction(AnonymousAction:new(function ()
+			if #hand == 0 and (#drawPile > 0 or #discardPile > 0) and
+				not table.anyMatch(actions,function (action) return getmetatable(action) == DrawCardAction end) then
+				addAction(1,DrawCardAction:new(1))
+			end
+		end))
 	end
 end
 

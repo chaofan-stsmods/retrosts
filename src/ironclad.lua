@@ -89,10 +89,16 @@ function Bash:use(target)
 	return { DamageAction:new{target=target,source=player,value=self.damage}, ApplyPowerAction:new(player,VulnerablePower:new(target,self.magic)) }
 end
 
-BodySlam = RedCard:new{ name='Body Slam',description='{Damage} equal to your {Block}.',rarity='common',baseCost=1,enemyTarget=true,upgrade={baseCost=0} }
+BodySlam = RedCard:new{ name='Body Slam',description='{Damage} equal to your {Block}.',rarity='common',baseCost=1,displayDamage='?',enemyTarget=true,upgrade={baseCost=0} }
 function BodySlam:applyPowers(target)
+	self.displayDamage = false
 	self.baseDamage = player.block
 	RedCard.applyPowers(self,target)
+end
+
+function BodySlam:resetPowers()
+	self.displayDamage = '?'
+	RedCard.resetPowers(self)
 end
 
 function BodySlam:use(target)
@@ -157,7 +163,7 @@ end
 
 SwordBoomerang = RedCard:new{
 	name='Sword Boomerang',description='{Damage} !D! to a random enemy !M! times.',rarity='common',baseCost=1,baseDamage=3,baseMagic=3,
-	enemyTarget=true,toAllEnemies=true,upgrade={baseMagic=4,attackCount=4},attackCount=3,
+	enemyTarget=true,toAllEnemies=true,upgrade={baseMagic=4,displayAttackCount=4},displayAttackCount=3,
 }
 function SwordBoomerang:use()
 	local result = {}
@@ -182,7 +188,7 @@ end
 
 TwinStrike = RedCard:new{
 	name='Twin Strike',description='{Damage} !D! twice.',rarity='common',baseCost=1,baseDamage=5,enemyTarget=true,
-	upgrade={baseDamage=7},tags={'strike'},attackCount=2,
+	upgrade={baseDamage=7},tags={'strike'},displayAttackCount=2,
 }
 function TwinStrike:use(target)
 	return { DamageAction:new{target=target,source=player,value=self.damage},DamageAction:new{target=target,source=player,value=self.damage} }
@@ -301,7 +307,7 @@ end
 
 Whirlwind = RedCard:new{
 	name='Whirlwind',description='{Damage} !D! to all enemies X times.',rarity='uncommon',baseCost=-1,enemyTarget=true,toAllEnemies=true,
-	baseDamage=5,upgrade={baseDamage=8},attackCount='X',
+	baseDamage=5,upgrade={baseDamage=8},displayAttackCount='X',
 }
 function Whirlwind:use(target,energyOnUse,free)
 	return {
@@ -372,7 +378,7 @@ end
 
 Pummel = RedCard:new{
 	name='Pummel',description='{Damage} !D!, !M! times. NL Exhaust.',rarity='uncommon',baseCost=1,baseDamage=2,baseMagic=4,
-	enemyTarget=true,upgrade={baseMagic=5,attackCount=5},exhaust=true,attackCount=4,
+	enemyTarget=true,upgrade={baseMagic=5,displayAttackCount=5},exhaust=true,displayAttackCount=4,
 }
 function Pummel:use(target)
 	local result = {}

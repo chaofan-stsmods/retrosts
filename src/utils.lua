@@ -40,10 +40,14 @@ end
 
 function printGlowed(str,x,y,color,glowColor,scale,smallFont)
 	scale = scale or 1
-	print(str,x+1,y,glowColor or 15,false,scale,smallFont)
-	print(str,x-1,y,glowColor or 15,false,scale,smallFont)
-	print(str,x,y-1,glowColor or 15,false,scale,smallFont)
-	print(str,x,y+1,glowColor or 15,false,scale,smallFont)
+	if isDarken then
+		color = darkenColorList[color+1]
+		glowColor = darkenColorList[(glowColor or 15)+1]
+	end
+	print(str,x+1,y,glowColor,false,scale,smallFont)
+	print(str,x-1,y,glowColor,false,scale,smallFont)
+	print(str,x,y-1,glowColor,false,scale,smallFont)
+	print(str,x,y+1,glowColor,false,scale,smallFont)
 	return print(str,x,y,color,false,scale,smallFont)
 end
 
@@ -132,7 +136,7 @@ function drawItemTooltip(item,x,y,width,bottomAlign)
 		y = y-math.floor(h/8+2.5)*8
 	end
 	drawTooltipBox(boxX,y,width,math.floor(h/8+2.5))
-	print(item.name,boxX+4,y+4,4,false,1,true)
+	print(item.name,boxX+4,y+4,isDarken and darkenColorList[4+1] or 4,false,1,true)
 	drawDescription(item,item.description,boxX+4,y+14,(width-1)*8,999,12)
 end
 

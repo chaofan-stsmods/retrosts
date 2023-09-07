@@ -8,7 +8,7 @@ Card = {
 	name='',description='',type='attack',rarity='common',
 	color={2,1},costIcon=201,typeIconColor=4,colorName='',
 	baseCost=0,cost=0,costForOneTurnPlay=nil,costForOnePlay=nil,baseCostModified=false,
-	damage=0,baseDamage=0,block=0,baseBlock=0,magic=0,baseMagic=0,multiDamage={},attackCount=1,
+	damage=0,baseDamage=0,block=0,baseBlock=0,magic=0,baseMagic=0,multiDamage={},displayAttackCount=1,displayDamage=nil,
 	enemyTarget=false,playerTarget=false,toAllEnemies=false,
 	exhaust=false,ethereal=false,innate=false,autoPlayOnEndTurn=false,
 	upgrade=noop,upgraded=false,tags={},canGenerateInCombat=true,canRemove=true,linkedBottle=nil,
@@ -234,9 +234,9 @@ function drawCardBack(card,large,l,t)
 	local typeWidth = 8
 	local damageStr = ''
 	if card.type == 'attack' then
-		damageStr = tostring(card.damage)
-		if type(card.attackCount) ~= 'number' or card.attackCount > 1 then
-			damageStr = damageStr .. 'x' .. tostring(card.attackCount)
+		damageStr = tostring(card.displayDamage or card.damage)
+		if type(card.displayAttackCount) ~= 'number' or card.displayAttackCount > 1 then
+			damageStr = damageStr .. 'x' .. tostring(card.displayAttackCount)
 		end
 		typeWidth = typeWidth + strWidth(damageStr,false,true) + 1
 	end
@@ -246,10 +246,12 @@ function drawCardBack(card,large,l,t)
 	resetColors{3,9,10,14,15}
 	if card.type == 'attack' then
 		local color = 12
-		if card.damage > card.baseDamage then
-			color = 5
-		elseif card.damage < card.baseDamage then
-			color = 3
+		if not card.displayDamage then
+			if card.damage > card.baseDamage then
+				color = 5
+			elseif card.damage < card.baseDamage then
+				color = 3
+			end
 		end
 		print(damageStr,typeLeft+8,t-4,color,false,1,true)
 	end
@@ -262,7 +264,7 @@ function drawCost(card,l,t,isNotInHand,showWhiteCost)
 		spr(card.costIcon,l,t,0)
 		local costStr = cost == -1 and 'X' or tostring(cost)
 		local txtWidth = strWidth(costStr)
-		local color = (isNotInHand or showWhiteCost or card:canUse()) and 12 or 1
+		local color = (isNotInHand or showWhiteCost or (card:canUse() and not endTurnPressed)) and 12 or 1
 		if color == 12 and (cost ~= card.baseCost or card.baseCostModified) then
 			color = 5
 		end

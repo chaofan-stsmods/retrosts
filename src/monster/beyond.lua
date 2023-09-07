@@ -1019,8 +1019,8 @@ function TimeWarpPower:onUseCard()
 	if self.amount == 12 then
 		self.amount = 0
 		addAction(ApplyPowerAction:new(self.owner,StrengthPower:new(self.owner,2)))
-		if not inEnemyTurn then
-			inEnemyTurn = true
+		if not endTurnPressed then
+			endTurnPressed = true
 			addEffect(TimeWarpEffect:new())
 			addAction(EndTurnAction:new())
 		end

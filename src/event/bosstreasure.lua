@@ -19,9 +19,14 @@ local relicLocations = {
 }
 function BossTreasureEvent:drawBackground()
 	if self.opened then
-		darkenColors()
+		local wasDarken = isDarken
+		if not isDarken then
+			darkenColors()
+		end
 		act:drawBackground()
-		resetColors()
+		if not wasDarken then
+			resetColors()
+		end
 		player:drawImage()
 		sprmap(4,34,5,4,160,56,0)
 		drawTalkBubble('',85,20,70,51,167,73,7)
@@ -30,9 +35,11 @@ function BossTreasureEvent:drawBackground()
 		local width = strWidth(title)
 		printGlowed(title,120-width/2,21,12)
 		for i = 1, 3 do
-			mapColors(0,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15)
-			self.relics[i]:drawImage(relicLocations[i][1]+1,relicLocations[i][2]+1)
-			resetColors()
+			if not isDarken then
+				mapColors(0,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15)
+				self.relics[i]:drawImage(relicLocations[i][1]+1,relicLocations[i][2]+1)
+				resetColors()
+			end
 			self.relics[i]:drawImage(relicLocations[i][1],relicLocations[i][2])
 			if i == self.relicOption then
 				drawSelectionBox(relicLocations[i][1]-2,relicLocations[i][2]-2,12,12)
@@ -75,6 +82,10 @@ function BossTreasureEvent:eventControls()
 	if not self.opened then
 		Event.eventControls(self)
 	else
+		if cursorOnTopBar then
+			return
+		end
+
 		if btnp(0) then
 			self.relicOption = 1
 		elseif btnp(1) then

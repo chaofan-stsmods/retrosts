@@ -1230,7 +1230,7 @@ TwoThievesEncounter = Encounter:new{spriteBank=1,name='TwoThieves',enemyInfo={en
 ThreeCultistsEncounter = Encounter:new{spriteBank=1,name='ThreeCultists',enemyInfo={encItem(Cultist,-48,1),encItem(Cultist,0,0),encItem(Cultist,48,0)}}
 ThreeByrdsEncounter = Encounter:new{spriteBank=1,name='ThreeByrds',enemyInfo={encItem(Byrd,-48,0),encItem(Byrd,0,0),encItem(Byrd,48,0)}}
 SphericGuardianEncounter = Encounter:new{spriteBank=3,name='SphericGuardian',enemyInfo={encItem(SphericGuardian,0,0)}}
-SentryAndSphereEncounter = Encounter:new{spriteBank=3,name='SentryAndSphere',enemyInfo={encItem(SphericGuardian,20,0),encItem(Sentry,-30,1)}}
+SentryAndSphereEncounter = Encounter:new{spriteBank=3,name='SentryAndSphere',enemyInfo={encItem(Sentry,-30,1),encItem(SphericGuardian,20,0)}}
 ChosenEncounter = Encounter:new{spriteBank=1,name='Chosen',enemyInfo={encItem(Chosen,0,0)}}
 ByrdAndChosenEncounter = Encounter:new{spriteBank=1,name='ByrdAndChosen',enemyInfo={encItem(Byrd,-24,3),encItem(Chosen,24,0)}}
 CultistAndChosenEncounter = Encounter:new{spriteBank=1,name='CultistAndChosen',enemyInfo={encItem(Cultist,-24,-1),encItem(Chosen,24,0)}}

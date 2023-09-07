@@ -610,7 +610,7 @@ function ThieveryAction:tick()
 	self.isDone = true
 end
 
-GremlinNob = Monster:new{ maxHp=90,width=5,height=6,bashDmg=6,rushDmg=14,usedBellow=false,type='elite' }
+GremlinNob = Monster:new{ maxHp=90,width=6,height=6,bashDmg=6,rushDmg=14,usedBellow=false,type='elite' }
 function GremlinNob:init(random)
 	self.maxHp = ascension >= 8 and random:randInt(85,90) or random:randInt(82,86)
 	if ascension >= 3 then
@@ -620,9 +620,9 @@ end
 
 function GremlinNob:drawImage()
 	if combatSpriteBank == 1 then
-		sprmap(19,21,self.width,self.height,self.x+10,self.y,0)
+		sprmap(19,21,5,self.height,self.x+14,self.y,0)
 	else
-		sprmap(38,17,self.width,self.height,self.x+10,self.y,0)
+		sprmap(38,17,5,self.height,self.x+14,self.y,0)
 	end
 end
 

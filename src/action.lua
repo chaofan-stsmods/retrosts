@@ -323,14 +323,12 @@ end
 EndTurnAction = Action:new{duration=10,secondary=true}
 function EndTurnAction:tick()
 	if self.duration == self.startDuration then
+		inEnemyTurn = true
 		for i = #secondaryActions,1,-1 do
 			table.remove(secondaryActions,i)
 		end
 		addAction(AutoPlayOnEndTurnAction:new())
-		addAction(ExhaustEtherealCardsAction:new())
-		if not hasRelic(RunicPryamid) then
-			addAction(DiscardAllCardsAction:new())
-		end
+		addAction(HandleRemainingCardsAction:new{shouldDiscard=not hasRelic(RunicPryamid)})
 		player:onTurnEnd()
 		for _, enemy in ipairs(enemies) do
 			if enemy.alive then
@@ -382,8 +380,8 @@ function AutoPlayOnEndTurnAction:tick()
 	self.isDone = true
 end
 
-ExhaustEtherealCardsAction = Action:new{secondary=true}
-function ExhaustEtherealCardsAction:tick()
+HandleRemainingCardsAction = Action:new{secondary=true,shouldDiscard=true}
+function HandleRemainingCardsAction:tick()
 	local etherealCards = {}
 	for i = #hand,1,-1 do
 		local cardItem = hand[i]
@@ -398,10 +396,13 @@ function ExhaustEtherealCardsAction:tick()
 			addAction(1,ExhaustCardAction:new{cardItem=cardItem,duration=5})
 		end))
 	end
+	if self.shouldDiscard then
+		addAction(#etherealCards+1,DiscardAllCardsAction:new())
+	end
 	self.isDone = true
 end
 
-DiscardAllCardsAction = Action:new{duration=20,secondary=true}
+DiscardAllCardsAction = Action:new{duration=20}
 function DiscardAllCardsAction:tick()
 	Action.tick(self)
 	for i = #hand,1,-1 do
@@ -434,6 +435,7 @@ function NewTurnAction:tick()
 	Action.tick(self)
 	if self.isDone then
 		inEnemyTurn = false
+		endTurnPressed = false
 		turn = turn + 1
 	end
 end

@@ -294,7 +294,11 @@ queueSync(32,1)
 startGame(Ironclad,20)
 startAct(4)
 obtainRelic(Girya:new{counter=99})
-currentEvent = IroncladEnding:new()
+gold = 999
+currentEvent = MerchantEvent:new()
+currentEvent.goods.relics[1] = ToxicEgg:new()
+currentEvent.goods.relics[1].basePrice = 100
+currentEvent.goods.relics[1].price = 100
 --]]
 --[[
 startGame(Ironclad,20)
@@ -310,8 +314,10 @@ local function addCard(cardType)
 	c1:resetPowers()
 	table.insert(deck,c1)
 end
-addCard(Transmutation)
-addCard(Violence)
+addCard(DarkEmbrace)
+addCard(GhostlyArmor)
+addCard(GhostlyArmor)
+addCard(GhostlyArmor)
 potions[1] = SmokeBomb:new()
 maxEnergy = 6
 startCombat(GiantHeadEncounter)
@@ -324,10 +330,15 @@ currentEvent = TreasureEvent:new()
 currentEvent:showRewards()
 nearestWindow.rewards = {}
 table.insert(deck,BattleTrance:new())
-addRelicReward(nearestWindow.rewards,SingingBowl:new())
-addRelicReward(nearestWindow.rewards,Orrery:new())
-addRelicReward(nearestWindow.rewards,NeowsLament:new{counter=99})
-addPotionReward(nearestWindow.rewards,FruitJuice:new())
+addRelicReward(nearestWindow.rewards,UnceasingTop:new())
+--addRelicReward(nearestWindow.rewards,Orrery:new())
+--addRelicReward(nearestWindow.rewards,NeowsLament:new{counter=99})
+addPotionReward(nearestWindow.rewards,GamblersBrew:new())
+generateCardRewards(nearestWindow.rewards,makeRand(0))
+generateCardRewards(nearestWindow.rewards,makeRand(0))
+maxEnergy = 6
+nearestWindow.rewards[#nearestWindow.rewards-1].value[4] = MindBlast:new()
+nearestWindow.rewards[#nearestWindow.rewards].value[4] = BodySlam:new()
 --addPotionReward(nearestWindow.rewards,SmokeBomb:new())
 --addPotionReward(nearestWindow.rewards,SmokeBomb:new())
 --]]

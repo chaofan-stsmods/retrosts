@@ -26,6 +26,7 @@ hand = {}
 limbo = {}
 energy = 3
 turn = 1
+endTurnPressed = false
 inEnemyTurn = false
 combatType = 'monster'
 inCombat = false
@@ -171,7 +172,7 @@ end
 local function enemyCanInteract(i) return enemies[i].canInteract end
 
 function handUISelect(selection)
-	if not hand[selection].card:canUse() then
+	if not hand[selection].card:canUse() and not endTurnPressed then
 		return
 	end
 
@@ -229,7 +230,7 @@ function combatControls()
 		end
 
 	elseif combatSelection.type == 'usecard' then
-		if combatSelection.handIndex < 1 or combatSelection.handIndex > #hand or not hand[combatSelection.handIndex].card:canUse() then
+		if combatSelection.handIndex < 1 or combatSelection.handIndex > #hand or not hand[combatSelection.handIndex].card:canUse() or endTurnPressed then
 			combatSelection.type = 'hand'
 			handUI.cursorOnSelf = true
 			if combatSelection.handIndex < 1 or combatSelection.handIndex > #hand then
@@ -315,8 +316,8 @@ function combatControls()
 		end
 	end
 
-	if btnp(7) and not inEnemyTurn then
-		inEnemyTurn = true
+	if btnp(7) and not endTurnPressed then
+		endTurnPressed = true
 		addAction(EndTurnAction:new())
 	end
 end

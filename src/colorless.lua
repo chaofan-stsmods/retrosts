@@ -338,11 +338,17 @@ end
 
 MindBlast = ColorlessCard:new{
 	name='Mind Blast',description='Innate. NL Deal damage equal to the number of cards in draw pile.',baseCost=2,type='attack',rarity='uncommon',
-	enemyTarget=true,upgrade={baseCost=1},innate=true,
+	enemyTarget=true,upgrade={baseCost=1},innate=true,displayDamage='?'
 }
 function MindBlast:applyPowers(target)
+	self.displayDamage = false
 	self.baseDamage = #drawPile
 	ColorlessCard.applyPowers(self,target)
+end
+
+function MindBlast:resetPowers()
+	self.displayDamage = '?'
+	ColorlessCard.resetPowers(self)
 end
 
 function MindBlast:onDraw()

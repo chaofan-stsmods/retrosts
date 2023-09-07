@@ -144,19 +144,17 @@ function TitleSelectionWindow:tick()
 	end
 end
 
-TitleWindow = TitleSelectionWindow:new{options={'New Game','Card List','Relic Collection','Potion Lab','Exit'},name='TitleWindow'}
+TitleWindow = TitleSelectionWindow:new{options={'New Game','Card List','Relic Collection','Potion Lab'},name='TitleWindow'}
 function TitleWindow:new(o)
 	o = o or {}
 	if hasSave() then
-		o.options = {'Continue','New Game','Card List','Relic Collection','Potion Lab','Exit'}
+		o.options = {'Continue','New Game','Card List','Relic Collection','Potion Lab'}
 	end
 	return TitleSelectionWindow.new(self,o)
 end
 
 function TitleWindow:onOption()
-	if self.selection == #self.options then
-		exit()
-	elseif self.options[self.selection] == 'Card List' then
+	if self.options[self.selection] == 'Card List' then
 		self:open(CardListWindow:new())
 	elseif self.options[self.selection] == 'Relic Collection' then
 		self:open(RelicCollectionWindow:new())
