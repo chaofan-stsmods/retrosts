@@ -94,10 +94,14 @@ end
 
 function LouseDefensive:drawImage()
 	sprmap(9,19,1,1,self.x+8,self.y+8,0)
-	mapColor(4,5)
-	mapColor(2,6)
+	if self.color == nil then
+		mapColor(4,5)
+		mapColor(2,6)
+	end
 	sprmap(10,19,1,1,self.x+16,self.y+8,0)
-	resetColors{2,4}
+	if self.color == nil then
+		resetColors{2,4}
+	end
 end
 
 function LouseDefensive:debuff()
@@ -364,10 +368,14 @@ function AcidSlimeL:init(random)
 end
 
 function AcidSlimeL:drawImage()
-	mapColor(13,5)
-	mapColor(14,6)
+	if self.color == nil then
+		mapColor(13,5)
+		mapColor(14,6)
+	end
 	sprmap(24,20,self.width,self.height,self.x,self.y,0)
-	resetColors{13,14}
+	if self.color == nil then
+		resetColors{13,14}
+	end
 end
 
 function AcidSlimeL:attack()
@@ -494,11 +502,15 @@ function SlaverRed:init(random)
 end
 
 function SlaverRed:drawImage()
-	mapColor(9,2)
-	mapColor(15,1)
+	if self.color == nil then
+		mapColor(9,2)
+		mapColor(15,1)
+	end
 	sprmap(6,21,7,self.height,self.x-16,self.y,0)
 	rect(self.x-12,self.y+21,4,1,13)
-	resetColors{9,15}
+	if self.color == nil then
+		resetColors{9,15}
+	end
 end
 
 function SlaverRed:stab()
@@ -961,7 +973,7 @@ function SlimeBoss:init()
 end
 
 function SlimeBoss:drawImage()
-	sprmap(48,17,6,self.height,self.x+8,self.y+8,0)
+	sprmap(48,17,6,5,self.x+8,self.y+8,0)
 end
 
 function SlimeBoss:onCombatStart()
@@ -975,10 +987,14 @@ function SlimeBoss:debuff()
 end
 
 function SlimeBoss:prepare()
+	addAction(TalkAction:new(self,'~Slime...~ NL ~#2#CRUSH!!!~',{duration=120,xOffset=8,yOffset=8}))
 	addAction(SetIntentAction:new(self,'attack','attack',self.dmg))
 end
 
 function SlimeBoss:attack()
+	addAction(AnonymousAction:new(function ()
+		self:addJumpAnimation()
+	end))
 	addAction(DamageAction:new{target=player,source=self,value=self.intentDamage})
 	addAction(SetIntentAction:new(self,'debuff','strongDebuff'))
 end

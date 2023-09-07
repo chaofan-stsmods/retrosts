@@ -12,19 +12,27 @@ end
 
 function Mugger:drawImage()
 	if self.flipped then
-		sprmap(0,25,3,2,self.x+8,self.y,0,1,flipRemap(0,3))
-		mapColors(0,1,14,15,14,5,6,7,8,3,4,11,15,13,14,1)
-		sprmap(1,27,2,2,self.x+8,self.y+16,0,1,flipRemap(1,2))
-		mapColor(2,11)
-		sprmap(0,27,1,2,self.x+24,self.y+16,0,1,flipRemap(0,1))
-		resetColors()
+		if self.color == nil then
+			sprmap(0,25,3,2,self.x+8,self.y,0,1,flipRemap(0,3))
+			mapColors(0,1,14,15,14,5,6,7,8,3,4,11,15,13,14,1)
+			sprmap(1,27,2,2,self.x+8,self.y+16,0,1,flipRemap(1,2))
+			mapColor(2,11)
+			sprmap(0,27,1,2,self.x+24,self.y+16,0,1,flipRemap(0,1))
+			resetColors()
+		else
+			sprmap(0,25,3,4,self.x+8,self.y,0,1,flipRemap(0,3))
+		end
 	else
-		sprmap(0,25,3,2,self.x,self.y,0)
-		mapColors(0,1,14,15,14,5,6,7,8,3,4,11,15,13,14,1)
-		sprmap(1,27,2,2,self.x+8,self.y+16,0)
-		mapColor(2,11)
-		sprmap(0,27,1,2,self.x,self.y+16,0)
-		resetColors()
+		if self.color == nil then
+			sprmap(0,25,3,2,self.x,self.y,0)
+			mapColors(0,1,14,15,14,5,6,7,8,3,4,11,15,13,14,1)
+			sprmap(1,27,2,2,self.x+8,self.y+16,0)
+			mapColor(2,11)
+			sprmap(0,27,1,2,self.x,self.y+16,0)
+			resetColors()
+		else
+			sprmap(0,25,3,4,self.x,self.y,0)
+		end
 	end
 end
 

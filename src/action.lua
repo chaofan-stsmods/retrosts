@@ -492,6 +492,9 @@ function ApplyPowerAction:tick()
 			owner:addPower(power)
 		end
 		owner:applyPowers()
+		if power.debuff then
+			owner:addDebuffAnimation()
+		end
 		self.source:triggerEvent('onAppliedPower',power)
 	end
 	Action.tick(self)

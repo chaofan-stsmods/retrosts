@@ -4,7 +4,8 @@
 ---@class Creature : Object
 ---@field visible boolean
 Creature = {
-	hp=100,maxHp=100,x=0,y=0,width=3,height=3,block=0,powerIndex=0,powers={},alive=true,visible=true,flipped=false,canInteract=true,
+	hp=100,maxHp=100,x=0,y=0,width=3,height=3,block=0,powerIndex=0,powers={},alive=true,visible=true,flipped=false,canInteract=true,color=nil,
+	animations=nil,
 	applyPowers=noop,
 	onCombatStart=noop,
 	drawImage=noop,
@@ -12,7 +13,8 @@ Creature = {
 Object:new(Creature)
 function Creature:new(o)
 	o = o or {}
-	o.powers={}
+	o.powers = {}
+	o.animations = {}
 	if o.maxHp and not o.hp then
 		o.hp = o.maxHp
 	elseif o.hp and not o.maxHp then
@@ -23,7 +25,21 @@ end
 
 function Creature:tick()
 	if self.visible then
+		local x,y = self.x,self.y
+		local color = nil
+		for _,animation in ipairs(self.animations) do
+			self.x,self.y,color = animation(self.x,self.y,color)
+		end
+		if color ~= nil then
+			self.color = color
+			mapColors(color,color,color,color,color,color,color,color,color,color,color,color,color,color,color,color)
+		end
 		self:drawImage(self.x,self.y)
+		if color ~= nil then
+			self.color = nil
+			resetColors{0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15}
+		end
+		self.x,self.y = x,y
 		if self.canInteract then
 			self:drawHealthBar()
 			self:drawPowers()
@@ -121,6 +137,7 @@ function Creature:damage(source,value,type,action)
 			end
 			if value == 0 then
 				addEffect(TextEffect:new{x=self.x+self.width*4,y=self.y,text='Blocked',color=11,ySpeed=-0.5})
+				addEffect(HitParticleEffect:new{x=self.x+self.width*4,y=self.y+self.height*4,colors={11,11,10}})
 			end
 		end
 	end
@@ -128,6 +145,10 @@ function Creature:damage(source,value,type,action)
 	value = source:triggerReducerEvent('onBeforeReduceHp',value,self,type,action)
 	if value > 0 then
 		addEffect(TextEffect:new{x=self.x+self.width*4,y=self.y,text=tostring(value),color=3,ySpeed=-0.5})
+		if type ~= 'hpLoss' then
+			addEffect(HitParticleEffect:new{x=self.x+self.width*4,y=self.y+self.height*4,colors={4,4,3}})
+		end
+		self:addDamagedAnimation(source)
 		if action then
 			action.damageDealt = (action.damageDealt or 0) + value
 		end
@@ -216,4 +237,48 @@ function Creature:removePower(power)
 			return
 		end
 	end
+end
+
+function Creature:addDamagedAnimation(source)
+	local timer = 0
+	local xOffset = source.x < self.x and 6 or -6
+	local animation
+	animation = function (x,y,c)
+		timer = timer + 1
+		x = x + xOffset
+		xOffset = lerp(xOffset,0,0.2)
+		if math.abs(xOffset) < 0.5 then
+			table.remove(self.animations,table.indexOf(self.animations,animation))
+		end
+		return x,y,timer % 2 == 0 and 2 or c
+	end
+	table.insert(self.animations,animation)
+end
+
+function Creature:addDebuffAnimation()
+	local timer = 60
+	local animation
+	animation = function (x,y,c)
+		local xOffset = math.sin((60-timer)*0.2)*(timer/10)
+		timer = timer - 1
+		if timer == 0 then
+			table.remove(self.animations,table.indexOf(self.animations,animation))
+		end
+		return x+xOffset,y,c
+	end
+	table.insert(self.animations,animation)
+end
+
+function Creature:addJumpAnimation()
+	local timer = 60
+	local animation
+	animation = function (x,y,c)
+		local yOffset = timer * (timer - 60) / 90
+		timer = timer - 1
+		if timer == 0 then
+			table.remove(self.animations,table.indexOf(self.animations,animation))
+		end
+		return x,y+yOffset,c
+	end
+	table.insert(self.animations,animation)
 end

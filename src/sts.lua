@@ -320,7 +320,7 @@ addCard(GhostlyArmor)
 addCard(GhostlyArmor)
 potions[1] = SmokeBomb:new()
 maxEnergy = 6
-startCombat(GiantHeadEncounter)
+startCombat(SlimeBossEncounter)
 --addAction(ApplyPowerAction:new(player,StrengthPower:new(player,300)))
 addAction(ApplyPowerAction:new(player,MetallicizePower:new(player,300)))
 --]]
