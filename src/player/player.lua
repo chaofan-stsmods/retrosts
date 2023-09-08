@@ -3,7 +3,7 @@
 
 ---@class Player : Creature
 Player = {
-	x=26,y=52,tileBank=1,name=nil,drawCorpse=noop,
+	x=30,y=52,tileBank=1,name=nil,drawCorpse=noop,energyYOffset=0,
 }
 Creature:new(Player)
 
@@ -122,7 +122,7 @@ function Player:getPronouns()
 end
 
 function Player:resetPosition()
-	self.x = 26
+	self.x = 30
 	self.y = 52
 	self.flipped = false
 	self.visible = true

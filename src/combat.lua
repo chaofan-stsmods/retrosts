@@ -108,7 +108,7 @@ function drawOverlay()
 	map(0,2,3,3,4,96,8)
 	local energyText = energy .. '/' .. maxEnergy
 	local width = strWidth(energyText)
-	printShadowed(energyText,16-width/2,105,12)
+	printShadowed(energyText,16-width/2,105+player.energyYOffset,12)
 	drawIcon(icons.DrawPile,0,128)
 	printShadowed(tostring(#drawPile),8,129,12)
 	if combatSelection.type == 'drawPile' then

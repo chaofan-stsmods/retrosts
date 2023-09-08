@@ -1259,12 +1259,12 @@ function ModeShiftPower:onDamaged(value)
 	if self.amount > value then
 		self.amount = self.amount - value
 	elseif owner.alive and not owner.enteringDefensiveMode then
+		owner.enteringDefensiveMode = true
 		addAction(RemovePowerAction:new(self))
 		addAction(GainBlockAction:new{target=owner,value=20})
 		addAction(AnonymousAction:new(function ()
 			owner.modeShiftAmount = owner.modeShiftAmount + 10
 			owner.defensiveMode = true
-			owner.enteringDefensiveMode = true
 		end))
 		addAction(SetIntentAction:new(owner,'enterDefensiveMode','buff',0,0,false))
 	end
@@ -1273,7 +1273,7 @@ end
 SharpHidePower = Power:new{icon=43}
 function SharpHidePower:onUseCard(card)
 	if card.type == 'attack' then
-		addAction(DamageAction:new{target=player,source=self.owner,value=self.amount})
+		addAction(DamageAction:new{target=player,source=self.owner,value=self.amount,type='power'})
 	end
 end
 

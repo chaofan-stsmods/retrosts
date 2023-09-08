@@ -225,10 +225,11 @@ function CharacterSelectWindow:onOption()
 	startGame(characters[self.selection],self.ascension)
 end
 
-CardListWindow = Window:new{name='CardListWindow',gridUI=nil,allCardItems=nil,cardItemsIndex=1}
+CardListWindow = Window:new{name='CardListWindow',gridUI=nil,allCardItems=nil,tileBanks=nil,cardItemsIndex=1}
 local rarityPriority = {basic=0,special=1,common=2,uncommon=3,rare=4}
 function CardListWindow:new()
 	local allCardItems = {}
+	local tileBanks = {}
 	local cardItems
 	for _,character in ipairs(characters) do
 		cardItems = {}
@@ -236,17 +237,20 @@ function CardListWindow:new()
 			table.insert(cardItems,CardItem:new{card=cardType:new(),isNotInHand=true})
 		end
 		table.insert(allCardItems,cardItems)
+		table.insert(tileBanks,character.tileBank)
 	end
 	cardItems = {}
 	for _,cardType in ipairs(getColorlessCards()) do
 		table.insert(cardItems,CardItem:new{card=cardType:new(),isNotInHand=true})
 	end
 	table.insert(allCardItems,cardItems)
+	table.insert(tileBanks,1)
 	cardItems = {}
 	for _,cardType in ipairs(getCurseCards()) do
 		table.insert(cardItems,CardItem:new{card=cardType:new(),isNotInHand=true})
 	end
 	table.insert(allCardItems,cardItems)
+	table.insert(tileBanks,1)
 	for _,cardItems in ipairs(allCardItems) do
 		table.sort(cardItems,function (a, b)
 			if a.card.rarity == b.card.rarity then
@@ -257,7 +261,7 @@ function CardListWindow:new()
 		end)
 	end
 	local gridUI = CardGridUI:new(allCardItems[1])
-	local r = Window.new(self,{gridUI=gridUI,allCardItems=allCardItems})
+	local r = Window.new(self,{gridUI=gridUI,allCardItems=allCardItems,tileBanks=tileBanks})
 	gridUI.cursorOnSelf = true
 	gridUI.onSelect = function (selection)
 		r:gridUISelect(selection)
@@ -266,7 +270,7 @@ function CardListWindow:new()
 end
 
 function CardListWindow:onOpen()
-	queueSync(1,1)
+	queueSync(1,self.tileBanks[self.cardItemsIndex] or 1)
 end
 
 function CardListWindow:tick()
@@ -278,6 +282,7 @@ function CardListWindow:tick()
 			self.gridUI.cardItems = self.allCardItems[self.cardItemsIndex]
 			self.gridUI.selection = 1
 			self.gridUI:scrollToSelection()
+			queueSync(1,self.tileBanks[self.cardItemsIndex] or 1)
 		end
 	elseif btnp(7) then
 		if self.cardItemsIndex < #self.allCardItems then
@@ -285,6 +290,7 @@ function CardListWindow:tick()
 			self.gridUI.cardItems = self.allCardItems[self.cardItemsIndex]
 			self.gridUI.selection = 1
 			self.gridUI:scrollToSelection()
+			queueSync(1,self.tileBanks[self.cardItemsIndex] or 1)
 		end
 	elseif btnp(5) then
 		self:close()

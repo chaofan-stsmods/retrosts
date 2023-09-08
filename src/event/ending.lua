@@ -13,7 +13,7 @@ function IroncladEnding:tick()
 	if self.screen == 'scene1' then
 		act:drawBackground()
 		if timer > 60 and timer <= 100 then
-			player.x = exp5(26,200,(timer-60)/40)
+			player.x = exp5(30,200,(timer-60)/40)
 		end
 		player:drawImage()
 		local y1 = 4

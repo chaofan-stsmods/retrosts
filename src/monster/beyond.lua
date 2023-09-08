@@ -1031,7 +1031,7 @@ require 'effect'
 TimeWarpEffect = Effect:new{x=120,y=160,vx=-0.1,vy=-7,rotation=-0.4,duration=120}
 function TimeWarpEffect:tick()
 	Effect.tick(self)
-	if self.duration > 80 then
+	if self.duration > 80 or not ttri then
 		return
 	end
 
