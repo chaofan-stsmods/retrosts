@@ -57,7 +57,7 @@ function Player:triggerConditionEvent(name,default,...)
 end
 
 function Player:triggerReducerEvent(name,value,...)
-	for _, item in ipairs(sortByPriority(potions,relics,self.powers)) do
+	for _, item in ipairs(sortByPriority(potions,relics,self.powers,table.map(hand,function(cardItem) return cardItem.card end))) do
 		if item[name] then
 			value = item[name](item,value,...) or value
 		end

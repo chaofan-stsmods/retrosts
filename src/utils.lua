@@ -561,6 +561,10 @@ function Random:rand()
 	return self:randRaw()/D40
 end
 
+---@param from integer
+---@param to integer
+---@return integer
+---@overload fun(self: Random, to: integer): integer
 function Random:randInt(from,to)
 	if to == nil then
 		to = from

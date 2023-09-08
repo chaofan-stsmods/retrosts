@@ -204,8 +204,8 @@ DarkShackles = ColorlessCard:new{
 }
 function DarkShackles:use(target)
 	return {
-		ApplyPowerAction:new(target,StrengthPower:new(target,-self.magic,true)),
-		ApplyPowerAction:new(target,ShackledPower:new(target,self.magic,true)),
+		ApplyPowerAction:new(player,StrengthPower:new(target,-self.magic)),
+		ApplyPowerAction:new(player,ShackledPower:new(target,self.magic)),
 	}
 end
 
@@ -505,7 +505,7 @@ function Magnetism:use()
 	return { ApplyPowerAction:new(player,MagnetismPower:new(player)) }
 end
 
-MagnetismPower = Power:new{icon=252}
+MagnetismPower = Power:new{icon=63}
 function MagnetismPower:onTurnStart()
 	for _=1,self.amount do
 		addAction(MakeTempCardToHandAction:new(getColorlessCardType(miscRand,nil,nil,true):new()))
@@ -711,6 +711,14 @@ function Violence:use()
 	return result
 end
 
+Shiv = ColorlessCard:new{
+	name='Shiv',description='{Damage} !D!. NL Exhaust.',baseCost=0,type='attack',rarity='special',
+	enemyTarget=true,baseDamage=4,upgrade={baseDamage=6},exhaust=true,
+}
+function Shiv:use(target)
+	return { DamageAction:new{source=player,target=target,value=self.damage} }
+end
+
 colorlessCards = {
 	-- status
 	Wound,Dazed,Burn,Slimed,Void,
@@ -722,7 +730,7 @@ colorlessCards = {
 	MasterOfStrategy,HandOfGreed,ThinkingAhead,Apotheosis,Chrysalis,Metamorphosis,Magnetism,Mayhem,Panache,
 	SadisticNature,SecretTechnique,SecretWeapon,TheBomb,Transmutation,Violence,
 	-- special
-	JAX,Apparition,RitualDagger,Bite,
+	JAX,Apparition,RitualDagger,Bite,Shiv,
 }
 
 CurseCard = Card:new{color={15,0},costIcon=46,typeIconColor=13,colorName='curse',type='curse',rarity='common',baseCost=-2,baseCanUse=false,canUpgrade=false,playerTarget=true}

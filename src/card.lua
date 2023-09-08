@@ -237,6 +237,8 @@ function drawCardBack(card,large,l,t)
 		damageStr = tostring(card.displayDamage or card.damage)
 		if type(card.displayAttackCount) ~= 'number' or card.displayAttackCount > 1 then
 			damageStr = damageStr .. 'x' .. tostring(card.displayAttackCount)
+		elseif card.displayAttackCount == 0 then
+			damageStr = '0'
 		end
 		typeWidth = typeWidth + strWidth(damageStr,false,true) + 1
 	end

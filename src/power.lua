@@ -128,13 +128,13 @@ function FrailPower:onModifyBlock(block)
 	return block * 0.75
 end
 
-LoseStrengthPower = Power:new{debuff=true,icon=14}
+LoseStrengthPower = Power:new{debuff=true,icon=59}
 function LoseStrengthPower:onTurnEnd()
 	addAction(ApplyPowerAction:new(self.owner,StrengthPower:new(self.owner,-self.amount)))
 	addAction(RemovePowerAction:new(self))
 end
 
-LoseDexterityPower = Power:new{debuff=true,icon=14}
+LoseDexterityPower = Power:new{debuff=true,icon=59}
 function LoseDexterityPower:onTurnEnd()
 	addAction(ApplyPowerAction:new(self.owner,DexterityPower:new(self.owner,-self.amount)))
 	addAction(RemovePowerAction:new(self))
@@ -227,7 +227,7 @@ function ThornsPower:onDamaged(_,source,type)
 	end
 end
 
-GainBlockNextTurnPower = Power:new{icon=236}
+GainBlockNextTurnPower = Power:new{icon=14}
 function GainBlockNextTurnPower:onTurnStart()
 	addAction(GainBlockAction:new{target=self.owner,value=self.amount})
 	addAction(RemovePowerAction:new(self))

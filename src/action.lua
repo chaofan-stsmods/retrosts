@@ -64,9 +64,9 @@ function WaitAction:new(duration)
 	return Action.new(self,{duration=duration})
 end
 
-DrawCardAction = Action:new()
+DrawCardAction = Action:new{cardDrawn=nil}
 function DrawCardAction:new(numCards)
-	return Action.new(self,{numCards=numCards,duration=3})
+	return Action.new(self,{numCards=numCards,duration=3,cardDrawn={}})
 end
 
 function DrawCardAction:tick()
@@ -89,6 +89,7 @@ function DrawCardAction:tick()
 		end
 		local card = table.remove(drawPile,#drawPile)
 		table.insert(hand,CardItem:new{card=card})
+		table.insert(self.cardDrawn,card)
 		card:applyPowers()
 		player:triggerEvent('onDraw',card)
 	end
@@ -871,6 +872,7 @@ function DiscardAction:tick()
 		end
 		card.costForOneTurnPlay = nil
 		table.insert(discardPile,card)
+		player:triggerEvent('onDiscard',card)
 		cardItem.large = false
 		local effect = CardEffect:new{cardItem=cardItem,pauseDuration=30,duration=50,tx=240,ty=136}
 		if self.show then
@@ -923,6 +925,33 @@ function PlayerEscapeAction:tick()
 		player.visible = false
 		target.flipped = not target.flipped
 		addEffect(CreatureEffect:new{target=target,x=target.x,y=target.y,xSpeed=target.flipped and -1 or 1})
+	end
+	Action.tick(self)
+end
+
+SelectDiscardHandAction = Action:new{duration=1}
+function SelectDiscardHandAction:new(amount)
+	return Action.new(self,{amount=amount})
+end
+
+function SelectDiscardHandAction:tick()
+	if self.duration == self.startDuration then
+		if #hand <= self.amount then
+			for i=#hand,1,-1 do
+				local cardItem = hand[i]
+				removeHand(i)
+				addAction(1,DiscardAction:new{cardItem=cardItem,duration=1})
+			end
+		else
+			local title = self.amount == 1 and 'Choose a Card to Discard' or 'Choose Cards to Discard ({#}/'..self.amount..')'
+			openWindowAbove(HandSelectWindow:new{cardItems=hand,title=title,min=self.amount,max=self.amount},function (cards)
+				for i,cardItem in ipairs(cards) do
+					local cardIndex = table.indexOf(hand,cardItem)
+					removeHand(cardIndex)
+					addAction(i,DiscardAction:new{cardItem=cardItem,duration=1})
+				end
+			end)
+		end
 	end
 	Action.tick(self)
 end

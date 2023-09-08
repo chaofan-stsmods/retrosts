@@ -1411,7 +1411,7 @@ RunicDome = EnergyRelic:new{name='Runic Dome',icon=180,tier='boss',description='
 
 RunicPryamid = Relic:new{name='Runic Pyramid',icon=181,tier='boss',description='At the end of your turn, you no longer discard your hand.'}
 
-SacredBark = Relic:new{name='Sacred Bark',icon=220,tier='boss',description='Double the effectiveness of potions.'}
+SacredBark = Relic:new{name='Sacred Bark',icon=252,tier='boss',description='Double the effectiveness of potions.'}
 function SacredBark:onObtained()
 	for _,potion in ipairs(potions) do
 		potion:applyPowers()
