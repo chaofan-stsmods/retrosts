@@ -233,6 +233,12 @@ function GainBlockNextTurnPower:onTurnStart()
 	addAction(RemovePowerAction:new(self))
 end
 
+DrawCardNextTurnPower = Power:new{icon=52}
+function DrawCardNextTurnPower:onTurnStart()
+	addAction(DrawCardAction:new(self.amount))
+	addAction(RemovePowerAction:new(self))
+end
+
 BufferPower = Power:new{icon=0}
 function BufferPower:onBeforeHpLoss(value)
 	if value > 0 then

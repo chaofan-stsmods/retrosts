@@ -4,13 +4,15 @@
 ---@class Card : Object
 ---@field costForOnePlay integer?
 ---@field costForOneTurnPlay integer?
+---@field tempRetain boolean
+---@field baseCanUse fun(self:Card,free:boolean):boolean
 Card = {
 	name='',description='',type='attack',rarity='common',
 	color={2,1},costIcon=201,typeIconColor=4,colorName='',
 	baseCost=0,cost=0,costForOneTurnPlay=nil,costForOnePlay=nil,baseCostModified=false,
 	damage=0,baseDamage=0,block=0,baseBlock=0,magic=0,baseMagic=0,multiDamage={},displayAttackCount=1,displayDamage=nil,
 	enemyTarget=false,playerTarget=false,toAllEnemies=false,
-	exhaust=false,ethereal=false,innate=false,autoPlayOnEndTurn=false,
+	exhaust=false,ethereal=false,innate=false,retain=false,tempRetain=false,autoPlayOnEndTurn=false,
 	upgrade=noop,upgraded=false,tags={},canGenerateInCombat=true,canRemove=true,linkedBottle=nil,
 	onRemoveFromDeck=noop,priority=120,descriptionWidth=53,
 }

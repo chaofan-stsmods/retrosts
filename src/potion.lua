@@ -29,7 +29,7 @@ function getRandomPotionType(random,noFruit)
 		rarity = 'rare'
 	end
 	local potions = shallowcopy(potionPool)
-	table.retainIf(potions,function (p) return p.rarity == rarity and (not noFruit or p == FruitJuice) end)
+	table.retainIf(potions,function (p) return p.rarity == rarity and (not noFruit or p ~= FruitJuice) end)
 	return potions[random:randInt(#potions)]
 end
 

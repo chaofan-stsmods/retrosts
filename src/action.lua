@@ -398,27 +398,35 @@ function HandleRemainingCardsAction:tick()
 		end))
 	end
 	if self.shouldDiscard then
-		addAction(#etherealCards+1,DiscardAllCardsAction:new())
+		addAction(#etherealCards+1,DiscardNonRetainCardsAction:new())
 	end
 	self.isDone = true
 end
 
-DiscardAllCardsAction = Action:new{duration=20}
-function DiscardAllCardsAction:tick()
+DiscardNonRetainCardsAction = Action:new{duration=20}
+function DiscardNonRetainCardsAction:tick()
 	Action.tick(self)
+	local numRetained = 0
 	for i = #hand,1,-1 do
 		local cardItem = hand[i]
-		cardItem.isNotInHand = true
-		cardItem.tx = 240
-		cardItem.ty = 136
-		if self.isDone or (math.abs(cardItem.tx - cardItem.x) < 2 and math.abs(cardItem.ty - cardItem.y) < 2) then
-			removeHand(i)
-			table.insert(discardPile,cardItem.card)
-			cardItem.card:resetPowers()
-			cardItem.card.costForOneTurnPlay = nil
+		if cardItem.card.retain or cardItem.card.tempRetain then
+			numRetained = numRetained + 1
+		else
+			cardItem.isNotInHand = true
+			cardItem.tx = 240
+			cardItem.ty = 136
+			if self.isDone or (math.abs(cardItem.tx - cardItem.x) < 2 and math.abs(cardItem.ty - cardItem.y) < 2) then
+				removeHand(i)
+				table.insert(discardPile,cardItem.card)
+				cardItem.card:resetPowers()
+				cardItem.card.costForOneTurnPlay = nil
+			end
 		end
 	end
-	if #hand == 0 then
+	if #hand == numRetained then
+		for _,cardItem in ipairs(hand) do
+			cardItem.card.tempRetain = false
+		end
 		self.isDone = true
 	end
 end
@@ -855,7 +863,7 @@ function DiscoveryAction:tick()
 	Action.tick(self)
 end
 
-DiscardAction = Action:new{duration=30,cardItem=nil,show=false}
+DiscardAction = Action:new{duration=30,cardItem=nil,fromHand=true,show=false}
 function DiscardAction:new(o)
 	table.insert(limbo,o.cardItem)
 	return Action.new(self,o)
@@ -872,7 +880,9 @@ function DiscardAction:tick()
 		end
 		card.costForOneTurnPlay = nil
 		table.insert(discardPile,card)
-		player:triggerEvent('onDiscard',card)
+		if self.fromHand then
+			player:triggerEvent('onDiscardFromHand',card)
+		end
 		cardItem.large = false
 		local effect = CardEffect:new{cardItem=cardItem,pauseDuration=30,duration=50,tx=240,ty=136}
 		if self.show then

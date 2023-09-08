@@ -313,15 +313,15 @@ local function addCard(cardType)
 	c1:resetPowers()
 	table.insert(deck,c1)
 end
-addCard(Flechettes)
-addCard(Flechettes)
-addCard(BladeDance)
-addCard(BladeDance)
+addCard(ToolsOfTheTrade)
+addCard(Unload)
+addCard(WraithForm)
+addCard(Expertise)
 potions[1] = SmokeBomb:new()
 maxEnergy = 6
-startCombat(SlimeBossEncounter)
+startCombat(ThreeSentryEncounter)
 --addAction(ApplyPowerAction:new(player,StrengthPower:new(player,300)))
-addAction(ApplyPowerAction:new(player,MetallicizePower:new(player,300)))
+--addAction(ApplyPowerAction:new(player,MetallicizePower:new(player,300)))
 --]]
 --[[
 startGame(TheSilent,20)
@@ -965,6 +965,7 @@ window:onOpen()
 -- 224:666660006666600066666600676666007666660067666e006600edd000000ddd
 -- 225:00bb9b670066b9b700666b9f006666ff06666776066677766667776666777666
 -- 226:7676660076766700666676706667676066767676666767676676767666676766
+-- 232:000055005c555500550050050005505500556550005555000555000000000000
 -- 233:888de77688cd767688dd766688de76658cd766658dd766668de76666dd777667
 -- 234:665566666556655665555566655c555655ccc555555cc5556655555665556656
 -- 235:777ff8886677fe887667ff886767ff8867777fe866777ff866677ff8766777ff

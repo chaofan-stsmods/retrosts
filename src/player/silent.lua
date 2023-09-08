@@ -268,7 +268,7 @@ function SneakyStrike:onTurnStart()
 	self.discarded = false
 end
 
-function SneakyStrike:onDiscard()
+function SneakyStrike:onDiscardFromHand()
 	self.discarded = true
 end
 
@@ -317,7 +317,7 @@ function AllOutAttack:use()
 				local cardIndex = miscRand:randInt(#hand)
 				local cardItem = hand[cardIndex]
 				removeHand(cardIndex)
-				addAction(1,DiscardAction:new{cardItem=cardItem,duration=1})
+				addAction(1,DiscardAction:new{cardItem=cardItem,show=true})
 			end
 		end)
 	}
@@ -491,7 +491,7 @@ function Eviscerate:onTurnStart()
 	self.numDiscarded = 0
 end
 
-function Eviscerate:onDiscard()
+function Eviscerate:onDiscardFromHand()
 	self.numDiscarded = self.numDiscarded + 1
 end
 
@@ -590,11 +590,523 @@ function Flechettes:use(target)
 	}
 end
 
+Footwork = GreenCard:new{
+	name='Footwork',description='Gain !M! {Dexterity}.',rarity='uncommon',type='power',baseCost=1,baseMagic=2,
+	playerTarget=true,upgrade={baseMagic=3},
+}
+function Footwork:use()
+	return { ApplyPowerAction:new(player,DexterityPower:new(player,self.magic)) }
+end
+
+HeelHook = GreenCard:new{
+	name='Heel Hook',description='{Damage} !D!. NL If the enemy has {Weak}, gain {Energy} and draw 1 card.',rarity='uncommon',baseCost=1,baseDamage=5,
+	enemyTarget=true,upgrade={baseDamage=8},
+}
+function HeelHook:use(target)
+	local actions = { DamageAction:new{target=target,source=player,value=self.damage} }
+	if target:getPower(WeakPower) then
+		table.insert(actions,GainEnergyAction:new(1))
+		table.insert(actions,DrawCardAction:new(1))
+	end
+	return actions
+end
+
+InfiniteBlades = GreenCard:new{
+	name='Infinite Blades',description='At the start of turn, add a Shiv into hand.',rarity='uncommon',type='power',baseCost=1,
+	playerTarget=true,upgrade={description='Innate. NL At the start of turn, add a Shiv into hand.',innate=true},
+}
+function InfiniteBlades:use()
+	return { ApplyPowerAction:new(player,InfiniteBladesPower:new(player,1)) }
+end
+
+InfiniteBladesPower = Power:new{icon=213}
+function InfiniteBladesPower:onTurnStart()
+	addAction(1,MakeTempCardToHandAction:new(Shiv:new(),self.amount))
+end
+
+LegSweep = GreenCard:new{
+	name='Leg Sweep',description='Apply !M! {Weak}. NL Gain !B! {Block}.',rarity='uncommon',type='skill',baseCost=2,baseMagic=2,baseBlock=11,
+	playerTarget=true,enemyTarget=true,upgrade={baseMagic=3,baseBlock=14},
+}
+function LegSweep:use(target)
+	return { ApplyPowerAction:new(player,WeakPower:new(target,self.magic)), GainBlockAction:new{target=player,value=self.block} }
+end
+
+MasterfulStab = GreenCard:new{
+	name='Masterful Stab',description='Costs 1 additional {Energy} for each time you lose HP this combat. NL {Damage} !D!.',rarity='uncommon',
+	baseCost=0,baseDamage=12,enemyTarget=true,upgrade={baseDamage=16}
+}
+function MasterfulStab:onDamaged(value)
+	if value > 0 then
+		self.baseCost = self.baseCost + 1
+		if not table.anyMatch(hand,function (cardItem) return cardItem.card == self end) then
+			self:resetPowers()
+		end
+	end
+end
+
+function MasterfulStab:use(target)
+	return { DamageAction:new{target=target,source=player,value=self.damage} }
+end
+
+NoxiousFumes = GreenCard:new{
+	name='Noxious Fumes',description='At the start of turn, apply !M! {Poison} to all enemies.',rarity='uncommon',type='power',baseCost=1,
+	playerTarget=true,baseMagic=2,upgrade={baseMagic=3},
+}
+function NoxiousFumes:use()
+	return { ApplyPowerAction:new(player,NoxiousFumesPower:new(player,self.magic)) }
+end
+
+NoxiousFumesPower = Power:new{icon=198}
+function NoxiousFumesPower:onTurnStart()
+	for _, enemy in ipairs(enemies) do
+		addAction(ApplyPowerAction:new(player,PoisonPower:new(enemy,self.amount)))
+	end
+end
+
+Predator = GreenCard:new{
+	name='Predator',description='{Damage} !D!. NL Next turn, draw 2 additional cards.',rarity='uncommon',baseCost=2,baseDamage=15,
+	playerTarget=true,enemyTarget=true,upgrade={baseDamage=20},
+}
+function Predator:use(target)
+	return { DamageAction:new{target=target,source=player,value=self.damage}, ApplyPowerAction:new(player,DrawCardNextTurnPower:new(player,2)) }
+end
+
+Reflex = GreenCard:new{
+	name='Reflex',description='Unplayable. NL If this card is discarded from hand, draw !M! cards.',rarity='uncommon',type='skill',baseCost=-2,
+	baseMagic=2,playerTarget=true,upgrade={baseMagic=3},baseCanUse=false,
+}
+function Reflex:onDiscardFromHand(card)
+	if card == self then
+		addAction(DrawCardAction:new(self.magic))
+	end
+end
+
+RiddleWithHoles = GreenCard:new{
+	name='Riddle with Holes',description='{Damage} !D!, 5 times.',rarity='uncommon',baseCost=2,baseDamage=3,
+	enemyTarget=true,upgrade={baseDamage=4},displayAttackCount=5,
+}
+function RiddleWithHoles:use(target)
+	local result = {}
+	for i=1,5 do
+		result[i] = DamageAction:new{target=target,source=player,value=self.damage}
+	end
+	return result
+end
+
+Setup = GreenCard:new{
+	name='Setup',description='Put a card from hand on top of draw pile. NL It costs 0 until played.',rarity='uncommon',type='skill',
+	baseCost=1,playerTarget=true,upgrade={baseCost=0},
+}
+function Setup:use()
+	return {
+		AnonymousAction:new(function ()
+			if #hand == 0 then
+				return
+			elseif #hand == 1 then
+				local card = hand[1].card
+				addAction(1,PutCardInDrawPileAction:new{cardItem=hand[1],show=true,duration=10})
+				if card:getCost() > 0 then
+					card.costForOnePlay = 0
+				end
+				removeHand(1)
+			else
+				local title = 'Choose a Card to Put on Top of Draw Pile'
+				openWindowAbove(HandSelectWindow:new{cardItems=hand,title=title,max=1},function (cards)
+					for _, cardItem in ipairs(cards) do
+						local cardIndex = table.indexOf(hand,cardItem)
+						addAction(1,PutCardInDrawPileAction:new{cardItem=cardItem,duration=1})
+						if cardItem.card:getCost() > 0 then
+							cardItem.card.costForOnePlay = 0
+						end
+						removeHand(cardIndex)
+					end
+				end)
+			end
+		end)
+	}
+end
+
+Skewer = GreenCard:new{
+	name='Skewer',description='{Damage} !D!, X times.',rarity='uncommon',baseCost=-1,baseDamage=7,
+	enemyTarget=true,upgrade={baseDamage=10},displayAttackCount='X',
+}
+function Skewer:use(target,energyOnUse,free)
+	return {
+		XCardAction:new(function (amount)
+			local result = {}
+			for i = 1, amount do
+				result[i] = DamageAction:new{target=target,source=player,value=self.damage}
+			end
+			return result
+		end,energyOnUse,free)
+	}
+end
+
+Tactican = GreenCard:new{
+	name='Tactician',description='Unplayable. NL If this card is discarded from hand, gain {Energy}.',rarity='uncommon',type='skill',
+	baseCost=-2,baseMagic=1,playerTarget=true,baseCanUse=false,
+	upgrade={baseMagic=2,description='Unplayable. NL If this card is discarded from hand, gain {Energy}{Energy}.'},
+}
+function Tactican:onDiscardFromHand(card)
+	if card == self then
+		addAction(GainEnergyAction:new(self.magic))
+	end
+end
+
+Terror = GreenCard:new{
+	name='Terror',description='Apply !M! {Vulnerable}. NL Exhaust.',rarity='uncommon',type='skill',baseCost=1,baseMagic=99,
+	enemyTarget=true,upgrade={baseCost=0},exhaust=true,
+}
+function Terror:use(target)
+	return { ApplyPowerAction:new(player,VulnerablePower:new(target,self.magic)) }
+end
+
+WellLaidPlans = GreenCard:new{
+	name='Well-Laid Plans',description='At the end of turn, retain up to !M! card.',rarity='uncommon',type='power',baseCost=1,baseMagic=1,
+	playerTarget=true,upgrade={baseMagic=2,description='At the end of turn, retain up to !M! cards.'},
+}
+function WellLaidPlans:use()
+	return { ApplyPowerAction:new(player,WellLaidPlansPower:new(player,self.magic)) }
+end
+
+WellLaidPlansPower = Power:new{icon=214,priority=150}
+function WellLaidPlansPower:onTurnEnd()
+	if not hasRelic(RunicPryamid) and table.anyMatch(hand,function (cardItem) return not cardItem.card.retain and not cardItem.card.tempRetain end) then
+		addAction(AnonymousAction:new(function ()
+			local title = self.amount == 1 and 'Choose a Card to Retain' or 'Choose Cards to Retain ({#}/'..self.amount..')'
+			openWindowAbove(HandSelectWindow:new{cardItems=hand,title=title,min=0,max=self.amount},function (cards)
+				for _, cardItem in ipairs(cards) do
+					cardItem.card.tempRetain = true
+				end
+			end)
+		end))
+	end
+end
+
+AThousandCuts = GreenCard:new{
+	name='A Thousand Cuts',description='Whenever you play a card, {Damage} !M! to all enemies.',rarity='rare',type='power',baseCost=2,baseMagic=1,
+	playerTarget=true,upgrade={baseMagic=2},
+}
+function AThousandCuts:use()
+	return { ApplyPowerAction:new(player,AThousandCutsPower:new(player,self.magic)) }
+end
+
+AThousandCutsPower = Power:new{icon=199}
+function AThousandCutsPower:onUseCard()
+	for _, enemy in ipairs(enemies) do
+		addAction(DamageAction:new{target=enemy,source=self.owner,value=self.amount,type='power'})
+	end
+end
+
+Adrenaline = GreenCard:new{
+	name='Adrenaline',description='Gain {Energy}. NL Draw 2 cards. NL Exhaust.',rarity='rare',type='skill',baseCost=0,baseMagic=1,
+	playerTarget=true,upgrade={baseMagic=2,description='Gain {Energy}{Energy}. NL Draw 2 cards. NL Exhaust.'},exhaust=true,
+}
+function Adrenaline:use()
+	return { GainEnergyAction:new(self.magic), DrawCardAction:new(2) }
+end
+
+AfterImage = GreenCard:new{
+	name='After Image',description='Whenever you play a card, gain !M! {Block}.',rarity='rare',type='power',baseCost=1,baseMagic=1,
+	playerTarget=true,upgrade={innate=true,description='Innate. NL Whenever you play a card, gain !M! {Block}.'},
+}
+function AfterImage:use()
+	return { ApplyPowerAction:new(player,AfterImagePower:new(player,self.magic)) }
+end
+
+AfterImagePower = Power:new{icon=215}
+function AfterImagePower:onUseCard()
+	addAction(GainBlockAction:new{target=self.owner,value=self.amount})
+end
+
+Alchemize = GreenCard:new{
+	name='Alchemize',description='Obtain a random potion. NL Exhaust.',rarity='rare',type='skill',baseCost=1,
+	playerTarget=true,upgrade={baseCost=0},exhaust=true,
+}
+function Alchemize:use()
+	return { AnonymousAction:new(function ()
+		local potion = getRandomPotionType(potionRand,true):new()
+		obtainPotion(potion)
+	end) }
+end
+
+BulletTime = GreenCard:new{
+	name='Bullet Time',description='You cannot draw additional cards this turn. Reduce the cost of all cards in hand to 0 this turn.',rarity='rare',
+	type='skill',baseCost=3,playerTarget=true,upgrade={baseCost=2},
+}
+function BulletTime:use()
+	return {
+		ApplyPowerAction:new(player,NoDrawPower:new(player)),
+		AnonymousAction:new(function ()
+			for _, cardItem in ipairs(hand) do
+				if cardItem.card:getCost() > 0 then
+					cardItem.card.costForOneTurnPlay = 0
+				end
+			end
+			handApplyPowers()
+		end)
+	}
+end
+
+Burst = GreenCard:new{
+	name='Burst',description='This turn, your next {Skill} is played twice.',rarity='rare',type='skill',baseCost=1,baseMagic=1,
+	playerTarget=true,upgrade={baseMagic=2,description='This turn, your next !M! {Skill} are played twice.'},
+}
+function Burst:use()
+	return { ApplyPowerAction:new(player,BurstPower:new(player,self.magic)) }
+end
+
+BurstPower = Power:new{icon=232}
+function BurstPower:onUseCard(card,target,useCardAction)
+	if card.type == 'skill' and not useCardAction.isDoubleTap then
+		local cardItem = useCardAction.cardItem:copy()
+		local action = UseCardAction:new{cardItem=cardItem,isDoubleTap=true,tempCard=true,free=true,target=target,energyOnUse=useCardAction.energyOnUse}
+		action.useCardPosition = fillCardPosition(cardItem,2)
+		table.insert(limbo,cardItem)
+		addAction(ReducePowerAction:new(self,1))
+		addAction(action)
+	end
+end
+
+function BurstPower:onTurnEnd()
+	addAction(RemovePowerAction:new(self))
+end
+
+CorpseExplosion = GreenCard:new{
+	name='Corpse Explosion',description='Apply !M! {Poison}. NL When the enemy dies, {Damage} equal to its Max HP to all enemies.',rarity='rare',type='skill',
+	baseCost=2,baseMagic=6,enemyTarget=true,upgrade={baseMagic=9},
+}
+function CorpseExplosion:use(target)
+	return { ApplyPowerAction:new(player,PoisonPower:new(target,self.magic)), ApplyPowerAction:new(player,CorpseExplosionPower:new(target,1)), }
+end
+
+CorpseExplosionPower = Power:new{icon=200,debuff=true}
+function CorpseExplosionPower:onDeath()
+	if self.owner.hp > 0 or self.owner.alive then
+		return
+	end
+	addAction(DamageAllEnemiesAction:new{source=player,value=self.owner.maxHp*self.amount,type='power'})
+end
+
+DieDieDie = GreenCard:new{
+	name='Die Die Die',description='{Damage} !D! to all enemies. NL Exhaust.',rarity='rare',baseCost=1,baseDamage=13,
+	enemyTarget=true,toAllEnemies=true,upgrade={baseDamage=17},exhaust=true,
+}
+function DieDieDie:use()
+	return { DamageAllEnemiesAction:new{source=player,value=self.multiDamage} }
+end
+
+Doppelganger = GreenCard:new{
+	name='Doppleganger',description='Next turn, draw X cards and gain X {Energy}. NL Exhaust.',rarity='rare',type='skill',baseCost=-1,
+	playerTarget=true,upgrade={description='Next turn, draw X+1 cards and gain X+1 {Energy}. NL Exhaust.'},exhaust=true,
+}
+function Doppelganger:use(_,energyOnUse,free)
+	return {
+		XCardAction:new(function (amount)
+			amount = self.upgraded and (amount + 1) or amount
+			if amount > 0 then
+				return {
+					ApplyPowerAction:new(player,DrawCardNextTurnPower:new(player,amount)),
+					ApplyPowerAction:new(player,EnergizedPower:new(player,amount)),
+				}
+			end
+		end,energyOnUse,free)
+	}
+end
+
+Envenom = GreenCard:new{
+	name='Envenom',description='Whenever a {Attack} deals unblocked damage, apply 1 {Poison}.',rarity='rare',type='power',baseCost=2,
+	playerTarget=true,upgrade={baseCost=1},
+}
+function Envenom:use()
+	return { ApplyPowerAction:new(player,EnvenomPower:new(player,1)) }
+end
+
+EnvenomPower = Power:new{icon=216}
+function EnvenomPower:onDamageDealt(value,target,type)
+	if type == 'attack' and value > 0 then
+		addAction(ApplyPowerAction:new(player,PoisonPower:new(target,self.amount)))
+	end
+end
+
+GlassKnife = GreenCard:new{
+	name='Glass Knife',description='{Damage} !D! twice. NL -2 damage this combat.',rarity='rare',baseCost=1,baseDamage=8,
+	enemyTarget=true,upgrade={baseDamage=12},displayAttackCount=2,
+}
+function GlassKnife:use(target)
+	return {
+		DamageAction:new{target=target,source=player,value=self.damage},
+		DamageAction:new{target=target,source=player,value=self.damage},
+		AnonymousAction:new(function ()
+			self.baseDamage = self.baseDamage - 2
+		end),
+	}
+end
+
+GrandFinale = GreenCard:new{
+	name='Grand Finale',description='Can only be played if draw pile is empty. NL {Damage} !D! to all enemies.',rarity='rare',baseCost=0,
+	enemyTarget=true,toAllEnemies=true,baseDamage=50,upgrade={baseDamage=60},
+}
+function GrandFinale:baseCanUse(free)
+	return GreenCard.baseCanUse(self,free) and #drawPile == 0
+end
+
+function GrandFinale:use()
+	return { DamageAllEnemiesAction:new{source=player,value=self.multiDamage} }
+end
+
+Malaise = GreenCard:new{
+	name='Malaise',description='Enemy loses X {Strength}. NL Apply X {Weak}. NL Exhaust.',rarity='rare',type='skill',baseCost=-1,
+	enemyTarget=true,upgrade={description='Enemy loses X+1 {Strength}. NL Apply X+1 {Weak}. NL Exhaust.'},exhaust=true,
+}
+function Malaise:use(target,energyOnUse,free)
+	return {
+		XCardAction:new(function (amount)
+			amount = self.upgraded and (amount + 1) or amount
+			if amount > 0 then
+				return {
+					ApplyPowerAction:new(player,StrengthPower:new(target,-amount)),
+					ApplyPowerAction:new(player,WeakPower:new(target,amount)),
+				}
+			end
+		end,energyOnUse,free)
+	}
+end
+
+Nightmare = GreenCard:new{
+	name='Nightmare',description='Choose a card. NL Next turn, add 3 copies of that card into hand. NL Exhaust.',rarity='rare',type='skill',
+	baseCost=3,playerTarget=true,upgrade={baseCost=2},exhaust=true,
+}
+function Nightmare:use()
+	return {
+		AnonymousAction:new(function ()
+			if #hand == 0 then
+				return
+			elseif #hand == 1 then
+				local card = hand[1].card
+				addAction(ApplyPowerAction:new(player,NightmarePower:new(player,card:copy())))
+			else
+				local title = 'Choose a Card to Copy'
+				openWindowAbove(HandSelectWindow:new{cardItems=hand,title=title,max=1},function (cards)
+					for _, cardItem in ipairs(cards) do
+						local card = cardItem.card
+						addAction(ApplyPowerAction:new(player,NightmarePower:new(player,card:copy())))
+					end
+				end)
+			end
+		end)
+	}
+end
+
+NightmarePower = Power:new{icon=220,card=nil,stackable=false}
+function NightmarePower:new(owner,card)
+	local o = Power.new(self,owner)
+	o.amount = 1
+	o.card = card
+	-- making different nightmares not to stack
+	return Power.new(o,nil)
+end
+
+function NightmarePower:onTurnStart()
+	addAction(RemovePowerAction:new(self))
+	addAction(MakeTempCardToHandAction:new(self.card,3))
+end
+
+PhantasmalKiller = GreenCard:new{
+	name='Phantasmal Killer',description='Next turn, your {Attack} deal double damage.',rarity='rare',type='skill',baseCost=1,
+	playerTarget=true,upgrade={baseCost=0}
+}
+function PhantasmalKiller:use()
+	return { ApplyPowerAction:new(player,PhantasmalKillerPower:new(player)) }
+end
+
+PhantasmalKillerPower = Power:new{icon=203}
+function PhantasmalKillerPower:onTurnStart()
+	addAction(RemovePowerAction:new(self))
+	addAction(ApplyPowerAction:new(self.owner,DoubleDamagePower:new(self.owner,self.amount)))
+end
+
+DoubleDamagePower = TurnBasedPower:new{icon=204,priority=150}
+function DoubleDamagePower:onAttack(damage)
+	return damage * 2
+end
+
+StormOfSteel = GreenCard:new{
+	name='Storm of Steel',description='Discard your hand. NL Add 1 Shiv into hand for each card discarded.',rarity='rare',type='skill',baseCost=1,
+	playerTarget=true,upgrade={description='Discard your hand. NL Add 1 Shiv+ into hand for each card discarded.'},
+}
+function StormOfSteel:use()
+	return {
+		AnonymousAction:new(function ()
+			local cardCount = #hand
+			if cardCount > 0 then
+				addAction(1,SelectDiscardHandAction:new(cardCount))
+				local card = Shiv:new()
+				if self.upgraded then
+					card:upgrade()
+				end
+				addAction(2,MakeTempCardToHandAction:new(card,cardCount))
+			end
+		end)
+	}
+end
+
+ToolsOfTheTrade = GreenCard:new{
+	name='Tools of the Trade',description='At the start of turn, draw 1 card and discard 1 card.',rarity='rare',type='power',baseCost=1,
+	playerTarget=true,upgrade={baseCost=0},
+}
+function ToolsOfTheTrade:use()
+	return { ApplyPowerAction:new(player,ToolsOfTheTradePower:new(player)) }
+end
+
+ToolsOfTheTradePower = Power:new{icon=236}
+function ToolsOfTheTradePower:onTurnStartPostDraw()
+	addAction(DrawCardAction:new(1))
+	addAction(SelectDiscardHandAction:new(1))
+end
+
+Unload = GreenCard:new{
+	name='Unload',description='{Damage} !D!. NL Discard all non-{Attack} in hand.',rarity='rare',baseCost=1,baseDamage=14,
+	enemyTarget=true,upgrade={baseDamage=18},
+}
+function Unload:use(target)
+	return {
+		DamageAction:new{target=target,source=player,value=self.damage},
+		AnonymousAction:new(function ()
+			local targetCards = shallowcopy(hand)
+			table.retainIf(targetCards,function (cardItem) return cardItem.card.type ~= 'attack' end)
+
+			for _, cardItem in ipairs(targetCards) do
+				local cardIndex = table.indexOf(hand,cardItem)
+				removeHand(cardIndex)
+				addAction(1,DiscardAction:new{cardItem=cardItem,duration=1})
+			end
+		end)
+	}
+end
+
+WraithForm = GreenCard:new{
+	name='Wraith Form',description='Gain !M! {35}. NL At the end of turn, lose 1 {Dexterity}.',rarity='rare',type='power',
+	baseCost=3,baseMagic=2,playerTarget=true,upgrade={baseMagic=3},
+}
+function WraithForm:use()
+	return { ApplyPowerAction:new(player,IntangiblePower:new(player,self.magic)), ApplyPowerAction:new(player,WraithFormPower:new(player,-1)) }
+end
+
+WraithFormPower = Power:new{icon=195,debuff=true}
+function WraithFormPower:onTurnEnd()
+	addAction(ApplyPowerAction:new(self.owner,DexterityPower:new(self.owner,self.amount)))
+end
+
 greenCards = {
 	StrikeGreen,DefendGreen,Neutralize,Survivor,Acrobatics,Backflip,Bane,BladeDance,CloakAndDagger,DaggerSpray,DaggerThrow,
 	DeadlyPoison,Deflect,DodgeAndRoll,FlyingKnee,Outmaneuver,PiercingWail,PoisonedStab,Prepared,QuickSlash,Slice,SneakyStrike,
 	SuckerPunch,Accuracy,AllOutAttack,BackStab,Blur,BouncingFlask,CalculatedGamble,Caltrops,Catalyst,Choke,Concentrate,
-	CrippingCloud,Dash,Distraction,EndlessAgony,EscapePlan,Eviscerate,Expertise,Finisher,Flechettes,
+	CrippingCloud,Dash,Distraction,EndlessAgony,EscapePlan,Eviscerate,Expertise,Finisher,Flechettes,Footwork,HeelHook,
+	InfiniteBlades,LegSweep,MasterfulStab,NoxiousFumes,Predator,Reflex,RiddleWithHoles,Setup,Skewer,Tactican,Terror,
+	WellLaidPlans,AThousandCuts,Adrenaline,AfterImage,Alchemize,BulletTime,Burst,CorpseExplosion,DieDieDie,Doppelganger,
+	Envenom,GlassKnife,GrandFinale,Malaise,Nightmare,PhantasmalKiller,StormOfSteel,ToolsOfTheTrade,Unload,WraithForm,
 }
 
 -- relics

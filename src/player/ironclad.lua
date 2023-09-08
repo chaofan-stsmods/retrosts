@@ -109,8 +109,8 @@ Clash = RedCard:new{
 	name='Clash',description='Can only be played if every card in hand is {Attack}. NL {Damage} !D!.',rarity='common',
 	baseCost=0,enemyTarget=true,baseDamage=14,upgrade={baseDamage=18}
 }
-function Clash:baseCanUse()
-	return RedCard.baseCanUse(self) and table.allMatch(hand,function (cardItem) return cardItem.card.type == 'attack' end)
+function Clash:baseCanUse(free)
+	return RedCard.baseCanUse(self,free) and table.allMatch(hand,function (cardItem) return cardItem.card.type == 'attack' end)
 end
 
 function Clash:use(target)
@@ -276,9 +276,12 @@ Rampage = RedCard:new{
 	enemyTarget=true,upgrade={baseMagic=8}
 }
 function Rampage:use(target)
-	return { DamageAction:new{target=target,source=player,value=self.damage}, AnonymousAction:new(function ()
-		self.baseDamage = self.baseDamage + self.magic
-	end) }
+	return {
+		DamageAction:new{target=target,source=player,value=self.damage},
+		AnonymousAction:new(function ()
+			self.baseDamage = self.baseDamage + self.magic
+		end),
+	}
 end
 
 SpotWeakness = RedCard:new{
@@ -549,6 +552,9 @@ end
 function BloodForBlood:onDamaged(value)
 	if value > 0 then
 		self.baseCost = math.max(0,self.baseCost-1)
+		if not table.anyMatch(hand,function (cardItem) return cardItem.card == self end) then
+			self:resetPowers()
+		end
 	end
 end
 
