@@ -60,7 +60,7 @@ function Ironclad:getRelics()
 end
 
 function Ironclad:getPotions()
-	return { BloodPotion,HeartOfIron,Elixir }
+	return { BloodPotion,Elixir,HeartOfIron }
 end
 
 function Ironclad:getSpireHeartText()
@@ -69,7 +69,7 @@ end
 
 -- cards
 
-RedCard = Card:new{color={2,1},costIcon=201,typeIconColor=4,colorName='red'}
+RedCard = Card:new{color={2,1},typeIconColor=4,colorName='red'}
 
 Strike = RedCard:new{ name='Strike',description='{Damage} !D!.',rarity='basic',baseCost=1,baseDamage=6,enemyTarget=true,upgrade={baseDamage=9},tags={'strike','basicStrike'} }
 function Strike:use(target)
@@ -973,7 +973,7 @@ function Corruption:use()
 end
 
 CorruptionPower = Power:new{icon=229,stackable=false,priority=150}
-function CorruptionPower:onModifyCost(cost,card)
+function CorruptionPower:modifyCost(cost,card)
 	if card.type == 'skill' then
 		card.costForOneTurnPlay = nil
 		card.costForOnePlay = nil
@@ -1169,7 +1169,7 @@ function RedSkull:onDamaged()
 end
 
 PaperPhrog = RedRelic:new{name='Paper Phrog',icon=214,tier='uncommon',description='Enemies with {Vulnerable} take #11#75%#12# more damage rather than #11#50%#12#.'}
-function PaperPhrog:onModifyVulnerableFactor(factor,isAttacking)
+function PaperPhrog:modifyVulnerableFactor(factor,isAttacking)
 	if isAttacking then
 		return factor + 0.25
 	end
@@ -1202,22 +1202,7 @@ function MagicFlower:onBeforeHeal(value)
 	end
 end
 
-BlackBlood = RedRelic:new{name='Black Blood',icon=246,tier='boss',description='Replaces #3#Burning Blood#12#. At the end of combat, heal #11#12#12# HP.'}
-function BlackBlood:canSpawn()
-	return hasRelic(BurningBlood)
-end
-
-function BlackBlood:onObtained()
-	local selfIndex = table.indexOf(relics,self)
-	local relic = getRelic(BurningBlood)
-	local index = table.indexOf(relics,relic)
-	if index then
-		table.remove(relics,selfIndex)
-		loseRelic(relic)
-		table.insert(relics,index,self)
-	end
-end
-
+BlackBlood = RedRelic:new{name='Black Blood',icon=246,tier='boss',replaces=BurningBlood,description='Replaces #3#Burning Blood#12#. At the end of combat, heal #11#12#12# HP.'}
 function BlackBlood:onCombatEnd()
 	player:heal(12)
 end

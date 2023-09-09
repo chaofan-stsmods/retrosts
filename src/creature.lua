@@ -148,7 +148,7 @@ function Creature:damage(source,value,type,action)
 		if type ~= 'hpLoss' then
 			addEffect(HitParticleEffect:new{x=self.x+self.width*4,y=self.y+self.height*4,colors={4,4,3}})
 		end
-		self:addDamagedAnimation(source)
+		self:addDamagedAnimation(source,action == nil and 2 or action.color)
 		if action then
 			action.damageDealt = (action.damageDealt or 0) + value
 		end
@@ -239,7 +239,7 @@ function Creature:removePower(power)
 	end
 end
 
-function Creature:addDamagedAnimation(source)
+function Creature:addDamagedAnimation(source,color)
 	local timer = 0
 	local xOffset = source.x < self.x and 6 or -6
 	local animation
@@ -250,7 +250,7 @@ function Creature:addDamagedAnimation(source)
 		if math.abs(xOffset) < 0.5 then
 			table.remove(self.animations,table.indexOf(self.animations,animation))
 		end
-		return x,y,timer % 2 == 0 and 2 or c
+		return x,y,timer % 2 == 0 and color or c
 	end
 	table.insert(self.animations,animation)
 end

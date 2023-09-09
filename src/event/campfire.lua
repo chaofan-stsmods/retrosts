@@ -9,7 +9,7 @@ function CampfireEvent:init()
 	if not rubyKeyObtained then
 		table.insert(self.options,{name='Recall',description='Obtain the ruby key.',icon=340,onSelect=function() self:recall() end})
 	end
-	player:triggerEvent('onModifyCampfireOptions',self.options,self)
+	player:triggerEvent('modifyCampfireOptions',self.options,self)
 	self.healAmt = math.floor(player.maxHp*0.3)
 	self.additionalHealAmt = hasRelic(RegalPillow) and 15 or 0
 end

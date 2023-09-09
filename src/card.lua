@@ -8,12 +8,12 @@
 ---@field baseCanUse fun(self:Card,free:boolean):boolean
 Card = {
 	name='',description='',type='attack',rarity='common',
-	color={2,1},costIcon=201,typeIconColor=4,colorName='',
+	color={2,1},costIcon=203,typeIconColor=4,colorName='',
 	baseCost=0,cost=0,costForOneTurnPlay=nil,costForOnePlay=nil,baseCostModified=false,
 	damage=0,baseDamage=0,block=0,baseBlock=0,magic=0,baseMagic=0,multiDamage={},displayAttackCount=1,displayDamage=nil,
 	enemyTarget=false,playerTarget=false,toAllEnemies=false,
 	exhaust=false,ethereal=false,innate=false,retain=false,tempRetain=false,autoPlayOnEndTurn=false,
-	upgrade=noop,upgraded=false,tags={},canGenerateInCombat=true,canRemove=true,linkedBottle=nil,
+	upgrade=noop,upgraded=false,tags={},canGenerateInCombat=true,canRemove=true,linkedBottle=nil,canUseCache=nil,
 	onRemoveFromDeck=noop,priority=120,descriptionWidth=53,
 }
 Object:new(Card)
@@ -46,8 +46,18 @@ function Card:baseCanUse(free)
 	return self:getCost() <= energy or free
 end
 
+local function makeCanUseCache(self)
+	return {
+		[true] = player:triggerConditionEvent('canUseCard',true,self),
+		[false] = player:triggerConditionEvent('canUseCard',false,self)
+	}
+end
+
 function Card:canUse(free)
-	return player:triggerConditionEvent('canUseCard',self:baseCanUse(free),self) and not inEnemyTurn
+	if self.canUseCache == nil then
+		self.canUseCache = makeCanUseCache(self)
+	end
+	return self.canUseCache[self:baseCanUse(free)] and not inEnemyTurn
 end
 
 function Card:getCost()
@@ -91,14 +101,16 @@ function Card:applyPowers(target)
 	self.damage = math.max(0,math.floor(damage))
 
 	local block = self.baseBlock
-	block = player:triggerReducerEvent('onModifyBlock',block,self)
+	block = player:triggerReducerEvent('modifyBlock',block,self)
 	self.block = math.max(0,math.floor(block))
 
 	self.magic = self.baseMagic
 
 	local cost = self.baseCost
-	cost = player:triggerReducerEvent('onModifyCost',cost,self)
+	cost = player:triggerReducerEvent('modifyCost',cost,self)
 	self.cost = math.floor(cost)
+
+	makeCanUseCache(self)
 end
 
 function Card:resetPowers()

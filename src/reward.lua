@@ -314,7 +314,7 @@ function generateCardRarity(random)
 	elseif isRoomType('shop') then
 		rareCardChance = 9
 	end
-	rareCardChance = player:triggerReducerEvent('onModifyRareCardChance',rareCardChance)
+	rareCardChance = player:triggerReducerEvent('modifyRareCardChance',rareCardChance)
 	if roll < rareCardChance then
 		return 'rare'
 	elseif roll < rareCardChance + uncommonCardChance then

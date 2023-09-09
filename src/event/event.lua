@@ -111,7 +111,7 @@ function generateEventRoomType(random)
 	else
 		roll = roll - treasureChance
 	end
-	
+
 	result = player:triggerReducerEvent('modifyEventRoomTypeBeforeUpdateChance',result or 'event')
 
 	monsterChance = result == 'monster' and 10 or (monsterChance + 10)

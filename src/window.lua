@@ -307,23 +307,24 @@ function CardListWindow:gridUISelect(selection)
 	end
 end
 
-ItemCollectionWindow = Window:new{name='RelicCollectionWindow',scrollY=0,targetScrollY=0,items=nil,poolSelection=0,itemSelection=1}
+ItemCollectionWindow = Window:new{name='RelicCollectionWindow',scrollY=0,targetScrollY=0,itemLists=nil,itemListSelection=1,poolSelection=0,itemSelection=1}
 local itemPoolNames = {'basic','common','uncommon','rare','boss','shop','special'}
 local itemPoolDisplayNames = {basic='Starter',special='Event'}
 function ItemCollectionWindow:new(items)
-	return Window.new(self,{items=items})
+	return Window.new(self,{itemLists=items})
 end
 
 function ItemCollectionWindow:onOpen()
-	queueSync(1,1)
+	queueSync(1,self.itemLists[self.itemListSelection].tileBank)
 end
 
 function ItemCollectionWindow:tick()
 	cls(0)
 	local y = math.floor(-self.scrollY)
 	local sx = 20
+	local items = self.itemLists[self.itemListSelection].items
 	for pi,poolName in ipairs(itemPoolNames) do
-		local pool = self.items[poolName]
+		local pool = items[poolName]
 		if pool then
 			local x = sx
 			printShadowed(itemPoolDisplayNames[poolName] or poolName:sub(1,1):upper()..poolName:sub(2),x,y+2,4)
@@ -352,7 +353,7 @@ function ItemCollectionWindow:tick()
 	if self.poolSelection == 0 then
 		repeat
 			self.poolSelection = self.poolSelection + 1
-		until self.poolSelection > #itemPoolNames or (self.items[itemPoolNames[self.poolSelection]] and #self.items[itemPoolNames[self.poolSelection]] > 0)
+		until self.poolSelection > #itemPoolNames or (items[itemPoolNames[self.poolSelection]] and #items[itemPoolNames[self.poolSelection]] > 0)
 		if self.poolSelection > #itemPoolNames then
 			self.poolSelection = 0
 		end
@@ -365,26 +366,26 @@ function ItemCollectionWindow:tick()
 			local oldPoolSelection = self.poolSelection
 			repeat
 				self.poolSelection = self.poolSelection - 1
-			until self.poolSelection == 0 or (self.items[itemPoolNames[self.poolSelection]] and #self.items[itemPoolNames[self.poolSelection]] > 0)
+			until self.poolSelection == 0 or (items[itemPoolNames[self.poolSelection]] and #items[itemPoolNames[self.poolSelection]] > 0)
 			if self.poolSelection == 0 then
 				self.poolSelection = oldPoolSelection
 			else
-				local relicCount = #self.items[itemPoolNames[self.poolSelection]]
+				local relicCount = #items[itemPoolNames[self.poolSelection]]
 				self.itemSelection = limit(math.floor((relicCount-1)/10)*10+self.itemSelection,1,relicCount)
 			end
 		end
 	elseif btnp(1) then
-		if self.itemSelection <= #self.items[itemPoolNames[self.poolSelection]] - 10 then
+		if self.itemSelection <= #items[itemPoolNames[self.poolSelection]] - 10 then
 			self.itemSelection = self.itemSelection + 10
 		else
 			local oldPoolSelection = self.poolSelection
 			repeat
 				self.poolSelection = self.poolSelection + 1
-			until self.poolSelection > #itemPoolNames or (self.items[itemPoolNames[self.poolSelection]] and #self.items[itemPoolNames[self.poolSelection]] > 0)
+			until self.poolSelection > #itemPoolNames or (items[itemPoolNames[self.poolSelection]] and #items[itemPoolNames[self.poolSelection]] > 0)
 			if self.poolSelection > #itemPoolNames then
 				self.poolSelection = oldPoolSelection
 			else
-				self.itemSelection = limit((self.itemSelection-1)%10+1,1,#self.items[itemPoolNames[self.poolSelection]])
+				self.itemSelection = limit((self.itemSelection-1)%10+1,1,#items[itemPoolNames[self.poolSelection]])
 			end
 		end
 	elseif btnp(2) then
@@ -392,8 +393,22 @@ function ItemCollectionWindow:tick()
 			self.itemSelection = self.itemSelection - 1
 		end
 	elseif btnp(3) then
-		if self.itemSelection < #self.items[itemPoolNames[self.poolSelection]] then
+		if self.itemSelection < #items[itemPoolNames[self.poolSelection]] then
 			self.itemSelection = self.itemSelection + 1
+		end
+	elseif btnp(6) then
+		if self.itemListSelection > 1 then
+			self.itemListSelection = self.itemListSelection - 1
+			self.poolSelection = 0
+			self.itemSelection = 1
+			queueSync(1,self.itemLists[self.itemListSelection].tileBank)
+		end
+	elseif btnp(7) then
+		if self.itemListSelection < #self.itemLists then
+			self.itemListSelection = self.itemListSelection + 1
+			self.poolSelection = 0
+			self.itemSelection = 1
+			queueSync(1,self.itemLists[self.itemListSelection].tileBank)
 		end
 	elseif btnp(5) then
 		self:close()
@@ -402,20 +417,32 @@ end
 
 RelicCollectionWindow = ItemCollectionWindow:new{name='RelicCollectionWindow'}
 function RelicCollectionWindow:new()
-	local relics = {}
-	for _,character in ipairs(characters) do
-		for _,relicType in ipairs(character:getRelics()) do
-			table.insert(relics,relicType:new())
-		end
-	end
+	local relicLists = {}
+	local relics,relicWithPools
+
+	relics = {}
 	for _,relicType in ipairs(getColorlessRelics()) do
 		if relicType ~= Circlet then
 			table.insert(relics,relicType:new())
 		end
 	end
+	relicWithPools = self:splitRelicsByPool(relics)
+	table.insert(relicLists,{items=relicWithPools,tileBank=1})
 
-	table.sort(relics,function(a,b) return a.name < b.name end)
+	for _,character in ipairs(characters) do
+		relics = {}
+		for _,relicType in ipairs(character:getRelics()) do
+			table.insert(relics,relicType:new())
+		end
+		table.sort(relics,function(a,b) return a.name < b.name end)
+		relicWithPools = self:splitRelicsByPool(relics)
+		table.insert(relicLists,{items=relicWithPools,tileBank=character.tileBank})
+	end
 
+	return ItemCollectionWindow.new(self,relicLists)
+end
+
+function RelicCollectionWindow:splitRelicsByPool(relics)
 	local relicWithPools = {}
 	for _, relicType in ipairs(relics) do
 		local pool = relicWithPools[relicType.tier]
@@ -425,8 +452,7 @@ function RelicCollectionWindow:new()
 		end
 		table.insert(pool,relicType)
 	end
-
-	return ItemCollectionWindow.new(self,relicWithPools)
+	return relicWithPools
 end
 
 PotionLabWindow = ItemCollectionWindow:new{name='PotionLabWindow'}
@@ -453,7 +479,7 @@ function PotionLabWindow:new()
 		table.insert(pool,potionType)
 	end
 
-	return ItemCollectionWindow.new(self,potionWithPools)
+	return ItemCollectionWindow.new(self,{{items=potionWithPools,tileBank=2}})
 end
 
 LoseWindow = Window:new{name='LoseWindow',title='You Lose!'}

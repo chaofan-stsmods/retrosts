@@ -16,11 +16,7 @@ end
 
 Power = Object:new{
 	owner=nil,amount=0,stackable=true,debuff=false,turnBased=false,maxAmount=999,icon=40,priority=100,
-	onTurnStart=noop,
-	onTurnEnd=noop,
-	onAttacked=function(self,damage,source,card) return damage end,
-	onAttack=function(self,damage,target,card) return damage end,
-	onAmountUpdated=noop,
+	hpReductColor=nil,onAmountUpdated=noop,
 }
 function Power:new(owner,amount)
 	local result
@@ -91,7 +87,7 @@ end
 
 VulnerablePower = TurnBasedPower:new{debuff=true,icon=icons.Vulnerable,priority=150}
 function VulnerablePower:onAttacked(damage,source)
-	return damage * source:triggerReducerEvent('onModifyVulnerableFactor',self.owner:triggerReducerEvent('onModifyVulnerableFactor',1.5),true)
+	return damage * source:triggerReducerEvent('modifyVulnerableFactor',self.owner:triggerReducerEvent('modifyVulnerableFactor',1.5),true)
 end
 
 RitualPower = Power:new{icon=73,skipFirst=false}
@@ -114,17 +110,21 @@ function StrengthPower:onAttack(damage)
 end
 
 DexterityPower = PositiveBuffNegativeDebuffPower:new{icon=icons.Dexterity}
-function DexterityPower:onModifyBlock(block)
+function DexterityPower:modifyBlock(block)
 	return block + self.amount
 end
 
 WeakPower = TurnBasedPower:new{debuff=true,icon=icons.Weak,priority=150}
-function WeakPower:onAttack(damage)
-	return damage * 0.75
+function WeakPower:onAttack(damage,target)
+	local factor = 0.75
+	if target then
+		factor = target:triggerReducerEvent('modifyWeakFactor',factor)
+	end
+	return damage * factor
 end
 
 FrailPower = TurnBasedPower:new{debuff=true,icon=icons.Frail,priority=150}
-function FrailPower:onModifyBlock(block)
+function FrailPower:modifyBlock(block)
 	return block * 0.75
 end
 
@@ -158,7 +158,7 @@ end
 MinionPower = Power:new{icon=21,stackable=false}
 
 ArtifactPower = Power:new{icon=22}
-function ArtifactPower:onBeforeApplyPower(power)
+function ArtifactPower:onBeforeGainPower(power)
 	if power.debuff then
 		addAction(1,ReducePowerAction:new(self,1))
 		local owner = self.owner
@@ -266,6 +266,6 @@ function IntangiblePower:onBeforeDamaged()
 end
 
 NoBlockPower = TurnBasedPower:new{icon=25,priority=200}
-function NoBlockPower:onModifyBlock()
+function NoBlockPower:modifyBlock()
 	return 0
 end

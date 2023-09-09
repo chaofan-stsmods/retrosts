@@ -7,12 +7,12 @@ local colorlessRelics
 Relic = {
 	name='',description='',counter=-1,saved=0,icon=0,
 	tier='common',colorName='colorless',tags={},
-	priority=70,onObtained=noop,onLost=noop
+	priority=70,onObtained=noop,onLost=noop,replaces=nil,
 }
 Object:new(Relic)
 
 function Relic:canSpawn()
-	return true
+	return self.replaces == nil or hasRelic(self.replaces)
 end
 
 function Relic:drawImage(x,y,hideCounter)
@@ -78,7 +78,17 @@ end
 
 function obtainRelic(relic)
 	if player:triggerConditionEvent('onBeforeObtainRelic',true,relic) then
-		table.insert(relics,relic)
+		if relic.replaces then
+			local index = table.indexOf(relics,getRelic(relic.replaces))
+			if index then
+				loseRelicByIndex(index)
+				table.insert(relics,index,relic)
+			else
+				table.insert(relics,relic)
+			end
+		else
+			table.insert(relics,relic)
+		end
 		player:triggerEvent('onObtainRelic',relic)
 	end
 end
@@ -86,9 +96,13 @@ end
 function loseRelic(relic)
 	local index = table.indexOf(relics,relic)
 	if index then
-		player:triggerEvent('onLoseRelic',relic)
-		table.remove(relics,index)
+		loseRelicByIndex(index)
 	end
+end
+
+function loseRelicByIndex(index)
+	player:triggerEvent('onLoseRelic',relics[index])
+	table.remove(relics,index)
 end
 
 function hasRelic(relicType)
@@ -149,7 +163,7 @@ function BloodyIdol:onGainGold(amount)
 end
 
 OddMushroom = Relic:new{name='Odd Mushroom',icon=26,tier='special',description='When you have {Vulnerable}, take #11#25%#12# more attack damage rather than #11#50%.'}
-function OddMushroom:onModifyVulnerableFactor(factor,isAttacking)
+function OddMushroom:modifyVulnerableFactor(factor,isAttacking)
 	if isAttacking then
 		return factor
 	end
@@ -183,7 +197,7 @@ function EnergyRelic:onLost()
 end
 
 CoffeeDripper = EnergyRelic:new{name='Coffee Dripper',icon=173,description='Gain {Energy} at the start of your turn. You can no longer #4#Rest#12# at Rest Sites.'}
-function CoffeeDripper:onModifyCampfireOptions(options)
+function CoffeeDripper:modifyCampfireOptions(options)
 	for _, option in ipairs(options) do
 		if option.name == 'Rest' then
 			option.locked = true
@@ -193,7 +207,7 @@ function CoffeeDripper:onModifyCampfireOptions(options)
 end
 
 FusionHammer = EnergyRelic:new{name='Fusion Hammer',icon=177,description='Gain {Energy} at the start of your turn. You can no longer #4#Smith#12# at Rest Sites.'}
-function FusionHammer:onModifyCampfireOptions(options)
+function FusionHammer:modifyCampfireOptions(options)
 	for _, option in ipairs(options) do
 		if option.name == 'Smith' then
 			option.locked = true
@@ -279,7 +293,7 @@ function SsserpentHead:onEnterRoom(room)
 end
 
 NlothsGift = Relic:new{name='N\'loth\'s Gift',icon=223,tier='special',description='Triple the chance of finding #4#Rare#12# cards from combat rewards.'}
-function NlothsGift:onModifyRareCardChance(chance)
+function NlothsGift:modifyRareCardChance(chance)
 	if not isRoomType('shop') or roomActionType == 'combat' then
 		return chance * 3
 	end
@@ -295,7 +309,7 @@ function PotionBelt:onObtained()
 	table.insert(potions,PotionSlot)
 end
 
-PreservedInsect = Relic:new{name='Preserved Insect',icon=16,tier='common',description='Enemies in Elite combats have #11#25%#12# less HP.'}
+PreservedInsect = Relic:new{name='Preserved Insect',icon=38,tier='common',description='Enemies in Elite combats have #11#25%#12# less HP.'}
 function PreservedInsect:canSpawn()
 	return floor <= 52
 end
@@ -352,7 +366,10 @@ function ArtOfWar:onUseCard(card)
 end
 
 BagOfMarbles = Relic:new{name='Bag of Marbles',icon=33,tier='common',description='At the start of each combat, apply #11#1#12# {Vulnerable} to all enemies.'}
-function BagOfMarbles:onCombatStart()
+function BagOfMarbles:onTurnStart(turn)
+	if turn ~= 1 then
+		return
+	end
 	for _, enemy in ipairs(enemies) do
 		if enemy.canInteract then
 			addAction(ApplyPowerAction:new(player,VulnerablePower:new(enemy,1)))
@@ -690,17 +707,17 @@ function BottleRelic:load(meta)
 	end
 end
 
-BottledFlame = BottleRelic:new{name='Bottled Flame',icon=119,description='Upon pickup, choose a {Attack}. Start each combat with this card in your hand.'}
+BottledFlame = BottleRelic:new{name='Bottled Flame',icon=icons.BottledFlame,description='Upon pickup, choose a {Attack}. Start each combat with this card in your hand.'}
 function BottledFlame:condition(card)
 	return card.type == 'attack' and not card.linkedBottle
 end
 
-BottledLightning = BottleRelic:new{name='Bottled Lightning',icon=120,description='Upon pickup, choose a {Skill}. Start each combat with this card in your hand.'}
+BottledLightning = BottleRelic:new{name='Bottled Lightning',icon=icons.BottledLightning,description='Upon pickup, choose a {Skill}. Start each combat with this card in your hand.'}
 function BottledLightning:condition(card)
 	return card.type == 'skill' and not card.linkedBottle
 end
 
-BottledTornado = BottleRelic:new{name='Bottled Tornado',icon=121,description='Upon pickup, choose a {Power}. Start each combat with this card in your hand.'}
+BottledTornado = BottleRelic:new{name='Bottled Tornado',icon=icons.BottledTornado,description='Upon pickup, choose a {Power}. Start each combat with this card in your hand.'}
 function BottledTornado:condition(card)
 	return card.type == 'power' and not card.linkedBottle
 end
@@ -1097,7 +1114,7 @@ function GamblingChip:onTurnStartPostDraw(turn)
 end
 
 Ginger = Relic:new{name='Ginger',icon=151,tier='rare',description='You can no longer become {Weak}.'}
-function Ginger:onBeforeApplyPower(power)
+function Ginger:onBeforeGainPower(power)
 	if getmetatable(power) == WeakPower then
 		local owner = player
 		addEffect(TextEffect:new{x=owner.x+owner.width*4,y=owner.y,text='Immune',color=12,ySpeed=-0.5})
@@ -1106,7 +1123,7 @@ function Ginger:onBeforeApplyPower(power)
 end
 
 Turnip = Relic:new{name='Turnip',icon=166,tier='rare',description='You can no longer become {Frail}.'}
-function Turnip:onBeforeApplyPower(power)
+function Turnip:onBeforeGainPower(power)
 	if getmetatable(power) == FrailPower then
 		local owner = player
 		addEffect(TextEffect:new{x=owner.x+owner.width*4,y=owner.y,text='Immune',color=12,ySpeed=-0.5})
@@ -1127,7 +1144,7 @@ function CampfireRelic:canSpawn()
 end
 
 Girya = CampfireRelic:new{name='Girya',icon=152,tier='rare',counter=0,description='You can now gain {Strength} at Rest Sites (up to 3 times).'}
-function Girya:onModifyCampfireOptions(options,event)
+function Girya:modifyCampfireOptions(options,event)
 	table.insert(options,{
 		name='Lift',description='Start battles with +1 Strength. (Max 3)',icon=388,
 		locked=self.counter>=3,
@@ -1191,7 +1208,7 @@ function OldCoin:onObtained()
 end
 
 PeacePipe = CampfireRelic:new{name='Peace Pipe',icon=158,tier='rare',description='You can now remove cards from your deck at Rest Sites.'}
-function PeacePipe:onModifyCampfireOptions(options,event)
+function PeacePipe:modifyCampfireOptions(options,event)
 	table.insert(options,{
 		name='Toke',description='Remove a card from your deck.',icon=416,
 		onSelect=function()
@@ -1230,7 +1247,7 @@ function PrayerWheel:canSpawn()
 end
 
 Shovel = CampfireRelic:new{name='Shovel',icon=161,tier='rare',description='You can now #4#Dig#12# for relics at Rest Sites.'}
-function Shovel:onModifyCampfireOptions(options,event)
+function Shovel:modifyCampfireOptions(options,event)
 	table.insert(options,{
 		name='Dig',description='Dig up a random relic.',icon=368,
 		onSelect=function()
@@ -1397,7 +1414,10 @@ function PandorasBox:onObtained()
 end
 
 PhilosophersStone = EnergyRelic:new{name='Philosopher\'s Stone',icon=179,tier='boss',description='Gain {Energy} at the start of your turn. All enemies start each combat with #11#1#12# {Strength}.'}
-function PhilosophersStone:onCombatStart()
+function PhilosophersStone:onTurnStart(turn)
+	if turn ~= 1 then
+		return
+	end
 	for _,enemy in ipairs(enemies) do
 		addAction(ApplyPowerAction:new(player,StrengthPower:new(enemy,1)))
 	end
@@ -1411,7 +1431,7 @@ RunicDome = EnergyRelic:new{name='Runic Dome',icon=180,tier='boss',description='
 
 RunicPryamid = Relic:new{name='Runic Pyramid',icon=181,tier='boss',description='At the end of your turn, you no longer discard your hand.'}
 
-SacredBark = Relic:new{name='Sacred Bark',icon=252,tier='boss',description='Double the effectiveness of potions.'}
+SacredBark = Relic:new{name='Sacred Bark',icon=121,tier='boss',description='Double the effectiveness of potions.'}
 function SacredBark:onObtained()
 	for _,potion in ipairs(potions) do
 		potion:applyPowers()
@@ -1655,7 +1675,10 @@ function NilrysCodex:onTurnEnd()
 end
 
 RedMask = Relic:new{name='Red Mask',icon=222,tier='special',description='At the start of each combat, apply #11#1#12# {Weak} to all enemies.'}
-function RedMask:onCombatStart()
+function RedMask:onTurnStart(turn)
+	if turn ~= 1 then
+		return
+	end
 	for _, enemy in ipairs(enemies) do
 		if enemy.canInteract then
 			addAction(ApplyPowerAction:new(player,WeakPower:new(enemy,1)))

@@ -16,7 +16,7 @@ function TheSilent:drawImage()
 end
 
 function TheSilent:drawCorpse()
-	map(0,13,7,3,self.x-4,self.y+20,0)
+	map(7,13,7,2,self.x-4,self.y+20,0)
 end
 
 function TheSilent:getStartDeck()
@@ -53,11 +53,22 @@ function TheSilent:getMatchAndKeepCardType()
 end
 
 function TheSilent:getRelics()
-	return { RingOfTheSnake }
+	return {
+		RingOfTheSnake,
+		SneckoSkull,
+		NinjaScroll,PaperKrane,
+		TheSpecimen,Tingsha,ToughBandages,
+		RingOfTheSerpent,WristBlade,HoveringKite,
+		TwistedFunnel,
+	}
 end
 
 function TheSilent:getPotions()
-	return { }
+	return { PoisonPotion,CunningPotion,GhostInAJar }
+end
+
+function TheSilent:getPronouns()
+	return {vampires='sister'}
 end
 
 function TheSilent:getSpireHeartText()
@@ -66,7 +77,7 @@ end
 
 -- cards
 
-GreenCard = Card:new{color={7,15},costIcon=201,typeIconColor=5,colorName='green'}
+GreenCard = Card:new{color={7,15},typeIconColor=5,colorName='green'}
 
 StrikeGreen = GreenCard:new{ name='Strike',description='{Damage} !D!.',rarity='basic',baseCost=1,baseDamage=6,enemyTarget=true,upgrade={baseDamage=9},tags={'strike','basicStrike'} }
 function StrikeGreen:use(target)
@@ -131,10 +142,10 @@ function Bane:use(target)
 	return actions
 end
 
-PoisonPower = Power:new{icon=icons.Poison,debuff=true}
+PoisonPower = Power:new{icon=icons.Poison,debuff=true,hpReductColor=6}
 function PoisonPower:onTurnStart()
-	addAction(1,DamageAction:new{target=self.owner,source=player,value=self.amount})
-	addAction(2,ReducePowerAction:new(self,1))
+	addAction(DamageAction:new{target=self.owner,source=player,value=self.amount,color=6,type='hpLoss'})
+	addAction(ReducePowerAction:new(self,1))
 end
 
 BladeDance = GreenCard:new{
@@ -203,8 +214,8 @@ end
 
 EnergizedPower = Power:new{icon=211}
 function EnergizedPower:onTurnStart()
-	addAction(1,GainEnergyAction:new(self.amount))
-	addAction(2,RemovePowerAction:new(self))
+	addAction(GainEnergyAction:new(self.amount))
+	addAction(RemovePowerAction:new(self))
 end
 
 Outmaneuver = GreenCard:new{
@@ -495,7 +506,7 @@ function Eviscerate:onDiscardFromHand()
 	self.numDiscarded = self.numDiscarded + 1
 end
 
-function Eviscerate:onModifyCost(cost,card)
+function Eviscerate:modifyCost(cost,card)
 	if card == self then
 		return math.max(0, cost - self.numDiscarded)
 	end
@@ -621,7 +632,7 @@ end
 
 InfiniteBladesPower = Power:new{icon=213}
 function InfiniteBladesPower:onTurnStart()
-	addAction(1,MakeTempCardToHandAction:new(Shiv:new(),self.amount))
+	addAction(MakeTempCardToHandAction:new(Shiv:new(),self.amount))
 end
 
 LegSweep = GreenCard:new{
@@ -713,9 +724,9 @@ function Setup:use()
 			else
 				local title = 'Choose a Card to Put on Top of Draw Pile'
 				openWindowAbove(HandSelectWindow:new{cardItems=hand,title=title,max=1},function (cards)
-					for _, cardItem in ipairs(cards) do
+					for i, cardItem in ipairs(cards) do
 						local cardIndex = table.indexOf(hand,cardItem)
-						addAction(1,PutCardInDrawPileAction:new{cardItem=cardItem,duration=1})
+						addAction(i,PutCardInDrawPileAction:new{cardItem=cardItem,duration=1})
 						if cardItem.card:getCost() > 0 then
 							cardItem.card.costForOnePlay = 0
 						end
@@ -794,9 +805,7 @@ end
 
 AThousandCutsPower = Power:new{icon=199}
 function AThousandCutsPower:onUseCard()
-	for _, enemy in ipairs(enemies) do
-		addAction(DamageAction:new{target=enemy,source=self.owner,value=self.amount,type='power'})
-	end
+	addAction(DamageAllEnemiesAction:new{source=self.owner,value=self.amount,type='power'})
 end
 
 Adrenaline = GreenCard:new{
@@ -999,7 +1008,7 @@ function Nightmare:use()
 	}
 end
 
-NightmarePower = Power:new{icon=220,card=nil,stackable=false}
+NightmarePower = Power:new{icon=217,card=nil,stackable=false}
 function NightmarePower:new(owner,card)
 	local o = Power.new(self,owner)
 	o.amount = 1
@@ -1021,13 +1030,13 @@ function PhantasmalKiller:use()
 	return { ApplyPowerAction:new(player,PhantasmalKillerPower:new(player)) }
 end
 
-PhantasmalKillerPower = Power:new{icon=203}
+PhantasmalKillerPower = Power:new{icon=201}
 function PhantasmalKillerPower:onTurnStart()
 	addAction(RemovePowerAction:new(self))
 	addAction(ApplyPowerAction:new(self.owner,DoubleDamagePower:new(self.owner,self.amount)))
 end
 
-DoubleDamagePower = TurnBasedPower:new{icon=204,priority=150}
+DoubleDamagePower = TurnBasedPower:new{icon=202,priority=150}
 function DoubleDamagePower:onAttack(damage)
 	return damage * 2
 end
@@ -1060,10 +1069,10 @@ function ToolsOfTheTrade:use()
 	return { ApplyPowerAction:new(player,ToolsOfTheTradePower:new(player)) }
 end
 
-ToolsOfTheTradePower = Power:new{icon=236}
+ToolsOfTheTradePower = Power:new{icon=233}
 function ToolsOfTheTradePower:onTurnStartPostDraw()
-	addAction(DrawCardAction:new(1))
-	addAction(SelectDiscardHandAction:new(1))
+	addAction(DrawCardAction:new(self.amount))
+	addAction(SelectDiscardHandAction:new(self.amount))
 end
 
 Unload = GreenCard:new{
@@ -1076,11 +1085,10 @@ function Unload:use(target)
 		AnonymousAction:new(function ()
 			local targetCards = shallowcopy(hand)
 			table.retainIf(targetCards,function (cardItem) return cardItem.card.type ~= 'attack' end)
-
-			for _, cardItem in ipairs(targetCards) do
+			for i, cardItem in ipairs(targetCards) do
 				local cardIndex = table.indexOf(hand,cardItem)
 				removeHand(cardIndex)
-				addAction(1,DiscardAction:new{cardItem=cardItem,duration=1})
+				addAction(i,DiscardAction:new{cardItem=cardItem,duration=1})
 			end
 		end)
 	}
@@ -1118,4 +1126,110 @@ function RingOfTheSnake:onTurnStartPostDraw(turn)
 	if turn == 1 then
 		addAction(DrawCardAction:new(2))
 	end
+end
+
+SneckoSkull = GreenRelic:new{name='Snecko Skull',icon=227,tier='common',description='Whenever you apply {Poison}, apply an additional #11#1#12# {Poison}.'}
+function SneckoSkull:onBeforeApplyPower(power)
+	if getmetatable(power) == PoisonPower then
+		power.amount = power.amount + 1
+	end
+end
+
+NinjaScroll = GreenRelic:new{name='Ninja Scroll',icon=228,tier='uncommon',description='At the start of each combat, add #11#3#12# Shivs into hand.'}
+function NinjaScroll:onCombatStart()
+	addAction(MakeTempCardToHandAction:new(Shiv:new(),3))
+end
+
+PaperKrane = GreenRelic:new{name='Paper Krane',icon=244,tier='uncommon',description='Enemies with {Weak} deal #11#40%#12# less damage rather than #11#25%#12#.'}
+function PaperKrane:modifyWeakFactor(factor)
+	return factor - 0.15
+end
+
+TheSpecimen = GreenRelic:new{name='The Specimen',icon=229,tier='rare',description='Whenever an enemy dies, transfer any {Poison} it has to a random enemy.'}
+function TheSpecimen:onMonsterDeath(monster)
+	local poison = monster:getPower(PoisonPower)
+	if poison then
+		local amount = poison.amount
+		addAction(AnonymousAction:new(function ()
+			local target = getRandomInteractableEnemy()
+			if target then
+				addAction(1,ApplyPowerAction:new(player,PoisonPower:new(target,amount)))
+			end
+		end))
+	end
+end
+
+Tingsha = GreenRelic:new{name='Tingsha',icon=245,tier='rare',description='Whenever you discard a card during your turn, {Damage} #11#3#12# to a random enemy.'}
+function Tingsha:onDiscardFromHand()
+	addAction(AnonymousAction:new(function ()
+		local target = getRandomInteractableEnemy()
+		if target then
+			addAction(1,DamageAction:new{target=target,source=player,value=3,type='power'})
+		end
+	end))
+end
+
+ToughBandages = GreenRelic:new{name='Tough Bandages',icon=230,tier='rare',description='Whenever you discard a card during your turn, gain #11#3#12# {Block}.'}
+function ToughBandages:onDiscardFromHand()
+	addAction(GainBlockAction:new{target=player,value=3})
+end
+
+RingOfTheSerpent = GreenRelic:new{name='Ring of the Serpent',icon=246,tier='boss',replaces=RingOfTheSnake,description='Replaces #5#Ring of the Snake#12#. At the start of your turn, draw #11#1#12# additional card.'}
+function RingOfTheSerpent:onTurnStartPostDraw()
+	addAction(DrawCardAction:new(1))
+end
+
+WristBlade = GreenRelic:new{name='Wrist Blade',icon=248,tier='boss',description='{Attack} that costs #11#0#12# deal #11#4#12# additional damage.'}
+function WristBlade:onAttack(damage,_,card)
+	if card.type == 'attack' and card:getCost() == 0 then
+		return damage + 4
+	end
+end
+
+HoveringKite = GreenRelic:new{name='Hovering Kite',icon=247,tier='boss',discarded=false,description='The first time you discard a card each turn, gain {Energy}.'}
+function HoveringKite:onDiscardFromHand()
+	if not self.discarded then
+		self.discarded = true
+		addAction(GainEnergyAction:new(1))
+	end
+end
+
+function HoveringKite:onTurnStart()
+	self.discarded = false
+end
+
+TwistedFunnel = GreenRelic:new{name='Twisted Funnel',icon=231,tier='shop',description='At the start of each combat, apply #11#4#12# {Poison} to ALL enemies.'}
+function TwistedFunnel:onTurnStart(turn)
+	if turn ~= 1 then
+		return
+	end
+	for _, enemy in ipairs(enemies) do
+		addAction(ApplyPowerAction:new(player,PoisonPower:new(enemy,4)))
+	end
+end
+
+-- potions
+PoisonPotion = Potion:new{
+	name='Poison Potion',icon=Icon:new{image=97,colorMap={6,7}},baseMagic=6,rarity='common',
+	description='Apply #11#!M!#12# {Poison}.',enemyTarget=true,useTitle='Throw'
+}
+function PoisonPotion:use(target)
+	return { ApplyPowerAction:new(player,PoisonPower:new(target,self.magic)) }
+end
+
+GhostInAJar = Potion:new{
+	name='Ghost in a Jar',icon=249,rarity='rare',description='Gain #11#!M!#12# {35}.',baseMagic=1,
+}
+function GhostInAJar:use()
+	return { ApplyPowerAction:new(player,IntangiblePower:new(player,self.magic)) }
+end
+
+CunningPotion = Potion:new{
+	name='Cunning Potion',icon=Icon:new{image=105,colorMap={14,13}},rarity='uncommon',description='Add #11#!M!#12# Shiv+ to hand.',baseMagic=3,
+}
+function CunningPotion:use()
+	local card = Shiv:new()
+	card:upgrade()
+	card:resetPowers()
+	return { MakeTempCardToHandAction:new(card,self.magic) }
 end

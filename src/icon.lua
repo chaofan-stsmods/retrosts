@@ -57,7 +57,7 @@ end
 icons = {
 	Damage = Icon:new{image=57},
 	Block = Icon:new{image=47,colorMap={[5]=10}},
-	Energy = Icon:new{image=202},
+	Energy = Icon:new{image=204},
 
 	Attack = Icon:new{image=57,typeIcon={12,13,14},transparentColor={0,15}},
 	Skill = Icon:new{image=58,typeIcon=3},
@@ -65,9 +65,9 @@ icons = {
 	Status = Icon:new{image=55,typeIcon=3},
 	Curse = Icon:new{image=56,typeIcon=7,transparentColor={0,5,6}},
 
-	DrawPile = Icon:new{image=38,colorMap={[5]=4,[6]=3},flip=true,transparentColor={0,15}},
-	DiscardPile = Icon:new{image=38,colorMap={[4]=10,[5]=10,[3]=9,[6]=9,[2]=15},transparentColor={0,15}},
-	Deck = Icon:new{image=38,colorMap={[5]=15,[6]=15,[12]=15}},
+	DrawPile = Icon:new{image=16,colorMap={[5]=4,[6]=3},flip=true,transparentColor={0,15}},
+	DiscardPile = Icon:new{image=16,colorMap={[4]=10,[5]=10,[3]=9,[6]=9,[2]=15},transparentColor={0,15}},
+	Deck = Icon:new{image=16,colorMap={[5]=15,[6]=15,[12]=15}},
 
 	Vulnerable = Icon:new{image=60},
 	Weak = Icon:new{image=61},
@@ -78,4 +78,8 @@ icons = {
 	Poison = Icon:new{image=56},
 
 	AttackIntent = Icon:new{image=57,colorMap={[12]=3,[13]=2,[14]=2,[15]=1},flip=true},
+
+	BottledFlame = Icon:new{image=119,colorMap={[9]=2,[10]=3,[11]=4,[6]=15},transparentColor={0,5}},
+	BottledLightning = Icon:new{image=119,colorMap={[9]=5,[10]=5,[11]=5,[6]=5},transparentColor={0,2,3,4}},
+	BottledTornado = 120,
 }

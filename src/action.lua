@@ -252,7 +252,7 @@ function UsePotionAction:tick()
 	Action.tick(self)
 end
 
-DamageAction = Action:new{source=nil,target=nil,value=nil,type=nil,duration=10}
+DamageAction = Action:new{source=nil,target=nil,value=nil,type=nil,color=2,duration=10}
 function DamageAction:tick()
 	if not self.source.alive and (self.type or 'attack') == 'attack' then
 		self.isDone = true
@@ -264,7 +264,7 @@ function DamageAction:tick()
 	Action.tick(self)
 end
 
-DamageAllEnemiesAction = Action:new{source=nil,value=nil,type=nil,duration=10}
+DamageAllEnemiesAction = Action:new{source=nil,value=nil,type=nil,color=2,duration=10}
 function DamageAllEnemiesAction:tick()
 	if not self.source.alive and (self.type or 'attack') == 'attack' then
 		self.isDone = true
@@ -284,7 +284,7 @@ function DamageAllEnemiesAction:tick()
 	Action.tick(self)
 end
 
-DamageRandomEnemyAction = Action:new{source=nil,value=nil,type=nil,duration=10}
+DamageRandomEnemyAction = Action:new{source=nil,value=nil,type=nil,color=2,duration=10}
 function DamageRandomEnemyAction:tick()
 	if not self.source.alive and (self.type or 'attack') == 'attack' then
 		self.isDone = true
@@ -486,7 +486,8 @@ function ApplyPowerAction:tick()
 			self.isDone = true
 			return
 		end
-		if not owner:triggerConditionEvent('onBeforeApplyPower',true,power) then
+		self.source:triggerEvent('onBeforeApplyPower',power)
+		if not owner:triggerConditionEvent('onBeforeGainPower',true,power) then
 			Action.tick(self)
 			return
 		end
