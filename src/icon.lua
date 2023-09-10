@@ -76,10 +76,18 @@ icons = {
 	Dexterity = Icon:new{image=47,colorMap={[9]=5,[10]=6,[11]=6,[15]=7}},
 	Metallicize = Icon:new{image=46,colorMap={[13]=12,[14]=13,[15]=14}},
 	Poison = Icon:new{image=56},
+	DrawCardNextTurn = Icon:new{image=52,colorMap={[14]=12,[1]=12}},
+	DrawCardEveryTurn = Icon:new{image=52,colorMap={[1]=15}},
+
+	OrbSlot = Icon:new{image=195,colorMap={[2]=12,[3]=13,[5]=13},transparentColor={0,1,4,6,7,10,11,12}},
+	Lightning = Icon:new{image=195,colorMap={[1]=5,[2]=5,[3]=5,[4]=5,[7]=5,[5]=12,[6]=12,[10]=5,[11]=12}},
+	Frost = Icon:new{image=196},
+	Dark = Icon:new{image=197},
+	Plasma = Icon:new{image=195,colorMap={[1]=3,[2]=3,[5]=3,[7]=6,[10]=11,[12]=4}},
 
 	AttackIntent = Icon:new{image=57,colorMap={[12]=3,[13]=2,[14]=2,[15]=1},flip=true},
 
 	BottledFlame = Icon:new{image=119,colorMap={[9]=2,[10]=3,[11]=4,[6]=15},transparentColor={0,5}},
 	BottledLightning = Icon:new{image=119,colorMap={[9]=5,[10]=5,[11]=5,[6]=5},transparentColor={0,2,3,4}},
-	BottledTornado = 120,
+	BottledTornado = Icon:new{image=120},
 }

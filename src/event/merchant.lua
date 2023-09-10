@@ -483,6 +483,7 @@ function MerchantWindow:merchantControls()
 						loseGold(self.cardRemoval.price)
 						self.cardRemoval.sold = true
 						self.selection = 0
+						shopRemoveCount = shopRemoveCount + 1
 					end
 				end)
 			end

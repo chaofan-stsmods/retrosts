@@ -203,9 +203,14 @@ DarkShackles = ColorlessCard:new{
 	enemyTarget=true,baseMagic=9,upgrade={baseMagic=15},exhaust=true,
 }
 function DarkShackles:use(target)
+	local action = ApplyPowerAction:new(player,StrengthPower:new(target,-self.magic))
 	return {
-		ApplyPowerAction:new(player,StrengthPower:new(target,-self.magic)),
-		ApplyPowerAction:new(player,ShackledPower:new(target,self.magic)),
+		action,
+		AnonymousAction:new(function ()
+			if action.succeeded then
+				addAction(1,ApplyPowerAction:new(player,ShackledPower:new(target,self.magic)))
+			end
+		end),
 	}
 end
 

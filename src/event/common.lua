@@ -181,7 +181,7 @@ function WheelOfChange:tick()
 		if not self.rolling and not self.rolled then
 			self.rolling = true
 			local targetPrize = self.random:randInt(1,6)
-			self.wheelTargetRotation = 3.14159265*10+targetPrize*1.04719755
+			self.wheelTargetRotation = math.pi*10+targetPrize*1.04719755
 			self.description = wheelPrizes[targetPrize].description
 			self.options = {{description=wheelPrizes[targetPrize].option:gsub('{#}',tostring(self.hpLoss))}}
 			self.prize = wheelPrizes[targetPrize].action
@@ -240,7 +240,7 @@ function WheelOfChange:drawWheel()
 		local r = rotation+(i-0.5)*step/2
 		local x1,y1 = cx+(radius*0.6)*math.sin(r),cy-(radius*0.6)*math.cos(r)
 		if ttri then
-			local d1,d2,d3,d4=math.sin(r-3.14159265/4),-math.cos(r-3.14159265/4),math.sin(r+3.14159265/4),-math.cos(r+3.14159265/4)
+			local d1,d2,d3,d4=math.sin(r-math.pi/4),-math.cos(r-math.pi/4),math.sin(r+math.pi/4),-math.cos(r+math.pi/4)
 			local d = 1.414*8
 			d1,d2,d3,d4 = d1*d,d2*d,d3*d,d4*d
 			local icon = wheelIcons[i]

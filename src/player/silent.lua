@@ -2,8 +2,8 @@
 
 local greenCards
 
-TheSilent = Player:new{ maxHp=70,width=6,height=4,tileBank=2,name='The Silent',energyYOffset=1 }
-function TheSilent:drawImage()
+Silent = Player:new{ maxHp=70,width=6,height=4,tileBank=2,name='Silent',energyYOffset=1 }
+function Silent:drawImage()
 	if self.flipped then
 		map(7,9,5,4,self.x+8,self.y,0,1,flipRemap(7,5))
 		pix(self.x+33,self.y+12,11)
@@ -15,11 +15,11 @@ function TheSilent:drawImage()
 	end
 end
 
-function TheSilent:drawCorpse()
+function Silent:drawCorpse()
 	map(7,13,7,2,self.x-4,self.y+20,0)
 end
 
-function TheSilent:getStartDeck()
+function Silent:getStartDeck()
 	local deck = {}
 	table.insert(deck,StrikeGreen:new())
 	table.insert(deck,StrikeGreen:new())
@@ -36,23 +36,23 @@ function TheSilent:getStartDeck()
 	return deck
 end
 
-function TheSilent:getCards()
+function Silent:getCards()
 	return greenCards
 end
 
-function TheSilent:getStartRelics()
+function Silent:getStartRelics()
 	return { RingOfTheSnake:new() }
 end
 
-function TheSilent:getAscensionMaxHPLoss()
+function Silent:getAscensionMaxHPLoss()
 	return 4
 end
 
-function TheSilent:getMatchAndKeepCardType()
+function Silent:getMatchAndKeepCardType()
 	return Neutralize
 end
 
-function TheSilent:getRelics()
+function Silent:getRelics()
 	return {
 		RingOfTheSnake,
 		SneckoSkull,
@@ -63,15 +63,15 @@ function TheSilent:getRelics()
 	}
 end
 
-function TheSilent:getPotions()
+function Silent:getPotions()
 	return { PoisonPotion,CunningPotion,GhostInAJar }
 end
 
-function TheSilent:getPronouns()
+function Silent:getPronouns()
 	return {vampires='sister'}
 end
 
-function TheSilent:getSpireHeartText()
+function Silent:getSpireHeartText()
 	return 'NL You prepare your daggers...'
 end
 
@@ -132,6 +132,7 @@ end
 
 function Bane:resetPowers()
 	self.displayAttackCount = 1
+	GreenCard.resetPowers(self)
 end
 
 function Bane:use(target)
@@ -142,7 +143,7 @@ function Bane:use(target)
 	return actions
 end
 
-PoisonPower = Power:new{icon=icons.Poison,debuff=true,hpReductColor=6}
+PoisonPower = Power:new{icon=icons.Poison,debuff=true,healthBarColor=6}
 function PoisonPower:onTurnStart()
 	addAction(DamageAction:new{target=self.owner,source=player,value=self.amount,color=6,type='hpLoss'})
 	addAction(ReducePowerAction:new(self,1))
@@ -233,8 +234,13 @@ PiercingWail = GreenCard:new{
 function PiercingWail:use()
 	local result = {}
 	for _, enemy in ipairs(enemies) do
-		table.insert(result,ApplyPowerAction:new(player,StrengthPower:new(enemy,-self.magic)))
-		table.insert(result,ApplyPowerAction:new(player,ShackledPower:new(enemy,self.magic)))
+		local action = ApplyPowerAction:new(player,StrengthPower:new(enemy,-self.magic))
+		table.insert(result,action)
+		table.insert(result,AnonymousAction:new(function ()
+			if action.succeeded then
+				addAction(1,ApplyPowerAction:new(player,ShackledPower:new(enemy,self.magic)))
+			end
+		end))
 	end
 	return result
 end
@@ -387,7 +393,7 @@ function CalculatedGamble:use()
 end
 
 Caltrops = GreenCard:new{
-	name='Caltrops',description='Whenever you are attacked, {Damage} !M! back.',rarity='uncommon',type='skill',
+	name='Caltrops',description='Whenever you are attacked, {Damage} !M! back.',rarity='uncommon',type='power',
 	baseCost=1,baseMagic=3,playerTarget=true,upgrade={baseMagic=5},
 }
 function Caltrops:use()
@@ -410,7 +416,7 @@ function Catalyst:use(target)
 end
 
 Choke = GreenCard:new{
-	name='Choke',description='{Damage} !D!. NL Whenever you play a card this turn, the enemy loses !M! HP.',rarity='uncommon',type='skill',
+	name='Choke',description='{Damage} !D!. NL Whenever you play a card this turn, the enemy loses !M! HP.',rarity='uncommon',
 	baseCost=2,baseDamage=12,baseMagic=3,enemyTarget=true,upgrade={baseMagic=5},
 }
 function Choke:use(target)

@@ -1040,7 +1040,7 @@ function TimeWarpEffect:tick()
 	self.rotation = self.rotation + 0.1
 
 	local x1,y1,r = self.x,self.y,self.rotation
-	local d1,d2,d3,d4=math.sin(r-3.14159265/4),-math.cos(r-3.14159265/4),math.sin(r+3.14159265/4),-math.cos(r+3.14159265/4)
+	local d1,d2,d3,d4=math.sin(r-math.pi/4),-math.cos(r-math.pi/4),math.sin(r+math.pi/4),-math.cos(r+math.pi/4)
 	local d = 1.414*32
 	d1,d2,d3,d4 = d1*d,d2*d,d3*d,d4*d
 	local icon = 404

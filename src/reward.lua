@@ -44,6 +44,8 @@ function RewardWindow:drawRewards()
 		end
 		if reward.type == 'potion' then
 			reward.value:drawImage(79,y+4)
+		elseif reward.type == 'relic' then
+			reward.value:drawImage(79,y+4,true)
 		else
 			spr(reward.icon,79,y+4,0)
 		end

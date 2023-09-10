@@ -473,7 +473,7 @@ function ReducePowerAction:tick()
 	Action.tick(self)
 end
 
-ApplyPowerAction = Action:new{duration=10}
+ApplyPowerAction = Action:new{duration=10,succeeded=false}
 function ApplyPowerAction:new(source,power)
 	return Action.new(self,{source=source,power=power})
 end
@@ -505,6 +505,7 @@ function ApplyPowerAction:tick()
 		if power.debuff then
 			owner:addDebuffAnimation()
 		end
+		self.succeeded = true
 		self.source:triggerEvent('onAppliedPower',power)
 	end
 	Action.tick(self)
@@ -962,6 +963,70 @@ function SelectDiscardHandAction:tick()
 					addAction(i,DiscardAction:new{cardItem=cardItem,duration=1})
 				end
 			end)
+		end
+	end
+	Action.tick(self)
+end
+
+ChannelAction = Action:new{duration=10,orb=nil}
+function ChannelAction:new(orb)
+	return Action.new(self,{orb=orb})
+end
+
+function ChannelAction:tick()
+	if self.duration == self.startDuration then
+		if #player.orbs == 0 then
+			self.isDone = true
+			return
+		end
+		local channeled = false
+		for i = 1, #player.orbs do
+			local target = player.orbs[i]
+			if getmetatable(target) == OrbSlot then
+				player.orbs[i] = self.orb
+				self.orb.x = target.x
+				self.orb.y = target.y
+				self.orb:applyPowers()
+				channeled = true
+				break
+			end
+		end
+		if not channeled then
+			addAction(1,EvokeAction:new())
+			addAction(2,ChannelAction:new(self.orb))
+			self.isDone = true
+			return
+		end
+	end
+	Action.tick(self)
+end
+
+EvokeAction = Action:new{duration=10,amount=1}
+function EvokeAction:tick()
+	if self.duration == self.startDuration then
+		if #player.orbs == 0 then
+			self.isDone = true
+			return
+		end
+		local orb = player.orbs[1]
+		if getmetatable(orb) == OrbSlot then
+			self.isDone = true
+			return
+		end
+		local allActions = { AnonymousAction:new(function () orb.evoking = true end) }
+		orb:applyPowers()
+		for _ = 1, self.amount do
+			local actions = orb:onEvoke() or {}
+			for _,action in ipairs(actions) do
+				table.insert(allActions,action)
+			end
+		end
+		table.insert(allActions,AnonymousAction:new(function ()
+			table.remove(player.orbs,1)
+			table.insert(player.orbs,OrbSlot:new{owner=player})
+		end))
+		for i,action in ipairs(allActions) do
+			addAction(i,action)
 		end
 	end
 	Action.tick(self)

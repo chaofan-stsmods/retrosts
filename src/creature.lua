@@ -9,6 +9,7 @@ Creature = {
 	applyPowers=noop,
 	onCombatStart=noop,
 	drawImage=noop,
+	drawAdditionalItems=noop,
 }
 Object:new(Creature)
 function Creature:new(o)
@@ -42,6 +43,7 @@ function Creature:tick()
 		self.x,self.y = x,y
 		if self.canInteract then
 			self:drawHealthBar()
+			self:drawAdditionalItems()
 			self:drawPowers()
 		end
 	end
@@ -53,6 +55,20 @@ function Creature:drawHealthBar()
 	local y = self.y+1
 	local healthWidth = self.hp*(width*8-2)//self.maxHp
 	rect(x+1,y+8*self.height+1,healthWidth,6,2)
+	local powerEndX = x+1+healthWidth
+	for _,power in ipairs(self.powers) do
+		if power.healthBarColor then
+			local powerWidth = power.amount*(width*8-2)//self.maxHp
+			local powerStartX = powerEndX-powerWidth
+			if powerStartX < x+1 then
+				powerWidth = powerWidth - (x+1-powerStartX)
+				powerStartX = x+1
+			end
+			rect(powerStartX,y+8*self.height+1,powerWidth,6,power.healthBarColor)
+			powerEndX = powerStartX
+		end
+	end
+
 	local damageWidth = width*8-2-healthWidth
 	rect(x+1+healthWidth,y+8*self.height+1,damageWidth,6,0)
 

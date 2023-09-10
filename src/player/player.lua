@@ -3,14 +3,39 @@
 
 ---@class Player : Creature
 Player = {
-	x=30,y=52,tileBank=1,name=nil,drawCorpse=noop,energyYOffset=0,
+	x=30,y=52,tileBank=1,name=nil,drawCorpse=noop,energyYOffset=0,maxOrbs=0,orbs=nil,
 }
 Creature:new(Player)
 
+function Player:new(o)
+	o = o or {}
+	o.orbs = {}
+	return Creature.new(self,o)
+end
+
 function Player:applyPowers()
 	handApplyPowers()
+	for _, orb in ipairs(self.orbs) do
+		orb:applyPowers()
+	end
 	for _, enemy in ipairs(enemies) do
 		enemy:applyPowers()
+	end
+end
+
+function Player:drawAdditionalItems()
+	local orbCount = #self.orbs
+	for i=1,orbCount do
+		if orbCount == 1 then
+			self.orbs[i].tx = self.x+self.width*4
+			self.orbs[i].ty = self.y-6
+		else
+			local r = orbCount*4+18
+			local rad = (i-0.5)/orbCount*math.pi
+			self.orbs[i].tx = self.x+self.width*4+r*math.cos(rad)
+			self.orbs[i].ty = self.y+self.height*4-r*math.sin(rad)
+		end
+		self.orbs[i]:tick()
 	end
 end
 
@@ -20,6 +45,11 @@ end
 
 function Player:onCombatStart()
 	self.visible = true
+	for i=1,self.maxOrbs do
+		if self.orbs[i] == nil then
+			self.orbs[i] = OrbSlot:new{owner=self}
+		end
+	end
 	self:triggerEvent('onCombatStart')
 	Creature.onCombatStart(self)
 end
@@ -28,6 +58,11 @@ function Player:triggerEvent(name,...)
 	for _, item in ipairs(sortByPriority(potions,relics,self.powers)) do
 		if item[name] then
 			item[name](item,...)
+		end
+	end
+	for _, orb in ipairs(self.orbs) do
+		if orb[name] then
+			orb[name](orb,...)
 		end
 	end
 	for _, hand in ipairs(hand) do
@@ -78,6 +113,7 @@ function Player:onCombatEnd()
 	self:triggerEvent('onCombatEnd')
 	self.block = 0
 	self.powers = {}
+	self.orbs = {}
 end
 
 function Player:die()

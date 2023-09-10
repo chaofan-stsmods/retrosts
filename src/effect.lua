@@ -87,7 +87,7 @@ function HitParticleEffect:new(o)
 	o.colors = o.colors or {4}
 	o.particles = {}
 	for i=1,30 do
-		local r = effectRandom:rand() * 3.1415926 * 2
+		local r = effectRandom:rand() * math.pi * 2
 		local s = effectRandom:rand() * 1.6 + 1.6
 		table.insert(o.particles,{x=o.x,y=o.y,xSpeed=math.sin(r)*s,ySpeed=math.cos(r)*s,color=o.colors[effectRandom:randInt(#o.colors)],timer=effectRandom:randInt(13,20)})
 	end
