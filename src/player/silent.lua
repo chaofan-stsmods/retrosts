@@ -75,6 +75,10 @@ function Silent:getSpireHeartText()
 	return 'NL You prepare your daggers...'
 end
 
+function Silent:getEnding()
+	return SilentEnding:new()
+end
+
 -- cards
 
 GreenCard = Card:new{color={7,15},typeIconColor=5,colorName='green'}
