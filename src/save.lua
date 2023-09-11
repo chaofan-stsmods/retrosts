@@ -187,6 +187,16 @@ end
 
 function clearSavedGame()
 	pmem(0,0)
+	pmem(1,ascension)
+end
+
+function loadLastAscension()
+	if not hasSave() then
+		return pmem(1)
+	else
+		local val32 = pmem(0)
+		return (val32 >> 8) & 0xff
+	end
 end
 
 function loadGame()

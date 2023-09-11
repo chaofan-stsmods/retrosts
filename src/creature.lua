@@ -165,6 +165,7 @@ function Creature:damage(source,value,type,action)
 			addEffect(HitParticleEffect:new{x=self.x+self.width*4,y=self.y+self.height*4,colors={4,4,3}})
 		end
 		self:addDamagedAnimation(source,action == nil and 2 or action.color)
+		value = math.min(value,self.hp)
 		if action then
 			action.damageDealt = (action.damageDealt or 0) + value
 		end

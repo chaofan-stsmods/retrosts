@@ -136,6 +136,10 @@ function TitleSelectionWindow:tick()
 	end
 
 	map(0,51,30,17,0,0)
+	local x = 176
+	printShadowed('To report bugs,',x,110,12,nil,1,true)
+	printShadowed('please join my QQ',x,118,12,nil,1,true)
+	printShadowed('group: 103776068',x,126,12,nil,1,true)
 	local startY = 128-#self.options*8
 	for i=1,#self.options do
 		local color = i == self.selection and 4 or 12
@@ -151,6 +155,67 @@ function TitleWindow:new(o)
 		o.options = {'Continue','New Game','Card List','Relic Collection','Potion Lab'}
 	end
 	return TitleSelectionWindow.new(self,o)
+end
+
+local keys = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890-=[]\\;\'`,./'
+local wordKeys = {
+	'    ','TAB','ENTER','BACKSPACE','DELETE','INSERT','PG UP','PG DOWN','HOME','END',
+	'UP','DOWN','LEFT','RIGHT',
+	'CAPS','CTRL','SHIFT','ALT','ESC','F1','F2','F3','F4','F5','F6','F7','F8','F9','F10','F11','F12',
+	'NUM0','NUM1','NUM2','NUM3','NUM4','NUM5','NUM6','NUM7','NUM8','NUM9',
+	'NUM+','NUM-','NUM*','NUM/','NUMENTER','NUM.'
+}
+local keyRotation = { 0, 2, 3, 1 }
+local keyOffset = { {1,0}, {0,-1}, {1,-1}, {0,0} }
+local keyFunction = { 'Confirm, Select','Cancel','Select Potion','End turn, Proceed, Skip' }
+function TitleWindow:tick()
+	TitleSelectionWindow.tick(self)
+	for i=0,3 do
+		local key = getKeyForBtn(i+4)
+		local keyWidth = self:drawKey(key,2,2+10*i)
+		printShadowed(keyFunction[i+1],5+keyWidth,3+10*i,12,nil,1,true)
+	end
+	local x = 2
+	x = x + self:drawKey(getKeyForBtn(2),x,50) + 1
+	self:drawKey(getKeyForBtn(0),x,42)
+	x = x + self:drawKey(getKeyForBtn(1),x,50) + 1
+	x = x + self:drawKey(getKeyForBtn(3),x,50) + 1
+	printShadowed('Move cursor',x+2,47,12,nil,1,true)
+end
+
+function TitleWindow:drawKey(key,x,y)
+	local keyWidth = 8
+	if key <= #keys then
+		map(0,39,2,2,x,y,0)
+		local str = keys:sub(key,key)
+		print(str,x+5-strWidth(str)//2,y+1,15)
+	elseif key == 51 then
+		map(0,41,3,2,x,y,0)
+		keyWidth = 16
+		spr(240,x+keyOffset[3][1],y+keyOffset[3][2],0,1,0,keyRotation[3])
+	elseif key >= 58 and key <= 61 then
+		map(0,39,2,2,x,y,0)
+		spr(240,x+keyOffset[key-57][1],y+keyOffset[key-57][2],0,1,0,keyRotation[key-57])
+	else
+		local str = wordKeys[key-#keys]
+		if #str == 1 then
+			map(0,39,2,2,x,y,0)
+			print(str,x+5-strWidth(str)//2,y+1,15)
+		elseif #str < 4 then
+			map(0,41,3,2,x,y,0)
+			keyWidth = 16
+			print(str,x+9-strWidth(str,false,true)//2,y+1,15,false,1,true)
+		elseif #str < 6 then
+			map(0,43,4,2,x,y,0)
+			keyWidth = 24
+			print(str,x+13-strWidth(str,false,true)//2,y+1,15,false,1,true)
+		else
+			map(0,45,5,2,x,y,0)
+			keyWidth = 32
+			print(str,x+17-strWidth(str,false,true)//2,y+1,15,false,1,true)
+		end
+	end
+	return keyWidth
 end
 
 function TitleWindow:onOption()
@@ -193,6 +258,7 @@ local ascensionEffects = {
 function CharacterSelectWindow:new(o)
 	o = o or {}
 	o.options = table.map(characters,function(c) return c.name end)
+	o.ascension = limit(loadLastAscension(),0,20)
 	return TitleSelectionWindow.new(self,o)
 end
 

@@ -73,10 +73,12 @@ end
 local monsterChance = 10
 local shopChance = 3
 local treasureChance = 2
+isLatestRoomShop = false
 function resetEventGenerator()
 	monsterChance = 10
 	shopChance = 3
 	treasureChance = 2
+	isLatestRoomShop = false
 end
 
 function saveEventGenerator(index)
@@ -93,17 +95,19 @@ end
 function generateEventRoomType(random)
 	local roll = random:randInt(0,99)
 	local result = nil
-	trace('generateEventRoomType '..roll..' chances:'..table.concat({monsterChance,shopChance,treasureChance},','))
+	trace('generateEventRoomType '..roll..' isLatestRoomShop:'..tostring(isLatestRoomShop)..' chances:'..table.concat({monsterChance,shopChance,treasureChance},','))
 	if roll < monsterChance then
 		result = 'monster'
 	else
 		roll = roll - monsterChance
 	end
 
-	if roll < shopChance and result == nil then
-		result = 'shop'
-	else
-		roll = roll - shopChance
+	if not isLatestRoomShop then
+		if roll < shopChance and result == nil then
+			result = 'shop'
+		else
+			roll = roll - shopChance
+		end
 	end
 
 	if roll < treasureChance and result == nil then

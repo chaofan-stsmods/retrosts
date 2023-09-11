@@ -111,6 +111,9 @@ end
 
 function MerchantEvent:modifyPrice(item,type)
 	local price = item.basePrice
+	if not price then
+		return
+	end
 	if ascension >= 16 and type ~= 'cardRemoval' then
 		price = price * 1.1
 	end
@@ -222,8 +225,13 @@ function MerchantWindow:drawGoods()
 		if not relic.sold then
 			local x = 90+24*i
 			local y = 80+self.yOffset
+			if not isDarken then
+				mapColors(0,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15)
+				relic:drawImage(x+1,y+1,true)
+				resetColors()
+			end
 			relic:drawImage(x,y,true)
-			drawPrice(x+4,y+10,relic.price)
+			drawPrice(x+4,y+11,relic.price)
 		end
 	end
 
@@ -232,7 +240,7 @@ function MerchantWindow:drawGoods()
 			local x = 90+24*i
 			local y = 108+self.yOffset
 			potion:drawImage(90+24*i,y)
-			drawPrice(x+4,y+10,potion.price)
+			drawPrice(x+4,y+11,potion.price)
 		end
 	end
 

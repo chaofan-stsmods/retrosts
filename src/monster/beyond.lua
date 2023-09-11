@@ -931,9 +931,9 @@ end
 
 function Deca:nextIntent()
 	if self:lastIntentIs('beam') then
-		self:setIntent('defend','buff')
+		self:setIntent('defend',ascension >= 19 and 'defendBuff' or 'defend')
 	else
-		self:setIntent('beam','attack',self.beamDmg,2)
+		self:setIntent('beam','attackDebuff',self.beamDmg,2)
 	end
 end
 

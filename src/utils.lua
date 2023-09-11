@@ -333,6 +333,10 @@ function rollList(random,list,key)
 	return list[#list],#list
 end
 
+function getKeyForBtn(button)
+	return peek(0x14E04 + button)
+end
+
 function noop(...) end
 
 -- table

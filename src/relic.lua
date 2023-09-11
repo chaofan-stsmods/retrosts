@@ -462,7 +462,7 @@ function Lantern:onCombatStart()
 	addAction(GainEnergyAction:new(1))
 end
 
-MawBank = Relic:new{name='Maw Bank',icon=89,tier='common',description='Whenever you climb a floor, gain #11#12 #4#Gold#12#. No longer works when you spend any #4#Gold#12# at a shop.'}
+MawBank = Relic:new{name='Maw Bank',icon=89,tier='common',counter=12,description='Whenever you climb a floor, gain #11#12 #4#Gold#12#. No longer works when you spend any #4#Gold#12# at a shop.'}
 function MawBank:canSpawn()
 	return floor <= 48 and not isRoomType('shop')
 end
@@ -476,6 +476,7 @@ end
 function MawBank:onLoseGold()
 	if isRoomType('shop') then
 		self.saved = 1
+		self.counter = -1
 		self.description = 'This relic has been used up.'
 	end
 end
