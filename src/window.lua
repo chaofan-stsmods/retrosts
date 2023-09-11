@@ -532,6 +532,7 @@ function GameWindow:tickBelow()
 		act:drawBackground()
 		if player.visible then
 			player:drawImage()
+			player:drawAdditionalItems()
 		end
 		for _, enemy in ipairs(enemies) do
 			if enemy.visible then
@@ -547,7 +548,7 @@ function GameWindow:tickBelow()
 	end
 end
 
-VictoryWindow = Window:new{name='LoseWindow',title='Victory!'}
+VictoryWindow = Window:new{name='VictoryWindow',title='Victory!'}
 function VictoryWindow:tick()
 	darkenColors()
 	currentEvent:tick()

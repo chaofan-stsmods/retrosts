@@ -516,6 +516,12 @@ function Eviscerate:onDiscardFromHand()
 	self.numDiscarded = self.numDiscarded + 1
 end
 
+function Eviscerate:onConfused(card)
+	if card == self then
+		self.numDiscarded = 0
+	end
+end
+
 function Eviscerate:modifyCost(cost,card)
 	if card == self then
 		return math.max(0, cost - self.numDiscarded)

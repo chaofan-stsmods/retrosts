@@ -176,14 +176,8 @@ function generateGoldReward(rewards,random)
 end
 
 function generateStolenGoldReward(rewards)
-	local stolenGold = 0
-	for _, enemy in ipairs(enemies) do
-		if enemy.goldStolen then
-			stolenGold = stolenGold + enemy.goldStolen
-		end
-	end
-	if stolenGold > 0 then
-		addGoldReward(rewards,stolenGold,' (Stolen)',false)
+	if goldStolen > 0 then
+		addGoldReward(rewards,goldStolen,' (Stolen)',false)
 	end
 end
 

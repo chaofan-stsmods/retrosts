@@ -31,6 +31,7 @@ inEnemyTurn = false
 combatType = 'monster'
 inCombat = false
 combatSpriteBank = 1
+goldStolen = 0
 local handUI = HandUI:new(hand)
 local combatSelection = {type='hand',index=1}
 local pauseControl = false
@@ -59,6 +60,7 @@ function startCombat(encounter,completed)
 	limbo = {}
 	turn = 0
 	inEnemyTurn = false
+	goldStolen = 0
 	local innateCards = {}
 	for _,card in ipairs(deck) do
 		local card = card:copy()
@@ -382,13 +384,15 @@ function combatEnd(escaped)
 	if roomActionType == 'eventCombat' then
 		currentEvent:onCombatEnd(escaped)
 	else
-		saveGame(true,escaped and 1 or 0)
+		saveGame(true,(escaped and 1 or 0) | (goldStolen << 1))
 		normalCombatEnd(escaped)
 	end
 end
 
-function loadCombatEnd(escaped)
-	normalCombatEnd(escaped ~= 0)
+function loadCombatEnd(eventMeta)
+	local escaped = (eventMeta & 1) == 1
+	goldStolen = (eventMeta >> 1) & 0xFF
+	normalCombatEnd(escaped)
 end
 
 local keyBuffAppliers = {

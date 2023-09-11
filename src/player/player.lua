@@ -55,7 +55,7 @@ function Player:onCombatStart()
 end
 
 function Player:triggerEvent(name,...)
-	for _, item in ipairs(sortByPriority(potions,relics,self.powers)) do
+	for _, item in ipairs(sortByPriority(potions,relics,self.powers,table.map(hand,function(cardItem) return cardItem.card end))) do
 		if item[name] then
 			item[name](item,...)
 		end
@@ -64,9 +64,6 @@ function Player:triggerEvent(name,...)
 		if orb[name] then
 			orb[name](orb,...)
 		end
-	end
-	for _, hand in ipairs(hand) do
-		hand.card:triggerEvent(name,...)
 	end
 	for _, card in ipairs(drawPile) do
 		card:triggerEvent(name,...)

@@ -193,13 +193,14 @@ ConfusionPower = Power:new{icon=36,stackable=false}
 function ConfusionPower:onDraw(card)
 	if card.baseCost >= 0 then
 		local newCost = miscRand:randInt(0,3)
+		card.costForOneTurnPlay = nil
+		card.costForOnePlay = nil
 		if newCost ~= card.baseCost then
 			card.baseCost = newCost
-			card.costForOneTurnPlay = nil
-			card.costForOnePlay = nil
 			card.baseCostModified = true
-			card:applyPowers()
 		end
+		player:triggerEvent('onConfused',card)
+		card:applyPowers()
 	end
 end
 

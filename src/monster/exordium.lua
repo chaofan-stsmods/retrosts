@@ -618,7 +618,7 @@ ThieveryAction = Action:new{owner=nil,amount=15}
 function ThieveryAction:tick()
 	local amount = math.min(gold,self.amount)
 	loseGold(amount)
-	self.owner.goldStolen = self.owner.goldStolen + amount
+	goldStolen = goldStolen + amount
 	self.isDone = true
 end
 

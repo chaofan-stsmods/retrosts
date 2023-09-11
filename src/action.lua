@@ -426,6 +426,7 @@ function DiscardNonRetainCardsAction:tick()
 	if #hand == numRetained then
 		for _,cardItem in ipairs(hand) do
 			cardItem.card.tempRetain = false
+			cardItem.card.costForOneTurnPlay = nil
 		end
 		self.isDone = true
 	end
