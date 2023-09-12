@@ -5,7 +5,7 @@
 Act = {
 	id=0,title='',smallTitle='',cardUpgradedChance=0,drawBackground=noop,commonRelicChance=50,uncommonRelicChance=33,
 	weakEncounterCount=2,weakEncounters={},exclusiveEncounters={},strongEncounters={},eliteEncounters={},bossEncounters={},
-	events={}
+	events={},maxBackground=0,background=0,
 }
 Object:new(Act)
 
@@ -16,6 +16,10 @@ function Act:new(o)
 	normalize(r.eliteEncounters)
 	normalize(r.bossEncounters)
 	return r
+end
+
+function Act:randomizeBackground()
+	self.background = effectRandom:randInt(0,self.maxBackground)
 end
 
 function Act:playEntryEffect()
@@ -103,7 +107,7 @@ function generateEncountersByList(random,result,source,count,exclusiveCheck)
 end
 
 Exordium = Act:new{
-	id=1,title='Exordium',smallTitle='Act 1',cardUpgradedChance=0,
+	id=1,title='Exordium',smallTitle='Act 1',cardUpgradedChance=0,maxBackground=60,
 	weakEncounterCount=3,
 	weakEncounters={
 		{item=CultistEncounter,power=2},
@@ -142,7 +146,7 @@ Exordium = Act:new{
 	}
 }
 function Exordium:drawBackground()
-	sprmap(0,68,30,17,0,0)
+	sprmap(self.background,68,30,17,0,0)
 end
 
 TheCity = Act:new{
@@ -186,7 +190,7 @@ TheCity = Act:new{
 	}
 }
 function TheCity:drawBackground()
-	sprmap(0,85,30,17,0,0)
+	sprmap(self.background,85,30,17,0,0)
 	if currentEncounter == TheCollectorEncounter and #enemies == 3 then
 		local collector = enemies[3]
 		sprmap(71,17,8,10,collector.x+4,collector.y-16,8)
@@ -229,7 +233,7 @@ TheBeyond = Act:new{
 	}
 }
 function TheBeyond:drawBackground()
-	sprmap(0,102,30,17,0,0)
+	sprmap(self.background,102,30,17,0,0)
 end
 
 function TheBeyond:generateMap(random)

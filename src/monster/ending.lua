@@ -168,7 +168,11 @@ end
 
 function SpireShield:bash()
 	addAction(DamageAction:new{target=player,source=self,value=self.intentDamage})
-	addAction(ApplyPowerAction:new(self,StrengthPower:new(player,-1)))
+	if player.maxOrbs > 0 and aiRand:randBool() then
+		addAction(ApplyPowerAction:new(self,FocusPower:new(player,-1)))
+	else
+		addAction(ApplyPowerAction:new(self,StrengthPower:new(player,-1)))
+	end
 	addAction(NextIntentAction:new(self))
 end
 

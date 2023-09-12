@@ -3,7 +3,7 @@
 
 ---@class Player : Creature
 Player = {
-	x=30,y=52,tileBank=1,name=nil,drawCorpse=noop,energyYOffset=0,maxOrbs=0,orbs=nil,
+	x=30,y=52,tileBank=1,name=nil,drawCorpse=noop,energyYOffset=0,maxOrbs=0,orbs=nil,eventListener=nil,
 }
 Creature:new(Player)
 
@@ -74,18 +74,28 @@ function Player:triggerEvent(name,...)
 	for _, card in ipairs(exhaustPile) do
 		card:triggerEvent(name,...)
 	end
+	local eventListener = self.eventListener
+	if eventListener and eventListener[name] then
+		eventListener[name](eventListener,...)
+	end
 end
 
 function Player:triggerConditionEvent(name,default,...)
+	local result = default
 	for _, item in ipairs(sortByPriority(potions,relics,self.powers,table.map(hand,function(cardItem) return cardItem.card end))) do
 		if item[name] then
 			local b = item[name](item,...)
 			if b ~= nil then
-				return b
+				result = b
+				break
 			end
 		end
 	end
-	return default
+	local eventListener = self.eventListener
+	if eventListener and eventListener[name] then
+		eventListener[name](eventListener,result,...)
+	end
+	return result
 end
 
 function Player:triggerReducerEvent(name,value,...)
@@ -93,6 +103,10 @@ function Player:triggerReducerEvent(name,value,...)
 		if item[name] then
 			value = item[name](item,value,...) or value
 		end
+	end
+	local eventListener = self.eventListener
+	if eventListener and eventListener[name] then
+		eventListener[name](eventListener,value,...)
 	end
 	return value
 end

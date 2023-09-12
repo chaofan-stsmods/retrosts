@@ -2,7 +2,18 @@
 
 local greenCards
 
-Silent = Player:new{ maxHp=70,width=6,height=4,tileBank=2,name='Silent',energyYOffset=1 }
+SilentEventListener = {numAttackPlayed=0}
+function SilentEventListener:onTurnStart()
+	self.numAttackPlayed = 0
+end
+
+function SilentEventListener:onUseCard(card)
+	if card.type == 'attack' then
+		self.numAttackPlayed = self.numAttackPlayed + 1
+	end
+end
+
+Silent = Player:new{ maxHp=70,width=6,height=4,tileBank=2,name='Silent',energyYOffset=1,eventListener=SilentEventListener }
 function Silent:drawImage()
 	if self.flipped then
 		map(7,9,5,4,self.x+8,self.y,0,1,flipRemap(7,5))
@@ -556,20 +567,10 @@ end
 
 Finisher = GreenCard:new{
 	name='Finisher',description='{Damage} !D! for each {Attack} played this turn.',rarity='uncommon',baseCost=1,baseDamage=6,
-	enemyTarget=true,upgrade={baseDamage=8},displayAttackCount='?',numAttackPlayed=0,
+	enemyTarget=true,upgrade={baseDamage=8},displayAttackCount='?'
 }
-function Finisher:onTurnStart()
-	self.numAttackPlayed = 0
-end
-
-function Finisher:onUseCard(card)
-	if card.type == 'attack' then
-		self.numAttackPlayed = self.numAttackPlayed + 1
-	end
-end
-
 function Finisher:applyPowers(target)
-	self.displayAttackCount = self.numAttackPlayed
+	self.displayAttackCount = SilentEventListener.numAttackPlayed
 	GreenCard.applyPowers(self,target)
 end
 
@@ -580,7 +581,7 @@ end
 
 function Finisher:use(target)
 	local result = {}
-	for i=1,self.numAttackPlayed do
+	for i=1,SilentEventListener.numAttackPlayed do
 		result[i] = DamageAction:new{target=target,source=player,value=self.damage}
 	end
 	return result
