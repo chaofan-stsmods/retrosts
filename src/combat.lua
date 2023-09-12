@@ -32,7 +32,7 @@ combatType = 'monster'
 inCombat = false
 combatSpriteBank = 1
 goldStolen = 0
-local handUI = HandUI:new(hand)
+local handUI = HandUI:new(hand,true)
 local combatSelection = {type='hand',index=1}
 local pauseControl = false
 
@@ -338,13 +338,23 @@ function handApplyPowers()
 end
 
 function removeHand(index)
-	table.remove(hand,index)
+	local cardItem = table.remove(hand,index)
+	if cardItem then
+		cardItem.glow = nil
+	end
 	player:triggerEvent('onRemoveHand')
+	handApplyPowers()
 	if combatSelection.type == 'hand' and combatSelection.index > index then
 		combatSelection.index = combatSelection.index - 1
 	elseif combatSelection.type == 'usecard' and combatSelection.handIndex > index then
 		combatSelection.handIndex = combatSelection.handIndex - 1
 	end
+end
+
+function insertHand(cardItem)
+	table.insert(hand,cardItem)
+	cardItem.isNotInHand = false
+	handApplyPowers()
 end
 
 function checkCombatEnd()

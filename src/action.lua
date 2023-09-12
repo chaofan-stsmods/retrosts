@@ -88,9 +88,8 @@ function DrawCardAction:tick()
 			return
 		end
 		local card = table.remove(drawPile,#drawPile)
-		table.insert(hand,CardItem:new{card=card})
+		insertHand(CardItem:new{card=card})
 		table.insert(self.cardDrawn,card)
-		card:applyPowers()
 		player:triggerEvent('onDraw',card)
 	end
 end
@@ -106,7 +105,7 @@ function ShuffleAction:tick()
 end
 
 UseCardAction = Action:new{
-	cardItem=nil,target=nil,secondary=false,exhaust=false,randomTarget=false,free=false,forceUse=false,energyOnUse=nil,
+	cardItem=nil,target=nil,secondary=false,exhaust=false,rebound=false,randomTarget=false,free=false,forceUse=false,energyOnUse=nil,
 	tempCard=false,isDoubleTap=false,autoPlay=false,triggerOnUseCard=true,fromHand=false,tx=120,ty=68,duration=20
 }
 function UseCardAction:new(o)
@@ -185,12 +184,12 @@ end
 
 function UseCardAction:makeUseCardEndAction(used)
 	return UseCardEndAction:new{
-		cardItem=self.cardItem,exhaust=self.exhaust,used=used,
+		cardItem=self.cardItem,exhaust=self.exhaust,rebound=self.rebound,used=used,
 		useCardPosition=self.useCardPosition,tempCard=self.tempCard,
 	}
 end
 
-UseCardEndAction = Action:new{cardItem=nil,exhaust=false,tempCard=false,used=true,duration=20}
+UseCardEndAction = Action:new{cardItem=nil,exhaust=false,rebound=false,tempCard=false,used=true,duration=20}
 function UseCardEndAction:tick()
 	local card = self.cardItem.card
 	if self.duration == self.startDuration then
@@ -205,6 +204,9 @@ function UseCardEndAction:tick()
 		elseif exhaust or self.tempCard then
 			--self.cardItem.tx = 120
 			self.cardItem.ty = -32
+		elseif self.rebound then
+			self.cardItem.tx = 0
+			self.cardItem.ty = 136
 		else
 			self.cardItem.tx = 240
 			self.cardItem.ty = 136
@@ -223,6 +225,8 @@ function UseCardEndAction:tick()
 			if self.exhaust then
 				table.insert(exhaustPile,self.cardItem.card)
 				player:triggerEvent('onExhaust',card)
+			elseif self.rebound then
+				table.insert(drawPile,self.cardItem.card)
 			else
 				table.insert(discardPile,self.cardItem.card)
 			end
@@ -663,9 +667,7 @@ function MakeTempCardToHandAction:tick()
 			local card = self.card:copy()
 			local cardItem = self.cardItem and self.cardItem:copy() or CardItem:new{x=0,y=136}
 			cardItem.card = card
-			cardItem.isNotInHand = false
-			card:applyPowers()
-			table.insert(hand,cardItem)
+			insertHand(cardItem)
 		end
 	end
 	Action.tick(self)
@@ -997,6 +999,8 @@ function ChannelAction:tick()
 			addAction(2,ChannelAction:new(self.orb))
 			self.isDone = true
 			return
+		else
+			handApplyPowers()
 		end
 	end
 	Action.tick(self)
@@ -1025,6 +1029,7 @@ function EvokeAction:tick()
 		table.insert(allActions,AnonymousAction:new(function ()
 			table.remove(player.orbs,1)
 			table.insert(player.orbs,OrbSlot:new{owner=player})
+			handApplyPowers()
 		end))
 		for i,action in ipairs(allActions) do
 			addAction(i,action)

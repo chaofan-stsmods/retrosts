@@ -195,7 +195,7 @@ function TwinStrike:use(target)
 end
 
 PerfectedStrike = RedCard:new{
-	name='Perfected Strike',description='{Damage} !D!. NL +!M! damage for ALL your "Strike" card.',rarity='common',
+	name='Perfected Strike',description='{Damage} !D!. NL Deals !M! addi- tional damage for ALL your "Strike" card.',rarity='common',
 	baseCost=2,baseDamage=6,baseMagic=2,enemyTarget=true,upgrade={baseMagic=3},tags={'strike'}
 }
 function PerfectedStrike:applyPowers(target)
@@ -272,7 +272,7 @@ function Hemokinesis:use(target)
 end
 
 Rampage = RedCard:new{
-	name='Rampage',description='{Damage} !D!. NL +!M! damage this combat.',rarity='uncommon',baseCost=1,baseDamage=8,baseMagic=5,
+	name='Rampage',description='{Damage} !D!. NL This card +!M! damage this combat.',rarity='uncommon',baseCost=1,baseDamage=8,baseMagic=5,
 	enemyTarget=true,upgrade={baseMagic=8}
 }
 function Rampage:use(target)
@@ -552,6 +552,12 @@ end
 function BloodForBlood:onDamaged(value)
 	if value > 0 then
 		self.baseCost = math.max(0,self.baseCost-1)
+		if self.costForOneTurnPlay then
+			self.costForOneTurnPlay = math.max(0,self.costForOneTurnPlay-1)
+		end
+		if self.costForOnePlay then
+			self.costForOnePlay = math.max(0,self.costForOnePlay-1)
+		end
 		if not table.anyMatch(hand,function (cardItem) return cardItem.card == self end) then
 			self:resetPowers()
 		end
@@ -608,6 +614,12 @@ function Dropkick:use(target)
 		table.insert(r,DrawCardAction:new(1))
 	end
 	return r
+end
+
+function Dropkick:checkGlow()
+	if table.anyMatch(enemies,function (enemy) return enemy:getPower(VulnerablePower) ~= nil end) then
+		return 4
+	end
 end
 
 DualWield = RedCard:new{
@@ -943,8 +955,18 @@ end
 
 FiendFire = RedCard:new{
 	name='Fiend Fire',description='Exhaust your hand, {Damage} !D! for each card exhausted. NL Exhaust.',rarity='rare',
-	baseCost=2,baseDamage=7,enemyTarget=true,upgrade={baseDamage=10},exhaust=true
+	baseCost=2,baseDamage=7,enemyTarget=true,upgrade={baseDamage=10},exhaust=true,displayAttackCount='?'
 }
+function FiendFire:applyPowers(target)
+	self.displayAttackCount = #hand - 1
+	RedCard.applyPowers(self,target)
+end
+
+function FiendFire:resetPowers()
+	self.displayAttackCount = '?'
+	RedCard.resetPowers(self)
+end
+
 function FiendFire:use(target)
 	return {
 		AnonymousAction:new(function ()
@@ -1087,7 +1109,7 @@ function Headbutt:use(target)
 						end
 					end)
 			end
-		end)
+		end),
 	}
 end
 
@@ -1107,17 +1129,13 @@ function Exhume:use()
 				return
 			elseif #cardItems == 1 then
 				table.remove(exhaustPile,table.indexOf(exhaustPile,cardItems[1].card))
-				table.insert(hand,cardItems[1])
-				cardItems[1].isNotInHand = false
-				cardItems[1].card:applyPowers()
+				insertHand(cardItems[1])
 			else
 				openWindowAbove(CardGridSelectWindow:new{cardItems=cardItems,title='Choose a Card to Put into Hand',max=1},
 					function (cards)
 						for _, cardItem in ipairs(cards) do
 							table.remove(exhaustPile,table.indexOf(exhaustPile,cardItem.card))
-							table.insert(hand,cardItem)
-							cardItem.isNotInHand = false
-							cardItem.card:applyPowers()
+							insertHand(cardItem)
 						end
 					end)
 			end

@@ -114,6 +114,8 @@ function DexterityPower:modifyBlock(block)
 	return block + self.amount
 end
 
+FocusPower = PositiveBuffNegativeDebuffPower:new{icon=icons.Focus}
+
 WeakPower = TurnBasedPower:new{debuff=true,icon=icons.Weak,priority=150}
 function WeakPower:onAttack(damage,target)
 	local factor = 0.75

@@ -115,20 +115,16 @@ function LiquidMemories:use()
 			elseif #cardItems <= amount then
 				for _, cardItem in ipairs(cardItems) do
 					table.remove(discardPile,table.indexOf(discardPile,cardItem.card))
-					table.insert(hand,cardItem)
-					cardItem.isNotInHand = false
 					cardItem.card.costForOneTurnPlay = 0
-					cardItem.card:applyPowers()
+					insertHand(cardItem)
 				end
 			else
 				openWindowAbove(CardGridSelectWindow:new{cardItems=cardItems,title='Choose a Card to Return to Hand',max=amount,min=amount},
 					function (cards)
 						for _, cardItem in ipairs(cards) do
 							table.remove(discardPile,table.indexOf(discardPile,cardItem.card))
-							table.insert(hand,cardItem)
-							cardItem.isNotInHand = false
 							cardItem.card.costForOneTurnPlay = 0
-							cardItem.card:applyPowers()
+							insertHand(cardItem)
 						end
 					end)
 			end

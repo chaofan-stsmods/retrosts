@@ -327,6 +327,12 @@ function Impatience:use()
 	}
 end
 
+function Impatience:checkGlow()
+	if table.allMatch(hand,function (cardItem) return cardItem.card.type ~= 'attack' end) then
+		return 4
+	end
+end
+
 JackOfAllTrades = ColorlessCard:new{
 	name='Jack of All Trades',description='Add !M! random colorless card into hand. NL Exhaust.',baseCost=0,type='skill',rarity='uncommon',
 	playerTarget=true,exhaust=true,baseMagic=1,upgrade={baseMagic=2,description='Add !M! random colorless cards into hand. NL Exhaust.'}
@@ -620,17 +626,13 @@ function SecretAction:tick()
 		elseif #cardItems == 1 then
 			local cardItem = cardItems[1]
 			table.remove(drawPile,table.indexOf(drawPile,cardItem.card))
-			table.insert(hand,cardItem)
-			cardItem.isNotInHand = false
-			cardItem.card:applyPowers()
+			insertHand(cardItem)
 		else
 			openWindowAbove(CardGridSelectWindow:new{cardItems=cardItems,title='Choose a Card to Put into Hand',max=1},
 				function (cards)
 					for _, cardItem in ipairs(cards) do
 						table.remove(drawPile,table.indexOf(drawPile,cardItem.card))
-						table.insert(hand,cardItem)
-						cardItem.isNotInHand = false
-						cardItem.card:applyPowers()
+						insertHand(cardItem)
 					end
 				end)
 		end
@@ -707,9 +709,7 @@ function Violence:use()
 		local cardItem = cardItems[i]
 		result[i] = AnonymousAction:new(function ()
 			table.remove(drawPile,table.indexOf(drawPile,cardItem.card))
-			table.insert(hand,cardItem)
-			cardItem.isNotInHand = false
-			cardItem.card:applyPowers()
+			insertHand(cardItem)
 		end)
 	end
 	result[#result+1] = WaitAction:new(10)

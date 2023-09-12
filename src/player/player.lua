@@ -28,12 +28,12 @@ function Player:drawAdditionalItems()
 	for i=1,orbCount do
 		if orbCount == 1 then
 			self.orbs[i].tx = self.x+self.width*4
-			self.orbs[i].ty = self.y-6
+			self.orbs[i].ty = self.y-12
 		else
-			local r = orbCount*4+18
+			local r = orbCount*2+28
 			local rad = (i-0.5)/orbCount*math.pi
 			self.orbs[i].tx = self.x+self.width*4+r*math.cos(rad)
-			self.orbs[i].ty = self.y+self.height*4-r*math.sin(rad)
+			self.orbs[i].ty = self.y+self.height*4-r*math.sin(rad)+orbCount*0.5
 		end
 		self.orbs[i]:tick()
 	end

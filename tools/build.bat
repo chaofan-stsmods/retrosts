@@ -5,4 +5,4 @@ if not exist out mkdir out
 java -jar %~dp0compress\target\compress-1.0-SNAPSHOT.jar %~dp0..\out
 
 del %~dp0..\out\cart.tic
-D:\\Games\\tic80-1.1.2268-win\\tic80.exe --fs=%~dp0..\out --skip "--cmd=load compressed.lua & save cart.tic & exit"
+D:\\Games\\tic80-1.1.2732-win\\tic80.exe --fs=%~dp0..\out --skip "--cmd=load compressed.lua & save cart.tic & exit"

@@ -14,7 +14,7 @@ Card = {
 	enemyTarget=false,playerTarget=false,toAllEnemies=false,
 	exhaust=false,ethereal=false,innate=false,retain=false,tempRetain=false,autoPlayOnEndTurn=false,
 	upgrade=noop,upgraded=false,tags={},canGenerateInCombat=true,canRemove=true,linkedBottle=nil,canUseCache=nil,
-	onRemoveFromDeck=noop,priority=120,descriptionWidth=53,
+	onRemoveFromDeck=noop,priority=120,descriptionWidth=53,cachedGlow=nil,
 }
 Object:new(Card)
 
@@ -111,6 +111,7 @@ function Card:applyPowers(target)
 	self.cost = math.floor(cost)
 
 	makeCanUseCache(self)
+	self.cachedGlow = self:checkGlow()
 end
 
 function Card:resetPowers()
@@ -159,6 +160,10 @@ function Card:load(meta)
 	end
 end
 
+function Card:checkGlow()
+	return nil
+end
+
 ---@class CardItem : Object
 ---@field card Card
 ---@field tx integer
@@ -186,14 +191,12 @@ function CardItem:tick()
 	end
 	l = math.floor(l)
 	t = math.floor(t)
-	if self.glow ~= nil then
-		rect(l-1,t,self.large and 58 or 34,self.large and 57 or 41,self.glow)
-	end
 	if self.flipped then
 		drawCardFlipped(self.large,l,t)
-	else	
-		drawCardBack(self.card,self.large,l,t)
-		drawCost(self.card,l,t,self.isNotInHand,self.showWhiteCost)
+	else
+		local glow = self.glow
+		drawCardBack(self.card,self.large,glow,l,t)
+		drawCost(self.card,l,t,self.isNotInHand,self.showWhiteCost,glow)
 
 		stackClip(l+1,t,self.large and 54 or 30,self.large and 56 or 40)
 		drawTitle(self,l,t)
@@ -218,32 +221,32 @@ function drawCardFlipped(large,l,t)
 	end
 end
 
-function drawCardBack(card,large,l,t)
+function drawCardBack(card,large,glow,l,t)
 	mapColor(14,card.color[1])
-	mapColor(15,card.color[2])
+	mapColor(15,glow or card.color[2])
 	mapColor(10,cardRarityColor[card.rarity][1])
 	mapColor(9,cardRarityColor[card.rarity][2])
+	local w,h
 	if large then
-		rect(l,t+8,56,40,14)
-		rect(l+8,t+48,40,8,14)
-		rect(l,t+8,1,40,15)
-		rect(l+55,t+8,1,40,15)
-		rect(l+8,t+55,40,1,15)
-		rect(l+8,t+1,40,1,14)
-		rect(l+8,t+2,40,5,10)
-		rect(l+8,t+7,40,1,9)
+		w,h = 56,56
 		map(3,2,7,7,l,t,0,1,function(tile,x) return tile,x==9 and 1 or 0 end)
 	else
-		rect(l,t+8,32,24,14)
-		rect(l+8,t+32,16,8,14)
-		rect(l,t+8,1,24,15)
-		rect(l+31,t+8,1,24,15)
-		rect(l+8,t+39,16,1,15)
-		rect(l+8,t+1,16,1,14)
-		rect(l+8,t+2,16,5,10)
-		rect(l+8,t+7,16,1,9)
+		w,h = 32,40
 		map(10,2,4,5,l,t,0,1,function(tile,x) return tile,x==13 and 1 or 0 end)
 	end
+	rect(l,t+8,w,h-16,14)
+	rect(l+8,t+h-8,w-16,8,14)
+	rect(l,t+8,1,h-16,15)
+	rect(l+w-1,t+8,1,h-16,15)
+	rect(l+8,t+h-1,w-16,1,15)
+	rect(l+8,t+1,w-16,1,14)
+	rect(l+8,t+2,w-16,5,10)
+	rect(l+8,t+7,w-16,1,9)
+	if glow then
+		rect(l+2,t,w-4,1,glow)
+		pix(l+w-2,t+1,glow)
+	end
+
 	local typeLeft = card.baseCost >= -1 and l+8 or l+1
 	local typeWidth = 8
 	local damageStr = ''
@@ -256,8 +259,15 @@ function drawCardBack(card,large,l,t)
 		end
 		typeWidth = typeWidth + strWidth(damageStr,false,true) + 1
 	end
-	rect(typeLeft,t-4,typeWidth,6,14)
+	rect(typeLeft,t-4,typeWidth,5,14)
 	rect(typeLeft+1,t-5,typeWidth-2,1,14)
+	if glow then
+		rect(typeLeft+1,t-6,typeWidth-2,1,glow)
+		rect(typeLeft-1,t-4,1,5,glow)
+		rect(typeLeft+typeWidth,t-4,1,5,glow)
+		pix(typeLeft,t-5,glow)
+		pix(typeLeft+typeWidth-1,t-5,glow)
+	end
 	drawIcon(cardTypeToSprIndex[card.type],typeLeft,t-5,card.typeIconColor)
 	resetColors{3,9,10,14,15}
 	if card.type == 'attack' then
@@ -273,11 +283,18 @@ function drawCardBack(card,large,l,t)
 	end
 end
 
-function drawCost(card,l,t,isNotInHand,showWhiteCost)
+function drawCost(card,l,t,isNotInHand,showWhiteCost,glow)
 	t = t-5
 	local cost = card:getCost()
-	if cost >= 0 then
+	if cost >= -1 then
+		if not isDarken and glow then
+			mapColors(0,glow,glow,glow,glow,glow,glow,glow,glow,glow,glow,glow,glow,glow,glow,glow)
+			spr(card.costIcon,l,t-1,0)
+			resetColors()
+		end
 		spr(card.costIcon,l,t,0)
+	end
+	if cost >= 0 then
 		local costStr = cost == -1 and 'X' or tostring(cost)
 		local txtWidth = strWidth(costStr)
 		local color = (isNotInHand or showWhiteCost or (card:canUse() and not endTurnPressed)) and 12 or 1
@@ -286,7 +303,6 @@ function drawCost(card,l,t,isNotInHand,showWhiteCost)
 		end
 		printShadowed(costStr,l+4-txtWidth//2,t+1,color)
 	elseif cost == -1 then
-		spr(card.costIcon,l,t,0)
 		spr(54,l,t,7)
 	end
 end
@@ -663,9 +679,9 @@ function obtainCardWithEffect(card,x,y)
 end
 
 -- hand ui
-HandUI = Object:new{cardItems=nil,selection=0,cursorOnSelf=false,hideSelection=false,onSelect=noop,justChangedSelection=false}
-function HandUI:new(cardItems)
-	return Object.new(self,{cardItems=cardItems})
+HandUI = Object:new{cardItems=nil,selection=0,cursorOnSelf=false,hideSelection=false,onSelect=noop,justChangedSelection=false,isMainHand=false}
+function HandUI:new(cardItems,isMainHand)
+	return Object.new(self,{cardItems=cardItems,isMainHand=isMainHand})
 end
 
 function HandUI:tick()
@@ -677,47 +693,63 @@ function HandUI:drawCards()
 	local handWidth
 	local handDistance
 	local handStart
+	local handCenter
 	if #self.cardItems < 7 then
 		handWidth = #self.cardItems * 24 + 8
 		handDistance = 24
 		handStart = 120 - handWidth / 2 + 16 - handDistance
 	else
-		handWidth = 180
+		handWidth = 190
 		handDistance = (handWidth - 32) / (#self.cardItems - 1)
-		handStart = 30
+		handStart = 30 + 16 - handDistance
+	end
+	if self.isMainHand and #self.cardItems > 0 then
+		local rightMostHand = self.cardItems[#self.cardItems]
+		if rightMostHand.large then
+			printShadowed(tostring(#self.cardItems),rightMostHand.x+30,rightMostHand.y-32,12)
+		else
+			printShadowed(tostring(#self.cardItems),rightMostHand.x+18,rightMostHand.y-24,12)
+		end
 	end
 	if self.hideSelection then
 		for i = 1,#self.cardItems do
-			if not self.cardItems[i].isNotInHand then
-				self.cardItems[i].tx = handStart + i * handDistance
-				self.cardItems[i].ty = 136
+			local cardItem = self.cardItems[i]
+			if not cardItem.isNotInHand then
+				cardItem.tx = handStart + i * handDistance
+				cardItem.ty = 136
 			end
-			self.cardItems[i].large = false
-			self.cardItems[i]:tick()
+			cardItem.large = false
+			cardItem.glow = self.isMainHand and cardItem.card:canUse() and not endTurnPressed and cardItem.card.cachedGlow or nil
+			cardItem:tick()
 		end
 	else
 		for i = 1,#self.cardItems do
-			if not self.cardItems[i].isNotInHand then
-				self.cardItems[i].tx = handStart + i * handDistance
-				self.cardItems[i].ty = 136
+			local cardItem = self.cardItems[i]
+			if not cardItem.isNotInHand then
+				cardItem.tx = handStart + i * handDistance
+				cardItem.ty = 136
 			end
-			self.cardItems[i].large = false
+			cardItem.large = false
 			if self.selection == i and not self.cursorOnSelf then
-				self.cardItems[i].ty = 128
+				cardItem.ty = 128
 			end
 			if self.selection ~= i or not self.cursorOnSelf then
-				self.cardItems[i]:tick()
+				cardItem.glow = self.isMainHand and cardItem.card:canUse() and not endTurnPressed and cardItem.card.cachedGlow or nil
+				cardItem:tick()
 			end
 		end
 		if self.cursorOnSelf and self.selection <= #self.cardItems and self.selection >= 1 then
 			local index = self.selection
-			if self.cardItems[index].isNotInHand then
-				self.cardItems[index].large = false
+			local cardItem = self.cardItems[index]
+			if cardItem.isNotInHand then
+				cardItem.large = false
 			else
-				self.cardItems[index].ty = 108
-				self.cardItems[index].large = true
+				cardItem.tx = limit(cardItem.tx,54,198)
+				cardItem.ty = 108
+				cardItem.large = true
 			end
-			self.cardItems[index]:tick()
+			cardItem.glow = self.isMainHand and cardItem.card:canUse() and not endTurnPressed and cardItem.card.cachedGlow or nil
+			cardItem:tick()
 		end
 	end
 end

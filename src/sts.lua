@@ -300,12 +300,10 @@ currentEvent = MerchantEvent:new()
 room.type = 'shop'
 --]]
 --[[
-startGame(Silent,20)
-startAct(3)
+startGame(Defect,20)
+--startAct(3)
 --obtainRelic(NeowsLament:new{counter=99})
 --obtainRelic(Girya:new{counter=320})
-obtainRelic(FrozenEye:new())
-obtainRelic(SneckoEye:new())
 roomActionType = 'combat'
 local function addCard(cardType)
 	local c1 = cardType:new()
@@ -314,15 +312,14 @@ local function addCard(cardType)
 	c1:resetPowers()
 	table.insert(deck,c1)
 end
-addCard(Eviscerate)
-addCard(Eviscerate)
-addCard(CalculatedGamble)
-addCard(Acrobatics)
+addCard(SteamBarrier)
+addCard(SteamBarrier)
+addCard(Armaments)
 potions[1] = SmokeBomb:new()
 maxEnergy = 6
-startCombat(ThreeJawWormEncounter)
+startCombat(GiantHeadEncounter)
 --addAction(ApplyPowerAction:new(player,StrengthPower:new(player,300)))
---addAction(ApplyPowerAction:new(player,MetallicizePower:new(player,300)))
+addAction(ApplyPowerAction:new(player,MetallicizePower:new(player,300)))
 --]]
 --[[
 startGame(Silent,1)

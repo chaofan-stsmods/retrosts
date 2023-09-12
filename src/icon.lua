@@ -78,6 +78,8 @@ icons = {
 	Poison = Icon:new{image=56},
 	DrawCardNextTurn = Icon:new{image=52,colorMap={[14]=12,[1]=12}},
 	DrawCardEveryTurn = Icon:new{image=52,colorMap={[1]=15}},
+	Focus = Icon:new{image=198,colorMap={[5]=11,[6]=10}},
+	Bias = Icon:new{image=198,colorMap={[5]=2,[6]=2,[9]=2,[10]=3,[11]=4}},
 
 	OrbSlot = Icon:new{image=195,colorMap={[2]=12,[3]=13,[5]=13},transparentColor={0,1,4,6,7,10,11,12}},
 	Lightning = Icon:new{image=195,colorMap={[1]=5,[2]=5,[3]=5,[4]=5,[7]=5,[5]=12,[6]=12,[10]=5,[11]=12}},

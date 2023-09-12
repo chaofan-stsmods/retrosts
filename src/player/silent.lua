@@ -301,6 +301,12 @@ function SneakyStrike:use(target)
 	return actions
 end
 
+function SneakyStrike:checkGlow()
+	if self.discarded then
+		return 4
+	end
+end
+
 SuckerPunch = GreenCard:new{
 	name='Sucker Punch',description='{Damage} !D!. NL Apply !M! {Weak}.',rarity='common',baseCost=1,baseDamage=7,baseMagic=1,
 	enemyTarget=true,upgrade={baseDamage=9,baseMagic=2},
@@ -594,18 +600,6 @@ function Flechettes:resetPowers()
 	GreenCard.resetPowers(self)
 end
 
-function Flechettes:onDraw()
-	if table.anyMatch(hand,function (cardItem) return cardItem.card == self end) then
-		self.displayAttackCount = table.count(hand,function (cardItem) return cardItem.card.type == 'skill' end)
-	end
-end
-
-function Flechettes:onRemoveHand()
-	if table.anyMatch(hand,function (cardItem) return cardItem.card == self end) then
-		self.displayAttackCount = table.count(hand,function (cardItem) return cardItem.card.type == 'skill' end)
-	end
-end
-
 function Flechettes:use(target)
 	return {
 		AnonymousAction:new(function ()
@@ -638,6 +632,12 @@ function HeelHook:use(target)
 	return actions
 end
 
+function HeelHook:checkGlow()
+	if table.anyMatch(enemies,function (enemy) return enemy:getPower(WeakPower) ~= nil end) then
+		return 4
+	end
+end
+
 InfiniteBlades = GreenCard:new{
 	name='Infinite Blades',description='At the start of turn, add a Shiv into hand.',rarity='uncommon',type='power',baseCost=1,
 	playerTarget=true,upgrade={description='Innate. NL At the start of turn, add a Shiv into hand.',innate=true},
@@ -666,6 +666,12 @@ MasterfulStab = GreenCard:new{
 function MasterfulStab:onDamaged(value)
 	if value > 0 then
 		self.baseCost = self.baseCost + 1
+		if self.costForOneTurnPlay then
+			self.costForOneTurnPlay = self.costForOneTurnPlay + 1
+		end
+		if self.costForOnePlay then
+			self.costForOnePlay = self.costForOnePlay + 1
+		end
 		if not table.anyMatch(hand,function (cardItem) return cardItem.card == self end) then
 			self:resetPowers()
 		end
@@ -857,7 +863,7 @@ function Alchemize:use()
 end
 
 BulletTime = GreenCard:new{
-	name='Bullet Time',description='You cannot draw additional cards this turn. Reduce the cost of all cards in hand to 0 this turn.',rarity='rare',
+	name='Bullet Time',description='Reduce cost of all cards in hand to 0 this turn. You cannot draw more cards.',rarity='rare',
 	type='skill',baseCost=3,playerTarget=true,upgrade={baseCost=2},
 }
 function BulletTime:use()
@@ -956,8 +962,8 @@ function EnvenomPower:onDamageDealt(value,target,type)
 end
 
 GlassKnife = GreenCard:new{
-	name='Glass Knife',description='{Damage} !D! twice. NL -2 damage this combat.',rarity='rare',baseCost=1,baseDamage=8,
-	enemyTarget=true,upgrade={baseDamage=12},displayAttackCount=2,
+	name='Glass Knife',description='{Damage} !D! twice. NL This card -2 damage this combat.',rarity='rare',baseCost=1,baseDamage=8,
+	enemyTarget=true,displayAttackCount=2,
 }
 function GlassKnife:use(target)
 	return {
@@ -967,6 +973,10 @@ function GlassKnife:use(target)
 			self.baseDamage = self.baseDamage - 2
 		end),
 	}
+end
+
+function GlassKnife:upgrade()
+	self:upgradeValues({baseDamage=self.baseDamage+4})
 end
 
 GrandFinale = GreenCard:new{
@@ -979,6 +989,12 @@ end
 
 function GrandFinale:use()
 	return { DamageAllEnemiesAction:new{source=player,value=self.multiDamage} }
+end
+
+function GrandFinale:checkGlow()
+	if #drawPile == 0 then
+		return 4
+	end
 end
 
 Malaise = GreenCard:new{
