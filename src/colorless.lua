@@ -172,7 +172,7 @@ end
 
 Bite = ColorlessCard:new{
 	name='Bite',description='{Damage} !D!. NL Heal !M! HP.',baseCost=1,baseDamage=7,baseMagic=2,type='attack',rarity='special',
-	enemyTarget=true,upgrade={baseDamage=8,baseMagic=3},
+	enemyTarget=true,upgrade={baseDamage=8,baseMagic=3},canGenerateInCombat=false,
 }
 function Bite:use(target)
 	return {

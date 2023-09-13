@@ -165,6 +165,20 @@ function Card:checkGlow()
 	return nil
 end
 
+function Card:modifyBaseCost(diff)
+	self.baseCost = math.max(0,self.baseCost+diff)
+	if self.costForOneTurnPlay then
+		self.costForOneTurnPlay = math.max(0,self.costForOneTurnPlay+diff)
+	end
+	if self.costForOnePlay then
+		self.costForOnePlay = math.max(0,self.costForOnePlay+diff)
+	end
+	self.baseCostModified = true
+	if not table.anyMatch(hand,function (cardItem) return cardItem.card == self end) then
+		self:resetPowers()
+	end
+end
+
 ---@class CardItem : Object
 ---@field card Card
 ---@field tx integer

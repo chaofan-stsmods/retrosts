@@ -3,9 +3,11 @@
 
 ---@class Player : Creature
 Player = {
-	x=30,y=52,tileBank=1,name=nil,drawCorpse=noop,energyYOffset=0,maxOrbs=0,orbs=nil,eventListener=nil,
+	x=30,y=52,tileBank=1,name=nil,drawCorpse=noop,energyYOffset=0,maxOrbs=0,orbs=nil,
 }
 Creature:new(Player)
+
+playerEventListeners = {}
 
 function Player:new(o)
 	o = o or {}
@@ -86,9 +88,10 @@ function Player:triggerEvent(name,...)
 	for _, card in ipairs(exhaustPile) do
 		card:triggerEvent(name,...)
 	end
-	local eventListener = self.eventListener
-	if eventListener and eventListener[name] then
-		eventListener[name](eventListener,...)
+	for _,eventListener in ipairs(playerEventListeners) do
+		if eventListener and eventListener[name] then
+			eventListener[name](eventListener,...)
+		end
 	end
 end
 
@@ -103,9 +106,10 @@ function Player:triggerConditionEvent(name,default,...)
 			end
 		end
 	end
-	local eventListener = self.eventListener
-	if eventListener and eventListener[name] then
-		eventListener[name](eventListener,result,...)
+	for _,eventListener in ipairs(playerEventListeners) do
+		if eventListener and eventListener[name] then
+			eventListener[name](eventListener,result,...)
+		end
 	end
 	return result
 end
@@ -116,9 +120,10 @@ function Player:triggerReducerEvent(name,value,...)
 			value = item[name](item,value,...) or value
 		end
 	end
-	local eventListener = self.eventListener
-	if eventListener and eventListener[name] then
-		eventListener[name](eventListener,value,...)
+	for _,eventListener in ipairs(playerEventListeners) do
+		if eventListener and eventListener[name] then
+			eventListener[name](eventListener,value,...)
+		end
 	end
 	return value
 end

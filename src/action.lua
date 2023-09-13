@@ -65,8 +65,12 @@ function WaitAction:new(duration)
 end
 
 DrawCardAction = Action:new{cardDrawn=nil}
-function DrawCardAction:new(numCards)
-	return Action.new(self,{numCards=numCards,duration=3,cardDrawn={}})
+function DrawCardAction:new(numCards,o)
+	o = o or {}
+	o.numCards = numCards
+	o.duration = o.duration or 3
+	o.cardDrawn = o.cardDrawn or {}
+	return Action.new(self,o)
 end
 
 function DrawCardAction:tick()
@@ -76,7 +80,7 @@ function DrawCardAction:tick()
 	end
 	if self.numCards > #drawPile then
 		addAction(1,ShuffleAction:new())
-		addAction(2,DrawCardAction:new(self.numCards - #drawPile))
+		addAction(2,DrawCardAction:new(self.numCards-#drawPile,{cardDrawn=self.cardDrawn}))
 		self.numCards = #drawPile
 	end
 	self.duration = self.duration - 1

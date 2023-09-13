@@ -301,7 +301,7 @@ gold = 9999
 currentEvent = MerchantEvent:new()
 room.type = 'shop'
 --]]
-----[[
+--[[
 startGame(Defect,20)
 --startAct(3)
 --obtainRelic(NeowsLament:new{counter=99})
@@ -314,16 +314,17 @@ local function addCard(cardType)
 	c1:resetPowers()
 	table.insert(deck,c1)
 end
-addCard(DoomAndGloom)
-addCard(DoubleEnergy)
-addCard(Equilibrium)
-addCard(GhostlyArmor)
-addCard(Burn)
+deck = {}
+addCard(SelfRepair)
+addCard(Skim)
+addCard(StaticDischarge)
+addCard(Claw)
+addCard(Claw)
 potions[1] = SmokeBomb:new()
 maxEnergy = 6
-startCombat(GiantHeadEncounter)
+startCombat(SphericGuardianEncounter)
 --addAction(ApplyPowerAction:new(player,StrengthPower:new(player,300)))
-addAction(ApplyPowerAction:new(player,MetallicizePower:new(player,300)))
+--addAction(ApplyPowerAction:new(player,MetallicizePower:new(player,300)))
 --]]
 --[[
 startGame(Silent,1)

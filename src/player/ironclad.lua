@@ -551,16 +551,7 @@ end
 
 function BloodForBlood:onDamaged(value)
 	if value > 0 then
-		self.baseCost = math.max(0,self.baseCost-1)
-		if self.costForOneTurnPlay then
-			self.costForOneTurnPlay = math.max(0,self.costForOneTurnPlay-1)
-		end
-		if self.costForOnePlay then
-			self.costForOnePlay = math.max(0,self.costForOnePlay-1)
-		end
-		if not table.anyMatch(hand,function (cardItem) return cardItem.card == self end) then
-			self:resetPowers()
-		end
+		self:modifyBaseCost(-1)
 	end
 end
 

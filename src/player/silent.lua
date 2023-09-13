@@ -13,7 +13,9 @@ function SilentEventListener:onUseCard(card)
 	end
 end
 
-Silent = Player:new{ maxHp=70,width=6,height=4,tileBank=2,name='Silent',energyYOffset=1,eventListener=SilentEventListener }
+table.insert(playerEventListeners,SilentEventListener)
+
+Silent = Player:new{ maxHp=70,width=6,height=4,tileBank=2,name='Silent',energyYOffset=1 }
 function Silent:drawImage()
 	if self.flipped then
 		map(7,9,5,4,self.x+8,self.y,0,1,flipRemap(7,5))
@@ -422,8 +424,8 @@ function Caltrops:use()
 end
 
 Catalyst = GreenCard:new{
-	name='Catalyst',description='Double the enemy\'s {Poison}.',rarity='uncommon',type='skill',baseCost=1,baseMagic=1,
-	enemyTarget=true,upgrade={description='Triple the enemy\'s {Poison}.',baseMagic=2},
+	name='Catalyst',description='Double the enemy\'s {Poison}. NL Exhaust.',rarity='uncommon',type='skill',baseCost=1,baseMagic=1,
+	enemyTarget=true,upgrade={description='Triple the enemy\'s {Poison}. NL Exhaust.',baseMagic=2},exhaust=true,
 }
 function Catalyst:use(target)
 	return {
@@ -666,16 +668,7 @@ MasterfulStab = GreenCard:new{
 }
 function MasterfulStab:onDamaged(value)
 	if value > 0 then
-		self.baseCost = self.baseCost + 1
-		if self.costForOneTurnPlay then
-			self.costForOneTurnPlay = self.costForOneTurnPlay + 1
-		end
-		if self.costForOnePlay then
-			self.costForOnePlay = self.costForOnePlay + 1
-		end
-		if not table.anyMatch(hand,function (cardItem) return cardItem.card == self end) then
-			self:resetPowers()
-		end
+		self:modifyBaseCost(1)
 	end
 end
 
@@ -854,7 +847,7 @@ end
 
 Alchemize = GreenCard:new{
 	name='Alchemize',description='Obtain a random potion. NL Exhaust.',rarity='rare',type='skill',baseCost=1,
-	playerTarget=true,upgrade={baseCost=0},exhaust=true,
+	playerTarget=true,upgrade={baseCost=0},exhaust=true,canGenerateInCombat=false,
 }
 function Alchemize:use()
 	return { AnonymousAction:new(function ()

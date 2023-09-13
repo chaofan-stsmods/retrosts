@@ -2,10 +2,14 @@
 
 local blueCards
 
-DefectEventListener = { frostChanneled=0,lightningChanneled=0 }
+DefectEventListener = { frostChanneled=0,lightningChanneled=0,cardsPlayedThisTurn=0 }
 function DefectEventListener:onCombatStart()
 	self.frostChanneled = 0
 	self.lightningChanneled = 0
+end
+
+function DefectEventListener:onTurnStart()
+	self.cardsPlayedThisTurn = 0
 end
 
 function DefectEventListener:onChannel(orb)
@@ -16,7 +20,13 @@ function DefectEventListener:onChannel(orb)
 	end
 end
 
-Defect = Player:new{ maxHp=75,width=6,height=4,tileBank=3,name='Defect',maxOrbs=3,eventListener=DefectEventListener }
+function DefectEventListener:onUseCard(card)
+	self.cardsPlayedThisTurn = self.cardsPlayedThisTurn + 1
+end
+
+table.insert(playerEventListeners,DefectEventListener)
+
+Defect = Player:new{ maxHp=75,width=6,height=4,tileBank=3,name='Defect',maxOrbs=3 }
 function Defect:drawImage()
 	if self.flipped then
 		map(14,9,4,4,self.x+8,self.y,0,1,flipRemap(14,4))
@@ -769,11 +779,325 @@ function EquilibriumPower:onTurnEnd()
 	end))
 end
 
+FTL = BlueCard:new{
+	name='FTL',description='{Damage} !D!. If you have played less than !M! cards this turn, draw 1 card.',rarity='uncommon',baseCost=0,
+	enemyTarget=true,playerTarget=true,baseDamage=5,baseMagic=3,upgrade={baseDamage=6,baseMagic=4},
+}
+function FTL:checkGlow()
+	if DefectEventListener.cardsPlayedThisTurn < self.magic then
+		return 4
+	end
+end
+
+function FTL:use(target)
+	return {
+		DamageAction:new{target=target,source=player,value=self.damage},
+		AnonymousAction:new(function ()
+			if DefectEventListener.cardsPlayedThisTurn - 1 < self.magic then
+				addAction(1,DrawCardAction:new(1))
+			end
+		end),
+	}
+end
+
+ForceField = BlueCard:new{
+	name='Force Field',description='Costs 1 less {Energy} for each {Power} played this combat. NL Gain !B! {Block}.',rarity='uncommon',type='skill',baseCost=4,
+	playerTarget=true,baseBlock=12,upgrade={baseBlock=16},
+}
+function ForceField:onUseCard(card)
+	if card.type == 'power' then
+		self:modifyBaseCost(-1)
+	end
+end
+
+function ForceField:use()
+	return { GainBlockAction:new{target=player,value=self.block} }
+end
+
+Fusion = BlueCard:new{
+	name='Fusion',description='Channel 1 {Plasma}.',rarity='uncommon',type='skill',baseCost=2,playerTarget=true,channelCount=1,
+	upgrade={baseCost=1},
+}
+function Fusion:use()
+	return { ChannelAction:new(Plasma:new{owner=player}) }
+end
+
+GeneticAlgorithm = BlueCard:new{
+	name='Genetic Algorithm',description='Gain !B! {Block}. NL This card +!M! {Block} permanently. NL Exhaust.',rarity='uncommon',
+	type='skill',baseCost=1,playerTarget=true,baseBlock=1,baseMagic=2,upgrade={baseMagic=3},exhaust=true,source=nil,
+}
+function GeneticAlgorithm:use()
+	return {
+		GainBlockAction:new{target=player,value=self.block},
+		AnonymousAction:new(function ()
+			self.baseBlock = self.baseBlock + self.magic
+			self:applyPowers()
+			if self.source and table.indexOf(deck,self.source) then
+				self.source.baseBlock = self.source.baseBlock + self.magic
+				self.source:resetPowers()
+			end
+		end)
+	}
+end
+
+function GeneticAlgorithm:copy()
+	local copied = BlueCard.copy(self)
+	copied.source = self
+	return copied
+end
+
+function GeneticAlgorithm:save()
+	return BlueCard.save(self) | (self.baseBlock << 1)
+end
+
+function GeneticAlgorithm:load(meta)
+	BlueCard.load(self,meta & 1)
+	self.baseBlock = meta >> 1
+	self.block = self.baseBlock
+end
+
+Glacier = BlueCard:new{
+	name='Glacier',description='Gain !B! {Block}. NL Channel 2 {Frost}.',rarity='uncommon',type='skill',baseCost=2,
+	playerTarget=true,baseBlock=7,upgrade={baseBlock=10},channelCount=2,
+}
+function Glacier:use()
+	return {
+		GainBlockAction:new{target=player,value=self.block},
+		ChannelAction:new(Frost:new{owner=player}),
+		ChannelAction:new(Frost:new{owner=player}),
+	}
+end
+
+Heatsinks = BlueCard:new{
+	name='Heatsinks',description='Whenever you play a {Power}, draw !M! card.',rarity='uncommon',type='power',baseCost=1,baseMagic=1,
+	playerTarget=true,upgrade={baseMagic=2,description='Whenever you play a {Power}, draw !M! cards.'},
+}
+function Heatsinks:use()
+	return { ApplyPowerAction:new(player,HeatsinksPower:new(player,self.magic)) }
+end
+
+HeatsinksPower = Power:new{icon=216}
+function HeatsinksPower:onUseCard(card)
+	if card.type == 'power' then
+		addAction(DrawCardAction:new(self.amount))
+	end
+end
+
+HelloWorld = BlueCard:new{
+	name='Hello World',description='At the start of turn, add a random common card into hand.',rarity='uncommon',type='power',baseCost=1,
+	playerTarget=true,upgrade={description='Innate. NL At the start of turn, add a random common card into hand.',innate=true},
+}
+function HelloWorld:use()
+	return { ApplyPowerAction:new(player,HelloWorldPower:new(player,1)) }
+end
+
+HelloWorldPower = Power:new{icon=201}
+function HelloWorldPower:onTurnStart()
+	for _=1,self.amount do
+		local card = getPlayerCardType(miscRand,'common',nil,true):new()
+		addAction(MakeTempCardToHandAction:new(card))
+	end
+end
+
+Loop = BlueCard:new{
+	name='Loop',description='At the start of turn, trigger the passive ability of next orb.',rarity='uncommon',type='power',baseCost=1,
+	playerTarget=true,baseMagic=1,upgrade={description='At the start of turn, trigger the passive ability of next orb !M! times.',baseMagic=2},
+}
+function Loop:use()
+	return { ApplyPowerAction:new(player,LoopPower:new(player,self.magic)) }
+end
+
+LoopPower = Power:new{icon=217}
+function LoopPower:onTurnStart()
+	for _=1,self.amount do
+		addAction(AnonymousAction:new(function ()
+			local orb = player.orbs[1]
+			if getmetatable(orb) == OrbSlot then
+				return
+			end
+			for i,action in ipairs(orb:onPassive()) do
+				addAction(i,action)
+			end
+		end))
+	end
+end
+
+Melter = BlueCard:new{
+	name='Melter',description='Remove all {Block} from the enemy. NL Deal !D! damage.',rarity='uncommon',baseCost=1,
+	enemyTarget=true,baseDamage=10,upgrade={baseDamage=14},
+}
+function Melter:use(target)
+	return {
+		AnonymousAction:new(function ()
+			target.block = 0
+		end),
+		DamageAction:new{target=target,source=player,value=self.damage},
+	}
+end
+
+Overclock = BlueCard:new{
+	name='Overclock',description='Draw !M! cards. NL Add a Burn into discard pile.',rarity='uncommon',type='skill',baseCost=0,baseMagic=2,
+	playerTarget=true,upgrade={baseMagic=3},
+}
+function Overclock:use()
+	return {
+		DrawCardAction:new(self.magic),
+		MakeTempCardToDiscardPileAction:new(Burn:new()),
+	}
+end
+
+Recycle = BlueCard:new{
+	name='Recycle',description='Exhaust 1 card. NL Gain {Energy} equal to its cost.',rarity='uncommon',type='skill',
+	baseCost=1,playerTarget=true,upgrade={baseCost=0},
+}
+function Recycle:use()
+	return {
+		AnonymousAction:new(function ()
+			if #hand == 0 then
+				return
+			elseif #hand == 1 then
+				local cardIndex = 1
+				local cost = hand[cardIndex].card:getCost()
+				cost = cost == -1 and energy or cost
+				addAction(1,ExhaustCardAction:new{cardItem=hand[cardIndex],show=true})
+				addAction(2,GainEnergyAction:new(cost))
+				removeHand(cardIndex)
+			else
+				openWindowAbove(HandSelectWindow:new{cardItems=hand,title='Choose a Card to Exhaust',max=1},function (cards)
+					for _, cardItem in ipairs(cards) do
+						local cardIndex = table.indexOf(hand,cardItem)
+						local cost = hand[cardIndex].card:getCost()
+						cost = cost == -1 and energy or cost
+						addAction(1,ExhaustCardAction:new{cardItem=cardItem})
+						addAction(2,GainEnergyAction:new(cost))
+						removeHand(cardIndex)
+					end
+				end)
+			end
+		end)
+	}
+end
+
+ReinforcedBody = BlueCard:new{
+	name='Reinforced Body',description='Gain !B! {Block} X times.',rarity='uncommon',type='skill',baseCost=-1,
+	playerTarget=true,baseBlock=7,upgrade={baseBlock=9},
+}
+function ReinforcedBody:use(_,energyOnUse,free)
+	return {
+		XCardAction:new(function (amount)
+			local result = {}
+			for i = 1, amount do
+				result[i] = GainBlockAction:new{target=player,value=self.block}
+			end
+			return result
+		end,energyOnUse,free)
+	}
+end
+
+Reprogram = BlueCard:new{
+	name='Reprogram',description='Lose !M! {Focus}. NL Gain !M! {Strength}. NL Gain !M! {Dexterity}.',rarity='uncommon',type='skill',baseCost=1,
+	playerTarget=true,baseMagic=1,upgrade={baseMagic=2},
+}
+function Reprogram:use()
+	return {
+		ApplyPowerAction:new(player,FocusPower:new(player,-self.magic)),
+		ApplyPowerAction:new(player,StrengthPower:new(player,self.magic)),
+		ApplyPowerAction:new(player,DexterityPower:new(player,self.magic)),
+	}
+end
+
+RipAndTear = BlueCard:new{
+	name='Rip and Tear',description='{Damage} !D! to a random enemy twice.',rarity='uncommon',baseCost=1,
+	enemyTarget=true,toAllEnemies=true,playerTarget=true,baseDamage=7,upgrade={baseDamage=9},displayAttackCount=2,
+}
+function RipAndTear:use()
+	return {
+		DamageRandomEnemyAction:new{source=player,value=self.multiDamage},
+		DamageRandomEnemyAction:new{source=player,value=self.multiDamage},
+	}
+end
+
+Scrape = BlueCard:new{
+	name='Scrape',description='{Damage} !D!. NL Draw !M! cards. NL Discard all cards drawn this way that do not cost 0.',
+	rarity='uncommon',baseCost=1,baseDamage=7,baseMagic=4,playerTarget=true,enemyTarget=true,upgrade={baseDamage=10,baseMagic=5},
+}
+function Scrape:use(target)
+	local drawCardAction = DrawCardAction:new(self.magic)
+	return {
+		DamageAction:new{target=target,source=player,value=self.damage},
+		drawCardAction,
+		AnonymousAction:new(function ()
+			local cards = {}
+			for _,card in ipairs(drawCardAction.cardDrawn) do
+				if card:getCost() ~= 0 then
+					table.insert(cards,card)
+				end
+			end
+			if #cards > 0 then
+				local index = 1
+				for _,card in ipairs(cards) do
+					local cardIndex = nil
+					for j,cardItem in ipairs(hand) do
+						if cardItem.card == card then
+							cardIndex = j
+							break
+						end
+					end
+					if cardIndex then
+						addAction(index,DiscardAction:new{cardItem=hand[cardIndex],duration=1})
+						removeHand(cardIndex)
+						index = index + 1
+					end
+				end
+			end
+		end),
+	}
+end
+
+SelfRepair = BlueCard:new{
+	name='Self Repair',description='At the end of combat, heal !M! HP.',rarity='uncommon',type='power',baseCost=1,baseMagic=7,
+	playerTarget=true,upgrade={baseMagic=10},canGenerateInCombat=false,
+}
+function SelfRepair:use()
+	return { ApplyPowerAction:new(player,SelfRepairPower:new(player,self.magic)) }
+end
+
+SelfRepairPower = Power:new{icon=233}
+function SelfRepairPower:onCombatEnd()
+	player:heal(self.amount)
+end
+
+Skim = BlueCard:new{
+	name='Skim',description='Draw !M! cards.',rarity='uncommon',type='skill',baseCost=1,baseMagic=3,
+	playerTarget=true,upgrade={baseMagic=4},
+}
+function Skim:use()
+	return { DrawCardAction:new(self.magic) }
+end
+
+StaticDischarge = BlueCard:new{
+	name='Static Discharge',description='Whenever you receive unblocked attack damage, channel !M! {Lightning}.',rarity='uncommon',type='power',
+	baseCost=1,baseMagic=1,playerTarget=true,upgrade={baseMagic=2},
+}
+function StaticDischarge:use()
+	return { ApplyPowerAction:new(player,StaticDischargePower:new(player,self.magic)) }
+end
+
+StaticDischargePower = Power:new{icon=248}
+function StaticDischargePower:onDamaged(value,_,type)
+	if value > 0 and type == 'attack' then
+		for _=1,self.amount do
+			addAction(ChannelAction:new(Lightning:new{owner=player}))
+		end
+	end
+end
+
 blueCards = {
 	StrikeBlue,DefendBlue,Zap,Dualcast,BallLightning,Barrage,BeamCell,ChargeBattery,Claw,ColdSnap,CompileDriver,
 	Coolheaded,GoForTheEyes,Hologram,Leap,Rebound,Recursion,Stack,SteamBarrier,Streamline,SweepingBeam,Turbo,
 	Aggregate,AutoShields,Blizzard,BootSequence,Bullseye,Capacitor,Chaos,Chill,Consume,Darkness,Defragment,
-	DoomAndGloom,DoubleEnergy,Equilibrium,
+	DoomAndGloom,DoubleEnergy,Equilibrium,FTL,ForceField,Fusion,GeneticAlgorithm,Glacier,Heatsinks,HelloWorld,
+	Loop,Melter,Overclock,Recycle,ReinforcedBody,Reprogram,RipAndTear,Scrape,SelfRepair,Skim,StaticDischarge,
 }
 
 -- relics
