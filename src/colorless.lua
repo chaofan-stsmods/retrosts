@@ -60,7 +60,7 @@ function Blind:use(target)
 end
 
 Finesse = ColorlessCard:new{
-	name='Finesse',description='Gain !B! {Block}. NL Draw a card.',baseCost=0,type='skill',rarity='uncommon',
+	name='Finesse',description='Gain !B! {Block}. NL Draw 1 card.',baseCost=0,type='skill',rarity='uncommon',
 	playerTarget=true,baseBlock=2,upgrade={baseBlock=4}
 }
 function Finesse:use()

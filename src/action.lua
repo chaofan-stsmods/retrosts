@@ -288,7 +288,7 @@ function DamageAllEnemiesAction:tick()
 	Action.tick(self)
 end
 
-DamageRandomEnemyAction = Action:new{source=nil,value=nil,type=nil,color=2,duration=10}
+DamageRandomEnemyAction = Action:new{source=nil,value=nil,type=nil,color=2,duration=10,onModifyDamage=nil}
 function DamageRandomEnemyAction:tick()
 	if not self.source.alive and (self.type or 'attack') == 'attack' then
 		self.isDone = true
@@ -298,9 +298,17 @@ function DamageRandomEnemyAction:tick()
 		local target,index = getRandomInteractableEnemy()
 		if target then
 			if type(self.value) == 'number' then
-				target:damage(self.source,self.value,self.type,self)
+				local damage = self.value
+				if self.onModifyDamage then
+					damage = self.onModifyDamage(damage,target)
+				end
+				target:damage(self.source,math.floor(damage),self.type,self)
 			else
-				target:damage(self.source,self.value[index],self.type,self)
+				local damage = self.value[index]
+				if self.onModifyDamage then
+					damage = self.onModifyDamage(damage,target)
+				end
+				target:damage(self.source,math.floor(damage),self.type,self)
 			end
 		end
 	end
@@ -1000,6 +1008,7 @@ function ChannelAction:tick()
 			self.isDone = true
 			return
 		else
+			player:triggerEvent('onChannel',self.orb)
 			handApplyPowers()
 		end
 	end
@@ -1037,3 +1046,20 @@ function EvokeAction:tick()
 	end
 	Action.tick(self)
 end
+
+AddOrbSlotAction = Action:new{duration=10,amount=1}
+function AddOrbSlotAction:new(amount)
+	return Action.new(self,{amount=amount})
+end
+
+function AddOrbSlotAction:tick()
+	if self.duration == self.startDuration then
+		for _=1,self.amount do
+			if #player.orbs < 10 then
+				table.insert(player.orbs,OrbSlot:new{owner=player})
+			end
+		end
+	end
+	Action.tick(self)
+end
+

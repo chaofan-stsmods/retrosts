@@ -196,6 +196,12 @@ function handUISelect(selection)
 	end
 end
 
+function getHoldCard()
+	if combatSelection.type == 'usecard' then
+		return hand[combatSelection.handIndex].card
+	end
+end
+
 function combatControls()
 	if cursorOnTopBar then
 		if combatSelection.type ~= 'topbar' then
@@ -241,7 +247,7 @@ function combatControls()
 			combatSelection.handIndex = nil
 			return
 		end
-		if combatSelection.index == 0 or not enemyCanInteract(combatSelection.index) then
+		if combatSelection.singleEnemy and (combatSelection.index == 0 or not enemyCanInteract(combatSelection.index)) then
 			combatSelection.index = nextOrOtherIndexInTableIf(enemies,combatSelection.index,enemyCanInteract)
 			if combatSelection.index == 0 then
 				combatSelection.type = 'hand'

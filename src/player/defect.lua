@@ -2,7 +2,21 @@
 
 local blueCards
 
-Defect = Player:new{ maxHp=75,width=6,height=4,tileBank=3,name='Defect',maxOrbs=3 }
+DefectEventListener = { frostChanneled=0,lightningChanneled=0 }
+function DefectEventListener:onCombatStart()
+	self.frostChanneled = 0
+	self.lightningChanneled = 0
+end
+
+function DefectEventListener:onChannel(orb)
+	if getmetatable(orb) == Frost then
+		self.frostChanneled = self.frostChanneled + 1
+	elseif getmetatable(orb) == Lightning then
+		self.lightningChanneled = self.lightningChanneled + 1
+	end
+end
+
+Defect = Player:new{ maxHp=75,width=6,height=4,tileBank=3,name='Defect',maxOrbs=3,eventListener=DefectEventListener }
 function Defect:drawImage()
 	if self.flipped then
 		map(14,9,4,4,self.x+8,self.y,0,1,flipRemap(14,4))
@@ -70,7 +84,7 @@ end
 
 -- orbs
 
-Orb = Object:new{owner=nil,x=0,y=0,tx=0,ty=0,icon=nil,evoking=false,applyPowers=noop,drawNumbers=noop,onEvoke=noop}
+Orb = Object:new{owner=nil,x=0,y=0,tx=0,ty=0,icon=nil,evoking=false,showEvokeValue=false,applyPowers=noop,drawNumbers=noop,onEvoke=noop}
 function Orb:new(o)
 	local r = Object.new(self,o)
 	if r.owner ~= nil then
@@ -106,16 +120,21 @@ function Lightning:applyPowers()
 end
 
 function Lightning:drawNumbers()
-	local text = self.evoking and tostring(self.evokeValue) or tostring(self.value)
-	printGlowed(text,self.x+4-strWidth(text,false,true)/2,self.y,self.evoking and 10 or 12,15,1,true)
+	local showEvoke = self.evoking or self.showEvokeValue
+	local text = showEvoke and tostring(self.evokeValue) or tostring(self.value)
+	printGlowed(text,self.x+4-strWidth(text,false,true)/2,self.y,showEvoke and 10 or 12,15,1,true)
+end
+
+function Lightning.modifyOrbDamage(damage,target)
+	return target:triggerReducerEvent('onHitByOrb',damage)
 end
 
 function Lightning:onEvoke()
-	return { DamageRandomEnemyAction:new{source=self.owner,value=self.evokeValue,type='power'} }
+	return { DamageRandomEnemyAction:new{source=self.owner,value=self.evokeValue,type='power',onModifyDamage=self.modifyOrbDamage} }
 end
 
 function Lightning:onPassive()
-	return { DamageRandomEnemyAction:new{source=self.owner,value=self.value,type='power'} }
+	return { DamageRandomEnemyAction:new{source=self.owner,value=self.value,type='power',onModifyDamage=self.modifyOrbDamage} }
 end
 
 function Lightning:onTurnEnd()
@@ -131,8 +150,9 @@ function Frost:applyPowers()
 end
 
 function Frost:drawNumbers()
-	local text = self.evoking and tostring(self.evokeValue) or tostring(self.value)
-	printGlowed(text,self.x+4-strWidth(text,false,true)/2,self.y,self.evoking and 10 or 12,15,1,true)
+	local showEvoke = self.evoking or self.showEvokeValue
+	local text = showEvoke and tostring(self.evokeValue) or tostring(self.value)
+	printGlowed(text,self.x+4-strWidth(text,false,true)/2,self.y,showEvoke and 10 or 12,15,1,true)
 end
 
 function Frost:onEvoke()
@@ -158,7 +178,7 @@ function Dark:drawNumbers()
 	local text = tostring(self.evokeValue)
 	printGlowed(text,self.x+4-strWidth(text,false,true)/2,self.y,10,15,1,true)
 	text = tostring(self.value)
-	printGlowed(text,self.x+4-strWidth(text,false,true)/2,self.y-7,12,15,1,true)
+	printGlowed(text,self.x+4-strWidth(text,false,true)/2,self.y-6,12,15,1,true)
 end
 
 function Dark:onEvoke()
@@ -171,7 +191,10 @@ function Dark:onEvoke()
 					target = enemy
 				end
 			end
-			addAction(1,DamageAction:new{source=self.owner,target=target,value=evokeValue,type='power'})
+			if target ~= nil then
+				local damage = target:triggerReducerEvent('onHitByOrb',evokeValue)
+				addAction(1,DamageAction:new{source=self.owner,target=target,value=damage,type='power'})
+			end
 		end)
 	}
 end
@@ -189,7 +212,7 @@ end
 
 Plasma = Orb:new{icon=icons.Plasma,value=1,evokeValue=2}
 function Plasma:drawNumbers()
-	if self.evoking then
+	if self.evoking or self.showEvokeValue then
 		local text = tostring(self.evokeValue)
 		printGlowed(text,self.x+4-strWidth(text,false,true)/2,self.y,10,15,1,true)
 	end
@@ -209,9 +232,11 @@ function Plasma:onTurnStart()
 	end
 end
 
+local orbTypes = {Lightning,Frost,Dark,Plasma}
+
 -- cards
 
-BlueCard = Card:new{color={9,15},typeIconColor=11,colorName='blue',channelCount=0,evokeCount=0}
+BlueCard = Card:new{color={9,15},typeIconColor=11,colorName='blue'}
 
 StrikeBlue = BlueCard:new{ name='Strike',description='{Damage} !D!.',rarity='basic',baseCost=1,baseDamage=6,enemyTarget=true,upgrade={baseDamage=9},tags={'strike','basicStrike'} }
 function StrikeBlue:use(target)
@@ -545,9 +570,210 @@ function Turbo:use()
 	}
 end
 
+Aggregate = BlueCard:new{
+	name='Aggregate',description='Gain {Energy} for every !M! cards in draw pile.',rarity='uncommon',type='skill',baseCost=1,baseMagic=4,
+	playerTarget=true,upgrade={baseMagic=3},
+}
+function Aggregate:use()
+	local magic = self.magic
+	return { AnonymousAction:new(function ()
+		local amount = #drawPile//magic
+		if amount > 0 then
+			addAction(1,GainEnergyAction:new(amount))
+		end
+	end) }
+end
+
+AutoShields = BlueCard:new{
+	name='Auto-Shields',description='If you have no {Block}, gain !B! {Block}.',rarity='uncommon',type='skill',baseCost=1,baseBlock=11,
+	playerTarget=true,upgrade={baseBlock=15},
+}
+function AutoShields:use()
+	local block = self.block
+	return { AnonymousAction:new(function ()
+		if player.block == 0 then
+			addAction(1,GainBlockAction:new{target=player,value=block})
+		end
+	end) }
+end
+
+Blizzard = BlueCard:new{
+	name='Blizzard',description='{Damage} equal to !M! times the number of {Frost} channeled this combat to all enemies.',rarity='uncommon',
+	baseCost=1,baseMagic=2,enemyTarget=true,toAllEnemies=true,upgrade={baseMagic=3},displayDamage='?',
+}
+function Blizzard:applyPowers(target)
+	self.displayDamage = false
+	self.baseDamage = self.baseMagic * DefectEventListener.frostChanneled
+	BlueCard.applyPowers(self,target)
+end
+
+function Blizzard:resetPowers()
+	self.displayDamage = '?'
+	BlueCard.resetPowers(self)
+end
+
+function Blizzard:use()
+	return { DamageAllEnemiesAction:new{source=player,value=self.multiDamage} }
+end
+
+BootSequence = BlueCard:new{
+	name='Boot Sequence',description='Innate. NL Gain !B! {Block}. NL Exhaust.',rarity='uncommon',type='skill',
+	baseCost=0,baseBlock=10,playerTarget=true,upgrade={baseBlock=13},exhaust=true,innate=true,
+}
+function BootSequence:use()
+	return { GainBlockAction:new{target=player,value=self.block} }
+end
+
+Bullseye = BlueCard:new{
+	name='Bullseye',description='{Damage} !D!. NL Apply !M! {212}.',rarity='uncommon',baseCost=1,enemyTarget=true,
+	baseDamage=8,baseMagic=2,upgrade={baseDamage=11,baseMagic=3},
+}
+function Bullseye:use(target)
+	return {
+		DamageAction:new{target=target,source=player,value=self.damage},
+		ApplyPowerAction:new(target,BullseyePower:new(target,self.magic)),
+	}
+end
+
+BullseyePower = TurnBasedPower:new{icon=212,debuff=true}
+function BullseyePower:onHitByOrb(damage)
+	return damage * 1.5
+end
+
+Capacitor = BlueCard:new{
+	name='Capacitor',description='Gain !M! orb slots.',rarity='uncommon',type='power',baseCost=1,baseMagic=2,playerTarget=true,
+	upgrade={baseMagic=3},
+}
+function Capacitor:use()
+	return { AddOrbSlotAction:new(self.magic) }
+end
+
+Chaos = BlueCard:new{
+	name='Chaos',description='Channel !M! random orb.',rarity='uncommon',type='skill',baseCost=1,baseMagic=1,channelCount=1,
+	playerTarget=true,upgrade={baseMagic=2,description='Channel !M! random orbs.',channelCount=2},
+}
+function Chaos:use()
+	local actions = {}
+	for i=1,self.magic do
+		actions[i] = ChannelAction:new(orbTypes[miscRand:randInt(#orbTypes)]:new{owner=player})
+	end
+	return actions
+end
+
+Chill = BlueCard:new{
+	name='Chill',description='Channel 1 {Frost} for each enemy in combat. NL Exhaust.',rarity='uncommon',type='skill',baseCost=0,playerTarget=true,
+	upgrade={description='Innate. NL Channel 1 {Frost} for each enemy in combat. NL Exhaust.',innate=true},exhaust=true,
+}
+function Chill:applyPowers()
+	self.channelCount = table.count(enemies,function (enemy) return enemy.canInteract end)
+	BlueCard.applyPowers(self)
+end
+
+function Chill:use()
+	return { AnonymousAction:new(function()
+		for _,enemy in ipairs(enemies) do
+			if enemy.canInteract then
+				addAction(1,ChannelAction:new(Frost:new{owner=player}))
+			end
+		end
+	end) }
+end
+
+Consume = BlueCard:new{
+	name='Consume',description='Gain !M! {Focus}. NL Lose 1 orb slot.',rarity='uncommon',type='skill',baseCost=2,baseMagic=2,playerTarget=true,
+	upgrade={baseMagic=3},
+}
+function Consume:use()
+	return {
+		ApplyPowerAction:new(player,FocusPower:new(player,self.magic)),
+		AnonymousAction:new(function ()
+			if #player.orbs > 0 then
+				table.remove(player.orbs,#player.orbs)
+			end
+		end)
+	}
+end
+
+Darkness = BlueCard:new{
+	name='Darkness',description='Channel 1 {Dark}.',rarity='uncommon',type='skill',baseCost=1,playerTarget=true,
+	upgrade={description='Channel 1 {Dark}. NL Trigger the passive ability of all {Dark}.'},channelCount=1,
+}
+function Darkness:use()
+	local actions = { ChannelAction:new(Dark:new{owner=player}) }
+	if self.upgraded then
+		actions[2] = AnonymousAction:new(function ()
+			local actions = {}
+			for _,orb in ipairs(player.orbs) do
+				if getmetatable(orb) == Dark then
+					for _,action in ipairs(orb:onPassive()) do
+						table.insert(actions,action)
+					end
+				end
+			end
+			for i,action in ipairs(actions) do
+				addAction(i,action)
+			end
+		end)
+	end
+	return actions
+end
+
+Defragment = BlueCard:new{
+	name='Defragment',description='Gain !M! {Focus}.',rarity='uncommon',type='power',baseCost=1,playerTarget=true,baseMagic=1,
+	upgrade={baseMagic=2},
+}
+function Defragment:use()
+	return { ApplyPowerAction:new(player,FocusPower:new(player,self.magic)) }
+end
+
+DoomAndGloom = BlueCard:new{
+	name='Doom and Gloom',description='{Damage} !D! to all enemies. NL Channel 1 {Dark}.',rarity='uncommon',baseCost=2,baseDamage=10,
+	playerTarget=true,enemyTarget=true,toAllEnemies=true,upgrade={baseDamage=14},channelCount=1,
+}
+function DoomAndGloom:use()
+	return {
+		DamageAllEnemiesAction:new{source=player,value=self.multiDamage},
+		ChannelAction:new(Dark:new{owner=player}),
+	}
+end
+
+DoubleEnergy = BlueCard:new{
+	name='Double Energy',description='Double your {Energy}. NL Exhaust.',rarity='uncommon',type='skill',baseCost=1,playerTarget=true,
+	upgrade={baseCost=0},exhaust=true,
+}
+function DoubleEnergy:use()
+	return {
+		AnonymousAction:new(function ()
+			addAction(1,GainEnergyAction:new(energy))
+		end)
+	}
+end
+
+Equilibrium = BlueCard:new{
+	name='Equilibrium',description='Gain !B! {Block}. NL Retain your hand this turn.',rarity='uncommon',type='skill',baseCost=2,playerTarget=true,
+	baseBlock=13,upgrade={baseBlock=16},
+}
+function Equilibrium:use()
+	return {
+		GainBlockAction:new{target=player,value=self.block},
+		ApplyPowerAction:new(player,EquilibriumPower:new(player,1)),
+	}
+end
+
+EquilibriumPower = TurnBasedPower:new{icon=214}
+function EquilibriumPower:onTurnEnd()
+	addAction(AnonymousAction:new(function ()
+		for _, cardItem in ipairs(hand) do
+			cardItem.card.tempRetain = true
+		end
+	end))
+end
+
 blueCards = {
 	StrikeBlue,DefendBlue,Zap,Dualcast,BallLightning,Barrage,BeamCell,ChargeBattery,Claw,ColdSnap,CompileDriver,
 	Coolheaded,GoForTheEyes,Hologram,Leap,Rebound,Recursion,Stack,SteamBarrier,Streamline,SweepingBeam,Turbo,
+	Aggregate,AutoShields,Blizzard,BootSequence,Bullseye,Capacitor,Chaos,Chill,Consume,Darkness,Defragment,
+	DoomAndGloom,DoubleEnergy,Equilibrium,
 }
 
 -- relics

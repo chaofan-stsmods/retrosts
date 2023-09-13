@@ -2,7 +2,7 @@
 
 local greenCards
 
-SilentEventListener = {numAttackPlayed=0}
+SilentEventListener = { numAttackPlayed=0 }
 function SilentEventListener:onTurnStart()
 	self.numAttackPlayed = 0
 end

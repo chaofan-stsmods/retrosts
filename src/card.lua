@@ -15,6 +15,7 @@ Card = {
 	exhaust=false,ethereal=false,innate=false,retain=false,tempRetain=false,autoPlayOnEndTurn=false,
 	upgrade=noop,upgraded=false,tags={},canGenerateInCombat=true,canRemove=true,linkedBottle=nil,canUseCache=nil,
 	onRemoveFromDeck=noop,priority=120,descriptionWidth=53,cachedGlow=nil,
+	channelCount=0,evokeCount=0,
 }
 Object:new(Card)
 

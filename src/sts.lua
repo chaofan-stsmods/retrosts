@@ -301,7 +301,7 @@ gold = 9999
 currentEvent = MerchantEvent:new()
 room.type = 'shop'
 --]]
---[[
+----[[
 startGame(Defect,20)
 --startAct(3)
 --obtainRelic(NeowsLament:new{counter=99})
@@ -314,7 +314,11 @@ local function addCard(cardType)
 	c1:resetPowers()
 	table.insert(deck,c1)
 end
-addCard(Hologram)
+addCard(DoomAndGloom)
+addCard(DoubleEnergy)
+addCard(Equilibrium)
+addCard(GhostlyArmor)
+addCard(Burn)
 potions[1] = SmokeBomb:new()
 maxEnergy = 6
 startCombat(GiantHeadEncounter)
@@ -1200,7 +1204,7 @@ window:onOpen()
 -- 197:0110110008188881188ff81118ffff8008ffff81118ff8811888818000110110
 -- 198:900990090a9aa9a009a55a909ab55ba99a5555a9096556900a9669a090099009
 -- 199:00b0bb000b0000b0000bb00bb0bbbb00b0bbbb00bb0bb00b0bb000bb0000bb00
--- 200:00bbbb000bbbbbb0bbb000bbbb00000bbb0b000b0bbb00b0bbbb000000bb0000
+-- 200:22255aa0202050a002050a0002050a000022a000050a0200050a020000000000
 -- 201:0000400040044340434434404434443444344344044444400444440000444000
 -- 203:099999909a9aaaa99aabba999abbbba99abbbba999abbaa99aaaa9a909999990
 -- 204:0ffffff0fa9aaaaffaabba9ffabbbbaffabbbbaff9abbaaffaaaa9af0ffffff0
@@ -1213,7 +1217,7 @@ window:onOpen()
 -- 211:099999909aaa99a999999b9999bbbbb999bbbbb999999b999aaa99a909999990
 -- 212:220202202ff2ff200fffff0022f2f2200fffff002ff2ff202202022000000000
 -- 213:0000b000000aab000000aab00ab00ab000ab0aaba00ab0ab0a0ab0ab0a0ab0ab
--- 214:22255aa0202050a002050a0002050a000022a000050a0200050a020000000000
+-- 214:00bbbb000bbbbbb0bbb000bbbb00000bbb0b000b0bbb00b0bbbb000000bb0000
 -- 215:0040004040004040400400004044400440044404000040040404000004000040
 -- 216:000d000000dffd000dffdffddffdffdedfdffdeedfdfdeee0ddfdee0000dde00
 -- 217:0000bb00000b00b0000b00b00b9b9b00b00b0000b00b00000bb0000000000000

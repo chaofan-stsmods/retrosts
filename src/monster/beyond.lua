@@ -810,7 +810,7 @@ function AwakenedOne:nextIntent(first)
 		else
 			self:rollIntent({
 				{'soulStrike','attack',self.soulStrikeDmg,4,power=25,limit=1},
-				{'slash','attack',power=75,limit=2}
+				{'slash','attack',self.slashDmg,power=75,limit=2}
 			})
 		end
 	end

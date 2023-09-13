@@ -24,18 +24,30 @@ function Player:applyPowers()
 end
 
 function Player:drawAdditionalItems()
+	local evokeCount = 0
+	local holdCard = getHoldCard()
+	if holdCard then
+		evokeCount = holdCard.evokeCount
+		if holdCard.channelCount > 0 then
+			local orbSlotCount = table.count(self.orbs,function (orb) return getmetatable(orb) == OrbSlot end)
+			evokeCount = evokeCount + math.max(0,holdCard.channelCount-orbSlotCount)
+		end
+	end
+
 	local orbCount = #self.orbs
 	for i=1,orbCount do
+		local orb = self.orbs[i]
 		if orbCount == 1 then
-			self.orbs[i].tx = self.x+self.width*4
-			self.orbs[i].ty = self.y-12
+			orb.tx = self.x+self.width*4
+			orb.ty = self.y-12
 		else
 			local r = orbCount*2+28
 			local rad = (i-0.5)/orbCount*math.pi
-			self.orbs[i].tx = self.x+self.width*4+r*math.cos(rad)
-			self.orbs[i].ty = self.y+self.height*4-r*math.sin(rad)+orbCount*0.5
+			orb.tx = self.x+self.width*4+r*math.cos(rad)
+			orb.ty = self.y+self.height*4-r*math.sin(rad)+orbCount*0.5
 		end
-		self.orbs[i]:tick()
+		orb.showEvokeValue = i <= evokeCount
+		orb:tick()
 	end
 end
 

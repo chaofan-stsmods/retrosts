@@ -26,13 +26,7 @@ end
 
 function drawIcon(icon,x,y,typeIcon)
 	if type(icon) == 'number' then
-		if icon >= 55 and icon <= 59 then
-			mapColor(3,typeIcon)
-			spr(icon,x,y,0)
-			resetColor(3)
-		else
-			spr(icon,x,y,0)
-		end
+		spr(icon,x,y,0)
 	elseif getmetatable(icon) == Icon then
 		if icon.typeIcon and typeIcon then
 			if type(icon.typeIcon) == 'number' then
