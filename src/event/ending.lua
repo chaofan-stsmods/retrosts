@@ -6,6 +6,10 @@ local function exp5(from,to,progress)
 	return from + (to-from) * y
 end
 
+local function linear(from,to,progress)
+	return from + (to-from) * progress
+end
+
 IroncladEnding = Event:new{spriteBank=5,screen='scene1',timer=0,items={},controlTopBar=false}
 function IroncladEnding:tick()
 	self.timer = self.timer + 1
@@ -39,6 +43,7 @@ function IroncladEnding:tick()
 			self.screen = 'scene2'
 			self.timer = 0
 			self.spriteBank = 1
+			self.items = {}
 			queueSync(2,1)
 			queueSync(1,5)
 		end
@@ -49,10 +54,10 @@ function IroncladEnding:tick()
 			TheBeyond:drawBackground()
 		elseif timer <= 480 then
 			TheCity:drawBackground()
-		elseif timer <= 580 then
+		else
 			Exordium:drawBackground()
 		end
-		if timer > 280 and timer % 100 == 81 then
+		if timer > 280 and timer < 580 and timer % 100 == 81 then
 			self.items = {}
 			for _=1,30 do
 				table.insert(self.items,{type='fire',x=effectRandom:randInt(232),y=effectRandom:randInt(76,136),phase=effectRandom:randInt(0,3)})
@@ -61,8 +66,11 @@ function IroncladEnding:tick()
 				table.insert(self.items,{type='monster',x=effectRandom:randInt(240-32),y=effectRandom:randInt(76,136),faceLeft=effectRandom:randBool(),speed=effectRandom:rand()*0.4+1})
 			end
 			table.sort(self.items,function(a,b) return a.y < b.y end)
+			TheBeyond:randomizeBackground()
+			TheCity:randomizeBackground()
+			Exordium:randomizeBackground()
 		end
-		if (timer <= 120 and timer % 8 == 0) or (timer <= 180 and timer % 4 == 0) or timer % 32 == 0 then
+		if ((timer <= 120 and timer % 8 == 0) or (timer <= 180 and timer % 4 == 0) or timer % 32 == 0) and timer < 580 then
 			table.insert(self.items,{type='fire',x=effectRandom:randInt(232),y=effectRandom:randInt(76,136),phase=effectRandom:randInt(0,3)})
 			table.sort(self.items,function(a,b) return a.y < b.y end)
 		end
@@ -85,7 +93,6 @@ function IroncladEnding:tick()
 			end
 		end
 		if timer == 580 then
-			self.screen = 'scene3'
 			clearSavedGame()
 			switchWindow(VictoryWindow:new())
 		end
@@ -328,6 +335,144 @@ function SilentEnding:tick()
 		if timer == 360 then
 			clearSavedGame()
 			switchWindow(VictoryWindow:new())
+		end
+	end
+end
+
+DefectEnding = Event:new{spriteBank=5,screen='scene1',timer=0,items={},controlTopBar=false}
+function DefectEnding:tick()
+	self.timer = self.timer + 1
+	local timer = self.timer
+	if self.screen == 'scene1' then
+		act:drawBackground()
+		player:drawImage()
+		if timer <= 180 or (timer <= 260 and timer % 2 == 0) then
+			sprmap(62,17,9,10,136,4,0)
+		end
+		if timer > 60 and timer <= 150 and timer % 5 == 0 then
+			addEffect(HitParticleEffect:new{colors={11,11,12},x=172+effectRandom:randInt(-16,16),y=63+effectRandom:randInt(-4,4)})
+		end
+		if timer > 180 and timer <= 260 and timer % 5 == 0 then
+			addEffect(HitParticleEffect:new{colors={4,4,3},x=172+effectRandom:randInt(-16,16),y=63+effectRandom:randInt(-16,16)})
+		end
+		if timer > 60 and timer <= 150 then
+			local th = limit(effectRandom:randInt(9,11),0,math.min(timer-60,150-timer))
+			local ty = effectRandom:randInt(49,51)
+			local sh = effectRandom:randInt(2,3)
+			local sx = player.x+player.width*4
+			local sy = player.y+player.height*4
+			tri(sx,sy-sh/2,240,ty-th/2,240,ty+th/2,11)
+			tri(sx,sy-sh/2,sx,sy+sh/2,240,ty+th/2,11)
+			tri(sx,sy,240,ty-th/2+1,240,ty+th/2-1,12)
+		end
+		if timer > 300 then
+			self.screen = 'scene2'
+			self.timer = 0
+			self.items = {}
+		end
+	elseif self.screen == 'scene2' then
+		local function pow2(progress)
+			return progress * (1 - progress) * 4
+		end
+
+		act:drawBackground()
+		player:drawImage()
+
+		if timer < 30 then
+			local p = timer/30
+			player.flipped = false
+			player.y = linear(52,32,p) - pow2(p)*10
+			player.x = linear(30,112,p)
+		end
+		if timer >= 40 and timer < 70 then
+			local p = (timer-40)/30
+			player.flipped = true
+			player.y = linear(32,12,p) - pow2(p)*10
+			player.x = linear(112,45,p)
+		end
+		if timer >= 80 and timer < 110 then
+			local p = (timer-80)/30
+			player.flipped = false
+			player.y = linear(12,-8,p) - pow2(p)*10
+			player.x = linear(45,132,p)
+		end
+		if timer >= 120 and timer < 140 then
+			local p = (timer-120)/30
+			player.flipped = true
+			player.y = linear(-8,-28,p) - pow2(p)*10
+			player.x = linear(112,45,p)
+		end
+		if timer > 150 then
+			self.screen = 'scene3'
+			self.timer = 0
+			self.items = {}
+		end
+	elseif self.screen == 'scene3' or self.screen == 'scene4' then
+		if self.screen == 'scene3' then
+			if timer <= 120 then
+				Exordium:drawBackground()
+			elseif timer <= 240 then
+				TheCity:drawBackground()
+			elseif timer <= 360 then
+				TheBeyond:drawBackground()
+			else
+				TheBeyond:drawBackground()
+				self.screen = 'scene4'
+				self.timer = 0
+				self.spriteBank=5
+				queueSync(1,5)
+			end
+			if timer % 120 == 1 then
+				TheBeyond:randomizeBackground()
+				TheCity:randomizeBackground()
+				Exordium:randomizeBackground()
+			end
+		else
+			cls(0)
+		end
+		if timer % 5 == 0 and table.count(self.items,function (item) return item.type == 'word' end) < 30 then
+			table.insert(self.items,{
+				type='word',x=effectRandom:randInt(-60,240),y=effectRandom:randInt(8,128),text=tostring(effectRandom:randInt(0,1)),
+				small=effectRandom:randBool(),speedX=0,color=effectRandom:randInt(9,12),textLimit=effectRandom:randInt(5,10),timer=240,
+			})
+		end
+		if timer % 3 == 0 and self.screen == 'scene4' then
+			table.insert(self.items,{
+				type='line',rad=effectRandom:randFloat(0,math.pi*2),r1=80,r2=80,color=effectRandom:randInt(11,12),timer=20,
+			})
+		end
+		for i,item in ipairs(self.items) do
+			if item.type == 'word' then
+				local x,y = item.x,item.y
+				item.x = x + item.speedX
+				item.timer = item.timer - 1
+				if item.x > 240 or item.timer < 0 then
+					table.remove(self.items,i)
+				end
+				printDarken(item.text,x,y,item.color,true,1,item.small)
+				if effectRandom:randInt(60) == 1 and #item.text < item.textLimit then
+					item.text = item.text .. tostring(effectRandom:randInt(0,1))
+				end
+			elseif item.type == 'line' then
+				local rad = item.rad
+				local r1,r2 = item.r1,item.r2
+				local x1,y1 = 120+math.sin(rad)*r1,66+math.cos(rad)*r1
+				local x2,y2 = 120+math.sin(rad)*r2,66+math.cos(rad)*r2
+				item.r1 = r1 - 5
+				item.r2 = r2 - 4
+				item.timer = item.timer - 1
+				if item.timer < 0 or item.r1 < 0 then
+					table.remove(self.items,i)
+				end
+				line(x1,y1,x2,y2,item.color)
+			end
+		end
+		if self.screen == 'scene4' then
+			map(71,0,5,5,98,48+math.sin(timer*0.05)*2,0)
+			if timer == 240 then
+				clearSavedGame()
+				switchWindow(VictoryWindow:new())
+			end
 		end
 	end
 end

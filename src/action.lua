@@ -1007,7 +1007,7 @@ function ChannelAction:tick()
 			end
 		end
 		if not channeled then
-			addAction(1,EvokeAction:new())
+			addAction(1,EvokeAction:new{duration=1})
 			addAction(2,ChannelAction:new(self.orb))
 			self.isDone = true
 			return
@@ -1019,7 +1019,7 @@ function ChannelAction:tick()
 	Action.tick(self)
 end
 
-EvokeAction = Action:new{duration=10,amount=1}
+EvokeAction = Action:new{duration=5,amount=1}
 function EvokeAction:tick()
 	if self.duration == self.startDuration then
 		if #player.orbs == 0 then

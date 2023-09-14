@@ -296,7 +296,7 @@ end
 
 SneakyStrike = GreenCard:new{
 	name='Sneaky Strike',description='{Damage} !D!. NL If you have discarded a card this turn, gain {Energy}{Energy}.',rarity='common',
-	baseCost=2,baseDamage=12,playerTarget=true,enemyTarget=true,upgrade={baseDamage=16},discarded=false,
+	baseCost=2,baseDamage=12,playerTarget=true,enemyTarget=true,upgrade={baseDamage=16},discarded=false,tags={'strike'},
 }
 function SneakyStrike:onTurnStart()
 	self.discarded = false

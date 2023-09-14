@@ -36,7 +36,7 @@ function Defect:drawImage()
 end
 
 function Defect:drawCorpse()
-	map(7,13,7,2,self.x-4,self.y+20,0)
+	map(14,13,7,3,self.x-4,self.y+14,0)
 end
 
 function Defect:getStartDeck()
@@ -73,11 +73,16 @@ end
 function Defect:getRelics()
 	return {
 		CrackedCore,
+		DataDisk,
+		GoldPlatedCables,SymbioticVirus,
+		EmotionChip,
+		FrozenCore,Inserter,NuclearBattery,
+		RunicCapacitor,
 	}
 end
 
 function Defect:getPotions()
-	return {  }
+	return { FocusPotion,PotionOfCapacity,EssenceOfDarkness }
 end
 
 function Defect:getPronouns()
@@ -89,7 +94,7 @@ function Defect:getSpireHeartText()
 end
 
 function Defect:getEnding()
-	return IroncladEnding:new()
+	return DefectEnding:new()
 end
 
 -- orbs
@@ -140,11 +145,20 @@ function Lightning.modifyOrbDamage(damage,target)
 end
 
 function Lightning:onEvoke()
-	return { DamageRandomEnemyAction:new{source=self.owner,value=self.evokeValue,type='power',onModifyDamage=self.modifyOrbDamage} }
+	return self:damage(self.evokeValue)
 end
 
 function Lightning:onPassive()
-	return { DamageRandomEnemyAction:new{source=self.owner,value=self.value,type='power',onModifyDamage=self.modifyOrbDamage} }
+	player:triggerEvent('onOrbPassive',self)
+	return self:damage(self.value)
+end
+
+function Lightning:damage(value)
+	if self.owner:getPower(ElectrodynamicsPower) then
+		return { DamageAllEnemiesAction:new{source=self.owner,value=value,type='power',onModifyDamage=self.modifyOrbDamage} }
+	else
+		return { DamageRandomEnemyAction:new{source=self.owner,value=value,type='power',onModifyDamage=self.modifyOrbDamage} }
+	end
 end
 
 function Lightning:onTurnEnd()
@@ -170,6 +184,7 @@ function Frost:onEvoke()
 end
 
 function Frost:onPassive()
+	player:triggerEvent('onOrbPassive',self)
 	return { GainBlockAction:new{target=self.owner,value=self.value} }
 end
 
@@ -210,6 +225,7 @@ function Dark:onEvoke()
 end
 
 function Dark:onPassive()
+	player:triggerEvent('onOrbPassive',self)
 	local value = self.value
 	return { AnonymousAction:new(function () self.evokeValue = self.evokeValue + value end) }
 end
@@ -233,6 +249,7 @@ function Plasma:onEvoke()
 end
 
 function Plasma:onPassive()
+	player:triggerEvent('onOrbPassive',self)
 	return { GainEnergyAction:new(self.value) }
 end
 
@@ -674,9 +691,9 @@ Chill = BlueCard:new{
 	name='Chill',description='Channel 1 {Frost} for each enemy in combat. NL Exhaust.',rarity='uncommon',type='skill',baseCost=0,playerTarget=true,
 	upgrade={description='Innate. NL Channel 1 {Frost} for each enemy in combat. NL Exhaust.',innate=true},exhaust=true,
 }
-function Chill:applyPowers()
+function Chill:applyPowers(target)
 	self.channelCount = table.count(enemies,function (enemy) return enemy.canInteract end)
-	BlueCard.applyPowers(self)
+	BlueCard.applyPowers(self,target)
 end
 
 function Chill:use()
@@ -823,7 +840,7 @@ function Fusion:use()
 end
 
 GeneticAlgorithm = BlueCard:new{
-	name='Genetic Algorithm',description='Gain !B! {Block}. NL This card +!M! {Block} permanently. NL Exhaust.',rarity='uncommon',
+	name='Genetic Algorithm',description='Gain !B! {Block}. NL This card permanently NL +!M! {Block}. NL Exhaust.',rarity='uncommon',
 	type='skill',baseCost=1,playerTarget=true,baseBlock=1,baseMagic=2,upgrade={baseMagic=3},exhaust=true,source=nil,
 }
 function GeneticAlgorithm:use()
@@ -923,7 +940,7 @@ function LoopPower:onTurnStart()
 end
 
 Melter = BlueCard:new{
-	name='Melter',description='Remove all {Block} from the enemy. NL Deal !D! damage.',rarity='uncommon',baseCost=1,
+	name='Melter',description='Remove all {Block} from the enemy. NL {Damage} !D!.',rarity='uncommon',baseCost=1,
 	enemyTarget=true,baseDamage=10,upgrade={baseDamage=14},
 }
 function Melter:use(target)
@@ -1092,16 +1109,521 @@ function StaticDischargePower:onDamaged(value,_,type)
 	end
 end
 
+Storm = BlueCard:new{
+	name='Storm',description='Whenever you play a {Power} card, channel 1 {Lightning}.',rarity='uncommon',type='power',baseCost=1,
+	playerTarget=true,upgrade={description='Innate. NL Whenever you play a {Power} card, channel 1 {Lightning}.',innate=true},
+}
+function Storm:use()
+	return { ApplyPowerAction:new(player,StormPower:new(player,1)) }
+end
+
+StormPower = Power:new{icon=232}
+function StormPower:onUseCard(card)
+	if card.type == 'power' then
+		for _=1,self.amount do
+			addAction(ChannelAction:new(Lightning:new{owner=player}))
+		end
+	end
+end
+
+Sunder = BlueCard:new{
+	name='Sunder',description='{Damage} !D!. NL If this kills an enemy, gain {Energy}{Energy}{Energy}.',
+	rarity='uncommon',baseCost=3,baseDamage=24,enemyTarget=true,upgrade={baseDamage=32},
+}
+function Sunder:use(target)
+	local damageAction = DamageAction:new{target=target,source=player,value=self.damage}
+	return {
+		damageAction,
+		AnonymousAction:new(function ()
+			if damageAction.numKilled and damageAction.numKilled > 0 then
+				addAction(1,GainEnergyAction:new(3))
+			end
+		end),
+	}
+end
+
+Tempest = BlueCard:new{
+	name='Tempest',description='Channel X {Lightning}. NL Exhaust.',rarity='uncommon',type='skill',baseCost=-1,
+	playerTarget=true,upgrade={description='Channel X+1 {Lightning}. NL Exhaust.'},exhaust=true,
+}
+function Tempest:applyPowers(target)
+	self.channelCount = energy + (self.upgraded and 1 or 0)
+	BlueCard.applyPowers(self,target)
+end
+
+function Tempest:use(_,energyOnUse,free)
+	local upgraded = self.upgraded
+	return {
+		XCardAction:new(function (amount)
+			local actions = {}
+			if upgraded then
+				amount = amount + 1
+			end
+			for i = 1,amount do
+				actions[i] = ChannelAction:new(Lightning:new{owner=player})
+			end
+			return actions
+		end,energyOnUse,free)
+	}
+end
+
+WhiteNoise = BlueCard:new{
+	name='White Noise',description='Add a random {Power} into hand. NL It costs 0 this turn. NL Exhaust.',rarity='uncommon',
+	type='skill',baseCost=1,playerTarget=true,upgrade={baseCost=0},exhaust=true,
+}
+function WhiteNoise:use()
+	local randomType = getPlayerCardType(miscRand,nil,'power',true)
+	local card = randomType:new()
+	card.costForOneTurnPlay = 0
+	return { MakeTempCardToHandAction:new(card,1) }
+end
+
+AllForOne = BlueCard:new{
+	name='All for One',description='{Damage} !D!. NL Put all cost 0 cards from discard pile into hand.',rarity='rare',baseCost=2,
+	playerTarget=true,enemyTarget=true,baseDamage=10,upgrade={baseDamage=14},
+}
+function AllForOne:use(target)
+	local damageAction = DamageAction:new{target=target,source=player,value=self.damage}
+	return {
+		damageAction,
+		AnonymousAction:new(function ()
+			local cards = {}
+			for _,card in ipairs(discardPile) do
+				if card:getCost() == 0 then
+					table.insert(cards,card)
+				end
+			end
+			if #cards > 0 then
+				for _,card in ipairs(cards) do
+					if #hand > HAND_LIMIT then
+						break
+					end
+					local cardItem = CardItem:new{card=card,x=240,y=136}
+					table.remove(discardPile,table.indexOf(discardPile,card))
+					insertHand(cardItem)
+				end
+			end
+		end),
+	}
+end
+
+Amplify = BlueCard:new{
+	name='Amplify',description='This turn, your next {Power} is played twice.',rarity='rare',type='skill',baseCost=1,baseMagic=1,
+	playerTarget=true,upgrade={baseMagic=2,description='This turn, your next !M! {Power} are played twice.'},
+}
+function Amplify:use()
+	return { ApplyPowerAction:new(player,AmplifyPower:new(player,self.magic)) }
+end
+
+AmplifyPower = Power:new{icon=213}
+function AmplifyPower:onUseCard(card,target,useCardAction)
+	if card.type == 'power' and not useCardAction.isDoubleTap then
+		local cardItem = useCardAction.cardItem:copy()
+		local action = UseCardAction:new{cardItem=cardItem,isDoubleTap=true,tempCard=true,free=true,target=target,energyOnUse=useCardAction.energyOnUse}
+		action.useCardPosition = fillCardPosition(cardItem,2)
+		table.insert(limbo,cardItem)
+		addAction(ReducePowerAction:new(self,1))
+		addAction(action)
+	end
+end
+
+function AmplifyPower:onTurnEnd()
+	addAction(RemovePowerAction:new(self))
+end
+
+BiasedCognition = BlueCard:new{
+	name='Biased Cognition',description='Gain !M! {Focus}. NL At the start of turn, lose 1 {Focus}.',rarity='rare',type='power',baseCost=1,
+	playerTarget=true,baseMagic=4,upgrade={baseMagic=5},
+}
+function BiasedCognition:use()
+	return {
+		ApplyPowerAction:new(player,FocusPower:new(player,self.magic)),
+		ApplyPowerAction:new(player,BiasedCognitionPower:new(player,1)),
+	}
+end
+
+BiasedCognitionPower = Power:new{icon=icons.Bias,debuff=true}
+function BiasedCognitionPower:onTurnStart()
+	addAction(ApplyPowerAction:new(self.owner,FocusPower:new(self.owner,-self.amount)))
+end
+
+Buffer = BlueCard:new{
+	name='Buffer',description='Prevent the next time you would lose HP.',rarity='rare',type='power',baseCost=2,
+	playerTarget=true,baseMagic=1,upgrade={baseMagic=2,description='Prevent the next !M! times you would lose HP.'},
+}
+function Buffer:use()
+	return { ApplyPowerAction:new(player,BufferPower:new(player,self.magic)) }
+end
+
+CoreSurge = BlueCard:new{
+	name='Core Surge',description='{Damage} !D!. NL Gain 1 {Artifact}. NL Exhaust.',rarity='rare',baseCost=1,
+	playerTarget=true,enemyTarget=true,baseDamage=11,upgrade={baseDamage=15},exhaust=true,
+}
+function CoreSurge:use(target)
+	return {
+		DamageAction:new{target=target,source=player,value=self.damage},
+		ApplyPowerAction:new(player,ArtifactPower:new(player,1)),
+	}
+end
+
+CreativeAI = BlueCard:new{
+	name='Creative AI',description='At the start of turn, add a random {Power} into hand.',rarity='rare',type='power',baseCost=3,
+	playerTarget=true,upgrade={baseCost=2},
+}
+function CreativeAI:use()
+	return { ApplyPowerAction:new(player,CreativeAIPower:new(player,1)) }
+end
+
+CreativeAIPower = Power:new{icon=200}
+function CreativeAIPower:onTurnStart()
+	for _=1,self.amount do
+		local card = getPlayerCardType(miscRand,nil,'power',true):new()
+		addAction(MakeTempCardToHandAction:new(card))
+	end
+end
+
+EchoForm = BlueCard:new{
+	name='Echo Form',description='Ethereal. NL The first card you play each turn is played twice.',rarity='rare',type='power',baseCost=3,
+	playerTarget=true,upgrade={ethereal=false,description='The first card you play each turn is played twice.'},ethereal=true,
+}
+function EchoForm:use()
+	return { ApplyPowerAction:new(player,EchoFormPower:new(player,1)) }
+end
+
+EchoFormPower = Power:new{icon=199,cardsPlayed=1}
+function EchoFormPower:new(...)
+	local r = Power.new(self,...)
+	r.cardsPlayed = DefectEventListener.cardsPlayedThisTurn + 1
+	return r
+end
+
+function EchoFormPower:onUseCard(_,target,useCardAction)
+	if not useCardAction.isDoubleTap and self.cardsPlayed < self.amount then
+		local cardItem = useCardAction.cardItem:copy()
+		local action = UseCardAction:new{cardItem=cardItem,isDoubleTap=true,tempCard=true,free=true,target=target,energyOnUse=useCardAction.energyOnUse}
+		action.useCardPosition = fillCardPosition(cardItem,2)
+		table.insert(limbo,cardItem)
+		addAction(action)
+		self.cardsPlayed = self.cardsPlayed + 1
+	end
+end
+
+function EchoFormPower:onTurnStart()
+	self.cardsPlayed = 0
+end
+
+Electrodynamics = BlueCard:new{
+	name='Electrodynamics',description='{Lightning} now hits ALL enemies. NL Channel !M! {Lightning}.',rarity='rare',type='power',baseCost=2,
+	playerTarget=true,baseMagic=2,upgrade={baseMagic=3,channelCount=3},channelCount=2,
+}
+function Electrodynamics:use()
+	local actions = {
+		ApplyPowerAction:new(player,ElectrodynamicsPower:new(player,self.magic)),
+		ChannelAction:new(Lightning:new{owner=player}),
+		ChannelAction:new(Lightning:new{owner=player}),
+	}
+	if self.upgraded then
+		actions[4] = ChannelAction:new(Lightning:new{owner=player})
+	end
+	return actions
+end
+
+ElectrodynamicsPower = Power:new{icon=215,stackable=false}
+
+Fission = BlueCard:new{
+	name='Fission',description='Remove all orbs. Gain {Energy} and draw 1 card for each orb removed. NL Exhaust.',rarity='rare',type='skill',
+	baseCost=0,playerTarget=true,upgrade={description='Evoke all orbs. Gain {Energy} and draw 1 card for each orb evoked. NL Exhaust.',evokeCount=10},
+}
+function Fission:use()
+	local upgraded = self.upgraded
+	return {
+		AnonymousAction:new(function ()
+			local numOrbs = 0
+			local numEvokeAction = 0
+			for i,orb in ipairs(player.orbs) do
+				if getmetatable(orb) ~= OrbSlot then
+					if upgraded then
+						addAction(i,EvokeAction:new{duration=1})
+					else
+						player.orbs[i] = OrbSlot:new{owner=player,x=orb.x,y=orb.y}
+					end
+					numOrbs = numOrbs + 1
+				else
+					break
+				end
+			end
+			if upgraded then
+				numEvokeAction = numOrbs
+			end
+			addAction(numEvokeAction+1,GainEnergyAction:new(numOrbs))
+			addAction(numEvokeAction+2,DrawCardAction:new(numOrbs))
+		end)
+	}
+end
+
+Hyperbeam = BlueCard:new{
+	name='Hyperbeam',description='{Damage} !D! to all enemies. NL Lose 3 {Focus}.',rarity='rare',baseCost=2,
+	playerTarget=true,enemyTarget=true,toAllEnemies=true,baseDamage=26,upgrade={baseDamage=34},
+}
+function Hyperbeam:use()
+	return {
+		DamageAllEnemiesAction:new{source=player,value=self.multiDamage},
+		ApplyPowerAction:new(player,FocusPower:new(player,-3)),
+	}
+end
+
+MachineLearning = BlueCard:new{
+	name='Machine Learning',description='At the start of turn, draw 1 additional card.',rarity='rare',type='power',baseCost=1,
+	playerTarget=true,upgrade={description='Innate. NL At the start of turn, draw 1 additional card.',innate=true},
+}
+function MachineLearning:use()
+	return { ApplyPowerAction:new(player,MachineLearningPower:new(player,1)) }
+end
+
+MachineLearningPower = Power:new{icon=icons.DrawCardEveryTurn}
+function MachineLearningPower:onTurnStartPostDraw()
+	addAction(DrawCardAction:new(self.amount))
+end
+
+MeteorStrike = BlueCard:new{
+	name='Meteor Strike',description='{Damage} !D!. NL Channel 3 {Plasma}.',rarity='rare',baseCost=5,
+	playerTarget=true,enemyTarget=true,baseDamage=24,upgrade={baseDamage=30},channelCount=3,tags={'strike'},
+}
+function MeteorStrike:use(target)
+	return {
+		DamageAction:new{target=target,source=player,value=self.damage},
+		ChannelAction:new(Plasma:new{owner=player}),
+		ChannelAction:new(Plasma:new{owner=player}),
+		ChannelAction:new(Plasma:new{owner=player}),
+	}
+end
+
+Multicast = BlueCard:new{
+	name='Multi-Cast',description='Evoke your next orb X times.',rarity='rare',type='skill',baseCost=-1,
+	playerTarget=true,upgrade={description='Evoke your next orb X+1 times.'},evokeCount=1,
+}
+function Multicast:use(_,energyOnUse,free)
+	local upgraded = self.upgraded
+	return {
+		XCardAction:new(function (amount)
+			if upgraded then
+				amount = amount + 1
+			end
+			return { EvokeAction:new{amount=amount} }
+		end,energyOnUse,free)
+	}
+end
+
+Rainbow = BlueCard:new{
+	name='Rainbow',description='Channel 1 {Lightning}. NL Channel 1 {Frost}. NL Channel 1 {Dark}. NL Exhaust.',rarity='rare',type='skill',
+	baseCost=2,playerTarget=true,upgrade={description='Channel 1 {Lightning}. NL Channel 1 {Frost}. NL Channel 1 {Dark}.',exhaust=false},
+	exhaust=true,channelCount=3,
+}
+function Rainbow:use()
+	return {
+		ChannelAction:new(Lightning:new{owner=player}),
+		ChannelAction:new(Frost:new{owner=player}),
+		ChannelAction:new(Dark:new{owner=player}),
+	}
+end
+
+Reboot = BlueCard:new{
+	name='Reboot',description='Shuffle all your cards into your draw pile. NL Draw !M! cards. NL Exhaust.',rarity='rare',
+	type='skill',baseCost=0,playerTarget=true,baseMagic=4,upgrade={baseMagic=6},exhaust=true,
+}
+function Reboot:use()
+	return {
+		AnonymousAction:new(function ()
+			local count = #hand
+			for i=1,#hand do
+				local cardItem = hand[i]
+				addAction(i,PutCardInDrawPileAction:new{cardItem=cardItem,duration=1})
+			end
+			for i=#hand,1,-1 do
+				removeHand(i)
+			end
+			addAction(count+1,ShuffleAction:new())
+		end),
+		DrawCardAction:new(self.magic),
+	}
+end
+
+Seek = BlueCard:new{
+	name='Seek',description='Put !M! card from draw pile into hand. NL Exhaust.',rarity='rare',type='skill',baseCost=0,
+	playerTarget=true,baseMagic=1,upgrade={description='Put !M! cards from draw pile into hand. NL Exhaust.',baseMagic=2},exhaust=true,
+}
+function Seek:use()
+	local amount = self.magic
+	return {
+		AnonymousAction:new(function ()
+			local cards = shallowcopy(drawPile)
+			local cardItems = {}
+			for i, card in ipairs(cards) do
+				cardItems[i] = CardItem:new{card=card,x=0,y=136,tx=240,ty=136,isNotInHand=true}
+			end
+			if #cardItems == 0 then
+				return
+			elseif #cardItems <= amount then
+				for _, cardItem in ipairs(cardItems) do
+					table.remove(drawPile,table.indexOf(drawPile,cardItem.card))
+					insertHand(cardItem)
+				end
+			else
+				local title = amount == 1 and 'Choose a Card to Put into Hand' or 'Choose Cards to Put into Hand ({#}/'..tostring(amount)..')'
+				openWindowAbove(CardGridSelectWindow:new{cardItems=cardItems,title=title,min=amount,max=amount},
+					function (cards)
+						for _, cardItem in ipairs(cards) do
+							table.remove(drawPile,table.indexOf(drawPile,cardItem.card))
+							insertHand(cardItem)
+						end
+					end)
+			end
+		end),
+	}
+end
+
+ThunderStrike = BlueCard:new{
+	name='Thunder Strike',description='{Damage} !D! to a random enemy for each {Lightning} channeled this combat.',rarity='rare',baseCost=3,
+	playerTarget=true,enemyTarget=true,toAllEnemies=true,baseDamage=7,upgrade={baseDamage=9},displayAttackCount='?',tags={'strike'},
+}
+function ThunderStrike:applyPowers(target)
+	self.displayAttackCount = DefectEventListener.lightningChanneled
+	BlueCard.applyPowers(self,target)
+end
+
+function ThunderStrike:resetPowers()
+	self.displayAttackCount = '?'
+	BlueCard.resetPowers(self)
+end
+
+function ThunderStrike:use()
+	local actions = {}
+	for i=1,DefectEventListener.lightningChanneled do
+		actions[i] = DamageRandomEnemyAction:new{source=player,value=self.multiDamage}
+	end
+	return actions
+end
+
 blueCards = {
 	StrikeBlue,DefendBlue,Zap,Dualcast,BallLightning,Barrage,BeamCell,ChargeBattery,Claw,ColdSnap,CompileDriver,
 	Coolheaded,GoForTheEyes,Hologram,Leap,Rebound,Recursion,Stack,SteamBarrier,Streamline,SweepingBeam,Turbo,
 	Aggregate,AutoShields,Blizzard,BootSequence,Bullseye,Capacitor,Chaos,Chill,Consume,Darkness,Defragment,
 	DoomAndGloom,DoubleEnergy,Equilibrium,FTL,ForceField,Fusion,GeneticAlgorithm,Glacier,Heatsinks,HelloWorld,
 	Loop,Melter,Overclock,Recycle,ReinforcedBody,Reprogram,RipAndTear,Scrape,SelfRepair,Skim,StaticDischarge,
+	Storm,Sunder,Tempest,WhiteNoise,AllForOne,Amplify,BiasedCognition,Buffer,CoreSurge,CreativeAI,EchoForm,
+	Electrodynamics,Fission,Hyperbeam,MachineLearning,MeteorStrike,Multicast,Rainbow,Reboot,Seek,ThunderStrike,
 }
 
 -- relics
-CrackedCore = Relic:new{ name='Cracked Core',tier='basic',icon=243,description='At the start of each combat, channel 1 {Lightning}.' }
+CrackedCore = Relic:new{ name='Cracked Core',tier='basic',icon=243,description='At the start of each combat, channel #11#1#12# {Lightning}.' }
 function CrackedCore:onCombatStart()
 	addAction(ChannelAction:new(Lightning:new{owner=player}))
+end
+
+DataDisk = Relic:new{ name='Data Disk',tier='common',icon=244,description='Start each combat with #11#1#12# {Focus}.' }
+function DataDisk:onCombatStart()
+	addAction(ApplyPowerAction:new(player,FocusPower:new(player,1)))
+end
+
+GoldPlatedCables = Relic:new{ name='Gold-Plated Cables',tier='uncommon',icon=228,triggering=false,description='Your rightmost orb triggers its passive an additional time.' }
+function GoldPlatedCables:onOrbPassive(orb)
+	if self.triggering then
+		return
+	end
+	if #player.orbs > 0 and orb == player.orbs[1] then
+		addAction(AnonymousAction:new(function ()
+			self.triggering = true
+			for _,action in ipairs(orb:onPassive()) do
+				addAction(action)
+			end
+			self.triggering = false
+		end))
+	end
+end
+
+SymbioticVirus = Relic:new{ name='Symbiotic Virus',tier='uncommon',icon=229,description='At the start of each combat, channel #11#1#12# {Dark}.' }
+function SymbioticVirus:onCombatStart()
+	addAction(ChannelAction:new(Dark:new{owner=player}))
+end
+
+EmotionChip = Relic:new{ name='Emotion Chip',tier='rare',icon=245,damaged=false,description='If you lost HP during the previous turn, trigger the passive ability of all orbs at the start of turn.' }
+function EmotionChip:onDamaged(value)
+	if value > 0 then
+		self.damaged = true
+		self.counter = 1
+	end
+end
+
+function EmotionChip:onTurnStart()
+	if self.damaged then
+		self.damaged = false
+		self.counter = -1
+		for _,orb in ipairs(player.orbs) do
+			if getmetatable(orb) ~= OrbSlot then
+				for _,action in ipairs(orb:onPassive()) do
+					addAction(action)
+				end
+			end
+		end
+	end
+end
+
+FrozenCore = Relic:new{ name='Frozen Core',tier='boss',icon=246,replaces=CrackedCore,description='Replaces #11#Cracked Core#12#. If you end turn with any empty Orb slots, channel #11#1#12# {Frost}.' }
+function FrozenCore:onTurnEnd()
+	if table.anyMatch(player.orbs,function(orb) return getmetatable(orb) == OrbSlot end) then
+		local orb = Frost:new{owner=player}
+		addAction(ChannelAction:new(orb))
+		addAction(AnonymousAction:new(function ()
+			for _,action in ipairs(orb:onPassive()) do
+				addAction(action)
+			end
+		end))
+	end
+end
+
+Inserter = Relic:new{ name='Inserter',tier='boss',icon=231,counter=0,description='Every #11#2#12# turns, gain #11#1#12# orb slot.' }
+function Inserter:onTurnStart()
+	self.counter = self.counter + 1
+	if self.counter == 2 then
+		self.counter = 0
+		addAction(AddOrbSlotAction:new(1))
+	end
+end
+
+NuclearBattery = Relic:new{ name='Nuclear Battery',tier='boss',icon=247,description='At the start of each combat, channel #11#1#12# {Plasma}.' }
+function NuclearBattery:onCombatStart()
+	addAction(ChannelAction:new(Plasma:new{owner=player}))
+end
+
+RunicCapacitor = Relic:new{ name='Runic Capacitor',tier='shop',icon=230,description='Start each combat with #11#3#12# additional orb slots.' }
+function RunicCapacitor:onCombatStart()
+	addAction(AddOrbSlotAction:new(3))
+end
+
+-- potions
+FocusPotion = Potion:new{
+	name='Focus Potion',icon=Icon:new{image=98,colorMap={9,9,9,11,11}},rarity='common',description='Gain #11#!M!#12# {Focus}.',baseMagic=2,
+}
+function FocusPotion:use()
+	return { ApplyPowerAction:new(player,FocusPower:new(player,self.magic)) }
+end
+
+EssenceOfDarkness = Potion:new{
+	name='Essence of Darkness',icon=Icon:new{image=108,colorMap={14,13}},rarity='rare',description='Channel #11#!M!#12# {Dark} for each orb slot.',baseMagic=1,
+}
+function EssenceOfDarkness:use()
+	return {
+		AnonymousAction:new(function ()
+			for i=1,#player.orbs*self.magic do
+				addAction(i,ChannelAction:new(Dark:new{owner=player}))
+			end
+		end)
+	}
+end
+
+PotionOfCapacity = Potion:new{
+	name='Potion of Capacity',icon=Icon:new{image=100,colorMap={9,10,11}},rarity='uncommon',description='Gain #11#!M!#12# orb slots.',baseMagic=2,
+}
+function PotionOfCapacity:use()
+	return { AddOrbSlotAction:new(self.magic) }
 end

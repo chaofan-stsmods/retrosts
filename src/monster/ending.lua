@@ -1,7 +1,7 @@
 -- city-monsters
 ---@diagnostic disable: lowercase-global
 
-CorruptHeart = Monster:new{ maxHp=750,width=8,height=7,bashDmg=40,bloodHitCount=12,numAttacked=0,numBuffed=0 }
+CorruptHeart = Monster:new{ maxHp=750,width=8,height=7,bashDmg=40,bloodHitCount=12,numAttacked=0,numBuffed=0,type='boss' }
 function CorruptHeart:init()
 	self.maxHp = ascension >= 9 and 800 or 750
 	if ascension >= 4 then
@@ -128,7 +128,7 @@ function BeatOfDeathPower:onUseCard()
 	addAction(DamageAction:new{target=player,source=self.owner,value=self.amount,type='power'})
 end
 
-SpireShield = Monster:new{ maxHp=110,width=6,height=4,bashDmg=12,smashDmg=34,numTurn=1 }
+SpireShield = Monster:new{ maxHp=110,width=6,height=4,bashDmg=12,smashDmg=34,numTurn=1,type='elite' }
 function SpireShield:init()
 	self.maxHp = ascension >= 8 and 125 or 110
 	if ascension >= 3 then
@@ -214,7 +214,7 @@ function SpireShield:die()
 	end
 end
 
-SpireSpear = Monster:new{ maxHp=160,width=6,height=4,burnDmg=5,skewerCount=3,numTurn=1 }
+SpireSpear = Monster:new{ maxHp=160,width=6,height=4,burnDmg=5,skewerCount=3,numTurn=1,type='elite' }
 function SpireSpear:init()
 	self.maxHp = ascension >= 8 and 180 or 160
 	if ascension >= 3 then

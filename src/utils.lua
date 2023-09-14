@@ -9,6 +9,13 @@ function strWidth(str,fixed,small,scale)
 	return print(str,0,-8*scale,0,fixed,scale,small)
 end
 
+function printDarken(text,x,y,color,fixed,scale,smallfont)
+	if isDarken then
+		color = color and darkenColorList[color+1] or color
+	end
+	print(text,x,y,color,fixed,scale,smallfont)
+end
+
 function printColorStr(str,x,y,small,color,lockColor)
 	color = lockColor or color or 12
 	local originalX = x

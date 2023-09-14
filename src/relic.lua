@@ -955,7 +955,7 @@ end
 
 Pantograph = Relic:new{name='Pantograph',icon=137,tier='uncommon',description='At the start of boss combats, heal #11#25#12# HP.'}
 function Pantograph:onCombatStart()
-	if table.anyMatch(enemies,function(enemy) return enemy.type == 'boss' end) then
+	if combatType == 'boss' then
 		player:heal(25)
 	end
 end
@@ -1445,7 +1445,7 @@ end
 
 SlaversCollar = Relic:new{name='Slaver\'s Collar',icon=182,tier='boss',activated=false,description='During Boss and Elite combats, gain {Energy} at the start of your turn.'}
 function SlaversCollar:onCombatStart()
-	if combatType == 'elite' or table.anyMatch(enemies,function (enemy) return enemy.type == 'boss' end) then
+	if combatType == 'elite' or combatType == 'boss' then
 		maxEnergy = maxEnergy + 1
 		self.activated = true
 	end
