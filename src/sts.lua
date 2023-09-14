@@ -292,19 +292,19 @@ end
 -- main
 
 queueSync(32,1)
---[[
+----[[
 startGame(Defect,20)
-startAct(4)
+startAct(1)
 obtainRelic(Girya:new{counter=99})
 obtainRelic(TheCourier:new())
-currentEvent = DefectEnding:new()
+currentEvent = CampfireEvent:new()
 --]]
 --[[
 startGame(Defect,20)
 --startAct(3)
 --obtainRelic(NeowsLament:new{counter=99})
 --obtainRelic(Girya:new{counter=320})
-obtainRelic(RunicCapacitor:new())
+obtainRelic(GoldPlatedCables:new())
 roomActionType = 'combat'
 local function addCard(cardType)
 	local c1 = cardType:new()
@@ -313,17 +313,15 @@ local function addCard(cardType)
 	c1:resetPowers()
 	table.insert(deck,c1)
 end
-deck = {}
-addCard(Dualcast)
-addCard(Seek)
+addCard(Loop)
 addCard(Darkness)
 addCard(BallLightning)
 addCard(BallLightning)
 potions[1] = SmokeBomb:new()
 maxEnergy = 6
-startCombat(DonuAndDecaEncounter)
+startCombat(GiantHeadEncounter)
 --addAction(ApplyPowerAction:new(player,StrengthPower:new(player,300)))
---addAction(ApplyPowerAction:new(player,MetallicizePower:new(player,300)))
+addAction(ApplyPowerAction:new(player,MetallicizePower:new(player,300)))
 --]]
 --[[
 startGame(Defect,1)

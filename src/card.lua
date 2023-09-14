@@ -283,7 +283,7 @@ function drawCardBack(card,large,glow,l,t)
 		pix(typeLeft,t-5,glow)
 		pix(typeLeft+typeWidth-1,t-5,glow)
 	end
-	drawIcon(cardTypeToSprIndex[card.type],typeLeft,t-5,card.typeIconColor)
+	drawIcon(cardTypeToSprIndex[card.type],typeLeft,t-5,{typeIcon=card.typeIconColor})
 	resetColors{3,9,10,14,15}
 	if card.type == 'attack' then
 		local color = 12
@@ -392,7 +392,7 @@ function drawDescription(card,description,x,y,lineWidth,maxLine,color)
 						if currentY > maxY then
 							return maxX-x,maxY
 						end
-						drawIcon(icon,currentX+xOffset,currentY+yOffset-1,card.typeIconColor or color)
+						drawIcon(icon,currentX+xOffset,currentY+yOffset-1,{typeIcon=card.typeIconColor or color})
 						currentX = currentX + 9
 						maxX = math.max(maxX,currentX)
 					end
@@ -897,7 +897,7 @@ function HandSelectWindow:new(o)
 	handUI.cursorOnSelf = true
 	o.handUI = handUI
 	o.selectedCards = {}
-	r = Window.new(self,o)
+	local r = Window.new(self,o)
 	handUI.onSelect = function (selection)
 		r:handUISelect(selection)
 	end
@@ -1083,7 +1083,7 @@ function CardGridSelectWindow:new(o)
 	o.height = 120
 	o.gridUI = gridUI
 	o.selectedCards = {}
-	r = Window.new(self,o)
+	local r = Window.new(self,o)
 	gridUI.onSelect = function (selection)
 		r:gridUISelect(selection)
 	end

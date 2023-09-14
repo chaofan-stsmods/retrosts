@@ -37,7 +37,7 @@ function BossTreasureEvent:drawBackground()
 		for i = 1, 3 do
 			if not isDarken then
 				mapColors(0,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15)
-				self.relics[i]:drawImage(relicLocations[i][1]+1,relicLocations[i][2]+1)
+				drawIcon(self.relics[i].icon,relicLocations[i][1]+1,relicLocations[i][2]+1,{noMapColor=true})
 				resetColors()
 			end
 			self.relics[i]:drawImage(relicLocations[i][1],relicLocations[i][2])

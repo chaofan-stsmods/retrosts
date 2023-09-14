@@ -74,7 +74,7 @@ end
 local rainbowSpeed = 0.1
 function Potion:drawImage(x,y)
 	self.timer = (self.timer + 1) % math.floor(Icon.rainbowLength/rainbowSpeed)
-	drawIcon(self.icon,x,y,math.floor(self.timer*rainbowSpeed)+1)
+	drawIcon(self.icon,x,y,{rainbowTimer=math.floor(self.timer*rainbowSpeed)+1})
 end
 
 function Potion:canUse()

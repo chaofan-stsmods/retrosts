@@ -8,42 +8,58 @@ local rainbow2 = {1,1,2,3,6,10,9}
 Icon = {image=0,colorMap={},transparentColor=0,flip=false,typeIcon=nil,isRainbow=false,rainbowLength=#rainbow}
 Object:new(Icon)
 
-function Icon:draw(x,y,rainbowTimer)
-	for key, value in pairs(self.colorMap) do
-		if value == -1 then
-			mapColor(key,rainbow[rainbowTimer])
-		elseif value == -2 then
-			mapColor(key,rainbow2[rainbowTimer])
-		else
-			mapColor(key,value)
+function Icon:draw(x,y,o)
+	local rainbowTimer = o and o.rainbowTimer
+	local noMapColor = o and o.noMapColor
+	if not noMapColor then
+		for key, value in pairs(self.colorMap) do
+			if value == -1 then
+				mapColor(key,rainbow[rainbowTimer])
+			elseif value == -2 then
+				mapColor(key,rainbow2[rainbowTimer])
+			else
+				mapColor(key,value)
+			end
 		end
 	end
 	spr(self.image,x,y,self.transparentColor,1,self.flip and 1 or 0)
-	for key, _ in pairs(self.colorMap) do
-		resetColor(key)
+	if not noMapColor then
+		for key, _ in pairs(self.colorMap) do
+			resetColor(key)
+		end
 	end
 end
 
-function drawIcon(icon,x,y,typeIcon)
+function drawIcon(icon,x,y,o)
+	local typeIcon = o and o.typeIcon
+	local noMapColor = o and o.noMapColor
 	if type(icon) == 'number' then
 		spr(icon,x,y,0)
 	elseif getmetatable(icon) == Icon then
 		if icon.typeIcon and typeIcon then
 			if type(icon.typeIcon) == 'number' then
-				mapColor(icon.typeIcon,typeIcon)
-				icon:draw(x,y)
-				resetColor(icon.typeIcon)
-			elseif type(icon.typeIcon) == 'table' then
-				for _,c in ipairs(icon.typeIcon) do
-					mapColor(c,typeIcon)
+				if not noMapColor then
+					mapColor(icon.typeIcon,typeIcon)
 				end
-				icon:draw(x,y)
-				resetColors(icon.typeIcon)
+				icon:draw(x,y,o)
+				if not noMapColor then
+					resetColor(icon.typeIcon)
+				end
+			elseif type(icon.typeIcon) == 'table' then
+				if not noMapColor then
+					for _,c in ipairs(icon.typeIcon) do
+						mapColor(c,typeIcon)
+					end
+				end
+				icon:draw(x,y,o)
+				if not noMapColor then
+					resetColors(icon.typeIcon)
+				end
 			end
 		elseif icon.isRainbow then
-			icon:draw(x,y,typeIcon)
+			icon:draw(x,y,o)
 		else
-			icon:draw(x,y)
+			icon:draw(x,y,o)
 		end
 	end
 end

@@ -148,8 +148,10 @@ function Lightning:onEvoke()
 	return self:damage(self.evokeValue)
 end
 
-function Lightning:onPassive()
-	player:triggerEvent('onOrbPassive',self)
+function Lightning:onPassive(noEvent)
+	if not noEvent then
+		player:triggerEvent('onOrbPassive',self)
+	end
 	return self:damage(self.value)
 end
 
@@ -183,8 +185,10 @@ function Frost:onEvoke()
 	return { GainBlockAction:new{target=self.owner,value=self.evokeValue} }
 end
 
-function Frost:onPassive()
-	player:triggerEvent('onOrbPassive',self)
+function Frost:onPassive(noEvent)
+	if not noEvent then
+		player:triggerEvent('onOrbPassive',self)
+	end
 	return { GainBlockAction:new{target=self.owner,value=self.value} }
 end
 
@@ -224,8 +228,10 @@ function Dark:onEvoke()
 	}
 end
 
-function Dark:onPassive()
-	player:triggerEvent('onOrbPassive',self)
+function Dark:onPassive(noEvent)
+	if not noEvent then
+		player:triggerEvent('onOrbPassive',self)
+	end
 	local value = self.value
 	return { AnonymousAction:new(function () self.evokeValue = self.evokeValue + value end) }
 end
@@ -248,8 +254,10 @@ function Plasma:onEvoke()
 	return { GainEnergyAction:new(self.evokeValue) }
 end
 
-function Plasma:onPassive()
-	player:triggerEvent('onOrbPassive',self)
+function Plasma:onPassive(noEvent)
+	if not noEvent then
+		player:triggerEvent('onOrbPassive',self)
+	end
 	return { GainEnergyAction:new(self.value) }
 end
 
@@ -932,7 +940,7 @@ function LoopPower:onTurnStart()
 			if getmetatable(orb) == OrbSlot then
 				return
 			end
-			for i,action in ipairs(orb:onPassive()) do
+			for i,action in ipairs(orb:onPassive(true)) do
 				addAction(i,action)
 			end
 		end))
@@ -977,7 +985,9 @@ function Recycle:use()
 				local cost = hand[cardIndex].card:getCost()
 				cost = cost == -1 and energy or cost
 				addAction(1,ExhaustCardAction:new{cardItem=hand[cardIndex],show=true})
-				addAction(2,GainEnergyAction:new(cost))
+				if cost > 0 then
+					addAction(2,GainEnergyAction:new(cost))
+				end
 				removeHand(cardIndex)
 			else
 				openWindowAbove(HandSelectWindow:new{cardItems=hand,title='Choose a Card to Exhaust',max=1},function (cards)
@@ -986,7 +996,9 @@ function Recycle:use()
 						local cost = hand[cardIndex].card:getCost()
 						cost = cost == -1 and energy or cost
 						addAction(1,ExhaustCardAction:new{cardItem=cardItem})
-						addAction(2,GainEnergyAction:new(cost))
+						if cost > 0 then
+							addAction(2,GainEnergyAction:new(cost))
+						end
 						removeHand(cardIndex)
 					end
 				end)
@@ -1525,18 +1537,13 @@ function DataDisk:onCombatStart()
 	addAction(ApplyPowerAction:new(player,FocusPower:new(player,1)))
 end
 
-GoldPlatedCables = Relic:new{ name='Gold-Plated Cables',tier='uncommon',icon=228,triggering=false,description='Your rightmost orb triggers its passive an additional time.' }
+GoldPlatedCables = Relic:new{ name='Gold-Plated Cables',tier='uncommon',icon=228,description='Your rightmost orb triggers its passive an additional time.' }
 function GoldPlatedCables:onOrbPassive(orb)
-	if self.triggering then
-		return
-	end
 	if #player.orbs > 0 and orb == player.orbs[1] then
 		addAction(AnonymousAction:new(function ()
-			self.triggering = true
-			for _,action in ipairs(orb:onPassive()) do
+			for _,action in ipairs(orb:onPassive(true)) do
 				addAction(action)
 			end
-			self.triggering = false
 		end))
 	end
 end

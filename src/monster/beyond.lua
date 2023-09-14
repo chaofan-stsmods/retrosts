@@ -487,12 +487,14 @@ function WrithingMass:nextIntent(first)
 end
 
 ReactivePower = Power:new{icon=344,stackable=false}
-function ReactivePower:onDamaged()
-	addAction(AnonymousAction:new(function ()
-		self.owner.lastSecondIntent = self.owner.lastIntent
-		self.owner.lastIntent = self.owner.intent
-	end))
-	addAction(NextIntentAction:new(self.owner,false,false))
+function ReactivePower:onDamaged(value,source,type)
+	if value > 0 and source == player and type == 'attack' then
+		addAction(AnonymousAction:new(function ()
+			self.owner.lastSecondIntent = self.owner.lastIntent
+			self.owner.lastIntent = self.owner.intent
+		end))
+		addAction(NextIntentAction:new(self.owner,false,false))
+	end
 end
 
 Reptomancer = Monster:new{ maxHp=190,width=6,height=5,strikeDmg=13,biteDmg=30,daggerCount=1,type='elite' }
@@ -567,6 +569,15 @@ function Reptomancer:nextIntent(first)
 		})
 		if self.intent == 'summon' and table.count(enemies,function (enemy) return enemy.alive end) >= 5 then
 			self:setIntent('strike','attackDebuff',self.strikeDmg,2)
+		end
+	end
+end
+
+function Reptomancer:die()
+	Monster.die(self)
+	for _,enemy in ipairs(enemies) do
+		if enemy.alive and enemy ~= self then
+			addAction(SuicideAction:new{target=enemy})
 		end
 	end
 end

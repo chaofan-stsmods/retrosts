@@ -227,7 +227,7 @@ function MerchantWindow:drawGoods()
 			local y = 80+self.yOffset
 			if not isDarken then
 				mapColors(0,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15)
-				relic:drawImage(x+1,y+1,true)
+				drawIcon(relic.icon,x+1,y+1,{noMapColor=true})
 				resetColors()
 			end
 			relic:drawImage(x,y,true)
