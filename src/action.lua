@@ -1067,3 +1067,21 @@ function AddOrbSlotAction:tick()
 	Action.tick(self)
 end
 
+ChangeStanceAction = Action:new{duration=10,stance=nil}
+function ChangeStanceAction:new(stance)
+	return Action.new(self,{stance=stance})
+end
+
+function ChangeStanceAction:tick()
+	if self.duration == self.startDuration then
+		if player.stance == self.stance then
+			self.isDone = true
+			return
+		end
+		player:triggerEvent('onExitStance',player.stance)
+		player.stance = self.stance
+		player:applyPowers()
+		player:triggerEvent('onEnterStance',player.stance)
+	end
+	Action.tick(self)
+end

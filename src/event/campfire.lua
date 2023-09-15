@@ -18,9 +18,9 @@ function CampfireEvent:drawBackground()
 	act:drawBackground()
 	player:drawImage()
 	if self.screen == 'intro' then
-		sprmap(12,37,4,4,64,58,0)
+		sprmap(12,37,4,4,68,58,0)
 	else
-		sprmap(12,41,4,2,64,73,8)
+		sprmap(12,41,4,2,68,73,8)
 	end
 end
 

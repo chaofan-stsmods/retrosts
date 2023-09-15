@@ -724,6 +724,15 @@ function Shiv:use(target)
 	return { DamageAction:new{source=player,target=target,value=self.damage} }
 end
 
+Miracle = ColorlessCard:new{
+	name='Miracle',description='Retain. NL Gain {Energy}. NL Exhaust.',baseCost=0,type='skill',rarity='special',
+	playerTarget=true,baseMagic=1,upgrade={baseMagic=2,description='Retain. NL Gain {Energy}{Energy}. NL Exhaust.'},exhaust=true,
+	retain=true,
+}
+function Miracle:use()
+	return { GainEnergyAction:new(self.magic) }
+end
+
 colorlessCards = {
 	-- status
 	Wound,Dazed,Burn,Slimed,Void,

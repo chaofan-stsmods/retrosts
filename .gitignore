@@ -3,3 +3,4 @@ out/**
 *.gif
 *.png
 *.log
+stsdebug.lua

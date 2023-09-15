@@ -44,5 +44,5 @@ end
 v=v<<1
 end
 end
-load(table.concat(r,''))()
+return load(table.concat(r))()
 end

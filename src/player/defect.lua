@@ -1527,17 +1527,19 @@ blueCards = {
 }
 
 -- relics
-CrackedCore = Relic:new{ name='Cracked Core',tier='basic',icon=243,description='At the start of each combat, channel #11#1#12# {Lightning}.' }
+BlueRelic = Relic:new{colorName='blue'}
+
+CrackedCore = BlueRelic:new{ name='Cracked Core',tier='basic',icon=243,description='At the start of each combat, channel #11#1#12# {Lightning}.' }
 function CrackedCore:onCombatStart()
 	addAction(ChannelAction:new(Lightning:new{owner=player}))
 end
 
-DataDisk = Relic:new{ name='Data Disk',tier='common',icon=244,description='Start each combat with #11#1#12# {Focus}.' }
+DataDisk = BlueRelic:new{ name='Data Disk',tier='common',icon=244,description='Start each combat with #11#1#12# {Focus}.' }
 function DataDisk:onCombatStart()
 	addAction(ApplyPowerAction:new(player,FocusPower:new(player,1)))
 end
 
-GoldPlatedCables = Relic:new{ name='Gold-Plated Cables',tier='uncommon',icon=228,description='Your rightmost orb triggers its passive an additional time.' }
+GoldPlatedCables = BlueRelic:new{ name='Gold-Plated Cables',tier='uncommon',icon=228,description='Your rightmost orb triggers its passive an additional time.' }
 function GoldPlatedCables:onOrbPassive(orb)
 	if #player.orbs > 0 and orb == player.orbs[1] then
 		addAction(AnonymousAction:new(function ()
@@ -1548,12 +1550,12 @@ function GoldPlatedCables:onOrbPassive(orb)
 	end
 end
 
-SymbioticVirus = Relic:new{ name='Symbiotic Virus',tier='uncommon',icon=229,description='At the start of each combat, channel #11#1#12# {Dark}.' }
+SymbioticVirus = BlueRelic:new{ name='Symbiotic Virus',tier='uncommon',icon=229,description='At the start of each combat, channel #11#1#12# {Dark}.' }
 function SymbioticVirus:onCombatStart()
 	addAction(ChannelAction:new(Dark:new{owner=player}))
 end
 
-EmotionChip = Relic:new{ name='Emotion Chip',tier='rare',icon=245,damaged=false,description='If you lost HP during the previous turn, trigger the passive ability of all orbs at the start of turn.' }
+EmotionChip = BlueRelic:new{ name='Emotion Chip',tier='rare',icon=245,damaged=false,description='If you lost HP during the previous turn, trigger the passive ability of all orbs at the start of turn.' }
 function EmotionChip:onDamaged(value)
 	if value > 0 then
 		self.damaged = true
@@ -1575,7 +1577,7 @@ function EmotionChip:onTurnStart()
 	end
 end
 
-FrozenCore = Relic:new{ name='Frozen Core',tier='boss',icon=246,replaces=CrackedCore,description='Replaces #11#Cracked Core#12#. If you end turn with any empty Orb slots, channel #11#1#12# {Frost}.' }
+FrozenCore = BlueRelic:new{ name='Frozen Core',tier='boss',icon=246,replaces=CrackedCore,description='Replaces #11#Cracked Core#12#. If you end turn with any empty Orb slots, channel #11#1#12# {Frost}.' }
 function FrozenCore:onTurnEnd()
 	if table.anyMatch(player.orbs,function(orb) return getmetatable(orb) == OrbSlot end) then
 		local orb = Frost:new{owner=player}
@@ -1588,7 +1590,7 @@ function FrozenCore:onTurnEnd()
 	end
 end
 
-Inserter = Relic:new{ name='Inserter',tier='boss',icon=231,counter=0,description='Every #11#2#12# turns, gain #11#1#12# orb slot.' }
+Inserter = BlueRelic:new{ name='Inserter',tier='boss',icon=231,counter=0,description='Every #11#2#12# turns, gain #11#1#12# orb slot.' }
 function Inserter:onTurnStart()
 	self.counter = self.counter + 1
 	if self.counter == 2 then
@@ -1597,12 +1599,12 @@ function Inserter:onTurnStart()
 	end
 end
 
-NuclearBattery = Relic:new{ name='Nuclear Battery',tier='boss',icon=247,description='At the start of each combat, channel #11#1#12# {Plasma}.' }
+NuclearBattery = BlueRelic:new{ name='Nuclear Battery',tier='boss',icon=247,description='At the start of each combat, channel #11#1#12# {Plasma}.' }
 function NuclearBattery:onCombatStart()
 	addAction(ChannelAction:new(Plasma:new{owner=player}))
 end
 
-RunicCapacitor = Relic:new{ name='Runic Capacitor',tier='shop',icon=230,description='Start each combat with #11#3#12# additional orb slots.' }
+RunicCapacitor = BlueRelic:new{ name='Runic Capacitor',tier='shop',icon=230,description='Start each combat with #11#3#12# additional orb slots.' }
 function RunicCapacitor:onCombatStart()
 	addAction(AddOrbSlotAction:new(3))
 end

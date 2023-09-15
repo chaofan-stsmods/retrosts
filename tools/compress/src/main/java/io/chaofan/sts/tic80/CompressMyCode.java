@@ -70,25 +70,8 @@ public class CompressMyCode {
 
         StringBuilder sb = new StringBuilder();
         sb.append(String.join("\n",prefixLines));
-        sb.append("\nloadDecode(\n");
-        /*
-        int lineSize = 200;
-        for (int i = 0, j = Math.min(lineSize, base64String.length());
-             i < base64String.length();
-             i = j, j = Math.min(j + lineSize, base64String.length())) {
-            sb.append("'");
-            sb.append(base64String, i, j);
-            sb.append("'..\n");
-        }
-        sb.setLength(sb.length() - 3);
-        /*/
-        sb.append("'");
-        sb.append(base64String);
-        sb.append("'");
-        //*/
-        sb.append(",\n'");
-        sb.append(root.toCompressedLuaTree());
-        sb.append("'\n)\n");
+        String luaTree = root.toCompressedLuaTree();
+        putLoadDecode(sb, base64String, luaTree);
         System.out.println("Final code length: " + sb.length());
         sb.append(String.join("\n",suffixLines));
 
@@ -102,6 +85,42 @@ public class CompressMyCode {
 
         Files.write(Paths.get(basePath + "\\compressed.lua"), sb.toString().getBytes(StandardCharsets.UTF_8));
         Files.write(Paths.get(basePath + "\\uncompressed.lua"), code.getBytes(StandardCharsets.UTF_8));
+    }
+
+    private static void putLoadDecode(StringBuilder sb, String compressed, String tree) {
+        sb.append("\nloadDecode(\n");
+        //*
+        printString(compressed, sb);
+        /*/
+        sb.append("'");
+        sb.append(base64String);
+        sb.append("'");
+        //*/
+        sb.append(",\n");
+        //*
+        printString(tree, sb);
+        /*/
+        sb.append("'");
+        sb.append(root.toCompressedLuaTree());
+        sb.append("'");
+        //*/
+        sb.append("\n)\n");
+    }
+
+    private static void printString(String string, StringBuilder sb) {
+        int lineSize = 142;
+        sb.append("table.concat({\n");
+        for (int i = 0, j = Math.min(lineSize, string.length());
+             i < string.length();
+             i = j, j = Math.min(j + lineSize, string.length())) {
+            if (string.charAt(j - 1) == '\\' && string.charAt(j - 2) != '\\') {
+                j--;
+            }
+            sb.append("'");
+            sb.append(string, i, j);
+            sb.append("',\n");
+        }
+        sb.append("})");
     }
 
     public static byte[] huffman(String code, TreeNode[] rootContainer, boolean eachChar) throws IOException {

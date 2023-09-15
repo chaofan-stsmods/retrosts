@@ -3,7 +3,7 @@
 
 ---@class Player : Creature
 Player = {
-	x=30,y=52,tileBank=1,name=nil,drawCorpse=noop,energyYOffset=0,maxOrbs=0,orbs=nil,
+	x=30,y=52,tileBank=1,name=nil,drawCorpse=noop,energyYOffset=0,maxOrbs=0,orbs=nil,stance=nil,
 }
 Creature:new(Player)
 
@@ -12,6 +12,7 @@ playerEventListeners = {}
 function Player:new(o)
 	o = o or {}
 	o.orbs = {}
+	o.stance = Neutral
 	return Creature.new(self,o)
 end
 
@@ -51,6 +52,8 @@ function Player:drawAdditionalItems()
 		orb.showEvokeValue = i <= evokeCount
 		orb:tick()
 	end
+
+	self.stance:draw()
 end
 
 function Player:getAscensionMaxHPLoss()
@@ -64,12 +67,13 @@ function Player:onCombatStart()
 			self.orbs[i] = OrbSlot:new{owner=self}
 		end
 	end
+	self.stance = Neutral
 	self:triggerEvent('onCombatStart')
 	Creature.onCombatStart(self)
 end
 
 function Player:triggerEvent(name,...)
-	for _, item in ipairs(sortByPriority(potions,relics,self.powers,table.map(hand,function(cardItem) return cardItem.card end))) do
+	for _, item in ipairs(sortByPriority(potions,relics,self.powers,{self.stance},table.map(hand,function(cardItem) return cardItem.card end))) do
 		if item[name] then
 			item[name](item,...)
 		end
@@ -97,7 +101,7 @@ end
 
 function Player:triggerConditionEvent(name,default,...)
 	local result = default
-	for _, item in ipairs(sortByPriority(potions,relics,self.powers,table.map(hand,function(cardItem) return cardItem.card end))) do
+	for _, item in ipairs(sortByPriority(potions,relics,self.powers,{self.stance},table.map(hand,function(cardItem) return cardItem.card end))) do
 		if item[name] then
 			local b = item[name](item,...)
 			if b ~= nil then
@@ -115,7 +119,7 @@ function Player:triggerConditionEvent(name,default,...)
 end
 
 function Player:triggerReducerEvent(name,value,...)
-	for _, item in ipairs(sortByPriority(potions,relics,self.powers,table.map(hand,function(cardItem) return cardItem.card end))) do
+	for _, item in ipairs(sortByPriority(potions,relics,self.powers,{self.stance},table.map(hand,function(cardItem) return cardItem.card end))) do
 		if item[name] then
 			value = item[name](item,value,...) or value
 		end
@@ -142,6 +146,7 @@ function Player:onCombatEnd()
 	self.block = 0
 	self.powers = {}
 	self.orbs = {}
+	self.stance = Neutral
 end
 
 function Player:die()
@@ -198,6 +203,13 @@ end
 
 function Player:getEnding()
 	return IroncladEnding:new()
+end
+
+function Player:drawEnergyIndicator()
+	map(0,2,3,3,4,96,8)
+	local energyText = energy .. '/' .. maxEnergy
+	local width = strWidth(energyText)
+	printShadowed(energyText,16-width/2,105+self.energyYOffset,12)
 end
 
 function sortByPriority(...)
