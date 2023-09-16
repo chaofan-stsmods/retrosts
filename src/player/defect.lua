@@ -1468,9 +1468,8 @@ function Seek:use()
 	local amount = self.magic
 	return {
 		AnonymousAction:new(function ()
-			local cards = shallowcopy(drawPile)
 			local cardItems = {}
-			for i, card in ipairs(cards) do
+			for i, card in ipairs(drawPile) do
 				cardItems[i] = CardItem:new{card=card,x=0,y=136,tx=240,ty=136,isNotInHand=true}
 			end
 			if #cardItems == 0 then
@@ -1481,6 +1480,7 @@ function Seek:use()
 					insertHand(cardItem)
 				end
 			else
+				effectRandom:shuffle(cardItems)
 				local title = amount == 1 and 'Choose a Card to Put into Hand' or 'Choose Cards to Put into Hand ({#}/'..tostring(amount)..')'
 				openWindowAbove(CardGridSelectWindow:new{cardItems=cardItems,title=title,min=amount,max=amount},
 					function (cards)

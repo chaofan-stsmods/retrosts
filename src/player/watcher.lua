@@ -69,11 +69,16 @@ end
 function Watcher:getRelics()
 	return {
 		PureWater,
+		Damaru,
+		Duality,TeardropLocket,
+		CloakClasp,GoldenEye,
+		HolyWater,VioletLotus,
+		Melange,
 	}
 end
 
 function Watcher:getPotions()
-	return { }
+	return { BottledMiracle,StancePotion,Ambrosia }
 end
 
 function Watcher:getPronouns()
@@ -144,8 +149,10 @@ function Divinity:onAttack(damage)
 	return damage * 3
 end
 
-function Divinity:onTurnStart()
-	addAction(ChangeStanceAction:new(Neutral))
+function Divinity:onTurnStart(turn)
+	if turn ~= 1 then
+		addAction(ChangeStanceAction:new(Neutral))
+	end
 end
 
 function Divinity:draw()
@@ -209,10 +216,10 @@ function CalmEffect:tick()
 end
 
 local divinityEffectIcons = {
-	Icon:new{image=195,colorMap={0,8,0,8,0,8,0,8},transparentColor={0,1}},
-	Icon:new{image=195,colorMap={0,0,8,8,0,0,8,8},transparentColor={0,1}},
-	Icon:new{image=195,colorMap={0,0,0,0,8,8,8,8},transparentColor={0,1}},
-	Icon:new{image=195,colorMap={0,0,0,0,1,1,1,1},transparentColor={0,1}},
+	Icon:new{image=195,colorMap={0,8,0,8,0,8,0,8},transparentColor={0,1,3,5,7}},
+	Icon:new{image=195,colorMap={0,0,8,8,0,0,8,8},transparentColor={0,1,2,5,6}},
+	Icon:new{image=195,colorMap={0,0,0,0,8,8,8,8},transparentColor={0,1,2,3,4}},
+	Icon:new{image=195,colorMap={0,0,0,0,1,1,1,1},transparentColor={0,1,2,3,4}},
 }
 local divinityEffectIconSequence = { 4,3,2,1,1,1,2,3,4 }
 local divinityEffectIconInterval = 6
@@ -239,7 +246,7 @@ end
 
 Eruption = PurpleCard:new{
 	name='Eruption',description='Damage {Energy}. NL Enter Wrath.',rarity='basic',baseCost=2,playerTarget=true,
-	baseDamage=9,enemyTarget=true,upgrade={cost=1},
+	baseDamage=9,enemyTarget=true,upgrade={baseCost=1},
 }
 function Eruption:use(target)
 	return { DamageAction:new{target=target,source=player,value=self.damage},ChangeStanceAction:new(Wrath) }
@@ -247,10 +254,21 @@ end
 
 Vigilance = PurpleCard:new{
 	name='Vigilance',description='Gain !B! {Block}. NL Enter Calm.',rarity='basic',type='skill',baseCost=2,playerTarget=true,
-	baseBlock=8,upgrade={block=12},
+	baseBlock=8,upgrade={baseBlock=12},
 }
 function Vigilance:use()
 	return { GainBlockAction:new{target=player,value=self.block},ChangeStanceAction:new(Calm) }
+end
+
+MantraPower = Power:new{icon=icons.Mantra}
+function MantraPower:onAmountUpdated()
+	if self.amount >= 10 then
+		self.amount = self.amount % 10
+		addAction(ChangeStanceAction:new(Divinity))
+		if self.amount == 0 then
+			addAction(RemovePowerAction:new(self))
+		end
+	end
 end
 
 purpleCards = {
@@ -266,4 +284,81 @@ PureWater = PurpleRelic:new{
 }
 function PureWater:onCombatStart()
 	addAction(MakeTempCardToHandAction:new(Miracle:new()))
+end
+
+Damaru = PurpleRelic:new{ name='Damaru',tier='common',icon=244,description='At the start of turn, gain #11#1#12# {Mantra}.' }
+function Damaru:onTurnStart()
+	addAction(ApplyPowerAction:new(player,MantraPower:new(player,5)))
+end
+
+Duality = PurpleRelic:new{ name='Duality',tier='uncommon',icon=229,description='Whenever you play a {Attack}, gain #11#1#12# temporary {Dexterity}.' }
+function Duality:onUseCard(card)
+	if card.type == 'attack' then
+		addAction(ApplyPowerAction:new(player,DexterityPower:new(player,1)))
+		addAction(ApplyPowerAction:new(player,LoseDexterityPower:new(player,1)))
+	end
+end
+
+TeardropLocket = PurpleRelic:new{ name='Teardrop Locket',tier='uncommon',icon=230,description='Start each combat in Calm.' }
+function TeardropLocket:onCombatStart()
+	addAction(ChangeStanceAction:new(Calm))
+end
+
+CloakClasp = PurpleRelic:new{ name='Cloak Clasp',tier='rare',icon=231,description='At the end of turn, gain #11#1#12# {Block} for each card in hand.' }
+function CloakClasp:onTurnEnd()
+	addAction(GainBlockAction:new{target=player,value=#hand})
+end
+
+GoldenEye = PurpleRelic:new{ name='Golden Eye',tier='rare',icon=245,description='Whenever you Scry, Scry #11#2#12# additional cards.' }
+function GoldenEye:modifyScryAmount(amount)
+	return amount + 2
+end
+
+Melange = PurpleRelic:new{ name='Melange',tier='shop',icon=246,description='Whenever you shuffle draw pile, Scry #11#3#12#.' }
+function Melange:onShuffle()
+	addAction(ScryAction:new(3))
+end
+
+HolyWater = PurpleRelic:new{ name='Holy Water',tier='boss',icon=243,replaces=PureWater,description='Replaces #8#Pure Water#12#. At the start of each combat, add #11#3#12# Miracles into your hand.' }
+function HolyWater:onCombatStart()
+	addAction(MakeTempCardToHandAction:new(Miracle:new(),3))
+end
+
+VioletLotus = PurpleRelic:new{ name='Violet Lotus',tier='boss',icon=247,description='Whenever you exit Calm, gain an additional {Energy}.' }
+function VioletLotus:onExitStance(stance)
+	if stance == Calm then
+		addAction(GainEnergyAction:new(1))
+	end
+end
+
+-- potions
+BottledMiracle = Potion:new{
+	name='Bottled Miracle',icon=Icon:new{image=100,colorMap={13,4,4}},baseMagic=2,description='Add #11#!M!#12# Miracles to your hand.',rarity='common'
+}
+function BottledMiracle:use()
+	return { MakeTempCardToHandAction:new(Miracle:new(),self.magic) }
+end
+
+StancePotion = Potion:new{
+	name='Stance Potion',icon=Icon:new{image=100,colorMap={1,8,1}},description='Enter Calm or Wrath.',rarity='uncommon',
+}
+function StancePotion:use()
+	return { AnonymousAction:new(function ()
+		local calm = ColorlessCard:new{name='Calm',description='Upon exiting Calm, gain {Energy}{Energy}.',rarity='special',type='skill',baseCost=-2}
+		local wrath = ColorlessCard:new{name='Wrath',description='Deal and receive double attack damage.',rarity='special',type='skill',baseCost=-2}
+		openWindowAbove(CardRewardWindow:new{cards={wrath,calm},title='Choose One',canClose=false},function (cardItem)
+			if cardItem.card == calm then
+				addAction(ChangeStanceAction:new(Calm))
+			else
+				addAction(ChangeStanceAction:new(Wrath))
+			end
+		end)
+	end) }
+end
+
+Ambrosia = Potion:new{
+	name='Ambrosia',icon=Icon:new{image=107,colorMap={1,8}},description='Enter Divinity.',rarity='rare',
+}
+function Ambrosia:use()
+	return { ChangeStanceAction:new(Divinity) }
 end

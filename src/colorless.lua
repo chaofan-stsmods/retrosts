@@ -219,10 +219,12 @@ DeepBreath = ColorlessCard:new{
 	playerTarget=true,baseMagic=1,upgrade={baseMagic=2,description='Shuffle your discard pile into your draw pile. NL Draw !M! cards.'},
 }
 function DeepBreath:use()
-	return {
-		ShuffleAction:new(),
-		DrawCardAction:new(self.magic),
-	}
+	local actions = {}
+	if #discardPile > 0 then
+		table.insert(actions,ShuffleAction:new())
+	end
+	table.insert(actions,DrawCardAction:new(self.magic))
+	return actions
 end
 
 Discovery = ColorlessCard:new{
@@ -628,6 +630,7 @@ function SecretAction:tick()
 			table.remove(drawPile,table.indexOf(drawPile,cardItem.card))
 			insertHand(cardItem)
 		else
+			effectRandom:shuffle(cardItems)
 			openWindowAbove(CardGridSelectWindow:new{cardItems=cardItems,title='Choose a Card to Put into Hand',max=1},
 				function (cards)
 					for _, cardItem in ipairs(cards) do

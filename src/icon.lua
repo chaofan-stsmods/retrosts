@@ -90,6 +90,7 @@ icons = {
 	DrawCardEveryTurn = Icon:new{image=52,colorMap={[1]=15}},
 	Focus = Icon:new{image=198,colorMap={[5]=11,[6]=10}},
 	Bias = Icon:new{image=198,colorMap={[5]=2,[6]=4,[9]=2,[10]=3,[11]=4}},
+	Mantra = Icon:new{image=195,colorMap={8,8,0,8,0,8,0,8},transparentColor={0,3,5,7}},
 
 	OrbSlot = Icon:new{image=195,colorMap={[2]=12,[3]=13,[5]=13},transparentColor={0,1,4,6,7,10,11,12}},
 	Lightning = Icon:new{image=195,colorMap={[1]=4,[2]=4,[3]=4,[4]=4,[7]=4,[5]=12,[6]=12,[10]=4,[11]=12}},

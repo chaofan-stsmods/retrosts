@@ -1085,3 +1085,33 @@ function ChangeStanceAction:tick()
 	end
 	Action.tick(self)
 end
+
+ScryAction = Action:new{duration=10,amount=1}
+function ScryAction:new(amount)
+	return Action.new(self,{amount=amount})
+end
+
+function ScryAction:tick()
+	if self.duration == self.startDuration then
+		if #drawPile == 0 then
+			self.isDone = true
+			return
+		end
+		local amount = player:triggerReducerEvent('modifyScryAmount',self.amount)
+		amount = math.min(amount,#drawPile)
+		local cardItems = {}
+		for i=#drawPile,#drawPile-amount+1,-1 do
+			table.insert(cardItems,CardItem:new{card=drawPile[i],x=0,y=136,isNotInHand=true})
+		end
+		openWindowAbove(CardGridSelectWindow:new{cardItems=cardItems,title='Choose any number of cards to discard.',min=0,max=amount},
+			function (cards)
+				for _, cardItem in ipairs(cards) do
+					table.remove(drawPile,table.indexOf(drawPile,cardItem.card))
+					table.insert(discardPile,cardItem.card)
+					local effect = CardEffect:new{cardItem=cardItem,pauseDuration=1,duration=20,tx=240,ty=136}
+					addEffect(effect)
+				end
+			end)
+	end
+	Action.tick(self)
+end
