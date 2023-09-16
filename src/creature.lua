@@ -299,3 +299,20 @@ function Creature:addJumpAnimation()
 	end
 	table.insert(self.animations,animation)
 end
+
+function Creature:drawTooltips()
+	local x = self.x+self.width*8
+	local y = 20
+	local left = x > 160
+	if left then
+		x = self.x-80
+		x = math.max(80,x)
+	end
+	for _,power in ipairs(self.powers) do
+		y = y + drawPowerTooltip(power,x,y)*8
+		if y > 110 then
+			y = 20
+			x = x + (left and -80 or 80)
+		end
+	end
+end

@@ -668,7 +668,7 @@ function Rage:use()
 	return { ApplyPowerAction:new(player,RagePower:new(player,self.magic)) }
 end
 
-RagePower = Power:new{icon=17}
+RagePower = Power:new{icon=17,description='Whenever you play a {Attack} this turn, gain #11#!A!#12# {Block}.'}
 function RagePower:onUseCard(card)
 	if card.type == 'attack' then
 		addAction(GainBlockAction:new{target=self.owner,value=self.amount})
@@ -756,7 +756,7 @@ function DarkEmbrace:use()
 	return { ApplyPowerAction:new(player,DarkEmbracePower:new(player,1)) }
 end
 
-DarkEmbracePower = Power:new{icon=243}
+DarkEmbracePower = Power:new{icon=243,description='Whenever a card is exhausted, draw #11#!A!#12# card{s}.'}
 function DarkEmbracePower:onExhaust()
 	addAction(DrawCardAction:new(self.amount))
 end
@@ -769,7 +769,7 @@ function Combust:use()
 	return { ApplyPowerAction:new(player,CombustPower:new(player,self.magic)) }
 end
 
-CombustPower = Power:new{icon=19,hpLoss=1}
+CombustPower = Power:new{icon=19,hpLoss=1,description='At the end of turn, lose #11#!hpLoss!#12# HP and {Damage} #11#!A!#12# to all enemies.'}
 function CombustPower:onAmountUpdated(diff)
 	if diff > 0 then
 		self.hpLoss = self.hpLoss + 1
@@ -789,7 +789,7 @@ function Evolve:use()
 	return { ApplyPowerAction:new(player,EvolvePower:new(player,self.magic)) }
 end
 
-EvolvePower = Power:new{icon=195}
+EvolvePower = Power:new{icon=195,description='Whenever you draw a {Status}, draw #11#!A!#12# card{s}.'}
 function EvolvePower:onDraw(card)
 	if card.type == 'status' then
 		addAction(DrawCardAction:new(self.amount))
@@ -804,7 +804,7 @@ function FeelNoPain:use()
 	return { ApplyPowerAction:new(player,FeelNoPainPower:new(player,self.magic)) }
 end
 
-FeelNoPainPower = Power:new{icon=211}
+FeelNoPainPower = Power:new{icon=211,description='Whenever a card is exhausted, gain #11#!A!#12# {Block}.'}
 function FeelNoPainPower:onExhaust()
 	addAction(GainBlockAction:new{target=self.owner,value=self.amount})
 end
@@ -817,7 +817,7 @@ function FireBreathing:use()
 	return { ApplyPowerAction:new(player,FireBreathingPower:new(player,self.magic)) }
 end
 
-FireBreathingPower = Power:new{icon=227}
+FireBreathingPower = Power:new{icon=227,description='Whenever you draw a {Status} or {Curse}, {Damage} #11#!A!#12# to all enemies.'}
 function FireBreathingPower:onDraw(card)
 	if card.type == 'status' or card.type == 'curse' then
 		addAction(DamageAllEnemiesAction:new{source=player,value=self.amount,type='power'})
@@ -832,7 +832,7 @@ function FlameBarrier:use()
 	return { GainBlockAction:new{target=player,value=self.block}, ApplyPowerAction:new(player,FlameBarrierPower:new(player,self.magic)) }
 end
 
-FlameBarrierPower = Power:new{icon=196}
+FlameBarrierPower = Power:new{icon=196,description='When attacked, {Damage} #11#!A!#12# back.'}
 function FlameBarrierPower:onBeforeDamaged(value,source,type)
 	if source ~= player and type == 'attack' then
 		addAction(1,DamageAction:new{source=player,target=source,value=self.amount,type='power'})
@@ -851,7 +851,7 @@ function Rupture:use()
 	return { ApplyPowerAction:new(player,RupturePower:new(player,self.magic)) }
 end
 
-RupturePower = Power:new{icon=212}
+RupturePower = Power:new{icon=212,description='Whenever you lose HP from a card, gain #11#!A!#12# {Strength}.'}
 function RupturePower:onDamaged(value,source)
 	if source == self.owner and value > 0 then
 		addAction(ApplyPowerAction:new(player,StrengthPower:new(self.owner,self.amount)))
@@ -893,7 +893,7 @@ function Berserk:use()
 	return { ApplyPowerAction:new(player,VulnerablePower:new(player,self.magic)), ApplyPowerAction:new(player,BerserkPower:new(player,1)) }
 end
 
-BerserkPower = Power:new{icon=228}
+BerserkPower = Power:new{icon=228,description='At the start of turn, gain #11#!A!#12# {Energy}.'}
 function BerserkPower:onTurnStart()
 	addAction(GainEnergyAction:new(self.amount))
 end
@@ -906,7 +906,7 @@ function Brutality:use()
 	return { ApplyPowerAction:new(player,BrutalityPower:new(player,1)) }
 end
 
-BrutalityPower = Power:new{icon=244,hpLoss=1}
+BrutalityPower = Power:new{icon=244,hpLoss=1,description='At the start of turn, lose #11#!A!#12# HP and draw #11#!A!#12# card{s}.'}
 function BrutalityPower:onAmountUpdated(diff)
 	if diff > 0 then
 		self.hpLoss = self.hpLoss + 1
@@ -926,7 +926,7 @@ function DemonForm:use()
 	return { ApplyPowerAction:new(player,DemonFormPower:new(player,self.magic)) }
 end
 
-DemonFormPower = Power:new{icon=197}
+DemonFormPower = Power:new{icon=197,description='At the start of turn, gain #11#!A!#12# {Strength}.'}
 function DemonFormPower:onTurnStart()
 	addAction(ApplyPowerAction:new(player,StrengthPower:new(player,self.amount)))
 end
@@ -939,7 +939,7 @@ function Juggernaut:use()
 	return { ApplyPowerAction:new(player,JuggernautPower:new(player,self.magic)) }
 end
 
-JuggernautPower = Power:new{icon=213}
+JuggernautPower = Power:new{icon=213,description='Whenever you gain {Block}, {Damage} #11#!A!#12# to a random enemy.'}
 function JuggernautPower:onGainBlock()
 	addAction(DamageRandomEnemyAction:new{source=self.owner,value=self.amount,type='power'})
 end
@@ -985,7 +985,7 @@ function Corruption:use()
 	return { ApplyPowerAction:new(player,CorruptionPower:new(player)) }
 end
 
-CorruptionPower = Power:new{icon=229,stackable=false,priority=150}
+CorruptionPower = Power:new{icon=229,stackable=false,priority=150,description='{Skill} costs 0. Whenever you play a {Skill}, exhaust it.'}
 function CorruptionPower:modifyCost(cost,card)
 	if card.type == 'skill' then
 		card.costForOneTurnPlay = nil
@@ -1017,14 +1017,14 @@ function DoubleTap:use()
 	return { ApplyPowerAction:new(player,DoubleTapPower:new(player,self.magic)) }
 end
 
-DoubleTapPower = Power:new{icon=20}
+DoubleTapPower = Power:new{icon=20,description='your next #11#!A!#12# {Attack} {is} played twice this turn.'}
 function DoubleTapPower:onUseCard(card,target,useCardAction)
 	if card.type == 'attack' and not useCardAction.isDoubleTap then
 		local cardItem = useCardAction.cardItem:copy()
 		local action = UseCardAction:new{cardItem=cardItem,isDoubleTap=true,tempCard=true,free=true,target=target,energyOnUse=useCardAction.energyOnUse}
 		action.useCardPosition = fillCardPosition(cardItem,2)
 		table.insert(limbo,cardItem)
-		addAction(ReducePowerAction:new(self,1))
+		addAction(1,ReducePowerAction:new(self,1))
 		addAction(action)
 	end
 end

@@ -129,6 +129,22 @@ function drawOverlay()
 	end
 	drawHand()
 	drawLimbo()
+	if combatSelection.type == 'player' then
+		drawSelectionBox(player.x,player.y,8*player.width,8*player.height)
+		player:drawTooltips()
+	elseif combatSelection.type == 'orb' then
+		local orb = player.orbs[combatSelection.index]
+		if orb then
+			drawSelectionBox(orb.x-7,orb.y-7,14,14)
+			orb:drawTooltips()
+		end
+	elseif combatSelection.type == 'enemy' then
+		local enemy = enemies[combatSelection.index]
+		if enemy then
+			drawSelectionBox(enemy.x,enemy.y,8*enemy.width,8*enemy.height)
+			enemy:drawTooltips()
+		end
+	end
 end
 
 function drawHand()
@@ -231,6 +247,10 @@ function combatControls()
 				combatSelection.type = 'discardPile'
 				handUI.cursorOnSelf = false
 				handUI.hideSelection = true
+			elseif btnp(0) then
+				combatSelection.type = 'player'
+				handUI.cursorOnSelf = false
+				handUI.hideSelection = true
 			end
 		end
 
@@ -294,6 +314,10 @@ function combatControls()
 			end
 			local gridView = CardGridSelectWindow:new{title='Your Draw Pile',cardItems=cardItems,min=0,max=0,canClose=true}
 			openWindowAbove(gridView)
+		elseif btnp(0) then
+			combatSelection.type = 'player'
+			handUI.cursorOnSelf = false
+			handUI.hideSelection = true
 		end
 	elseif combatSelection.type == 'discardPile' then
 		if btnp(2) then
@@ -302,6 +326,10 @@ function combatControls()
 		elseif btnp(0) then
 			if #exhaustPile > 0 then
 				combatSelection.type = 'exhaustPile'
+			else
+				combatSelection.type = 'player'
+				handUI.cursorOnSelf = false
+				handUI.hideSelection = true
 			end
 		elseif btnp(4) then
 			local cardItems = table.map(discardPile, function (card) return CardItem:new{card=card,x=240,y=136,isNotInHand=true} end)
@@ -318,6 +346,57 @@ function combatControls()
 			local cardItems = table.map(exhaustPile, function (card) return CardItem:new{card=card,x=240,y=128,isNotInHand=true} end)
 			local gridView = CardGridSelectWindow:new{title='Exhasted Cards',cardItems=cardItems,min=0,max=0,canClose=true}
 			openWindowAbove(gridView)
+		elseif btnp(0) then
+			combatSelection.type = 'player'
+			handUI.cursorOnSelf = false
+			handUI.hideSelection = true
+		end
+	elseif combatSelection.type == 'player' then
+		if btnp(0) then
+			combatSelection.type = 'orb'
+			combatSelection.index = 0
+		elseif btnp(1) then
+			combatSelection.type = 'hand'
+			handUI.cursorOnSelf = true
+		elseif btnp(3) then
+			combatSelection.type = 'enemy'
+			combatSelection.index = 0
+		end
+	elseif combatSelection.type == 'enemy' then
+		if combatSelection.index == 0 or not enemyCanInteract(combatSelection.index) then
+			combatSelection.index = nextOrOtherIndexInTableIf(enemies,combatSelection.index,enemyCanInteract)
+			if combatSelection.index == 0 then
+				combatSelection.type = 'player'
+				return
+			end
+		end
+
+		if btnp(1) then
+			combatSelection.type = 'hand'
+			handUI.cursorOnSelf = true
+		elseif btnp(2) then
+			local oldIndex = combatSelection.index
+			combatSelection.index = previousOrOtherIndexInTableIf(enemies,combatSelection.index,enemyCanInteract)
+			if oldIndex == combatSelection.index then
+				combatSelection.type = 'player'
+			end
+		elseif btnp(3) then
+			combatSelection.index = nextOrOtherIndexInTableIf(enemies,combatSelection.index,enemyCanInteract)
+		end
+	elseif combatSelection.type == 'orb' then
+		if combatSelection.index == 0 then
+			if #player.orbs > 0 then
+				combatSelection.index = 1
+			else
+				combatSelection.type = 'player'
+			end
+		end
+		if btnp(1) then
+			combatSelection.type = 'player'
+		elseif btnp(2) then
+			combatSelection.index = limit(combatSelection.index+1,1,#player.orbs)
+		elseif btnp(3) then
+			combatSelection.index = limit(combatSelection.index-1,1,#player.orbs)
 		end
 	end
 

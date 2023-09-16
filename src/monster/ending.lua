@@ -98,7 +98,7 @@ function CorruptHeart:die()
 	self.visible = true
 end
 
-InvinciblePower = Power:new{icon=430}
+InvinciblePower = Power:new{icon=430,description='Can only lose #11#!A!#12# more HP this turn.'}
 function InvinciblePower:new(owner,amount)
 	local result = Power.new(self,owner,amount)
 	result.initialAmount = amount
@@ -123,7 +123,7 @@ function InvinciblePower:onBeforeHpLoss(value)
 	end
 end
 
-BeatOfDeathPower = Power:new{icon=431}
+BeatOfDeathPower = Power:new{icon=431,description='Whenever you play a card, take #11#!A!#12# damage.'}
 function BeatOfDeathPower:onUseCard()
 	addAction(DamageAction:new{target=player,source=self.owner,value=self.amount,type='power'})
 end
@@ -293,8 +293,16 @@ function SpireSpear:die()
 	end
 end
 
-SurroundedPower = Power:new{icon=416,faceLeft=false,stackable=false}
+SurroundedPower = Power:new{icon=416,faceLeft=false,stackable=false,description='Receive #11#50%#12# more damage if attacked from behind. Use targeting cards or potions to change your orientation.'}
 function SurroundedPower:onUseCard(_,target)
+	self:changeTarget(target)
+end
+
+function SurroundedPower:onUsePotion(_,_,target)
+	self:changeTarget(target)
+end
+
+function SurroundedPower:changeTarget(target)
 	if target == nil then
 		return
 	end
@@ -322,7 +330,7 @@ function SurroundedPower:onUseCard(_,target)
 	end
 end
 
-BackAttackPower = Power:new{icon=353,priority=150,stackable=false}
+BackAttackPower = Power:new{icon=353,priority=150,stackable=false,description='Deals #11#50%#12# more damage as it is attacking you from behind.'}
 function BackAttackPower:onAttack(damage)
 	return damage * 1.5
 end

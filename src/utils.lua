@@ -137,14 +137,40 @@ end
 
 function drawItemTooltip(item,x,y,width,bottomAlign)
 	width = width or 10
-	local _,h = drawDescription(item,item.description,-width*8,0,(width-1)*8,999,12)
+	local _,h = drawDescription(item,item.description or '',-width*8,0,(width-1)*8,999,12)
 	local boxX = math.min(x,240-width*8)
+	local height = math.floor(h/8+2.5)
 	if bottomAlign then
-		y = y-math.floor(h/8+2.5)*8
+		y = y-height*8
 	end
-	drawTooltipBox(boxX,y,width,math.floor(h/8+2.5))
-	print(item.name,boxX+4,y+4,isDarken and darkenColorList[4+1] or 4,false,1,true)
-	drawDescription(item,item.description,boxX+4,y+14,(width-1)*8,999,12)
+	drawTooltipBox(boxX,y,width,height)
+	if item.name then
+		print(item.name,boxX+4,y+4,isDarken and darkenColorList[4+1] or 4,false,1,true)
+	elseif item.icon then
+		drawIcon(item.icon,boxX+4,y+4)
+	end
+	drawDescription(item,item.description or '',boxX+4,y+14,(width-1)*8,999,12)
+	return height
+end
+
+function drawPowerTooltip(item,x,y,width,bottomAlign)
+	width = width or 10
+	icons.TempIcon = item.icon or 0
+	local description = '{TempIcon} '..(item.description or '')
+	if item.amount == 1 then
+		description = description:gsub('{s}',''):gsub('{is}','is')
+	else
+		description = description:gsub('{s}','s'):gsub('{is}','are')
+	end
+	local w,h = drawDescription(item,description,-width*8,0,width*8-4,999,12)
+	local boxX = math.min(x,240-width*8)
+	local height = math.floor(h/8+1.5)
+	if bottomAlign then
+		y = y-height*8
+	end
+	drawTooltipBox(boxX,y,width,height)
+	drawDescription(item,description,boxX+math.min(4,width*4-w//2),y+5,width*8-4,999,12)
+	return height
 end
 
 function drawTooltipBox(x,y,w,h)

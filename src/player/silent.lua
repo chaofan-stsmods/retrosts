@@ -160,7 +160,10 @@ function Bane:use(target)
 	return actions
 end
 
-PoisonPower = Power:new{icon=icons.Poison,debuff=true,healthBarColor=6}
+PoisonPower = Power:new{
+	icon=icons.Poison,debuff=true,healthBarColor=6,
+	description='At the start of turn, lose #11#!A!#12# HP, then reduce {Poison} by #11#1#12#.'
+}
 function PoisonPower:onTurnStart()
 	addAction(DamageAction:new{target=self.owner,source=player,value=self.amount,color=6,type='hpLoss'})
 	addAction(ReducePowerAction:new(self,1))
@@ -230,7 +233,7 @@ function FlyingKnee:use(target)
 	return { DamageAction:new{target=target,source=player,value=self.damage}, ApplyPowerAction:new(player,EnergizedPower:new(player,1)) }
 end
 
-EnergizedPower = Power:new{icon=211}
+EnergizedPower = Power:new{icon=211,description='Gain #11#!A!#12# additional {Energy} next turn.'}
 function EnergizedPower:onTurnStart()
 	addAction(GainEnergyAction:new(self.amount))
 	addAction(RemovePowerAction:new(self))
@@ -336,7 +339,7 @@ function Accuracy:use()
 	return { ApplyPowerAction:new(player,AccuracyPower:new(player,self.magic)) }
 end
 
-AccuracyPower = Power:new{icon=196}
+AccuracyPower = Power:new{icon=196,description='Shivs +#11#!A!#12# damage.'}
 function AccuracyPower:onAttack(damage,_,card)
 	if getmetatable(card) == Shiv then
 		return damage + self.amount
@@ -379,7 +382,7 @@ function Blur:use()
 	return { GainBlockAction:new{target=player,value=self.block}, ApplyPowerAction:new(player,BlurPower:new(player,1)) }
 end
 
-BlurPower = TurnBasedPower:new{icon=212}
+BlurPower = TurnBasedPower:new{icon=212,description='{Block} is not removed at the start of next #11#!A!#12# turn{s}.'}
 function BlurPower:onBeforeTurnStartLoseBlock()
 	return 0
 end
@@ -446,7 +449,7 @@ function Choke:use(target)
 	return { DamageAction:new{target=target,source=player,value=self.damage}, ApplyPowerAction:new(player,ChokePower:new(target,self.magic)) }
 end
 
-ChokePower = Power:new{icon=197}
+ChokePower = Power:new{icon=197,description='Whenever you play a card this turn, loses #11#!A!#12# HP.'}
 function ChokePower:onUseCard()
 	addAction(DamageAction:new{target=self.owner,source=player,value=self.amount,type='hpLoss'})
 end
@@ -649,7 +652,7 @@ function InfiniteBlades:use()
 	return { ApplyPowerAction:new(player,InfiniteBladesPower:new(player,1)) }
 end
 
-InfiniteBladesPower = Power:new{icon=213}
+InfiniteBladesPower = Power:new{icon=213,description='At the start of turn, add #11#!A!#12# Shiv{s} into hand.'}
 function InfiniteBladesPower:onTurnStart()
 	addAction(MakeTempCardToHandAction:new(Shiv:new(),self.amount))
 end
@@ -684,7 +687,7 @@ function NoxiousFumes:use()
 	return { ApplyPowerAction:new(player,NoxiousFumesPower:new(player,self.magic)) }
 end
 
-NoxiousFumesPower = Power:new{icon=198}
+NoxiousFumesPower = Power:new{icon=198,description='At the start of turn, apply #11#!A!#12# {Poison} to all enemies.'}
 function NoxiousFumesPower:onTurnStart()
 	for _, enemy in ipairs(enemies) do
 		addAction(ApplyPowerAction:new(player,PoisonPower:new(enemy,self.amount)))
@@ -797,7 +800,7 @@ function WellLaidPlans:use()
 	return { ApplyPowerAction:new(player,WellLaidPlansPower:new(player,self.magic)) }
 end
 
-WellLaidPlansPower = Power:new{icon=214,priority=150}
+WellLaidPlansPower = Power:new{icon=214,priority=150,description='At the end of turn, you may retain #11#!A!#12# card{s}.'}
 function WellLaidPlansPower:onTurnEnd()
 	if not hasRelic(RunicPryamid) and table.anyMatch(hand,function (cardItem) return not cardItem.card.retain and not cardItem.card.tempRetain end) then
 		addAction(AnonymousAction:new(function ()
@@ -819,7 +822,7 @@ function AThousandCuts:use()
 	return { ApplyPowerAction:new(player,AThousandCutsPower:new(player,self.magic)) }
 end
 
-AThousandCutsPower = Power:new{icon=199}
+AThousandCutsPower = Power:new{icon=199,description='Whenever you play a card, {Damage} #11#!A!#12# to all enemies.'}
 function AThousandCutsPower:onUseCard()
 	addAction(DamageAllEnemiesAction:new{source=self.owner,value=self.amount,type='power'})
 end
@@ -840,7 +843,7 @@ function AfterImage:use()
 	return { ApplyPowerAction:new(player,AfterImagePower:new(player,self.magic)) }
 end
 
-AfterImagePower = Power:new{icon=215}
+AfterImagePower = Power:new{icon=215,description='Whenever you play a card, gain #11#!A!#12# {Block}.'}
 function AfterImagePower:onUseCard()
 	addAction(GainBlockAction:new{target=self.owner,value=self.amount})
 end
@@ -882,14 +885,14 @@ function Burst:use()
 	return { ApplyPowerAction:new(player,BurstPower:new(player,self.magic)) }
 end
 
-BurstPower = Power:new{icon=232}
+BurstPower = Power:new{icon=232,description='your next #11#!A!#12# {Skill} {is} played twice this turn.'}
 function BurstPower:onUseCard(card,target,useCardAction)
 	if card.type == 'skill' and not useCardAction.isDoubleTap then
 		local cardItem = useCardAction.cardItem:copy()
 		local action = UseCardAction:new{cardItem=cardItem,isDoubleTap=true,tempCard=true,free=true,target=target,energyOnUse=useCardAction.energyOnUse}
 		action.useCardPosition = fillCardPosition(cardItem,2)
 		table.insert(limbo,cardItem)
-		addAction(ReducePowerAction:new(self,1))
+		addAction(1,ReducePowerAction:new(self,1))
 		addAction(action)
 	end
 end
@@ -906,7 +909,7 @@ function CorpseExplosion:use(target)
 	return { ApplyPowerAction:new(player,PoisonPower:new(target,self.magic)), ApplyPowerAction:new(player,CorpseExplosionPower:new(target,1)), }
 end
 
-CorpseExplosionPower = Power:new{icon=200,debuff=true}
+CorpseExplosionPower = Power:new{icon=200,debuff=true,description='On death, deal damage equal to its Max HP #11#!A!#12# time{s} to all enemies.'}
 function CorpseExplosionPower:onDeath()
 	if self.owner.hp > 0 or self.owner.alive then
 		return
@@ -948,7 +951,7 @@ function Envenom:use()
 	return { ApplyPowerAction:new(player,EnvenomPower:new(player,1)) }
 end
 
-EnvenomPower = Power:new{icon=216}
+EnvenomPower = Power:new{icon=216,description='Whenever a {Attack} deals unblocked damage, apply #11#!A!#12# {Poison}.'}
 function EnvenomPower:onDamageDealt(value,target,type)
 	if type == 'attack' and value > 0 then
 		addAction(ApplyPowerAction:new(player,PoisonPower:new(target,self.amount)))
@@ -1039,6 +1042,7 @@ function NightmarePower:new(owner,card)
 	local o = Power.new(self,owner)
 	o.amount = 1
 	o.card = card
+	o.description = 'Add #11#3#12# '..card.name..' into your hand next turn.'
 	-- making different nightmares not to stack
 	return Power.new(o,nil)
 end
@@ -1056,13 +1060,13 @@ function PhantasmalKiller:use()
 	return { ApplyPowerAction:new(player,PhantasmalKillerPower:new(player)) }
 end
 
-PhantasmalKillerPower = Power:new{icon=201}
+PhantasmalKillerPower = Power:new{icon=201,description='{Attack} deal double damage for the next #11#!A!#12# turn{s}.'}
 function PhantasmalKillerPower:onTurnStart()
 	addAction(RemovePowerAction:new(self))
 	addAction(ApplyPowerAction:new(self.owner,DoubleDamagePower:new(self.owner,self.amount)))
 end
 
-DoubleDamagePower = TurnBasedPower:new{icon=202,priority=150}
+DoubleDamagePower = TurnBasedPower:new{icon=202,priority=150,description='{Attack} deal double damage for #11#!A!#12# turn{s}.'}
 function DoubleDamagePower:onAttack(damage)
 	return damage * 2
 end
@@ -1095,7 +1099,7 @@ function ToolsOfTheTrade:use()
 	return { ApplyPowerAction:new(player,ToolsOfTheTradePower:new(player)) }
 end
 
-ToolsOfTheTradePower = Power:new{icon=233}
+ToolsOfTheTradePower = Power:new{icon=233,description='At the start of turn, draw #11#!A!#12# card and discard #11#!A!#12# card.'}
 function ToolsOfTheTradePower:onTurnStartPostDraw()
 	addAction(DrawCardAction:new(self.amount))
 	addAction(SelectDiscardHandAction:new(self.amount))
@@ -1128,7 +1132,7 @@ function WraithForm:use()
 	return { ApplyPowerAction:new(player,IntangiblePower:new(player,self.magic)), ApplyPowerAction:new(player,WraithFormPower:new(player,-1)) }
 end
 
-WraithFormPower = Power:new{icon=195,debuff=true}
+WraithFormPower = Power:new{icon=195,debuff=true,description='At the end of turn, lose #11#!A!#12# {Dexterity}.'}
 function WraithFormPower:onTurnEnd()
 	addAction(ApplyPowerAction:new(self.owner,DexterityPower:new(self.owner,self.amount)))
 end

@@ -111,7 +111,7 @@ function Card:applyPowers(target)
 	cost = player:triggerReducerEvent('modifyCost',cost,self)
 	self.cost = math.floor(cost)
 
-	makeCanUseCache(self)
+	self.canUseCache = makeCanUseCache(self)
 	self.cachedGlow = self:checkGlow()
 end
 
@@ -372,7 +372,7 @@ function drawDescription(card,description,x,y,lineWidth,maxLine,color)
 			end
 
 			local lastStart = 1
-			local findStart,findEnd,findStr = findMinimal(word,{'({%w+})','(!%w!)','(#%d+#)'},lastStart)
+			local findStart,findEnd,findStr = findMinimal(word,{'({%w+})','(!%w+!)','(#%d+#)'},lastStart)
 			while findStart and findEnd and findStr do
 				local strBeforeFind = word:sub(lastStart,findStart-1)
 				if #strBeforeFind > 0 then
@@ -397,7 +397,7 @@ function drawDescription(card,description,x,y,lineWidth,maxLine,color)
 						maxX = math.max(maxX,currentX)
 					end
 				elseif findStr:sub(1,1) == '!' then
-					local type = findStr:sub(2,2)
+					local type = findStr:sub(2,-2)
 					local base = 0
 					local value = 0
 					if type == 'D' then
@@ -409,6 +409,12 @@ function drawDescription(card,description,x,y,lineWidth,maxLine,color)
 					elseif type == 'M' then
 						base = card.baseMagic
 						value = card.magic
+					elseif type == 'A' then
+						base = math.abs(card.amount or 0)
+						value = base
+					else
+						base = card[type] or 0
+						value = base
 					end
 					local valueColor = base > value and 3 or (base < value and 5 or color)
 					if type == 'M' and base > value then valueColor = 5 end
@@ -422,7 +428,7 @@ function drawDescription(card,description,x,y,lineWidth,maxLine,color)
 					color = #colorStr == 0 and originalColor or tonumber(colorStr)
 				end
 				lastStart = findEnd + 1
-				findStart,findEnd,findStr = findMinimal(word,{'({%w+})','(!%w!)','(#%d+#)'},lastStart)
+				findStart,findEnd,findStr = findMinimal(word,{'({%w+})','(!%w+!)','(#%d+#)'},lastStart)
 			end
 			local strAfterFind = word:sub(lastStart,#word)
 			if #strAfterFind > 0 then

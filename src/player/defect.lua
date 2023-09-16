@@ -99,7 +99,10 @@ end
 
 -- orbs
 
-Orb = Object:new{owner=nil,x=0,y=0,tx=0,ty=0,icon=nil,evoking=false,showEvokeValue=false,applyPowers=noop,drawNumbers=noop,onEvoke=noop}
+Orb = Object:new{
+	owner=nil,x=0,y=0,tx=0,ty=0,icon=nil,evoking=false,showEvokeValue=false,
+	applyPowers=noop,drawNumbers=noop,onEvoke=noop,
+}
 function Orb:new(o)
 	local r = Object.new(self,o)
 	if r.owner ~= nil then
@@ -126,9 +129,16 @@ function Orb:resetPosition()
 	self.y = self.owner.y + self.owner.height*4
 end
 
-OrbSlot = Orb:new{icon=icons.OrbSlot}
+function Orb:drawTooltips()
+	drawItemTooltip(self,self.x+7,self.y-7)
+end
 
-Lightning = Orb:new{icon=icons.Lightning,value=3,evokeValue=8}
+OrbSlot = Orb:new{icon=icons.OrbSlot,description='Orbs can be channeled into these slots.'}
+
+Lightning = Orb:new{
+	icon=icons.Lightning,value=3,evokeValue=8,
+	description='Passive: At the end of turn, {Damage} #11#!value!#12# to a random enemy. NL Evoke: {Damage} #11#!evokeValue!#12# to a random enemy.'
+}
 function Lightning:applyPowers()
 	self.value = math.max(0,3+self:getFocusAmount())
 	self.evokeValue = math.max(0,8+self:getFocusAmount())
@@ -169,7 +179,10 @@ function Lightning:onTurnEnd()
 	end
 end
 
-Frost = Orb:new{icon=icons.Frost,value=2,evokeValue=5}
+Frost = Orb:new{
+	icon=icons.Frost,value=2,evokeValue=5,
+	description='Passive: At the end of turn, gain #11#!value!#12# {Block}. NL Evoke: Gain #11#!evokeValue!#12# {Block}.'
+}
 function Frost:applyPowers()
 	self.value = math.max(0,2+self:getFocusAmount())
 	self.evokeValue = math.max(0,5+self:getFocusAmount())
@@ -198,7 +211,10 @@ function Frost:onTurnEnd()
 	end
 end
 
-Dark = Orb:new{icon=icons.Dark,value=6,evokeValue=6}
+Dark = Orb:new{
+	icon=icons.Dark,value=6,evokeValue=6,
+	description='Passive: At the end of turn, increase this orb\'s damage by #11#!value!#12#. NL Evoke: {Damage} #11#!evokeValue!#12# to the enemy with lowest HP.'
+}
 function Dark:applyPowers()
 	self.value = math.max(0,6+self:getFocusAmount())
 end
@@ -242,7 +258,10 @@ function Dark:onTurnEnd()
 	end
 end
 
-Plasma = Orb:new{icon=icons.Plasma,value=1,evokeValue=2}
+Plasma = Orb:new{
+	icon=icons.Plasma,value=1,evokeValue=2,
+	description='Passive: At the start of turn, gain {Energy}. NL Evoke: Gain {Energy}{Energy}. NL {Plasma} is unaffected by {Focus}.'
+}
 function Plasma:drawNumbers()
 	if self.evoking or self.showEvokeValue then
 		local text = tostring(self.evokeValue)
@@ -506,10 +525,10 @@ function Rebound:use(target)
 	}
 end
 
-ReboundPower = Power:new{icon=249}
+ReboundPower = Power:new{icon=249,description='The next #11#!A!#12# card{s} you play this turn are placed on top of draw pile.'}
 function ReboundPower:onUseCard(_,_,action)
 	action.rebound = true
-	addAction(ReducePowerAction:new(self,1))
+	addAction(1,ReducePowerAction:new(self,1))
 end
 
 function ReboundPower:onTurnEnd()
@@ -670,7 +689,7 @@ function Bullseye:use(target)
 	}
 end
 
-BullseyePower = TurnBasedPower:new{icon=212,debuff=true}
+BullseyePower = TurnBasedPower:new{icon=212,debuff=true,description='Receives #11#50%#12# more damage from orbs for #11#!A!#12# turn{s}.'}
 function BullseyePower:onHitByOrb(damage)
 	return damage * 1.5
 end
@@ -795,7 +814,7 @@ function Equilibrium:use()
 	}
 end
 
-EquilibriumPower = TurnBasedPower:new{icon=214}
+EquilibriumPower = TurnBasedPower:new{icon=214,description='Retain your hand for #11#!A!#12# turn{s}.'}
 function EquilibriumPower:onTurnEnd()
 	addAction(AnonymousAction:new(function ()
 		for _, cardItem in ipairs(hand) do
@@ -848,7 +867,7 @@ function Fusion:use()
 end
 
 GeneticAlgorithm = BlueCard:new{
-	name='Genetic Algorithm',description='Gain !B! {Block}. NL This card permanently NL +!M! {Block}. NL Exhaust.',rarity='uncommon',
+	name='Genetic Algorithm',description='Gain !B! {Block}. NL This card NL +!M! {Block} permanently. NL Exhaust.',rarity='uncommon',
 	type='skill',baseCost=1,playerTarget=true,baseBlock=1,baseMagic=2,upgrade={baseMagic=3},exhaust=true,source=nil,
 }
 function GeneticAlgorithm:use()
@@ -901,7 +920,7 @@ function Heatsinks:use()
 	return { ApplyPowerAction:new(player,HeatsinksPower:new(player,self.magic)) }
 end
 
-HeatsinksPower = Power:new{icon=216}
+HeatsinksPower = Power:new{icon=216,description='Whenever you play a {Power}, draw #11#!A!#12# card{s}.'}
 function HeatsinksPower:onUseCard(card)
 	if card.type == 'power' then
 		addAction(DrawCardAction:new(self.amount))
@@ -916,7 +935,7 @@ function HelloWorld:use()
 	return { ApplyPowerAction:new(player,HelloWorldPower:new(player,1)) }
 end
 
-HelloWorldPower = Power:new{icon=201}
+HelloWorldPower = Power:new{icon=201,description='At the start of turn, add #11#!A!#12# random common card{s} into hand.'}
 function HelloWorldPower:onTurnStart()
 	for _=1,self.amount do
 		local card = getPlayerCardType(miscRand,'common',nil,true):new()
@@ -932,7 +951,7 @@ function Loop:use()
 	return { ApplyPowerAction:new(player,LoopPower:new(player,self.magic)) }
 end
 
-LoopPower = Power:new{icon=217}
+LoopPower = Power:new{icon=217,description='At the start of turn, trigger the passive ability of next orb #11#!A!#12# times.'}
 function LoopPower:onTurnStart()
 	for _=1,self.amount do
 		addAction(AnonymousAction:new(function ()
@@ -1091,7 +1110,7 @@ function SelfRepair:use()
 	return { ApplyPowerAction:new(player,SelfRepairPower:new(player,self.magic)) }
 end
 
-SelfRepairPower = Power:new{icon=233}
+SelfRepairPower = Power:new{icon=233,description='At the end of combat, heal #11#!A!#12# HP.'}
 function SelfRepairPower:onCombatEnd()
 	player:heal(self.amount)
 end
@@ -1112,24 +1131,24 @@ function StaticDischarge:use()
 	return { ApplyPowerAction:new(player,StaticDischargePower:new(player,self.magic)) }
 end
 
-StaticDischargePower = Power:new{icon=248}
+StaticDischargePower = Power:new{icon=248,description='Whenever you receive unblocked attack damage, channel #11#!A!#12# {Lightning}.'}
 function StaticDischargePower:onDamaged(value,_,type)
 	if value > 0 and type == 'attack' then
-		for _=1,self.amount do
-			addAction(ChannelAction:new(Lightning:new{owner=player}))
+		for i=1,self.amount do
+			addAction(i,ChannelAction:new(Lightning:new{owner=player}))
 		end
 	end
 end
 
 Storm = BlueCard:new{
-	name='Storm',description='Whenever you play a {Power} card, channel 1 {Lightning}.',rarity='uncommon',type='power',baseCost=1,
-	playerTarget=true,upgrade={description='Innate. NL Whenever you play a {Power} card, channel 1 {Lightning}.',innate=true},
+	name='Storm',description='Whenever you play a {Power}, channel 1 {Lightning}.',rarity='uncommon',type='power',baseCost=1,
+	playerTarget=true,upgrade={description='Innate. NL Whenever you play a {Power}, channel 1 {Lightning}.',innate=true},
 }
 function Storm:use()
 	return { ApplyPowerAction:new(player,StormPower:new(player,1)) }
 end
 
-StormPower = Power:new{icon=232}
+StormPower = Power:new{icon=232,description='Whenever you play a {Power}, channel #11#!A!#12# {Lightning}.'}
 function StormPower:onUseCard(card)
 	if card.type == 'power' then
 		for _=1,self.amount do
@@ -1227,14 +1246,14 @@ function Amplify:use()
 	return { ApplyPowerAction:new(player,AmplifyPower:new(player,self.magic)) }
 end
 
-AmplifyPower = Power:new{icon=213}
+AmplifyPower = Power:new{icon=213,description='your next #11#!A!#12# {Power} {is} played twice this turn.'}
 function AmplifyPower:onUseCard(card,target,useCardAction)
 	if card.type == 'power' and not useCardAction.isDoubleTap then
 		local cardItem = useCardAction.cardItem:copy()
 		local action = UseCardAction:new{cardItem=cardItem,isDoubleTap=true,tempCard=true,free=true,target=target,energyOnUse=useCardAction.energyOnUse}
 		action.useCardPosition = fillCardPosition(cardItem,2)
 		table.insert(limbo,cardItem)
-		addAction(ReducePowerAction:new(self,1))
+		addAction(1,ReducePowerAction:new(self,1))
 		addAction(action)
 	end
 end
@@ -1254,7 +1273,7 @@ function BiasedCognition:use()
 	}
 end
 
-BiasedCognitionPower = Power:new{icon=icons.Bias,debuff=true}
+BiasedCognitionPower = Power:new{icon=icons.Bias,debuff=true,description='At the start of turn, lose #11#!A!#12# {Focus}.'}
 function BiasedCognitionPower:onTurnStart()
 	addAction(ApplyPowerAction:new(self.owner,FocusPower:new(self.owner,-self.amount)))
 end
@@ -1286,7 +1305,7 @@ function CreativeAI:use()
 	return { ApplyPowerAction:new(player,CreativeAIPower:new(player,1)) }
 end
 
-CreativeAIPower = Power:new{icon=200}
+CreativeAIPower = Power:new{icon=200,description='At the start of turn, add #11#!A!#12# random {Power} into hand.'}
 function CreativeAIPower:onTurnStart()
 	for _=1,self.amount do
 		local card = getPlayerCardType(miscRand,nil,'power',true):new()
@@ -1302,7 +1321,7 @@ function EchoForm:use()
 	return { ApplyPowerAction:new(player,EchoFormPower:new(player,1)) }
 end
 
-EchoFormPower = Power:new{icon=199,cardsPlayed=1}
+EchoFormPower = Power:new{icon=199,cardsPlayed=1,description='The first #11#!A!#12# card{s} you play each turn is played twice.'}
 function EchoFormPower:new(...)
 	local r = Power.new(self,...)
 	r.cardsPlayed = DefectEventListener.cardsPlayedThisTurn + 1
@@ -1325,7 +1344,7 @@ function EchoFormPower:onTurnStart()
 end
 
 Electrodynamics = BlueCard:new{
-	name='Electrodynamics',description='{Lightning} now hits ALL enemies. NL Channel !M! {Lightning}.',rarity='rare',type='power',baseCost=2,
+	name='Electrodynamics',description='{Lightning} now hits all enemies. NL Channel !M! {Lightning}.',rarity='rare',type='power',baseCost=2,
 	playerTarget=true,baseMagic=2,upgrade={baseMagic=3,channelCount=3},channelCount=2,
 }
 function Electrodynamics:use()
@@ -1340,7 +1359,7 @@ function Electrodynamics:use()
 	return actions
 end
 
-ElectrodynamicsPower = Power:new{icon=215,stackable=false}
+ElectrodynamicsPower = Power:new{icon=215,stackable=false,description='{Lightning} now hits all enemies.'}
 
 Fission = BlueCard:new{
 	name='Fission',description='Remove all orbs. Gain {Energy} and draw 1 card for each orb removed. NL Exhaust.',rarity='rare',type='skill',
@@ -1392,7 +1411,7 @@ function MachineLearning:use()
 	return { ApplyPowerAction:new(player,MachineLearningPower:new(player,1)) }
 end
 
-MachineLearningPower = Power:new{icon=icons.DrawCardEveryTurn}
+MachineLearningPower = Power:new{icon=icons.DrawCardEveryTurn,description='At the start of turn, draw #11#!A!#12# additional card.'}
 function MachineLearningPower:onTurnStartPostDraw()
 	addAction(DrawCardAction:new(self.amount))
 end

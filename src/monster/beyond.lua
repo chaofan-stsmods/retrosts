@@ -39,7 +39,7 @@ function OrbWalker:nextIntent()
 	})
 end
 
-StrengthUpPower = Power:new{icon=265}
+StrengthUpPower = Power:new{icon=265,description='At the end of turn, gains #11#!A!#12# {Strength}.'}
 function StrengthUpPower:onTurnEnd()
 	addAction(ApplyPowerAction:new(self.owner,StrengthPower:new(self.owner,self.amount)))
 end
@@ -121,7 +121,7 @@ function Darkling:nextIntent(first)
 	end
 end
 
-LifeLinkPower = Power:new{icon=427,stackable=false}
+LifeLinkPower = Power:new{icon=427,stackable=false,description='If other enemies are still alive, revives in #11#2#12# turns at #11#50%#12# HP.'}
 function LifeLinkPower:onDeath()
 	if table.anyMatch(enemies,function (enemy) return enemy.alive and enemy:getPower(LifeLinkPower) ~= nil end) then
 		self.owner.alive = true
@@ -201,7 +201,7 @@ function Exploder:nextIntent()
 	end
 end
 
-ExplosivePower = TurnBasedPower:new{icon=19}
+ExplosivePower = TurnBasedPower:new{icon=19,description='Explodes in #11#!A!#12# turn{s}, dealing #11#30#12# damage.'}
 
 Spiker = Monster:new{ maxHp=56,width=4,height=3,attackDmg=7,spikeCount=6 }
 function Spiker:init(random)
@@ -284,7 +284,7 @@ function SpireGrowth:nextIntent()
 	end
 end
 
-ConstrictedPower = Power:new{icon=288,debuff=true,priority=180}
+ConstrictedPower = Power:new{icon=288,debuff=true,priority=180,description='At the end of turn, take #11#!A!#12# damage.'}
 function ConstrictedPower:new(owner,amount,source)
 	local r = Power.new(self,owner,amount)
 	r.source = source
@@ -322,7 +322,7 @@ function Transient:nextIntent()
 	self:setIntent('attack','attack',self.attackDmg)
 end
 
-FadingPower = TurnBasedPower:new{icon=Icon:new{image=263,transparentColor=8}}
+FadingPower = TurnBasedPower:new{icon=Icon:new{image=263,transparentColor=8},description='Dies in #11#!A!#12# turn{s}.'}
 function FadingPower:onTurnEnd()
 	if self.amount == 1 then
 		addAction(SuicideAction:new{target=self.owner})
@@ -330,13 +330,13 @@ function FadingPower:onTurnEnd()
 	TurnBasedPower.onTurnEnd(self)
 end
 
-ShiftingPower = Power:new{icon=308,stackable=false}
+ShiftingPower = Power:new{icon=308,stackable=false,description='Upon losing HP, loses that much {Strength} until the end of the turn.'}
 function ShiftingPower:onDamaged(value)
 	if value > 0 then
 		local power = StrengthPower:new(self.owner,-value)
 		power.isFromShifting = true
-		addAction(ApplyPowerAction:new(self.owner,power))
-		addAction(AnonymousAction:new(function ()
+		addAction(1,ApplyPowerAction:new(self.owner,power))
+		addAction(2,AnonymousAction:new(function ()
 			if power.applied then
 				addAction(1,ApplyPowerAction:new(self.owner,ShackledPower:new(self.owner,value)))
 			end
@@ -486,7 +486,7 @@ function WrithingMass:nextIntent(first)
 	end
 end
 
-ReactivePower = Power:new{icon=344,stackable=false}
+ReactivePower = Power:new{icon=344,stackable=false,description='Upon receiving damage from {Attack}, changes its intent.'}
 function ReactivePower:onDamaged(value,source,type)
 	if value > 0 and source == player and type == 'attack' then
 		addAction(AnonymousAction:new(function ()
@@ -675,7 +675,7 @@ function GiantHead:talk(text,duration)
 	addAction(TalkAction:new(self,text,{xOffset=8,yOffset=8,boxXOffset=12,boxYOffset=4,duration=duration}))
 end
 
-SlowPower = Power:new{icon=342,debuff=true}
+SlowPower = Power:new{icon=342,debuff=true,description='Whenever you play a card, receives #11#10%#12# more damage from {Attack} this turn.'}
 function SlowPower:onTurnStart()
 	self.amount = 0
 end
@@ -843,14 +843,14 @@ function AwakenedOne:die()
 	end
 end
 
-CuriosityPower = Power:new{icon=434}
+CuriosityPower = Power:new{icon=434,description='Whenever you play a {Power}, gains #11#!A!#12# {Strength}.'}
 function CuriosityPower:onUseCard(card)
 	if card.type == 'power' then
 		addAction(ApplyPowerAction:new(self.owner,StrengthPower:new(self.owner,self.amount)))
 	end
 end
 
-UnawakenedPower = Power:new{icon=435,stackable=false}
+UnawakenedPower = Power:new{icon=435,stackable=false,description='This enemy hasn\'t awakened yet...'}
 function UnawakenedPower:onDeath()
 	self.owner.alive = true
 	self.owner.visible = true
@@ -1024,7 +1024,7 @@ function TimeEater:nextIntent()
 	end
 end
 
-TimeWarpPower = Power:new{icon=404}
+TimeWarpPower = Power:new{icon=404,description='Whenever you play #11#12#12# cards, ends your turn and gains #11#2#12# {Strength}.'}
 function TimeWarpPower:onUseCard()
 	self.amount = self.amount + 1
 	if self.amount == 12 then
@@ -1060,7 +1060,7 @@ function TimeWarpEffect:tick()
 	ttri(x1+d1,y1+d2,x1-d3,y1-d4,x1-d1,y1-d2,u,v,u,v+8,u+8,v+8,0,0)
 end
 
-DrawReductionPower = TurnBasedPower:new{icon=405,debuff=true}
+DrawReductionPower = TurnBasedPower:new{icon=405,debuff=true,description='Draw #11#1#12# less card for #11#!A!#12# turn{s}.'}
 function DrawReductionPower:modifyTurnStartDrawCount(count)
 	return count - 1
 end

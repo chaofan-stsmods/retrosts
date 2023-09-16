@@ -419,14 +419,14 @@ function DuplicationPotion:use()
 	return { ApplyPowerAction:new(player,DuplicationPower:new(player,self.magic)) }
 end
 
-DuplicationPower = Power:new{icon=20}
+DuplicationPower = Power:new{icon=20,description='Your next #11#!A!#12# card{s} {is} played twice this turn.'}
 function DuplicationPower:onUseCard(_,target,useCardAction)
 	if not useCardAction.isDoubleTap then
 		local cardItem = useCardAction.cardItem:copy()
 		local action = UseCardAction:new{cardItem=cardItem,isDoubleTap=true,tempCard=true,free=true,target=target,energyOnUse=useCardAction.energyOnUse}
 		action.useCardPosition = fillCardPosition(cardItem)
 		table.insert(limbo,cardItem)
-		addAction(ReducePowerAction:new(self,1))
+		addAction(1,ReducePowerAction:new(self,1))
 		addAction(action)
 	end
 end

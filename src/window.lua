@@ -152,7 +152,8 @@ TitleWindow = TitleSelectionWindow:new{options={'New Game','Card List','Relic Co
 function TitleWindow:new(o)
 	o = o or {}
 	if hasSave() then
-		o.options = {'Continue','New Game','Card List','Relic Collection','Potion Lab'}
+		o.options = shallowcopy(TitleWindow.options)
+		table.insert(o.options,1,'Continue')
 	end
 	return TitleSelectionWindow.new(self,o)
 end
@@ -225,6 +226,8 @@ function TitleWindow:onOption()
 		self:open(RelicCollectionWindow:new())
 	elseif self.options[self.selection] == 'Potion Lab' then
 		self:open(PotionLabWindow:new())
+	elseif self.options[self.selection] == 'Buff List' then
+		self:open(BuffListWindow:new())
 	elseif self.options[self.selection] == 'Continue' then
 		loadGame()
 	elseif self.options[self.selection] == 'New Game' then
@@ -546,6 +549,11 @@ function PotionLabWindow:new()
 	end
 
 	return ItemCollectionWindow.new(self,{{items=potionWithPools,tileBank=2}})
+end
+
+BuffListWindow = ItemCollectionWindow:new{name='BuffListWindow'}
+function BuffListWindow:new()
+	return ItemCollectionWindow.new(self,{{items={basic=allPowers},tileBank=1}})
 end
 
 LoseWindow = Window:new{name='LoseWindow',title='You Lose!'}

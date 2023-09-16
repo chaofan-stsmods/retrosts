@@ -40,7 +40,7 @@ function BossTreasureEvent:drawBackground()
 				drawIcon(self.relics[i].icon,relicLocations[i][1]+1,relicLocations[i][2]+1,{noMapColor=true})
 				resetColors()
 			end
-			self.relics[i]:drawImage(relicLocations[i][1],relicLocations[i][2])
+			self.relics[i]:drawImage(relicLocations[i][1],relicLocations[i][2],true)
 			if i == self.relicOption then
 				drawSelectionBox(relicLocations[i][1]-2,relicLocations[i][2]-2,12,12)
 				drawItemTooltip(self.relics[i],64,134,14,true)

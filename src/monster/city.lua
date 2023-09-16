@@ -114,7 +114,7 @@ function Byrd:nextIntent(first)
 	})
 end
 
-FlightPower = Power:new{icon=419}
+FlightPower = Power:new{icon=419,description='Receives #11#50%#12# less damage from {Attack}. Cancelled if dealt damage from {Attack} #11#!A!#12# time{s} in one turn.'}
 function FlightPower:new(owner,amount)
 	local result = Power.new(self,owner,amount)
 	result.initialAmount = amount
@@ -255,10 +255,10 @@ function Chosen:nextIntent(first)
 	end
 end
 
-HexPower = Power:new{icon=325}
+HexPower = Power:new{icon=325,description='Whenever you play a non-{Attack}, shuffle #11#!A!#12# Dazed{s} into draw pile.'}
 function HexPower:onUseCard(card)
 	if card.type ~= 'attack' then
-		addAction(MakeTempCardToDrawPileAction:new(Dazed:new()))
+		addAction(MakeTempCardToDrawPileAction:new(Dazed:new(),self.amount))
 	end
 end
 
@@ -492,7 +492,7 @@ function SnakePlant:nextIntent()
 	end
 end
 
-MalleablePower = Power:new{icon=303}
+MalleablePower = Power:new{icon=303,description='Upon receiving damage from {Attack}, gains #11#!A!#12# {Block} and increases {Block} gain by #11#1#12#. Resets to #11#!initialAmount!#12# at the start of turn.'}
 function MalleablePower:new(owner,amount)
 	local result = Power.new(self,owner,amount)
 	result.initialAmount = amount
@@ -848,7 +848,7 @@ function BookOfStabbing:nextIntent()
 	}
 end
 
-PainfulStabsPower = Power:new{icon=276,stackable=false}
+PainfulStabsPower = Power:new{icon=276,stackable=false,description='Whenever you receive attack damage from this enemy, add a Wound into discard pile.'}
 function PainfulStabsPower:onDamageDealt(value,target,type)
 	if value > 0 and target == player and type == 'attack' then
 		addAction(MakeTempCardToDiscardPileAction:new(Wound:new(),1))
@@ -1086,9 +1086,7 @@ function BronzeOrb:stasis()
 		local effect = CardEffect:new{cardItem=cardItem,pauseDuration=30,duration=50,tx=self.x+self.width*4,ty=self.y+self.height*4}
 		effect.useCardPosition = fillCardPosition(cardItem)
 		addEffect(effect)
-		local power = StasisPower:new(self)
-		power.card = card
-		addAction(1,ApplyPowerAction:new(self,power))
+		addAction(1,ApplyPowerAction:new(self,StasisPower:new(self,card)))
 	end))
 	addAction(NextIntentAction:new(self))
 end
@@ -1112,6 +1110,13 @@ function BronzeOrb:nextIntent()
 end
 
 StasisPower = Power:new{icon=440,stackable=false,card=nil}
+function StasisPower:new(owner,card)
+	local o = Power.new(self,owner)
+	o.card = card
+	o.description = 'On death, '..card.name..' is returned to your hand.'
+	return o
+end
+
 function StasisPower:onDeath()
 	addAction(MakeTempCardToHandAction:new(self.card,1,{
 		cardItem=CardItem:new{x=self.owner.x+self.owner.width*4,y=self.owner.y+self.owner.height*4}

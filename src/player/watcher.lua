@@ -260,19 +260,49 @@ function Vigilance:use()
 	return { GainBlockAction:new{target=player,value=self.block},ChangeStanceAction:new(Calm) }
 end
 
-MantraPower = Power:new{icon=icons.Mantra}
+MantraPower = Power:new{icon=icons.Mantra,description='When you obtain #11#10#12# {Mantra}, enter Divinity.'}
 function MantraPower:onAmountUpdated()
 	if self.amount >= 10 then
 		self.amount = self.amount % 10
-		addAction(ChangeStanceAction:new(Divinity))
+		addAction(1,ChangeStanceAction:new(Divinity))
 		if self.amount == 0 then
-			addAction(RemovePowerAction:new(self))
+			addAction(2,RemovePowerAction:new(self))
 		end
 	end
 end
 
+BowlingBash = PurpleCard:new{
+	name='Bowling Bash',description='{Damage} !D! for each enemy in combat.',rarity='common',baseCost=1,
+	baseDamage=7,enemyTarget=true,upgrade={baseDamage=10},
+}
+function BowlingBash:use(target)
+	local actions = {}
+	for _,enemy in ipairs(enemies) do
+		if enemy.canInteract then
+			table.insert(actions,DamageAction:new{target=target,source=player,value=self.damage})
+		end
+	end
+	return actions
+end
+
+Consecrate = PurpleCard:new{
+	name='Consecrate',description='{Damage} !D! to all enemies.',rarity='common',baseCost=0,
+	baseDamage=5,enemyTarget=true,toAllEnemies=true,upgrade={baseDamage=8},
+}
+function Consecrate:use()
+	return { DamageAllEnemiesAction:new{source=player,value=self.multiDamage} }
+end
+
+Crescendo = PurpleCard:new{
+	name='Crescendo',description='Retain. NL Enter Wrath. NL Exhaust.',rarity='common',type='skill',baseCost=1,
+	playerTarget=true,upgrade={baseCost=0},retain=true,exhaust=true,
+}
+function Crescendo:use()
+	return { ChangeStanceAction:new(Wrath) }
+end
+
 purpleCards = {
-	StrikePurple,DefendPurple,Eruption,Vigilance,
+	StrikePurple,DefendPurple,Eruption,Vigilance,BowlingBash,Consecrate,Crescendo,
 }
 
 -- relics

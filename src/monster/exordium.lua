@@ -116,7 +116,7 @@ function LouseDefensive:nextIntent()
 	})
 end
 
-CurlUpPower = Power:new{icon=448,triggered=false}
+CurlUpPower = Power:new{icon=448,triggered=false,description='On receiving damage from {Attack}, gains #11#!A!#12# {Block}. (Once per combat)'}
 function CurlUpPower:onDamaged(value,_,type)
 	if not self.triggered and value > 0 and type == 'attack' then
 		self.triggered = true
@@ -267,7 +267,7 @@ function SpikeSlimeL:nextIntent()
 	})
 end
 
-SplitPower = Power:new{icon=450,stackable=false}
+SplitPower = Power:new{icon=450,stackable=false,description='When HP is at or below #11#50%#12#, will split into #11#2#12# smaller slimes with current HP.'}
 function SplitPower:new(...)
 	local r = Power.new(self,...)
 	if combatSpriteBank ~= 1 then
@@ -457,9 +457,9 @@ function FungiBeast:nextIntent()
 	})
 end
 
-SporeCloudPower = Power:new{icon=Icon:new{image=26,colorMap={[2]=6,[3]=5,[5]=4,[6]=3,[7]=4}}}
+SporeCloudPower = Power:new{icon=Icon:new{image=26,colorMap={[2]=6,[3]=5,[5]=4,[6]=3,[7]=4}},description='On death, applies #11#!A!#12# {Vulnerable}.'}
 function SporeCloudPower:onDeath()
-	addAction(ApplyPowerAction:new(self.owner,VulnerablePower:new(player,self.amount,inEnemyTurn)))
+	addAction(1,ApplyPowerAction:new(self.owner,VulnerablePower:new(player,self.amount,inEnemyTurn)))
 end
 
 SlaverBlue = Monster:new{ maxHp=50,width=4,height=4,stabDmg=12,rakeDmg=7 }
@@ -549,7 +549,7 @@ function SlaverRed:nextIntent(firstTurn)
 	end
 end
 
-EntanglePower = TurnBasedPower:new{icon=451,debuff=true}
+EntanglePower = TurnBasedPower:new{icon=451,debuff=true,description='You cannot play {Attack} for #11#!A!#12# turn{s}.'}
 function EntanglePower:canUseCard(card)
 	if card.type == 'attack' then
 		return false
@@ -613,7 +613,7 @@ function Looter:nextIntent()
 	self:setIntent('swipe','attack',self.swipeDmg)
 end
 
-ThieveryPower = Power:new{icon=418}
+ThieveryPower = Power:new{icon=418,description='Steals #11#!A!#12# #4#Gold#12# whenever attacks.'}
 ThieveryAction = Action:new{owner=nil,amount=15}
 function ThieveryAction:tick()
 	local amount = math.min(gold,self.amount)
@@ -672,10 +672,10 @@ function GremlinNob:nextIntent()
 	end
 end
 
-AngerPower = Power:new{icon=17}
+AngerPower = Power:new{icon=17,description='Whenever you play a {Skill}, gains #11#!A!#12# {Strength}.'}
 function AngerPower:onUseCard(card)
 	if card.type == 'skill' then
-		addAction(ApplyPowerAction:new(self.owner,StrengthPower:new(self.owner,self.amount)))
+		addAction(1,ApplyPowerAction:new(self.owner,StrengthPower:new(self.owner,self.amount)))
 	end
 end
 
@@ -763,7 +763,7 @@ function GremlinWarrior:nextIntent()
 	self:setIntent('attack','attack',self.dmg)
 end
 
-AngryPower = Power:new{icon=17}
+AngryPower = Power:new{icon=17,description='Upon receiving damage from {Attack}, gains #11#!A!#12# {Strength}.'}
 function AngryPower:onDamaged(value,source,type)
 	if value > 0 and source == player and type == 'attack' then
 		addAction(1,ApplyPowerAction:new(self.owner,StrengthPower:new(self.owner,self.amount)))
@@ -1253,7 +1253,7 @@ function TheGuardian:nextIntent()
 	self:setIntent('chargeUp','defend')
 end
 
-ModeShiftPower = Power:new{icon=261}
+ModeShiftPower = Power:new{icon=261,description='After receiving #11#!A!#12# damage, changes to a defensive mode.'}
 function ModeShiftPower:onDamaged(value)
 	local owner = self.owner
 	if self.amount > value then
@@ -1270,7 +1270,7 @@ function ModeShiftPower:onDamaged(value)
 	end
 end
 
-SharpHidePower = Power:new{icon=43}
+SharpHidePower = Power:new{icon=43,description='Whenever you play a {Attack}, {Damage} #11#!A!#12# to you.'}
 function SharpHidePower:onUseCard(card)
 	if card.type == 'attack' then
 		addAction(DamageAction:new{target=player,source=self.owner,value=self.amount,type='power'})

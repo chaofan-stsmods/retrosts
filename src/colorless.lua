@@ -518,7 +518,7 @@ function Magnetism:use()
 	return { ApplyPowerAction:new(player,MagnetismPower:new(player)) }
 end
 
-MagnetismPower = Power:new{icon=63}
+MagnetismPower = Power:new{icon=63,description='At the start of turn, add #11#!A!#12# random colorless card{s} into your hand.'}
 function MagnetismPower:onTurnStart()
 	for _=1,self.amount do
 		addAction(MakeTempCardToHandAction:new(getColorlessCardType(miscRand,nil,nil,true):new()))
@@ -533,7 +533,7 @@ function Mayhem:use()
 	return { ApplyPowerAction:new(player,MayhemPower:new(player)) }
 end
 
-MayhemPower = Power:new{icon=84}
+MayhemPower = Power:new{icon=84,description='At the start of turn, play the top #11#!A!#12# card{s} of draw pile.'}
 function MayhemPower:onTurnStart()
 	local amount = self.amount
 	addAction(AnonymousAction:new(function ()
@@ -551,7 +551,7 @@ function Panache:use()
 	return { ApplyPowerAction:new(player,PanachePower:new(player,self.magic)) }
 end
 
-PanachePower = Power:new{icon=76,damage=0}
+PanachePower = Power:new{icon=76,damage=0,description='If you play #11#!A!#12# more card{s} this turn, {Damage} #11#!damage!#12# to all enemies.'}
 function PanachePower:new(owner,damage)
 	local o = Power.new(self,owner)
 	o.amount = 5
@@ -583,7 +583,7 @@ function SadisticNature:use()
 	return { ApplyPowerAction:new(player,SadisticNaturePower:new(player,self.magic)) }
 end
 
-SadisticNaturePower = Power:new{icon=67}
+SadisticNaturePower = Power:new{icon=67,description='Whenever you apply a debuff to an enemy, {Damage} #11#!A!#12#.'}
 function SadisticNaturePower:onAppliedPower(power)
 	if power.debuff and power.owner ~= player then
 		addAction(DamageAction:new{source=self.owner,target=power.owner,value=self.amount,type='power'})
@@ -651,7 +651,7 @@ function TheBomb:use()
 	return { ApplyPowerAction:new(player,TheBombPower:new(player,self.magic)) }
 end
 
-TheBombPower = Power:new{icon=10,damage=0,turnBased=true}
+TheBombPower = Power:new{icon=10,damage=0,turnBased=true,description='At the end of #11#!A!#12# turn{s}, {Damage} #11#!damage!#12# to all enemies.'}
 function TheBombPower:new(owner,damage)
 	local o = Power.new(self,owner)
 	o.amount = 3
