@@ -736,6 +736,14 @@ function Miracle:use()
 	return { GainEnergyAction:new(self.magic) }
 end
 
+Insight = ColorlessCard:new{
+	name='Insight',description='Retain. NL Draw !M! cards. NL Exhaust.',baseCost=0,type='skill',rarity='special',
+	playerTarget=true,baseMagic=2,upgrade={baseMagic=3},exhaust=true,retain=true,
+}
+function Insight:use()
+	return { DrawCardAction:new(self.magic) }
+end
+
 colorlessCards = {
 	-- status
 	Wound,Dazed,Burn,Slimed,Void,

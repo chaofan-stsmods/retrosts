@@ -353,8 +353,12 @@ function combatControls()
 		end
 	elseif combatSelection.type == 'player' then
 		if btnp(0) then
-			combatSelection.type = 'orb'
-			combatSelection.index = 0
+			if #player.orbs > 0 then
+				combatSelection.type = 'orb'
+				combatSelection.index = 0
+			else
+				enterTopbar('relic',nil,player.x+player.width*4)
+			end
 		elseif btnp(1) then
 			combatSelection.type = 'hand'
 			handUI.cursorOnSelf = true
@@ -371,7 +375,12 @@ function combatControls()
 			end
 		end
 
-		if btnp(1) then
+		if btnp(0) then
+			local enemy = enemies[combatSelection.index]
+			if enemy then
+				enterTopbar('relic',nil,enemy.x+enemy.width*4)
+			end
+		elseif btnp(1) then
 			combatSelection.type = 'hand'
 			handUI.cursorOnSelf = true
 		elseif btnp(2) then
@@ -391,7 +400,12 @@ function combatControls()
 				combatSelection.type = 'player'
 			end
 		end
-		if btnp(1) then
+		if btnp(0) then
+			local orb = player.orbs[combatSelection.index]
+			if orb then
+				enterTopbar('relic',nil,orb.x)
+			end
+		elseif btnp(1) then
 			combatSelection.type = 'player'
 		elseif btnp(2) then
 			combatSelection.index = limit(combatSelection.index+1,1,#player.orbs)

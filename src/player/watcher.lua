@@ -2,7 +2,14 @@
 
 local purpleCards
 
-WatcherEventListener = {  }
+WatcherEventListener = { lastCardPlayed=nil }
+function WatcherEventListener:onCombatStart()
+	self.lastCardPlayed = nil
+end
+
+function WatcherEventListener:onUseCard(card)
+	self.lastCardPlayed = card
+end
 
 table.insert(playerEventListeners,WatcherEventListener)
 
@@ -273,8 +280,18 @@ end
 
 BowlingBash = PurpleCard:new{
 	name='Bowling Bash',description='{Damage} !D! for each enemy in combat.',rarity='common',baseCost=1,
-	baseDamage=7,enemyTarget=true,upgrade={baseDamage=10},
+	baseDamage=7,enemyTarget=true,upgrade={baseDamage=10},displayAttackCount='?'
 }
+function BowlingBash:applyPowers(target)
+	self.displayAttackCount = table.count(enemies,function (enemy) return enemy.canInteract end)
+	PurpleCard.applyPowers(self,target)
+end
+
+function BowlingBash:resetPowers()
+	self.displayAttackCount = '?'
+	PurpleCard.resetPowers(self)
+end
+
 function BowlingBash:use(target)
 	local actions = {}
 	for _,enemy in ipairs(enemies) do
@@ -301,8 +318,221 @@ function Crescendo:use()
 	return { ChangeStanceAction:new(Wrath) }
 end
 
+CrushJoints = PurpleCard:new{
+	name='Crush Joints',description='{Damage} !D!. NL If the last card played this combat was a {Skill}, apply !M! {Vulnerable}.',rarity='common',baseCost=1,
+	baseDamage=8,baseMagic=1,enemyTarget=true,upgrade={baseDamage=10,baseMagic=2},
+}
+function CrushJoints:use(target)
+	local actions = { DamageAction:new{target=target,source=player,value=self.damage} }
+	local lastCardPlayed = WatcherEventListener.lastCardPlayed
+	if lastCardPlayed and lastCardPlayed.type == 'skill' then
+		table.insert(actions,ApplyPowerAction:new(player,VulnerablePower:new(target,self.magic)))
+	end
+	return actions
+end
+
+function CrushJoints:checkGlow()
+	local lastCardPlayed = WatcherEventListener.lastCardPlayed
+	if lastCardPlayed and lastCardPlayed.type == 'skill' then
+		return 4
+	end
+end
+
+CutThroughFate = PurpleCard:new{
+	name='Cut Through Fate',description='{Damage} !D!. NL Scry !M!. NL Draw 1 card.',rarity='common',baseCost=1,
+	baseDamage=7,baseMagic=2,enemyTarget=true,upgrade={baseDamage=9,baseMagic=3},
+}
+function CutThroughFate:use(target)
+	return { DamageAction:new{target=target,source=player,value=self.damage},ScryAction:new(self.magic),DrawCardAction:new(1) }
+end
+
+EmptyBody = PurpleCard:new{
+	name='Empty Body',description='Gain !B! {Block}. NL Exit stance.',rarity='common',type='skill',baseCost=1,
+	baseBlock=7,playerTarget=true,upgrade={baseBlock=10},
+}
+function EmptyBody:use()
+	return { GainBlockAction:new{target=player,value=self.block},ChangeStanceAction:new(Neutral) }
+end
+
+EmptyFist = PurpleCard:new{
+	name='Empty Fist',description='{Damage} !D!. NL Exit stance.',rarity='common',baseCost=1,
+	baseDamage=9,enemyTarget=true,upgrade={baseDamage=14},
+}
+function EmptyFist:use(target)
+	return { DamageAction:new{target=target,source=player,value=self.damage},ChangeStanceAction:new(Neutral) }
+end
+
+Evaluate = PurpleCard:new{
+	name='Evaluate',description='Gain !B! {Block}. NL Shuffle an Insight into draw pile.',rarity='common',type='skill',baseCost=1,
+	baseBlock=6,playerTarget=true,upgrade={baseBlock=10},
+}
+function Evaluate:use()
+	return { GainBlockAction:new{target=player,value=self.block},MakeTempCardToDrawPileAction:new(Insight:new()) }
+end
+
+-- TODO description is too long
+FlurryOfBlows = PurpleCard:new{
+	name='Flurry of Blows',description='{Damage} !D!. NL Whenever you change stances, return this from discard pile to hand.',
+	rarity='common',baseCost=0,baseDamage=4,enemyTarget=true,upgrade={baseDamage=6},
+}
+function FlurryOfBlows:use(target)
+	return { DamageAction:new{target=target,source=player,value=self.damage} }
+end
+
+function FlurryOfBlows:onEnterStance()
+	if table.anyMatch(discardPile,function (card) return card == self end) then
+		addAction(AnonymousAction:new(function ()
+			table.remove(discardPile,table.indexOf(discardPile,self))
+			insertHand(CardItem:new{card=self,x=240,y=136})
+		end))
+	end
+end
+
+FlyingSleeves = PurpleCard:new{
+	name='Flying Sleeves',description='Retain. NL {Damage} !D! twice.',rarity='common',baseCost=1,
+	baseDamage=4,enemyTarget=true,upgrade={baseDamage=6},displayAttackCount=2,retain=true,
+}
+function FlyingSleeves:use(target)
+	return { DamageAction:new{target=target,source=player,value=self.damage},DamageAction:new{target=target,source=player,value=self.damage} }
+end
+
+FollowUp = PurpleCard:new{
+	name='Follow-Up',description='{Damage} !D!. NL If the last card played this combat was a {Attack}, gain {Energy}.',rarity='common',
+	baseCost=1,baseDamage=7,enemyTarget=true,playerTarge=true,upgrade={baseDamage=11},
+}
+function FollowUp:use(target)
+	local actions = { DamageAction:new{target=target,source=player,value=self.damage} }
+	local lastCardPlayed = WatcherEventListener.lastCardPlayed
+	if lastCardPlayed and lastCardPlayed.type == 'attack' then
+		table.insert(actions,GainEnergyAction:new(1))
+	end
+	return actions
+end
+
+function FollowUp:checkGlow()
+	local lastCardPlayed = WatcherEventListener.lastCardPlayed
+	if lastCardPlayed and lastCardPlayed.type == 'attack' then
+		return 4
+	end
+end
+
+Halt = PurpleCard:new{
+	name='Halt',description='Gain !B! {Block}. NL Wrath: Gain !M! additional {Block}.',rarity='common',type='skill',baseCost=0,
+	baseBlock=3,baseMagic=9,playerTarget=true,upgrade={baseBlock=4,baseMagic=14},
+}
+function Halt:applyPowers(target)
+	local oldBaseBlock = self.baseBlock
+	self.baseBlock = self.baseMagic
+	PurpleCard.applyPowers(self,target)
+	local magic = self.block
+	self.baseBlock = oldBaseBlock
+	PurpleCard.applyPowers(self,target)
+	self.magic = magic
+end
+
+function Halt:use()
+	local actions = { GainBlockAction:new{target=player,value=self.block} }
+	if player.stance == Wrath then
+		table.insert(actions,GainBlockAction:new{target=player,value=self.magic})
+	end
+	return actions
+end
+
+JustLucky = PurpleCard:new{
+	name='Just Lucky',description='Scry !M!. NL Gain !B! {Block}. NL {Damage} !D!.',rarity='common',baseCost=0,
+	baseMagic=1,baseBlock=2,baseDamage=3,enemyTarget=true,playerTarge=true,upgrade={baseMagic=2,baseBlock=3,baseDamage=4},
+}
+function JustLucky:use(target)
+	return {
+		ScryAction:new(self.magic),
+		GainBlockAction:new{target=player,value=self.block},
+		DamageAction:new{target=target,source=player,value=self.damage}
+	}
+end
+
+PressurePoints = PurpleCard:new{
+	name='Pressure Points',description='Apply !M! {248}. NL All enemies lose HP equal to their {248}.',rarity='common',type='skill',
+	baseCost=1,baseMagic=8,enemyTarget=true,upgrade={baseMagic=11},
+}
+function PressurePoints:use(target)
+	return {
+		ApplyPowerAction:new(target,MarkPower:new(target,self.magic)),
+		AnonymousAction:new(function ()
+			local index = 1
+			for _,enemy in ipairs(enemies) do
+				if enemy.canInteract then
+					local mark = enemy:getPower(MarkPower)
+					if mark then
+						addAction(index,DamageAction:new{target=enemy,source=player,value=mark.amount,type='hpLoss'})
+						index = index + 1
+					end
+				end
+			end
+		end)
+	}
+end
+
+MarkPower = Power:new{icon=248,description='Whenever you play Pressure Points, loses #11#!A!#12# HP.'}
+
+Prostrate = PurpleCard:new{
+	name='Prostrate',description='Gain !M! {MantraCard}. NL Gain !B! {Block}.',rarity='common',type='skill',baseCost=0,
+	baseBlock=4,baseMagic=2,playerTarget=true,upgrade={baseMagic=3},
+}
+function Prostrate:use()
+	return {
+		ApplyPowerAction:new(player,MantraPower:new(player,self.magic)),
+		GainBlockAction:new{target=player,value=self.block},
+	}
+end
+
+Protect = PurpleCard:new{
+	name='Protect',description='Retain. NL Gain !B! {Block}.',rarity='common',type='skill',baseCost=2,
+	baseBlock=12,playerTarget=true,upgrade={baseBlock=16},retain=true,
+}
+function Protect:use()
+	return { GainBlockAction:new{target=player,value=self.block} }
+end
+
+SashWhip = PurpleCard:new{
+	name='Sash Whip',description='{Damage} !D!. NL If the last card played this combat was a {Attack}, apply !M! {Weak}.',rarity='common',
+	baseCost=1,baseDamage=8,baseMagic=1,enemyTarget=true,upgrade={baseDamage=10,baseMagic=2},
+}
+function SashWhip:use(target)
+	local actions = { DamageAction:new{target=target,source=player,value=self.damage} }
+	local lastCardPlayed = WatcherEventListener.lastCardPlayed
+	if lastCardPlayed and lastCardPlayed.type == 'attack' then
+		table.insert(actions,ApplyPowerAction:new(target,WeakPower:new(target,self.magic)))
+	end
+	return actions
+end
+
+function SashWhip:checkGlow()
+	local lastCardPlayed = WatcherEventListener.lastCardPlayed
+	if lastCardPlayed and lastCardPlayed.type == 'attack' then
+		return 4
+	end
+end
+
+ThirdEye = PurpleCard:new{
+	name='Third Eye',description='Gain !B! {Block}. NL Scry !M!.',rarity='common',type='skill',baseCost=1,
+	baseBlock=7,baseMagic=3,playerTarget=true,upgrade={baseBlock=9,baseMagic=5},
+}
+function ThirdEye:use()
+	return { GainBlockAction:new{target=player,value=self.block},ScryAction:new(self.magic) }
+end
+
+Tranquility = PurpleCard:new{
+	name='Tranquility',description='Retain. NL Enter Calm. NL Exhaust.',rarity='common',type='skill',baseCost=1,
+	playerTarget=true,upgrade={baseCost=0},exhaust=true,retain=true,
+}
+function Tranquility:use()
+	return { ChangeStanceAction:new(Calm) }
+end
+
 purpleCards = {
-	StrikePurple,DefendPurple,Eruption,Vigilance,BowlingBash,Consecrate,Crescendo,
+	StrikePurple,DefendPurple,Eruption,Vigilance,BowlingBash,Consecrate,Crescendo,CrushJoints,CutThroughFate,EmptyBody,
+	EmptyFist,Evaluate,FlurryOfBlows,FlyingSleeves,FollowUp,Halt,JustLucky,PressurePoints,Prostrate,Protect,SashWhip,
+	ThirdEye,Tranquility,
 }
 
 -- relics

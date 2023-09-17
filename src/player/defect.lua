@@ -626,7 +626,7 @@ end
 
 Aggregate = BlueCard:new{
 	name='Aggregate',description='Gain {Energy} for every !M! cards in draw pile.',rarity='uncommon',type='skill',baseCost=1,baseMagic=4,
-	playerTarget=true,upgrade={baseMagic=3},
+	playerTarget=true,upgrade={baseMagic=3},preferSmallMagic=true,
 }
 function Aggregate:use()
 	local magic = self.magic

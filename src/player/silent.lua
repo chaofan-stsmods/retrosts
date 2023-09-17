@@ -639,7 +639,7 @@ function HeelHook:use(target)
 end
 
 function HeelHook:checkGlow()
-	if table.anyMatch(enemies,function (enemy) return enemy:getPower(WeakPower) ~= nil end) then
+	if table.anyMatch(enemies,function (enemy) return enemy.canInteract and enemy:getPower(WeakPower) ~= nil end) then
 		return 4
 	end
 end

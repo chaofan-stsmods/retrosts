@@ -608,7 +608,7 @@ function Dropkick:use(target)
 end
 
 function Dropkick:checkGlow()
-	if table.anyMatch(enemies,function (enemy) return enemy:getPower(VulnerablePower) ~= nil end) then
+	if table.anyMatch(enemies,function (enemy) return enemy.canInteract and enemy:getPower(VulnerablePower) ~= nil end) then
 		return 4
 	end
 end

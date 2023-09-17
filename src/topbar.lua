@@ -5,6 +5,7 @@ cursorOnTopBar = false
 local topBarSelection = {type=nil,index=0}
 local relicOffset = 0
 local relicOffsetTarget = 0
+local pauseControl = false
 function tickTopBar(control)
 	drawTopBar(control)
 	if control then
@@ -107,6 +108,11 @@ function drawPotionMenu(x)
 end
 
 function controlTopBar()
+	if pauseControl then
+		pauseControl = false
+		return
+	end
+
 	if btnp(6) then
 		if cursorOnTopBar then
 			exitTopBar()
@@ -271,4 +277,14 @@ function exitTopBar()
 	cursorOnTopBar = false
 	topBarSelection.type = nil
 	topBarSelection.potionIndex = nil
+end
+
+function enterTopbar(type,index,x)
+	cursorOnTopBar = true
+	topBarSelection.type = type or 'potion'
+	topBarSelection.index = index or 0
+	if topBarSelection.type == 'relic' and topBarSelection.index == 0 and x then
+		topBarSelection.index = limit(math.floor((relicOffset+x)/12),1,#relics)
+	end
+	pauseControl = true
 end
