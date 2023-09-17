@@ -223,18 +223,21 @@ function generateMap(random,width,height,count)
 
 	random:shuffle(roomPool)
 	assignRooms(unassignedRooms,roomPool)
-	if not emeraldKeyObtained then
-		local eliteRooms = {}
-		for i=height,1,-1 do
-			for j=1,width do
-				local room = map[i][j]
-				if room.hasEdge and room.type == 'elite' then
-					table.insert(eliteRooms,room)
-				end
+
+	local eliteRooms = {}
+	for i=height,1,-1 do
+		for j=1,width do
+			local room = map[i][j]
+			if room.hasEdge and room.type == 'elite' then
+				table.insert(eliteRooms,room)
 			end
 		end
-		if #eliteRooms > 0 then
-			eliteRooms[random:randInt(#eliteRooms)].hasKey = true
+	end
+	if #eliteRooms > 0 then
+		-- Always consume a random to prevent encounter change after SL
+		local eliteRoomIndex = random:randInt(#eliteRooms)
+		if not emeraldKeyObtained then
+			eliteRooms[eliteRoomIndex].hasKey = true
 		end
 	end
 

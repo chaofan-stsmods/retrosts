@@ -744,6 +744,30 @@ function Insight:use()
 	return { DrawCardAction:new(self.magic) }
 end
 
+Smite = ColorlessCard:new{
+	name='Smite',description='Retain. NL {Damage} !D!. NL Exhaust.',baseCost=1,type='attack',rarity='special',
+	enemyTarget=true,baseDamage=12,upgrade={baseDamage=16},exhaust=true,retain=true,
+}
+function Smite:use(target)
+	return { DamageAction:new{source=player,target=target,value=self.damage} }
+end
+
+Safety = ColorlessCard:new{
+	name='Safety',description='Retain. NL Gain !B! {Block}. NL Exhaust.',baseCost=1,type='skill',rarity='special',
+	playerTarget=true,baseBlock=12,upgrade={baseBlock=16},exhaust=true,retain=true,
+}
+function Safety:use()
+	return { GainBlockAction:new{target=player,value=self.block} }
+end
+
+ThroughViolence = ColorlessCard:new{
+	name='Through Violence',description='Retain. NL {Damage} !D!. NL Exhaust.',baseCost=0,type='attack',rarity='special',
+	enemyTarget=true,baseDamage=20,upgrade={baseDamage=30},exhaust=true,retain=true,
+}
+function ThroughViolence:use(target)
+	return { DamageAction:new{source=player,target=target,value=self.damage} }
+end
+
 colorlessCards = {
 	-- status
 	Wound,Dazed,Burn,Slimed,Void,
@@ -755,7 +779,7 @@ colorlessCards = {
 	MasterOfStrategy,HandOfGreed,ThinkingAhead,Apotheosis,Chrysalis,Metamorphosis,Magnetism,Mayhem,Panache,
 	SadisticNature,SecretTechnique,SecretWeapon,TheBomb,Transmutation,Violence,
 	-- special
-	JAX,Apparition,RitualDagger,Bite,Shiv,
+	JAX,Apparition,RitualDagger,Bite,Shiv,Miracle,Insight,Smite,Safety,ThroughViolence,
 }
 
 CurseCard = Card:new{color={15,0},costIcon=46,typeIconColor=13,colorName='curse',type='curse',rarity='common',baseCost=-2,baseCanUse=false,canUpgrade=false,playerTarget=true}

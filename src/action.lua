@@ -439,8 +439,9 @@ function DiscardNonRetainCardsAction:tick()
 			end
 		end
 	end
-	if #hand == numRetained then
+	if self.isDone or #hand == numRetained then
 		for _,cardItem in ipairs(hand) do
+			player:triggerEvent('onRetain',cardItem.card)
 			cardItem.card.tempRetain = false
 			cardItem.card.costForOneTurnPlay = nil
 		end
@@ -1093,6 +1094,7 @@ end
 
 function ScryAction:tick()
 	if self.duration == self.startDuration then
+		player:triggerEvent('onScry')
 		if #drawPile == 0 then
 			self.isDone = true
 			return

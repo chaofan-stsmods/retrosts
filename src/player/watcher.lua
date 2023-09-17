@@ -252,7 +252,7 @@ function DefendPurple:use()
 end
 
 Eruption = PurpleCard:new{
-	name='Eruption',description='Damage {Energy}. NL Enter Wrath.',rarity='basic',baseCost=2,playerTarget=true,
+	name='Eruption',description='Damage !D!. NL Enter Wrath.',rarity='basic',baseCost=2,playerTarget=true,
 	baseDamage=9,enemyTarget=true,upgrade={baseCost=1},
 }
 function Eruption:use(target)
@@ -370,9 +370,8 @@ function Evaluate:use()
 	return { GainBlockAction:new{target=player,value=self.block},MakeTempCardToDrawPileAction:new(Insight:new()) }
 end
 
--- TODO description is too long
 FlurryOfBlows = PurpleCard:new{
-	name='Flurry of Blows',description='{Damage} !D!. NL Whenever you change stances, return this from discard pile to hand.',
+	name='Flurry of Blows',description='{Damage} !D!. NL When stance is changed, return this from discard pile to hand.',
 	rarity='common',baseCost=0,baseDamage=4,enemyTarget=true,upgrade={baseDamage=6},
 }
 function FlurryOfBlows:use(target)
@@ -417,7 +416,7 @@ function FollowUp:checkGlow()
 end
 
 Halt = PurpleCard:new{
-	name='Halt',description='Gain !B! {Block}. NL Wrath: Gain !M! additional {Block}.',rarity='common',type='skill',baseCost=0,
+	name='Halt',description='Gain !B! {Block}. NL If you are in Wrath, gain !M! additional {Block}.',rarity='common',type='skill',baseCost=0,
 	baseBlock=3,baseMagic=9,playerTarget=true,upgrade={baseBlock=4,baseMagic=14},
 }
 function Halt:applyPowers(target)
@@ -472,7 +471,7 @@ function PressurePoints:use(target)
 	}
 end
 
-MarkPower = Power:new{icon=248,description='Whenever you play Pressure Points, loses #11#!A!#12# HP.'}
+MarkPower = Power:new{icon=248,debuff=true,description='Whenever you play Pressure Points, loses #11#!A!#12# HP.'}
 
 Prostrate = PurpleCard:new{
 	name='Prostrate',description='Gain !M! {MantraCard}. NL Gain !B! {Block}.',rarity='common',type='skill',baseCost=0,
@@ -529,10 +528,398 @@ function Tranquility:use()
 	return { ChangeStanceAction:new(Calm) }
 end
 
+BattleHymn = PurpleCard:new{
+	name='Battle Hymn',description='At the start of each turn, add a Smite into hand.',rarity='uncommon',type='power',baseCost=1,
+	playerTarget=true,upgrade={description='Innate. NL At the start of each turn, add a Smite into hand.',innate=true},
+}
+function BattleHymn:use()
+	return { ApplyPowerAction:new(player,BattleHymnPower:new(player,1)) }
+end
+
+BattleHymnPower = Power:new{icon=196,description='At the start of each turn, add #11#!A!#12# Smite{s} into hand.'}
+function BattleHymnPower:onTurnStart()
+	addAction(MakeTempCardToHandAction:new(Smite:new(),self.amount))
+end
+
+CarveReality = PurpleCard:new{
+	name='Carve Reality',description='{Damage} !D!. NL Add a Smite into hand.',rarity='uncommon',baseCost=1,
+	baseDamage=6,playerTarget=true,enemyTarget=true,upgrade={baseDamage=10},
+}
+function CarveReality:use(target)
+	return { DamageAction:new{target=target,source=player,value=self.damage},MakeTempCardToHandAction:new(Smite:new()) }
+end
+
+Collect = PurpleCard:new{
+	name='Collect',description='Put a Miracle+ into hand at the start of next X turns. NL Exhaust.',rarity='uncommon',
+	type='skill',baseCost=-1,playerTarget=true,upgrade={description='Put a Miracle+ into hand at the start of next X+1 turns. NL Exhaust.'},exhaust=true,
+}
+function Collect:use(_,energyOnUse,free)
+	local upgraded = self.upgraded
+	return {
+		XCardAction:new(function (amount)
+			if upgraded then
+				amount = amount + 1
+			end
+			return { ApplyPowerAction:new(player,CollectPower:new(player,amount)) }
+		end,energyOnUse,free)
+	}
+end
+
+CollectPower = TurnBasedPower:new{icon=211,description='At the start of next #11#!A!#12# turn{s}, put a Miracle+ into hand.'}
+function CollectPower:onTurnStart()
+	local card = Miracle:new()
+	card:upgrade()
+	addAction(MakeTempCardToHandAction:new(card))
+	TurnBasedPower.onTurnStart(self)
+end
+
+Conclude = PurpleCard:new{
+	name='Conclude',description='{Damage} !D! to all enemies. NL End your turn.',rarity='uncommon',baseCost=1,baseDamage=12,
+	playerTarget=true,enemyTarget=true,toAllEnemies=true,upgrade={baseDamage=16},
+}
+function Conclude:use()
+	addAction(EndTurnAction:new())
+	return { DamageAllEnemiesAction:new{source=player,value=self.multiDamage} }
+end
+
+DeceiveReality = PurpleCard:new{
+	name='Deceive Reality',description='Gain !B! {Block}. NL Add a Safety into hand.',rarity='uncommon',type='skill',baseCost=1,
+	baseBlock=4,playerTarget=true,upgrade={baseBlock=7},
+}
+function DeceiveReality:use()
+	return { GainBlockAction:new{target=player,value=self.block},MakeTempCardToHandAction:new(Safety:new()) }
+end
+
+EmptyMind = PurpleCard:new{
+	name='Empty Mind',description='Draw !M! cards. NL Exit stance.',rarity='uncommon',type='skill',baseCost=1,
+	baseMagic=2,playerTarget=true,upgrade={baseMagic=3},
+}
+function EmptyMind:use()
+	return { DrawCardAction:new(self.magic),ChangeStanceAction:new(Neutral) }
+end
+
+Fasting = PurpleCard:new{
+	name='Fasting',description='Gain !M! {Strength}. NL Gain !M! {Dexterity}. NL Gain 1 less {Energy} at the start of each turn.',rarity='uncommon',
+	type='power',baseCost=2,baseMagic=3,playerTarget=true,upgrade={baseMagic=4},
+}
+function Fasting:use()
+	return {
+		ApplyPowerAction:new(player,StrengthPower:new(player,self.magic)),
+		ApplyPowerAction:new(player,DexterityPower:new(player,self.magic)),
+		ApplyPowerAction:new(player,FastingPower:new(player,1))
+	}
+end
+
+FastingPower = Power:new{icon=232,debuff=true,description='At the start of turn, lose #11#!A!#12# {Energy}.'}
+function FastingPower:onTurnStart()
+	addAction(GainEnergyAction:new(-self.amount))
+end
+
+FearNoEvil = PurpleCard:new{
+	name='Fear No Evil',description='{Damage} !D!. NL If the enemy intends to attack, enter Calm.',rarity='uncommon',
+	baseCost=1,baseDamage=8,playerTarget=true,enemyTarget=true,upgrade={baseDamage=11},
+}
+function FearNoEvil:use(target)
+	return {
+		DamageAction:new{target=target,source=player,value=self.damage},
+		AnonymousAction:new(function ()
+			if target.intentType:sub(1,6) == 'attack' then
+				addAction(ChangeStanceAction:new(Calm))
+			end
+		end),
+	}
+end
+
+ForeignInfluence = PurpleCard:new{
+	name='Foreign Influence',description='Choose 1 of 3 any color {Attack} to add into hand. NL Exhaust.',rarity='uncommon',type='skill',
+	baseCost=1,playerTarget=true,upgrade={description='Choose 1 of 3 any color {Attack} to add into hand. It costs 0 this turn. NL Exhaust.'},exhaust=true,
+}
+function ForeignInfluence:use()
+	local upgraded = self.upgraded
+	return {
+		AnonymousAction:new(function ()
+			local cards = {}
+			for i = 1, 3 do
+				local rarity = 'rare'
+				local roll = miscRand:randInt(0,99)
+				if roll < 55 then
+					rarity = 'common'
+				elseif roll < 85 then
+					rarity = 'uncommon'
+				end
+				local card
+				repeat
+					card = getAllPlayerCardType(miscRand,rarity,'attack'):new()
+				until card.canGenerateInCombat and not table.anyMatch(cards,function (c) return getmetatable(c) == getmetatable(card) end)
+				cards[i] = card
+			end
+			openWindowAbove(CardRewardWindow:new{cards=cards,canClose=true},function (cardItem)
+				if not cardItem then
+					return
+				end
+				if cardItem.card:getCost() >= 0 and upgraded then
+					cardItem.card.costForOneTurnPlay = 0
+				end
+				addAction(1,MakeTempCardToHandAction:new(cardItem.card,1,{cardItem=cardItem}))
+			end)
+		end)
+	}
+end
+
+Foresight = PurpleCard:new{
+	name='Foresight',description='At start of turn, scry !M!.',rarity='uncommon',type='power',baseCost=1,
+	baseMagic=3,playerTarget=true,upgrade={baseMagic=4},
+}
+function Foresight:use()
+	return { ApplyPowerAction:new(player,ForesightPower:new(player,self.magic)) }
+end
+
+ForesightPower = Power:new{icon=214,description='At the start of turn, scry #11#!A!#12#.'}
+function ForesightPower:onTurnStart()
+	addAction(AnonymousAction:new(function ()
+		if #drawPile == 0 then
+			addAction(1,ShuffleAction:new())
+		end
+	end))
+	addAction(ScryAction:new(self.amount))
+end
+
+Indignation = PurpleCard:new{
+	name='Indignation',description='If you are in Wrath, apply !M! {Vulnerable} to all enemies, otherwise enter Wrath.',rarity='uncommon',
+	type='skill',baseCost=1,baseMagic=3,playerTarget=true,enemyTarget=true,toAllEnemies=true,upgrade={baseMagic=4},
+}
+function Indignation:use()
+	if player.stance == Wrath then
+		local result = {}
+		for _, enemy in ipairs(enemies) do
+			table.insert(result,ApplyPowerAction:new(player,VulnerablePower:new(enemy,self.magic)))
+		end
+		return result
+	else
+		return { ChangeStanceAction:new(Wrath) }
+	end
+end
+
+InnerPeace = PurpleCard:new{
+	name='Inner Peace',description='If you are in Calm, draw !M! cards, otherwise enter Calm.',rarity='uncommon',type='skill',baseCost=1,
+	playerTarget=true,baseMagic=3,upgrade={baseMagic=4},
+}
+function InnerPeace:use()
+	if player.stance == Calm then
+		return { DrawCardAction:new(self.magic) }
+	else
+		return { ChangeStanceAction:new(Calm) }
+	end
+end
+
+LikeWater = PurpleCard:new{
+	name='Like Water',description='At the end of turn, if you are in Calm, gain !M! {Block}.',rarity='uncommon',type='power',baseCost=1,
+	baseMagic=5,playerTarget=true,upgrade={baseMagic=7},
+}
+function LikeWater:use()
+	return { ApplyPowerAction:new(player,LikeWaterPower:new(player,self.magic)) }
+end
+
+LikeWaterPower = Power:new{icon=215,description='At the end of turn, if you are in Calm, gain #11#!A!#12# {Block}.'}
+function LikeWaterPower:onTurnEnd()
+	if player.stance == Calm then
+		addAction(GainBlockAction:new{target=player,value=self.amount})
+	end
+end
+
+Meditate = PurpleCard:new{
+	name='Meditate',description='Put a card from discard pile into hand and Retain. NL Enter Calm. NL End your turn.',rarity='uncommon',
+	type='skill',baseCost=1,playerTarget=true,baseMagic=1,
+	upgrade={baseMagic=2,description='Put !M! card from discard pile into hand and Retain. NL Enter Calm. NL End your turn.'},
+}
+function Meditate:use()
+	local amount = self.magic
+	addAction(EndTurnAction:new())
+	return {
+		AnonymousAction:new(function ()
+			local cardItems = {}
+			for i, card in ipairs(discardPile) do
+				cardItems[i] = CardItem:new{card=card,x=240,y=136,tx=240,ty=136,isNotInHand=true}
+			end
+			if #cardItems == 0 then
+				return
+			elseif #cardItems <= amount then
+				for _, cardItem in ipairs(cardItems) do
+					table.remove(discardPile,table.indexOf(discardPile,cardItem.card))
+					insertHand(cardItem)
+					cardItem.card.tempRetain = true
+				end
+			else
+				local title = amount == 1 and 'Choose a Card to Put into Hand' or 'Choose Cards to Put into Hand ({#}/'..amount..')'
+				openWindowAbove(CardGridSelectWindow:new{cardItems=cardItems,title=title,min=amount,max=amount},
+					function (cards)
+						for _, cardItem in ipairs(cards) do
+							table.remove(discardPile,table.indexOf(discardPile,cardItem.card))
+							insertHand(cardItem)
+							cardItem.card.tempRetain = true
+						end
+					end)
+			end
+		end),
+		ChangeStanceAction:new(Calm),
+	}
+end
+
+MentalFortress = PurpleCard:new{
+	name='Mental Fortress',description='Whenever you change stances, gain !M! {Block}.',rarity='uncommon',type='power',baseCost=1,
+	baseMagic=4,playerTarget=true,upgrade={baseMagic=6},
+}
+function MentalFortress:use()
+	return { ApplyPowerAction:new(player,MentalFortressPower:new(player,self.magic)) }
+end
+
+MentalFortressPower = Power:new{icon=216,description='Whenever you change stances, gain #11#!A!#12# {Block}.'}
+function MentalFortressPower:onEnterStance()
+	addAction(GainBlockAction:new{target=player,value=self.amount})
+end
+
+Nirvana = PurpleCard:new{
+	name='Nirvana',description='Whenever you scry, gain !M! {Block}.',rarity='uncommon',type='power',baseCost=1,
+	baseMagic=3,playerTarget=true,upgrade={baseMagic=4},
+}
+function Nirvana:use()
+	return { ApplyPowerAction:new(player,NirvanaPower:new(player,self.magic)) }
+end
+
+NirvanaPower = Power:new{icon=201,description='Whenever you scry, gain #11#!A!#12# {Block}.'}
+function NirvanaPower:onScry()
+	addAction(GainBlockAction:new{target=player,value=self.amount})
+end
+
+Perseverance = PurpleCard:new{
+	name='Perseverance',description='Retain. NL Gain !B! {Block}. NL When retained, this card +!M! {Block} gain this combat.',
+	rarity='uncommon',type='skill',baseCost=1,baseBlock=5,baseMagic=2,playerTarget=true,upgrade={baseBlock=7,baseMagic=3},retain=true,
+}
+function Perseverance:use()
+	return { GainBlockAction:new{target=player,value=self.block} }
+end
+
+function Perseverance:onRetain(card)
+	if card == self then
+		self.baseBlock = self.baseBlock + self.magic
+		self:applyPowers()
+	end
+end
+
+Pray = PurpleCard:new{
+	name='Pray',description='Gain !M! {MantraCard}. NL Shuffle an Insight into draw pile.',rarity='uncommon',type='skill',baseCost=1,
+	baseMagic=3,playerTarget=true,upgrade={baseMagic=4},
+}
+function Pray:use()
+	return {
+		ApplyPowerAction:new(player,MantraPower:new(player,self.magic)),
+		MakeTempCardToDrawPileAction:new(Insight:new())
+	}
+end
+
+ReachHeaven = PurpleCard:new{
+	name='Reach Heaven',description='{Damage} !D!. NL Shuffle a Through Violence into draw pile.',rarity='uncommon',
+	baseCost=2,baseDamage=10,enemyTarget=true,playerTarget=true,upgrade={baseDamage=15},
+}
+function ReachHeaven:use(target)
+	return {
+		DamageAction:new{target=target,source=player,value=self.damage},
+		MakeTempCardToDrawPileAction:new(ThroughViolence:new())
+	}
+end
+
+Rushdown = PurpleCard:new{
+	name='Rushdown',description='Whenever you enter Wrath, draw !M! cards.',rarity='uncommon',type='power',baseCost=1,
+	baseMagic=2,playerTarget=true,upgrade={baseCost=0},
+}
+function Rushdown:use()
+	return { ApplyPowerAction:new(player,RushdownPower:new(player,self.magic)) }
+end
+
+RushdownPower = Power:new{icon=202,description='Whenever you enter Wrath, draw #11#!A!#12# cards.'}
+function RushdownPower:onEnterStance(stance)
+	if stance == Wrath then
+		addAction(DrawCardAction:new(self.amount))
+	end
+end
+
+Sanctity = PurpleCard:new{
+	name='Sanctity',description='Gain !B! {Block}. NL If the last card played this combat was a {Skill}, draw !M! cards.',
+	rarity='uncommon',type='skill',baseCost=1,baseBlock=6,baseMagic=2,playerTarget=true,upgrade={baseBlock=9},
+}
+function Sanctity:use()
+	local actions = { GainBlockAction:new{target=player,value=self.block} }
+	local lastCardPlayed = WatcherEventListener.lastCardPlayed
+	if lastCardPlayed and lastCardPlayed.type == 'skill' then
+		table.insert(actions,DrawCardAction:new(self.magic))
+	end
+	return actions
+end
+
+function Sanctity:checkGlow()
+	local lastCardPlayed = WatcherEventListener.lastCardPlayed
+	if lastCardPlayed and lastCardPlayed.type == 'skill' then
+		return 4
+	end
+end
+
+SandsOfTime = PurpleCard:new{
+	name='Sands of Time',description='Retain. NL {Damage} !D!. NL When retained, lower its cost by 1 this combat.',
+	rarity='uncommon',baseCost=4,baseDamage=20,enemyTarget=true,upgrade={baseDamage=26},retain=true,
+}
+function SandsOfTime:use(target)
+	return { DamageAction:new{target=target,source=player,value=self.damage} }
+end
+
+function SandsOfTime:onRetain(card)
+	if card == self then
+		self:modifyBaseCost(-1)
+		self:applyPowers()
+	end
+end
+
+SignatureMove = PurpleCard:new{
+	name='Signature Move',description='Can only be played if this is the only Attack in hand. NL {Damage} !D!.',
+	rarity='uncommon',baseCost=2,baseDamage=30,enemyTarget=true,upgrade={baseDamage=40},
+}
+function SignatureMove:baseCanUse(free)
+	return PurpleCard.baseCanUse(self,free) and
+		table.allMatch(hand,function (cardItem) return cardItem.card.type ~= 'attack' or cardItem.card == self end)
+end
+
+function SignatureMove:use(target)
+	return { DamageAction:new{target=target,source=player,value=self.damage} }
+end
+
+function SignatureMove:checkGlow()
+	if table.allMatch(hand,function (cardItem) return cardItem.card.type ~= 'attack' or cardItem.card == self end) then
+		return 4
+	end
+end
+
+SimmeringFury = PurpleCard:new{
+	name='Simmering Fury',description='At the start of next turn, enter Wrath and draw !M! cards.',
+	rarity='uncommon',type='skill',baseCost=1,baseMagic=2,playerTarget=true,upgrade={baseMagic=3},
+}
+function SimmeringFury:use()
+	return {
+		ApplyPowerAction:new(player,SimmeringFuryPower:new(player)),
+		ApplyPowerAction:new(player,DrawCardNextTurnPower:new(player,self.magic)),
+	}
+end
+
+SimmeringFuryPower = Power:new{icon=17,stackable=false,description='At the start of next turn, enter Wrath.'}
+function SimmeringFuryPower:onTurnStart()
+	addAction(ChangeStanceAction:new(Wrath))
+	addAction(RemovePowerAction:new(self))
+end
+
 purpleCards = {
 	StrikePurple,DefendPurple,Eruption,Vigilance,BowlingBash,Consecrate,Crescendo,CrushJoints,CutThroughFate,EmptyBody,
 	EmptyFist,Evaluate,FlurryOfBlows,FlyingSleeves,FollowUp,Halt,JustLucky,PressurePoints,Prostrate,Protect,SashWhip,
-	ThirdEye,Tranquility,
+	ThirdEye,Tranquility,BattleHymn,CarveReality,Collect,Conclude,DeceiveReality,EmptyMind,Fasting,FearNoEvil,ForeignInfluence,
+	Foresight,Indignation,InnerPeace,LikeWater,Meditate,MentalFortress,Nirvana,Perseverance,Pray,ReachHeaven,Rushdown,
+	Sanctity,SandsOfTime,SignatureMove,SimmeringFury,
 }
 
 -- relics
@@ -569,7 +956,7 @@ function CloakClasp:onTurnEnd()
 	addAction(GainBlockAction:new{target=player,value=#hand})
 end
 
-GoldenEye = PurpleRelic:new{ name='Golden Eye',tier='rare',icon=245,description='Whenever you Scry, Scry #11#2#12# additional cards.' }
+GoldenEye = PurpleRelic:new{ name='Golden Eye',tier='rare',icon=245,description='Whenever you scry, Scry #11#2#12# additional cards.' }
 function GoldenEye:modifyScryAmount(amount)
 	return amount + 2
 end

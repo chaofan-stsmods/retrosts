@@ -215,6 +215,22 @@ function loadRewardGenerator(index)
 	potionRandOffset = (val32 >> 16) - 200
 end
 
+function getAllPlayerCardType(random,rarity,type,inCombat)
+	local allCardTypes = {}
+	for _,character in ipairs(characters) do
+		for _,cardType in ipairs(character:getCards()) do
+			table.insert(allCardTypes,cardType)
+		end
+	end
+	table.retainIf(allCardTypes,function (cardType)
+		return ((rarity == nil and (cardType.rarity == 'common' or cardType.rarity == 'uncommon' or cardType.rarity == 'rare'))
+				or cardType.rarity == rarity) and
+			(type == nil or cardType.type == type) and
+			(not inCombat or cardType.canGenerateInCombat)
+	end)
+	return allCardTypes[random:randInt(#allCardTypes)]
+end
+
 function getPlayerCardType(random,rarity,type,inCombat)
 	local allCardTypes = shallowcopy(player:getCards())
 	table.retainIf(allCardTypes,function (cardType)
