@@ -237,11 +237,18 @@ local divinityEffectIcons = {
 }
 local divinityEffectIconSequence = { 4,3,2,1,1,1,2,3,4 }
 local divinityEffectIconInterval = 6
-DivinityEffect = Effect:new{duration=#divinityEffectIconSequence*divinityEffectIconInterval,x=0,y=0}
+DivinityEffect = Effect:new{duration=#divinityEffectIconSequence*divinityEffectIconInterval,x=0,y=0,darken=false}
 function DivinityEffect:tick()
 	Effect.tick(self)
 	local icon = divinityEffectIcons[divinityEffectIconSequence[math.ceil(self.duration/divinityEffectIconInterval)]]
+	local wasDarken = isDarken
+	if self.darken and not isDarken then
+		darkenColors()
+	end
 	drawIcon(icon,self.x-4,self.y-4)
+	if self.darken and not wasDarken then
+		resetColors()
+	end
 end
 
 -- cards

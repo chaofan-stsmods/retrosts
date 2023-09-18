@@ -36,7 +36,7 @@ PALETTE_MAP = 0x3FF0
 HAND_LIMIT = 10
 
 effectRandom = Random:new()
-characters = {Ironclad,Silent,Defect}
+characters = {Ironclad,Silent,Defect,Watcher}
 
 switchWindow(TitleWindow:new())
 

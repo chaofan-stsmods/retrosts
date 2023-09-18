@@ -6,8 +6,37 @@ local function exp5(from,to,progress)
 	return from + (to-from) * y
 end
 
+local function exp5In(from,to,progress)
+	local y = progress^5
+	return from + (to-from) * y
+end
+
 local function linear(from,to,progress)
 	return from + (to-from) * progress
+end
+
+local function drawHolyLight(progress)
+	local y0 = -240
+	local width = 120 * progress
+	local maxTopWidth = 20
+	local x1 = 120 - width/2
+	local x2 = 120 + width/2
+	local x3 = 120 + math.min(maxTopWidth,width)/2
+	local x4 = 120 - math.min(maxTopWidth,width)/2
+	tri(x1,80,x2,80,x3,y0,15)
+	tri(x1,80,x4,y0,x3,y0,15)
+	if width > 10 then
+		tri(x1+5,80,x2-5,80,x3-5,y0,14)
+		tri(x1+5,80,x4+5,y0,x3-5,y0,14)
+	end
+	if width > 20 then
+		tri(x1+10,80,x2-10,80,x3-10,y0,13)
+		tri(x1+10,80,x4+10,y0,x3-10,y0,13)
+	end
+	if width > 30 then
+		tri(x1+15,80,x2-15,80,x3-15,y0,12)
+		tri(x1+15,80,x4+15,y0,x3-15,y0,12)
+	end
 end
 
 IroncladEnding = Event:new{spriteBank=5,screen='scene1',timer=0,items={},controlTopBar=false}
@@ -360,7 +389,7 @@ function DefectEnding:tick()
 			local ty = effectRandom:randInt(49,51)
 			local sh = effectRandom:randInt(2,3)
 			local sx = player.x+player.width*4
-			local sy = player.y+player.height*4
+			local sy = player.y+player.height*4-3
 			tri(sx,sy-sh/2,240,ty-th/2,240,ty+th/2,11)
 			tri(sx,sy-sh/2,sx,sy+sh/2,240,ty+th/2,11)
 			tri(sx,sy,240,ty-th/2+1,240,ty+th/2-1,12)
@@ -473,6 +502,101 @@ function DefectEnding:tick()
 				clearSavedGame()
 				switchWindow(VictoryWindow:new())
 			end
+		end
+	end
+end
+
+WatcherEnding = Event:new{spriteBank=5,screen='scene1',timer=0,items={},controlTopBar=false}
+function WatcherEnding:tick()
+	self.timer = self.timer + 1
+	local timer = self.timer
+	if self.screen == 'scene1' then
+		if timer > 340 then
+			mapColor(0,15)
+			mapColor(15,14)
+			mapColor(14,13)
+		end
+		act:drawBackground()
+		if timer > 340 then
+			resetColors{0,15,14}
+		end
+		if timer < 90 then
+			player.stance = Calm
+		else
+			player.stance = Wrath
+		end
+		if timer > 120 and timer <= 140 then
+			player.x = exp5In(30,112,(timer-120)/20)
+		end
+		if timer > 310 and timer <= 380 then
+			player.flipped = true
+			drawHolyLight((timer-310)/70)
+		elseif timer > 320 then
+			drawHolyLight(1)
+		end
+		player:drawImage()
+		player.stance:draw()
+
+		if timer <= 190 or (timer <= 270 and timer % 2 == 0) then
+			sprmap(62,17,9,10,136,4,0)
+		end
+		if timer > 190 and timer <= 270 and timer % 5 == 0 then
+			addEffect(HitParticleEffect:new{colors={4,4,3},x=172+effectRandom:randInt(-16,16),y=63+effectRandom:randInt(-16,16)})
+		end
+		if timer == 140 then
+			addEffect(HitParticleEffect:new{colors={11,11,10},x=148+effectRandom:randInt(-3,3),y=68+effectRandom:randInt(-3,3)})
+		end
+		if timer > 140 and timer <= 160 and timer % 2 == 0 then
+			spr(249,144,36,0,4)
+		end
+
+		if timer > 380 then
+			self.screen = 'scene2'
+			self.timer = 0
+		end
+	elseif self.screen == 'scene2' then
+		mapColor(0,15)
+		mapColor(15,14)
+		mapColor(14,13)
+		act:drawBackground()
+		resetColors{0,15,14}
+		drawHolyLight(1)
+
+		player.x = linear(112,100,timer/120)
+		player.y = linear(44,-40,timer/120)
+		player:drawImage()
+
+		if timer % 8 == 0 then
+			local x = effectRandom:randInt(-16,16) + player.x + player.width * 4
+			local y = effectRandom:randInt(4,player.height*8-4) + player.y
+			addEffect(DivinityEffect:new{x=x,y=y})
+		end
+
+		if timer > 160 then
+			self.screen = 'scene3'
+			self.timer = 0
+		end
+	elseif self.screen == 'scene3' then
+		if timer <= 100 then
+			TheBeyond:drawBackground()
+		elseif timer <= 200 then
+			TheCity:drawBackground()
+		else
+			Exordium:drawBackground()
+		end
+
+		local x = effectRandom:randInt(0,240)
+		local y = effectRandom:randInt(0,136)
+		addEffect(DivinityEffect:new{x=x,y=y,darken=timer>=300})
+
+		if timer == 300 then
+			for _,effect in ipairs(effects) do
+				if getmetatable(effect) == DivinityEffect then
+					effect.darken = true
+				end
+			end
+			clearSavedGame()
+			switchWindow(VictoryWindow:new())
 		end
 	end
 end
