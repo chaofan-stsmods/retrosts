@@ -968,7 +968,11 @@ end
 
 function TimeEater:enemyTurn()
 	if self.firstTurn then
-		addAction(TalkAction:new(self,'~Ah...~ NL ~..company...~',{duration=120}))
+		if getmetatable(player) == Watcher then
+			addAction(TalkAction:new(self,'~Never....~ NL ~...liked..~ NL ~..you...~',{duration=120}))
+		else
+			addAction(TalkAction:new(self,'~Ah...~ NL ~..company...~',{duration=120}))
+		end
 		self.firstTurn = false
 	end
 	Monster.enemyTurn(self)
@@ -1029,12 +1033,13 @@ function TimeWarpPower:onUseCard()
 	self.amount = self.amount + 1
 	if self.amount == 12 then
 		self.amount = 0
-		addAction(ApplyPowerAction:new(self.owner,StrengthPower:new(self.owner,2)))
+		disableAllUseCardActions()
 		if not endTurnPressed then
 			endTurnPressed = true
 			addEffect(TimeWarpEffect:new())
 			addAction(EndTurnAction:new())
 		end
+		addAction(ApplyPowerAction:new(self.owner,StrengthPower:new(self.owner,2)))
 	end
 end
 

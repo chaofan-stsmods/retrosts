@@ -364,10 +364,6 @@ function MindBlast:resetPowers()
 	ColorlessCard.resetPowers(self)
 end
 
-function MindBlast:onDraw()
-	self:applyPowers()
-end
-
 function MindBlast:use(target)
 	return { DamageAction:new{source=player,target=target,value=self.damage} }
 end
@@ -630,7 +626,7 @@ function SecretAction:tick()
 			table.remove(drawPile,table.indexOf(drawPile,cardItem.card))
 			insertHand(cardItem)
 		else
-			effectRandom:shuffle(cardItems)
+			table.sort(cardItems,function (a, b) return a.card.name < b.card.name end)
 			openWindowAbove(CardGridSelectWindow:new{cardItems=cardItems,title='Choose a Card to Put into Hand',max=1},
 				function (cards)
 					for _, cardItem in ipairs(cards) do
@@ -768,6 +764,53 @@ function ThroughViolence:use(target)
 	return { DamageAction:new{source=player,target=target,value=self.damage} }
 end
 
+Beta = ColorlessCard:new{
+	name='Beta',description='Shuffle an Omega into your draw pile. NL Exhaust.',baseCost=2,type='skill',rarity='special',
+	playerTarget=true,exhaust=true,upgrade={baseCost=1},
+}
+function Beta:use()
+	return { MakeTempCardToDrawPileAction:new(Omega:new()) }
+end
+
+Omega = ColorlessCard:new{
+	name='Omega',description='At the end of turn, {Damage} !M! to all enemies',baseCost=3,type='power',rarity='special',
+	baseMagic=50,playerTarget=true,upgrade={baseMagic=60},
+}
+function Omega:use()
+	return { ApplyPowerAction:new(player, OmegaPower:new(player,self.magic)) }
+end
+
+OmegaPower = Power:new{icon=217,description='At the end of turn, {Damage} #11#!damage!#12# to all enemies.'}
+function OmegaPower:onTurnEnd()
+	addAction(DamageAllEnemiesAction:new{source=self.owner,value=self.amount,type='power'})
+end
+
+Expunger = ColorlessCard:new{
+	name='Expunger',description='{Damage} !D!, X times.',baseCost=1,type='attack',rarity='special',
+	baseDamage=9,baseMagic=0,enemyTarget=true,upgrade={baseDamage=15},displayAttackCount='X',
+}
+function Expunger:new(x)
+	local r = ColorlessCard.new(self)
+	if x then
+		r.displayAttackCount = x
+		r.baseMagic = x
+		if x == 1 then
+			r.description = '{Damage} !D!, !M! time.'
+		else
+			r.description = '{Damage} !D!, !M! times.'
+		end
+	end
+	return r
+end
+
+function Expunger:use(target)
+	local actions = {}
+	for i=1,self.magic do
+		actions[i] = DamageAction:new{source=player,target=target,value=self.damage}
+	end
+	return actions
+end
+
 colorlessCards = {
 	-- status
 	Wound,Dazed,Burn,Slimed,Void,
@@ -779,7 +822,7 @@ colorlessCards = {
 	MasterOfStrategy,HandOfGreed,ThinkingAhead,Apotheosis,Chrysalis,Metamorphosis,Magnetism,Mayhem,Panache,
 	SadisticNature,SecretTechnique,SecretWeapon,TheBomb,Transmutation,Violence,
 	-- special
-	JAX,Apparition,RitualDagger,Bite,Shiv,Miracle,Insight,Smite,Safety,ThroughViolence,
+	JAX,Apparition,RitualDagger,Bite,Shiv,Miracle,Insight,Smite,Safety,ThroughViolence,Beta,Omega,Expunger,
 }
 
 CurseCard = Card:new{color={15,0},costIcon=46,typeIconColor=13,colorName='curse',type='curse',rarity='common',baseCost=-2,baseCanUse=false,canUpgrade=false,playerTarget=true}

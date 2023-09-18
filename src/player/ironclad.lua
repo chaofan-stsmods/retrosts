@@ -963,7 +963,7 @@ function FiendFire:use(target)
 		AnonymousAction:new(function ()
 			local targetCards = shallowcopy(hand)
 			miscRand:shuffle(targetCards)
-			
+
 			for _ = 1,#targetCards do
 				addAction(1,DamageAction:new{source=player,target=target,value=self.damage})
 			end

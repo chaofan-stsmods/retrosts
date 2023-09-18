@@ -39,6 +39,19 @@ function tickActions()
 	end
 end
 
+function disableAllUseCardActions()
+	for _,action in ipairs(actions) do
+		if getmetatable(action) == UseCardAction then
+			action.disabled = true
+		end
+	end
+	for _,action in ipairs(secondaryActions) do
+		if getmetatable(action) == UseCardAction then
+			action.disabled = true
+		end
+	end
+end
+
 ---@class Action : Object
 ---@field duration integer?
 ---@field startDuration integer?
@@ -74,6 +87,9 @@ function DrawCardAction:new(numCards,o)
 end
 
 function DrawCardAction:tick()
+	if #hand + self.numCards > HAND_LIMIT then
+		self.numCards = HAND_LIMIT - #hand
+	end
 	if self.numCards <= 0 or player:getPower(NoDrawPower) or (#discardPile == 0 and #drawPile == 0) then
 		self.isDone = true
 		return
@@ -110,7 +126,7 @@ end
 
 UseCardAction = Action:new{
 	cardItem=nil,target=nil,secondary=false,exhaust=false,rebound=false,randomTarget=false,free=false,forceUse=false,energyOnUse=nil,
-	tempCard=false,isDoubleTap=false,autoPlay=false,triggerOnUseCard=true,fromHand=false,tx=120,ty=68,duration=20
+	tempCard=false,isDoubleTap=false,autoPlay=false,triggerOnUseCard=true,fromHand=false,disabled=false,tx=120,ty=68,duration=20
 }
 function UseCardAction:new(o)
 	local cardItem = o.cardItem
@@ -143,7 +159,7 @@ function UseCardAction:tick()
 		else
 			card:applyPowers(self.target)
 		end
-		if not self.forceUse and (not card:canUse(self.free) or (self.target ~= nil and not self.target.canInteract)) then
+		if not self.forceUse and (self.disabled or not card:canUse(self.free) or (self.target ~= nil and not self.target.canInteract)) then
 			if self.fromHand and handIndex then
 				self.cardItem.isNotInHand = false
 				self.isDone = true
@@ -208,7 +224,7 @@ function UseCardEndAction:tick()
 		elseif exhaust or self.tempCard then
 			--self.cardItem.tx = 120
 			self.cardItem.ty = -32
-		elseif self.rebound then
+		elseif self.rebound or card.toDrawPileOnPlay then
 			self.cardItem.tx = 0
 			self.cardItem.ty = 136
 		else
@@ -231,6 +247,8 @@ function UseCardEndAction:tick()
 				player:triggerEvent('onExhaust',card)
 			elseif self.rebound then
 				table.insert(drawPile,self.cardItem.card)
+			elseif card.toDrawPileOnPlay then
+				table.insert(drawPile,miscRand:randInt(1,#drawPile+1),self.cardItem.card)
 			else
 				table.insert(discardPile,self.cardItem.card)
 			end
@@ -260,7 +278,7 @@ function UsePotionAction:tick()
 	Action.tick(self)
 end
 
-DamageAction = Action:new{source=nil,target=nil,value=nil,type=nil,color=2,duration=10}
+DamageAction = Action:new{source=nil,target=nil,value=nil,type=nil,color=2,callback=nil,duration=10}
 function DamageAction:tick()
 	if not self.source.alive and (self.type or 'attack') == 'attack' then
 		self.isDone = true
@@ -268,6 +286,9 @@ function DamageAction:tick()
 	end
 	if self.duration == self.startDuration then
 		self.target:damage(self.source,self.value,self.type,self)
+		if self.callback then
+			self.callback(self)
+		end
 	end
 	Action.tick(self)
 end
@@ -337,7 +358,7 @@ function HealAction:tick()
 	Action.tick(self)
 end
 
-EndTurnAction = Action:new{duration=10,secondary=true}
+EndTurnAction = Action:new{duration=10,secondary=true,skipEnemyTurn=false}
 function EndTurnAction:tick()
 	if self.duration == self.startDuration then
 		inEnemyTurn = true
@@ -347,22 +368,24 @@ function EndTurnAction:tick()
 		addAction(AutoPlayOnEndTurnAction:new())
 		addAction(HandleRemainingCardsAction:new{shouldDiscard=not hasRelic(RunicPryamid)})
 		player:onTurnEnd()
-		for _, enemy in ipairs(enemies) do
-			if enemy.alive then
-				enemy:onTurnStart(turn)
+		if not self.skipEnemyTurn then
+			for _, enemy in ipairs(enemies) do
+				if enemy.alive then
+					enemy:onTurnStart(turn)
+				end
+			end
+			for _, enemy in ipairs(enemies) do
+				if enemy.alive then
+					addAction(EnemeyTurnAction:new{enemy=enemy})
+				end
+			end
+			for _, enemy in ipairs(enemies) do
+				if enemy.alive then
+					addAction(EnemeyTurnEndAction:new{enemy=enemy})
+				end
 			end
 		end
-		for _, enemy in ipairs(enemies) do
-			if enemy.alive then
-				addAction(EnemeyTurnAction:new{enemy=enemy})
-			end
-		end
-		for _, enemy in ipairs(enemies) do
-			if enemy.alive then
-				addAction(EnemeyTurnEndAction:new{enemy=enemy})
-			end
-		end
-		addAction(NewTurnAction:new())
+		addAction(NewTurnAction:new{skipEnemyTurn=self.skipEnemyTurn})
 	end
 	Action.tick(self)
 end
@@ -449,9 +472,17 @@ function DiscardNonRetainCardsAction:tick()
 	end
 end
 
-NewTurnAction = Action:new{duration=10,secondary=true,additionalCard=0}
+NewTurnAction = Action:new{duration=10,secondary=true,additionalCard=0,skipEnemyTurn=false}
 function NewTurnAction:tick()
 	if self.duration == self.startDuration then
+		if turn ~= 0 and not self.skipEnemyTurn then
+			player:triggerEvent('onRoundEnd')
+			for _, enemy in ipairs(enemies) do
+				if enemy.alive then
+					enemy:triggerEvent('onRoundEnd')
+				end
+			end
+		end
 		player:onTurnStart(turn + 1)
 		addAction(DrawCardAction:new(player:triggerReducerEvent('modifyTurnStartDrawCount',5+self.additionalCard)))
 		player:triggerEvent('onTurnStartPostDraw', turn + 1)
@@ -645,6 +676,7 @@ function MakeTempCardToDiscardPileAction:tick()
 	if self.duration == self.startDuration then
 		for _ = 1,self.amount do
 			local card = self.card:copy()
+			player:triggerEvent('onTempCardMade',card)
 			table.insert(discardPile,card)
 			card:resetPowers()
 			local cardItem = self.cardItem and self.cardItem:copy() or CardItem:new{card=card,x=0,y=136,isNotInHand=true}
@@ -680,6 +712,7 @@ function MakeTempCardToHandAction:tick()
 			local card = self.card:copy()
 			local cardItem = self.cardItem and self.cardItem:copy() or CardItem:new{x=0,y=136}
 			cardItem.card = card
+			player:triggerEvent('onTempCardMade',card)
 			insertHand(cardItem)
 		end
 	end
@@ -698,6 +731,7 @@ function MakeTempCardToDrawPileAction:tick()
 	if self.duration == self.startDuration then
 		for _ = 1,self.amount do
 			local card = self.card:copy()
+			player:triggerEvent('onTempCardMade',card)
 			if self.putOnTop then
 				table.insert(drawPile,card)
 			else
@@ -1113,6 +1147,7 @@ function ScryAction:tick()
 					local effect = CardEffect:new{cardItem=cardItem,pauseDuration=1,duration=20,tx=240,ty=136}
 					addEffect(effect)
 				end
+				player:triggerEvent('onScried')
 			end)
 	end
 	Action.tick(self)

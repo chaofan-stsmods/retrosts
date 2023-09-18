@@ -62,10 +62,7 @@ function Card:canUse(free)
 end
 
 function Card:getCost()
-	if self.cost < 0 then
-		return self.cost
-	end
-	return self.costForOneTurnPlay or self.costForOnePlay or self.cost
+	return self.cost
 end
 
 function Card:applyPowers(target)
@@ -107,7 +104,7 @@ function Card:applyPowers(target)
 
 	self.magic = self.baseMagic
 
-	local cost = self.baseCost
+	local cost = self.costForOneTurnPlay or self.costForOnePlay or self.baseCost
 	cost = player:triggerReducerEvent('modifyCost',cost,self)
 	self.cost = math.floor(cost)
 
@@ -166,6 +163,7 @@ function Card:checkGlow()
 end
 
 function Card:modifyBaseCost(diff)
+	local oldBaseCost = self.baseCost
 	self.baseCost = math.max(0,self.baseCost+diff)
 	if self.costForOneTurnPlay then
 		self.costForOneTurnPlay = math.max(0,self.costForOneTurnPlay+diff)
@@ -173,7 +171,9 @@ function Card:modifyBaseCost(diff)
 	if self.costForOnePlay then
 		self.costForOnePlay = math.max(0,self.costForOnePlay+diff)
 	end
-	self.baseCostModified = true
+	if oldBaseCost ~= self.baseCost then
+		self.baseCostModified = true
+	end
 	if not table.anyMatch(hand,function (cardItem) return cardItem.card == self end) then
 		self:resetPowers()
 	end

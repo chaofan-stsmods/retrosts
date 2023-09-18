@@ -158,9 +158,9 @@ function drawPowerTooltip(item,x,y,width,bottomAlign)
 	icons.TempIcon = item.icon or 0
 	local description = '{TempIcon} '..(item.description or '')
 	if item.amount == 1 then
-		description = description:gsub('{s}',''):gsub('{is}','is')
+		description = description:gsub('{s}',''):gsub('{!s}','s'):gsub('{is}','is')
 	else
-		description = description:gsub('{s}','s'):gsub('{is}','are')
+		description = description:gsub('{s}','s'):gsub('{!s}',''):gsub('{is}','are')
 	end
 	local w,h = drawDescription(item,description,-width*8,0,width*8-4,999,12)
 	local boxX = math.min(x,240-width*8)

@@ -2,13 +2,20 @@
 
 local purpleCards
 
-WatcherEventListener = { lastCardPlayed=nil }
+WatcherEventListener = { lastCardPlayed=nil,mantraGainThisCombat=0 }
 function WatcherEventListener:onCombatStart()
 	self.lastCardPlayed = nil
+	self.mantraGainThisCombat = 0
 end
 
 function WatcherEventListener:onUseCard(card)
 	self.lastCardPlayed = card
+end
+
+function WatcherEventListener:onAppliedPower(power)
+	if getmetatable(power) == MantraPower then
+		self.mantraGainThisCombat = self.mantraGainThisCombat + power.amount
+	end
 end
 
 table.insert(playerEventListeners,WatcherEventListener)
@@ -39,7 +46,7 @@ function Watcher:drawImage()
 end
 
 function Watcher:drawCorpse()
-	map(7,13,7,2,self.x-4,self.y+20,0)
+	map(21,13,8,3,self.x-12,self.y+20,0)
 end
 
 function Watcher:getStartDeck()
@@ -579,7 +586,12 @@ Conclude = PurpleCard:new{
 }
 function Conclude:use()
 	addAction(EndTurnAction:new())
-	return { DamageAllEnemiesAction:new{source=player,value=self.multiDamage} }
+	return {
+		AnonymousAction:new(function ()
+			disableAllUseCardActions()
+		end),
+		DamageAllEnemiesAction:new{source=player,value=self.multiDamage},
+	}
 end
 
 DeceiveReality = PurpleCard:new{
@@ -737,6 +749,7 @@ function Meditate:use()
 	addAction(EndTurnAction:new())
 	return {
 		AnonymousAction:new(function ()
+			disableAllUseCardActions()
 			local cardItems = {}
 			for i, card in ipairs(discardPile) do
 				cardItems[i] = CardItem:new{card=card,x=240,y=136,tx=240,ty=136,isNotInHand=true}
@@ -914,12 +927,479 @@ function SimmeringFuryPower:onTurnStart()
 	addAction(RemovePowerAction:new(self))
 end
 
+Study = PurpleCard:new{
+	name='Study',description='At the end of turn, shuffle an Insight into draw pile.',rarity='uncommon',type='power',baseCost=2,
+	playerTarget=true,upgrade={baseCost=1},
+}
+function Study:use()
+	return { ApplyPowerAction:new(player,StudyPower:new(player,1)) }
+end
+
+StudyPower = Power:new{icon=icons.DrawCardEveryTurn,description='At the end of turn, shuffle #11#!A!#12# Insight{s} into draw pile.'}
+function StudyPower:onTurnEnd()
+	addAction(MakeTempCardToDrawPileAction:new(Insight:new(),self.amount))
+end
+
+Swivel = PurpleCard:new{
+	name='Swivel',description='Gain !B! {Block}. NL The next {Attack} you play costs 0.',rarity='uncommon',type='skill',baseCost=2,
+	baseBlock=8,playerTarget=true,upgrade={baseBlock=11},
+}
+function Swivel:use()
+	return {
+		GainBlockAction:new{target=player,value=self.block},
+		ApplyPowerAction:new(player,SwivelPower:new(player,1))
+	}
+end
+
+SwivelPower = Power:new{icon=199,description='The next #11#!A!#12# {Attack} you play cost{!s} 0.'}
+function SwivelPower:modifyCost(cost,card)
+	if card.type == 'attack' then
+		return 0
+	end
+end
+
+function SwivelPower:onUseCard(card)
+	if card.type == 'attack' then
+		addAction(ReducePowerAction:new(self,1))
+	end
+end
+
+TalkToTheHand = PurpleCard:new{
+	name='Talk to the Hand',description='{Damage} !D!. NL Whenever you attack this enemy, gain !M! {Block}. NL Exhaust.',rarity='uncommon',
+	baseCost=1,baseDamage=5,baseMagic=2,enemyTarget=true,upgrade={baseDamage=7,baseMagic=3},exhaust=true,
+}
+function TalkToTheHand:use(target)
+	return {
+		DamageAction:new{target=target,source=player,value=self.damage},
+		ApplyPowerAction:new(target,TalkToTheHandPower:new(target,self.magic))
+	}
+end
+
+TalkToTheHandPower = Power:new{icon=249,debuff=true,description='Whenever you attack this enemy, gain #11#!A!#12# {Block}.'}
+function TalkToTheHandPower:onDamaged(value,source,type)
+	if source == player and type == 'attack' then
+		addAction(1,GainBlockAction:new{target=player,value=self.amount})
+	end
+end
+
+Tantrum = PurpleCard:new{
+	name='Tantrum',description='{Damage} !D!, !M! times. NL Enter Wrath. NL Shuffle this card into draw pile.',rarity='uncommon',
+	baseCost=1,baseDamage=3,baseMagic=3,enemyTarget=true,playerTarget=true,upgrade={baseDamage=3,baseMagic=4,displayAttackCount=4},
+	toDrawPileOnPlay=true,displayAttackCount=3,
+}
+function Tantrum:use(target)
+	local actions = {}
+	for i = 1, self.magic do
+		table.insert(actions,DamageAction:new{target=target,source=player,value=self.damage})
+	end
+	table.insert(actions,ChangeStanceAction:new(Wrath))
+	return actions
+end
+
+Wallop = PurpleCard:new{
+	name='Wallop',description='{Damage} !D!. NL Gain {Block} equal to unblocked damage dealt.',rarity='uncommon',
+	baseCost=2,baseDamage=9,enemyTarget=true,playerTarget=true,upgrade={baseDamage=12},
+}
+function Wallop:use(target)
+	return {
+		DamageAction:new{target=target,source=player,value=self.damage,callback=function(action)
+			if action.damageDealt > 0 then
+				addAction(1,GainBlockAction:new{target=player,value=action.damageDealt})
+			end
+		end},
+	}
+end
+
+WaveOfTheHand = PurpleCard:new{
+	name='Wave of the Hand',description='Whenever you gain {Block} this turn, apply !M! {Weak} to all enemies.',rarity='uncommon',
+	type='skill',baseCost=1,baseMagic=1,playerTarget=true,upgrade={baseMagic=2},
+}
+function WaveOfTheHand:use()
+	return { ApplyPowerAction:new(player,WaveOfTheHandPower:new(player,self.magic)) }
+end
+
+WaveOfTheHandPower = Power:new{icon=233,description='Whenever you gain {Block} this turn, apply #11#!A!#12# {Weak} to all enemies.'}
+function WaveOfTheHandPower:onGainBlock(value)
+	if value <= 0 then
+		return
+	end
+	for _, enemy in ipairs(enemies) do
+		addAction(ApplyPowerAction:new(self.owner,WeakPower:new(enemy,self.amount)))
+	end
+end
+
+function WaveOfTheHandPower:onRoundEnd()
+	addAction(RemovePowerAction:new(self))
+end
+
+Weave = PurpleCard:new{
+	name='Weave',description='{Damage} !D!. NL Whenever you scry, return this from discard pile to hand.',rarity='uncommon',baseCost=0,
+	baseDamage=4,enemyTarget=true,upgrade={baseDamage=6},
+}
+function Weave:use(target)
+	return { DamageAction:new{target=target,source=player,value=self.damage} }
+end
+
+function Weave:onScried()
+	if table.anyMatch(discardPile,function (card) return card == self end) then
+		addAction(AnonymousAction:new(function ()
+			table.remove(discardPile,table.indexOf(discardPile,self))
+			insertHand(CardItem:new{card=self,x=240,y=136})
+		end))
+	end
+end
+
+WheelKick = PurpleCard:new{
+	name='Wheel Kick',description='{Damage} !D!. NL Draw !M! cards.',rarity='uncommon',baseCost=2,baseDamage=15,
+	baseMagic=2,enemyTarget=true,playerTarget=true,upgrade={baseDamage=20},
+}
+function WheelKick:use(target)
+	return {
+		DamageAction:new{target=target,source=player,value=self.damage},
+		DrawCardAction:new(self.magic)
+	}
+end
+
+WindmillStrike = PurpleCard:new{
+	name='Windmill Strike',description='Retain. NL {Damage} !D!. NL When retained, this card +!M! damage this combat.',rarity='uncommon',
+	baseCost=2,baseDamage=7,baseMagic=4,enemyTarget=true,upgrade={baseDamage=10,baseMagic=5},retain=true,tags={'strike'},
+}
+function WindmillStrike:use(target)
+	return { DamageAction:new{target=target,source=player,value=self.damage} }
+end
+
+function WindmillStrike:onRetain(card)
+	if card == self then
+		self.baseDamage = self.baseDamage + self.magic
+		self:applyPowers()
+	end
+end
+
+Worship = PurpleCard:new{
+	name='Worship',description='Gain !M! {MantraCard}.',rarity='uncommon',type='skill',baseCost=2,
+	baseMagic=5,playerTarget=true,upgrade={description='Retain. NL Gain !M! {MantraCard}.',retain=true},
+}
+function Worship:use()
+	return { ApplyPowerAction:new(player,MantraPower:new(player,self.magic)) }
+end
+
+WreathOfFlame = PurpleCard:new{
+	name='Wreath of Flame',description='Your next {Attack} deals !M! additional damage.',rarity='uncommon',type='skill',baseCost=1,
+	baseMagic=5,playerTarget=true,upgrade={baseMagic=8},
+}
+function WreathOfFlame:use()
+	return { ApplyPowerAction:new(player,VigorPower:new(player,self.magic)) }
+end
+
+Alpha = PurpleCard:new{
+	name='Alpha',description='Shuffle a Beta into your draw pile. NL Exhaust.',rarity='rare',type='skill',baseCost=1,
+	playerTarget=true,upgrade={description='Innate. NL Shuffle a Beta into your draw pile. NL Exhaust.',innate=true},exhaust=true,
+}
+function Alpha:use()
+	return { MakeTempCardToDrawPileAction:new(Beta:new()) }
+end
+
+Blasphemy = PurpleCard:new{
+	name='Blasphemy',description='Enter Divinity. NL Die next turn. NL Exhaust.',rarity='rare',type='skill',baseCost=1,
+	playerTarget=true,upgrade={description='Retain. NL Enter Divinity. NL Die next turn. NL Exhaust.',retain=true},exhaust=true,
+}
+function Blasphemy:use()
+	return {
+		ChangeStanceAction:new(Divinity),
+		ApplyPowerAction:new(player,BlasphemyPower:new(player))
+	}
+end
+
+BlasphemyPower = Power:new{icon=212,stackable=false,description='At the start of turn, die.'}
+function BlasphemyPower:onTurnStart()
+	addAction(DamageAction:new{target=self.owner,source=self.owner,value=114514,type='hpLoss'})
+	addAction(RemovePowerAction:new(self))
+end
+
+Brilliance = PurpleCard:new{
+	name='Brilliance',description='{Damage} !D!. NL Deals additional damage equal to {MantraCard} gained this combat.',rarity='rare',
+	baseCost=1,baseDamage=12,enemyTarget=true,upgrade={baseDamage=16},
+}
+function Brilliance:applyPowers(target)
+	self.baseDamage = self.baseDamage + WatcherEventListener.mantraGainThisCombat
+	PurpleCard.applyPowers(self,target)
+	self.baseDamage = self.baseDamage - WatcherEventListener.mantraGainThisCombat
+end
+
+function Brilliance:use(target)
+	return { DamageAction:new{target=target,source=player,value=self.damage} }
+end
+
+ConjureBlade = PurpleCard:new{
+	name='Conjure Blade',description='Shuffle an Expunger into draw pile. NL Exhaust.',rarity='rare',type='skill',baseCost=-1,
+	playerTarget=true,upgrade={description='Shuffle an Expunger with X+1 into draw pile. NL Exhaust.'},exhaust=true,
+}
+function ConjureBlade:use()
+	local upgraded = self.upgraded
+	return {
+		XCardAction:new(function (amount)
+			if upgraded then
+				amount = amount + 1
+			end
+			return { MakeTempCardToDrawPileAction:new(Expunger:new(amount)) }
+		end,energyOnUse,free)
+	}
+end
+
+DeusExMachina = PurpleCard:new{
+	name='Deus Ex Machina',description='Unplayable. NL When you draw this card, add !M! Miracles to hand and Exhaust.',rarity='rare',
+	type='skill',baseCost=-2,baseMagic=2,upgrade={baseMagic=3},baseCanUse=false,
+}
+function DeusExMachina:onDraw(card)
+	if card == self then
+		addAction(1,AnonymousAction:new(function ()
+			local cardIndex = nil
+			for j,cardItem in ipairs(hand) do
+				if cardItem.card == card then
+					cardIndex = j
+					break
+				end
+			end
+			if cardIndex then
+				addAction(1,ExhaustCardAction:new{cardItem=hand[cardIndex],show=true})
+				removeHand(cardIndex)
+			end
+		end))
+		addAction(2,MakeTempCardToHandAction:new(Miracle:new(),self.magic))
+	end
+end
+
+DevaForm = PurpleCard:new{
+	name='Deva Form',description='Ethereal. NL At the start of turn, gain {Energy} and increase this gain by !M!.',rarity='rare',
+	type='power',baseCost=3,baseMagic=1,playerTarget=true,ethereal=true,
+	upgrade={description='At the start of turn, gain {Energy} and increase this gain by !M!.',ethereal=false},
+}
+function DevaForm:use()
+	return { ApplyPowerAction:new(player,DevaFormPower:new(player,self.magic)) }
+end
+
+DevaFormPower = Power:new{icon=197,energy=1,description='At the start of turn, gain #11#!energy!#12# {Energy} and increase this by #11#!A!#12#.'}
+function DevaFormPower:stackPower(power)
+	self.energy = self.energy + power.energy
+	Power.stackPower(self,power)
+end
+
+function DevaFormPower:onTurnStart()
+	addAction(GainEnergyAction:new(self.energy))
+	self.energy = self.energy + self.amount
+end
+
+Devotion = PurpleCard:new{
+	name='Devotion',description='At the start of turn, gain !M! {MantraCard}.',rarity='rare',type='power',baseCost=1,
+	baseMagic=2,playerTarget=true,upgrade={baseMagic=3},
+}
+function Devotion:use()
+	return { ApplyPowerAction:new(player,DevotionPower:new(player,self.magic)) }
+end
+
+DevotionPower = Power:new{icon=213,description='At the start of turn, gain #11#!A!#12# {Mantra}.'}
+function DevotionPower:onTurnStart()
+	addAction(ApplyPowerAction:new(self.owner,MantraPower:new(self.owner,self.amount)))
+end
+
+Establishment = PurpleCard:new{
+	name='Establishment',description='Whenever a card is re- tained, reduce its cost by 1 this combat.',rarity='rare',type='power',
+	baseCost=1,playerTarget=true,upgrade={description='Innate. NL Whenever a card is re- tained, reduce its cost by 1 this combat.',innate=true},
+}
+function Establishment:use()
+	return { ApplyPowerAction:new(player,EstablishmentPower:new(player,1)) }
+end
+
+EstablishmentPower = Power:new{icon=198,description='Whenever a card is retained, reduce its cost by #11#!A!#12# this combat.'}
+function EstablishmentPower:onRetain(card)
+	card:modifyBaseCost(-self.amount)
+	card:applyPowers()
+end
+
+Judgement = PurpleCard:new{
+	name='Judgement',description='If the enemy has !M! or less HP, set their NL HP to 0.',rarity='rare',type='skill',baseCost=1,
+	baseMagic=30,enemyTarget=true,upgrade={baseMagic=40},
+}
+function Judgement:use(target)
+	local magic = self.magic
+	return {
+		EffectAction:new(TextEffect:new{x=target.x+target.width*4,y=target.y,text='JUDGED',scale=2,color=4,ySpeed=-0.5}),
+		AnonymousAction:new(function ()
+			if not target.canInteract then
+				return
+			end
+			if target.hp <= magic then
+				target.hp = 0
+				target:die()
+			end
+		end)
+	}
+end
+
+LessonLearned = PurpleCard:new{
+	name='Lesson Learned',description='{Damage} !D!. NL If Fatal, upgrade a random card in deck. NL Exhaust.',rarity='rare',baseCost=2,
+	baseDamage=10,enemyTarget=true,exhaust=true,upgrade={baseDamage=13},
+}
+function LessonLearned:use(target)
+	local damageAction = DamageAction:new{source=player,target=target,value=self.damage}
+	return {
+		damageAction,
+		FatalAction:new{target=target,action=damageAction,callback=function ()
+			local cards = shallowcopy(deck)
+			table.retainIf(cards,function(c) return c:canUpgrade() end)
+			if #cards > 0 then
+				local card = cards[miscRand:randInt(#cards)]
+				upgradeCardsWithEffect({CardItem:new{card=card,x=240,y=0,isNotInHand=true}})
+			end
+		end}
+	}
+end
+
+MasterReality = PurpleCard:new{
+	name='Master Reality',description='Whenever a card is created during combat, upgrade it.',rarity='rare',type='power',baseCost=1,
+	playerTarget=true,upgrade={baseCost=0},
+}
+function MasterReality:use()
+	return { ApplyPowerAction:new(player,MasterRealityPower:new(player)) }
+end
+
+MasterRealityPower = Power:new{icon=200,stackable=false,description='Whenever a card is created during combat, upgrade it.'}
+function MasterRealityPower:onTempCardMade(card)
+	if card:canUpgrade() then
+		card:upgrade()
+	end
+end
+
+Omniscience = PurpleCard:new{
+	name='Omniscience',description='Choose a card in draw pile. NL Play the chosen card twice and exhaust it. NL Exhaust.',rarity='rare',
+	type='skill',baseCost=4,playerTarget=true,upgrade={baseCost=3},exhaust=true,
+}
+function Omniscience:use()
+	return {
+		AnonymousAction:new(function()
+			local cardItems = {}
+			for i, card in ipairs(drawPile) do
+				cardItems[i] = CardItem:new{card=card,x=0,y=136,tx=240,ty=136,isNotInHand=true}
+			end
+			if #cardItems == 0 then
+				return
+			elseif #cardItems == 1 then
+				self:playCardTwice(cardItem[1])
+			else
+				table.sort(cardItems,function (a, b) return a.card.name < b.card.name end)
+				openWindowAbove(CardGridSelectWindow:new{cardItems=cardItems,title='Choose a Card to play.',max=1},
+					function (cards)
+						for _, cardItem in ipairs(cards) do
+							self:playCardTwice(cardItem)
+						end
+					end)
+			end
+		end)
+	}
+end
+
+function Omniscience:playCardTwice(cardItem)
+	table.remove(drawPile,table.indexOf(drawPile,cardItem.card))
+	cardItem.large = false
+	local action = UseCardAction:new{cardItem=cardItem,isDoubleTap=false,randomTarget=true,exhaust=true,free=true,target=target,energyOnUse=energy}
+	action.useCardPosition = fillCardPosition(cardItem,2)
+	table.insert(limbo,cardItem)
+	addAction(1,action)
+	cardItem = cardItem:copy()
+	action = UseCardAction:new{cardItem=cardItem,isDoubleTap=true,temp=true,randomTarget=true,exhaust=true,free=true,target=target,energyOnUse=energy}
+	action.useCardPosition = fillCardPosition(cardItem,2)
+	table.insert(limbo,cardItem)
+	addAction(2,action)
+end
+
+Ragnarok = PurpleCard:new{
+	name='Ragnarok',description='{Damage} !D! to a random enemy !M! times.',rarity='rare',baseCost=3,baseDamage=5,baseMagic=5,enemyTarget=true,
+	toAllEnemies=true,upgrade={baseDamage=6,baseMagic=6,displayAttackCount=6},displayAttackCount=5,
+}
+function Ragnarok:use(target)
+	local actions = {}
+	for i = 1, self.magic do
+		actions[i] = DamageRandomEnemyAction:new{target=target,source=player,value=self.damage}
+	end
+	return actions
+end
+
+Scrawl = PurpleCard:new{
+	name='Scrawl',description='Draw cards until hand is full. NL Exhaust.',rarity='rare',type='skill',baseCost=1,playerTarget=true,
+	upgrade={baseCost=0},exhaust=true,
+}
+function Scrawl:use()
+	return { DrawCardAction:new(HAND_LIMIT) }
+end
+
+SpiritShield = PurpleCard:new{
+	name='Spirit Shield',description='Gain !M! {Block} for each card in hand.',rarity='rare',type='skill',baseCost=2,playerTarget=true,
+	baseMagic=3,upgrade={baseMagic=4},
+}
+function SpiritShield:applyPowers(target)
+	self.baseBlock = table.count(hand,function (cardItem) return cardItem.card ~= self end) * self.baseMagic
+	self.description = 'Gain !M! {Block} for each card in hand. NL (!B! {Block})'
+	BlueCard.applyPowers(self,target)
+end
+
+function SpiritShield:resetPowers()
+	self.description = 'Gain !M! {Block} for each card in hand.'
+	BlueCard.resetPowers(self)
+end
+
+function SpiritShield:use()
+	return { GainBlockAction:new{target=player,value=self.block} }
+end
+
+Vault = PurpleCard:new{
+	name='Vault',description='Take an extra turn after this one. NL End your turn. NL Exhaust.',rarity='rare',type='skill',baseCost=3,
+	playerTarget=true,upgrade={baseCost=2},exhaust=true,
+}
+function Vault:use()
+	addAction(EndTurnAction:new{skipEnemyTurn=true})
+	return {}
+end
+
+Wish = PurpleCard:new{
+	name='Wish',description='Choose one: NL Gain !B! {62}, !D! {Strength}, or !M! Gold. NL Exhaust.',rarity='rare',type='skill',
+	baseCost=3,playerTarget=true,baseBlock=6,baseDamage=3,baseMagic=25,upgrade={baseBlock=8,baseDamage=4,baseMagic=30},exhaust=true,
+}
+function Wish:applyPowers()
+	PurpleCard.applyPowers(self)
+	self.block = self.baseBlock
+	self.damage = self.baseDamage
+	self.magic = self.baseMagic
+end
+
+function Wish:use()
+	local block,damage,magic = self.block,self.damage,self.magic
+	return { AnonymousAction:new(function ()
+		local liveForever = ColorlessCard:new{name='Live Forever',description='Gain '..block..' {62}.',rarity='special',type='power',baseCost=-2}
+		local becomeAlmighty = ColorlessCard:new{name='Become Almighty',description='Gain '..damage..' {Strength}.',rarity='special',type='power',baseCost=-2}
+		local fameAndFortune = ColorlessCard:new{name='Fame and Fortune',description='Gain '..magic..' Gold.',rarity='special',type='skill',baseCost=-2}
+		openWindowAbove(CardRewardWindow:new{cards={becomeAlmighty,fameAndFortune,liveForever},title='Choose One',canClose=false},
+			function (cardItem)
+				if cardItem.card == liveForever then
+					addAction(1,ApplyPowerAction:new(player,PlatedArmorPower:new(player,block)))
+				elseif cardItem.card == becomeAlmighty then
+					addAction(1,ApplyPowerAction:new(player,StrengthPower:new(player,damage)))
+				else
+					addAction(1,AnonymousAction:new(function ()
+						gainGold(magic)
+					end))
+				end
+			end)
+	end) }
+end
+
 purpleCards = {
 	StrikePurple,DefendPurple,Eruption,Vigilance,BowlingBash,Consecrate,Crescendo,CrushJoints,CutThroughFate,EmptyBody,
 	EmptyFist,Evaluate,FlurryOfBlows,FlyingSleeves,FollowUp,Halt,JustLucky,PressurePoints,Prostrate,Protect,SashWhip,
 	ThirdEye,Tranquility,BattleHymn,CarveReality,Collect,Conclude,DeceiveReality,EmptyMind,Fasting,FearNoEvil,ForeignInfluence,
 	Foresight,Indignation,InnerPeace,LikeWater,Meditate,MentalFortress,Nirvana,Perseverance,Pray,ReachHeaven,Rushdown,
-	Sanctity,SandsOfTime,SignatureMove,SimmeringFury,
+	Sanctity,SandsOfTime,SignatureMove,SimmeringFury,Study,Swivel,TalkToTheHand,Tantrum,Wallop,WaveOfTheHand,Weave,WheelKick,
+	WindmillStrike,Worship,WreathOfFlame,Alpha,Blasphemy,Brilliance,ConjureBlade,DeusExMachina,DevaForm,Devotion,Establishment,
+	Judgement,LessonLearned,MasterReality,Omniscience,Ragnarok,Scrawl,SpiritShield,Vault,Wish,
 }
 
 -- relics
@@ -995,9 +1475,9 @@ function StancePotion:use()
 		local wrath = ColorlessCard:new{name='Wrath',description='Deal and receive double attack damage.',rarity='special',type='skill',baseCost=-2}
 		openWindowAbove(CardRewardWindow:new{cards={wrath,calm},title='Choose One',canClose=false},function (cardItem)
 			if cardItem.card == calm then
-				addAction(ChangeStanceAction:new(Calm))
+				addAction(1,ChangeStanceAction:new(Calm))
 			else
-				addAction(ChangeStanceAction:new(Wrath))
+				addAction(1,ChangeStanceAction:new(Wrath))
 			end
 		end)
 	end) }

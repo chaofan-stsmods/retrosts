@@ -219,10 +219,8 @@ function Creature:triggerConditionEvent(name,default,...)
 end
 
 function Creature:onTurnStart(turn)
-	addAction(AnonymousAction:new(function ()
-		self.block = self.block - self:triggerReducerEvent('onBeforeTurnStartLoseBlock',self.block)
-	end))
 	self:triggerEvent('onTurnStart',turn)
+	self.block = self.block - self:triggerReducerEvent('onBeforeTurnStartLoseBlock',self.block)
 end
 
 function Creature:onTurnEnd()

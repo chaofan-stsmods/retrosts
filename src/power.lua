@@ -65,21 +65,7 @@ function TurnBasedPower:new(owner,amount,keepForOneTurn)
 	return r
 end
 
-function TurnBasedPower:onTurnStart()
-	if self.owner ~= player then
-		return
-	end
-	if self.keepForOneTurn then
-		self.keepForOneTurn = false
-		return
-	end
-	addAction(ReducePowerAction:new(self,1))
-end
-
-function TurnBasedPower:onTurnEnd()
-	if self.owner == player then
-		return
-	end
+function TurnBasedPower:onRoundEnd()
 	if self.keepForOneTurn then
 		self.keepForOneTurn = false
 		return

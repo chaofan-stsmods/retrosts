@@ -1499,7 +1499,7 @@ function Seek:use()
 					insertHand(cardItem)
 				end
 			else
-				effectRandom:shuffle(cardItems)
+				table.sort(cardItems,function (a, b) return a.card.name < b.card.name end)
 				local title = amount == 1 and 'Choose a Card to Put into Hand' or 'Choose Cards to Put into Hand ({#}/'..tostring(amount)..')'
 				openWindowAbove(CardGridSelectWindow:new{cardItems=cardItems,title=title,min=amount,max=amount},
 					function (cards)
