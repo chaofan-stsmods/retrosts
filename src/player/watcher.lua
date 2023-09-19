@@ -46,7 +46,7 @@ function Watcher:drawImage()
 end
 
 function Watcher:drawCorpse()
-	map(21,13,8,3,self.x-12,self.y+20,0)
+	map(21,13,7,2,self.x-4,self.y+28,0)
 end
 
 function Watcher:getStartDeck()
@@ -584,7 +584,6 @@ function CollectPower:onTurnStart()
 	local card = Miracle:new()
 	card:upgrade()
 	addAction(MakeTempCardToHandAction:new(card))
-	TurnBasedPower.onTurnStart(self)
 end
 
 Conclude = PurpleCard:new{

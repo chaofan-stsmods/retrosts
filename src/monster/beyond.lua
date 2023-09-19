@@ -327,7 +327,6 @@ function FadingPower:onTurnEnd()
 	if self.amount == 1 then
 		addAction(SuicideAction:new{target=self.owner})
 	end
-	TurnBasedPower.onTurnEnd(self)
 end
 
 ShiftingPower = Power:new{icon=308,stackable=false,description='Upon losing HP, loses that much {Strength} until the end of the turn.'}
