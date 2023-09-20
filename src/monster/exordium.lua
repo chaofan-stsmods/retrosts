@@ -1237,15 +1237,14 @@ function TheGuardian:roll()
 end
 
 function TheGuardian:twinSlam()
-	for _=1,self.intentAttackCount do
-		addAction(DamageAction:new{target=player,source=self,value=self.intentDamage})
-	end
 	addAction(AnonymousAction:new(function ()
 		self.defensiveMode = false
 	end))
-	local power = self:getPower(SharpHidePower)
-	addAction(ReducePowerAction:new(power,power.amount))
+	addAction(RemovePowerByTypeAction:new(self,SharpHidePower))
 	addAction(ApplyPowerAction:new(self,ModeShiftPower:new(self,self.modeShiftAmount)))
+	for _=1,self.intentAttackCount do
+		addAction(DamageAction:new{target=player,source=self,value=self.intentDamage})
+	end
 	addAction(SetIntentAction:new(self,'whirlwind','attack',self.whirlwindDmg,5))
 end
 
@@ -1260,6 +1259,7 @@ function ModeShiftPower:onDamaged(value)
 		self.amount = self.amount - value
 	elseif owner.alive and not owner.enteringDefensiveMode then
 		owner.enteringDefensiveMode = true
+		self.amount = 0
 		addAction(RemovePowerAction:new(self))
 		addAction(GainBlockAction:new{target=owner,value=20})
 		addAction(AnonymousAction:new(function ()

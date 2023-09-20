@@ -369,25 +369,31 @@ function EndTurnAction:tick()
 		addAction(HandleRemainingCardsAction:new{shouldDiscard=not hasRelic(RunicPryamid)})
 		player:onTurnEnd()
 		if not self.skipEnemyTurn then
-			for _, enemy in ipairs(enemies) do
-				if enemy.alive then
-					enemy:onTurnStart(turn)
-				end
-			end
-			for _, enemy in ipairs(enemies) do
-				if enemy.alive then
-					addAction(EnemeyTurnAction:new{enemy=enemy})
-				end
-			end
-			for _, enemy in ipairs(enemies) do
-				if enemy.alive then
-					addAction(EnemeyTurnEndAction:new{enemy=enemy})
-				end
-			end
+			addAction(AllEnemyTurnAction:new())
 		end
 		addAction(NewTurnAction:new{skipEnemyTurn=self.skipEnemyTurn})
 	end
 	Action.tick(self)
+end
+
+AllEnemyTurnAction = Action:new{secondary=true}
+function AllEnemyTurnAction:tick()
+	for _, enemy in ipairs(enemies) do
+		if enemy.alive then
+			enemy:onTurnStart(turn)
+		end
+	end
+	for _, enemy in ipairs(enemies) do
+		if enemy.alive then
+			addAction(EnemeyTurnAction:new{enemy=enemy})
+		end
+	end
+	for _, enemy in ipairs(enemies) do
+		if enemy.alive then
+			addAction(EnemeyTurnEndAction:new{enemy=enemy})
+		end
+	end
+	self.isDone = true
 end
 
 EnemeyTurnAction = Action:new{secondary=true,enemy=nil}

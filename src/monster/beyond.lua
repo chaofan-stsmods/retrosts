@@ -126,7 +126,9 @@ function LifeLinkPower:onDeath()
 	if table.anyMatch(enemies,function (enemy) return enemy.alive and enemy:getPower(LifeLinkPower) ~= nil end) then
 		self.owner.alive = true
 		self.owner.visible = true
-		self.owner.powers = {}
+		addAction(1,AnonymousAction:new(function ()
+			self.owner.powers = {}
+		end))
 		addAction(SetIntentAction:new(self.owner,'count','unknown',0,0,false))
 	elseif table.allMatch(enemies,function (enemy) return not enemy.alive or (enemy.hp <= 0 and not enemy.canInteract) end) then
 		for _, enemy in ipairs(enemies) do

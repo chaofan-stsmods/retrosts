@@ -36,7 +36,7 @@ end
 
 function Monster:onTurnEnd()
 	Creature.onTurnEnd(self)
-	addAction(AllEnemyTurnEndAction:new(self))
+	addAction(ShowIntentAction:new(self))
 end
 
 function Monster:enemyTurn()
@@ -175,12 +175,12 @@ function EnemyTurnEndAction:tick()
 	Action.tick(self)
 end
 
-AllEnemyTurnEndAction = Action:new{duration=5}
-function AllEnemyTurnEndAction:new(owner)
+ShowIntentAction = Action:new{duration=5}
+function ShowIntentAction:new(owner)
 	return Action.new(self,{owner=owner})
 end
 
-function AllEnemyTurnEndAction:tick()
+function ShowIntentAction:tick()
 	if self.duration == self.startDuration then
 		local owner = self.owner;
 		owner.showIntent = true
