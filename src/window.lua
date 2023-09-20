@@ -117,7 +117,25 @@ function closeChildWindows(output)
 end
 
 -- instance
-TitleSelectionWindow = Window:new{selection=1,options={},onOption=noop}
+local fires = {}
+local backClouds = {{30,59,7,3},{30,62,8,1},{30,63,6,1},{30,64,6,1},{30,65,7,2}}
+local frontClouds = {{38,51,15,3},{38,54,12,3},{38,57,4,2},{42,57,4,2},{50,54,13,4},{37,59,8,2},{45,59,14,5},{37,64,15,4}}
+local clouds1 = {}
+local clouds2 = {}
+for i=1,20 do
+	local cloud = backClouds[effectRandom:randInt(#backClouds)]
+	local x = effectRandom:randInt(-cloud[3]*8-20,240)
+	local y = effectRandom:randInt(16,70)
+	clouds1[i] = {item=cloud,x=x,y=y,speedX=effectRandom:randFloat(0.1,0.15),flipped=effectRandom:randBool()}
+end
+for i=1,12 do
+	local cloud = frontClouds[effectRandom:randInt(#frontClouds)]
+	local x = effectRandom:randInt(-cloud[3]*8,260)
+	local y = effectRandom:randInt(24,136-cloud[4]*8)
+	clouds2[i] = {item=cloud,x=x,y=y,speedX=-effectRandom:randFloat(0.15,0.2),flipped=effectRandom:randBool()}
+end
+
+TitleSelectionWindow = Window:new{selection=1,options=nil,onOption=noop}
 function TitleSelectionWindow:onOpen()
 	queueSync(1,0)
 end
@@ -135,7 +153,52 @@ function TitleSelectionWindow:tick()
 		self:close()
 	end
 
-	map(0,51,30,17,0,0)
+	cls(13)
+	for i,cloud in ipairs(clouds1) do
+		local item = cloud.item
+		if cloud.flipped then
+			map(item[1],item[2],item[3],item[4],cloud.x,cloud.y,13,1,flipRemap(item[1],item[3]))
+		else
+			map(item[1],item[2],item[3],item[4],cloud.x,cloud.y,13)
+		end
+		cloud.x = cloud.x + cloud.speedX
+		if cloud.x > 240 then
+			local item = backClouds[effectRandom:randInt(#backClouds)]
+			local x = effectRandom:randInt(-20,0)-item[3]*8
+			local y = effectRandom:randInt(16,70)
+			clouds1[i] = {item=item,x=x,y=y,speedX=effectRandom:randFloat(0.1,0.15),flipped=effectRandom:randBool()}
+		end
+	end
+	map(0,51,30,17,0,0,13)
+	for i,cloud in ipairs(clouds2) do
+		local item = cloud.item
+		if cloud.flipped then
+			map(item[1],item[2],item[3],item[4],cloud.x,cloud.y,13,1,flipRemap(item[1],item[3]))
+		else
+			map(item[1],item[2],item[3],item[4],cloud.x,cloud.y,13)
+		end
+		cloud.x = cloud.x + cloud.speedX
+		if cloud.x < -item[3]*8 then
+			local item = frontClouds[effectRandom:randInt(#frontClouds)]
+			local x = effectRandom:randInt(0,20)+240
+			local y = effectRandom:randInt(24,136-item[4]*8)
+			clouds2[i] = {item=item,x=x,y=y,speedX=-effectRandom:randFloat(0.15,0.2),flipped=effectRandom:randBool()}
+		end
+	end
+	map(30,51,8,8,88,36,13)
+	if effectRandom:randInt(0,5) == 0 then
+		fires[#fires+1] = {x=effectRandom:randInt(123,126),y=effectRandom:randInt(70,76),timer=effectRandom:randInt(20,30),color=effectRandom:randInt(11,12)}
+	end
+	for i=#fires,1,-1 do
+		local fire = fires[i]
+		fire.timer = fire.timer - 1
+		fire.y = fire.y - 0.3
+		if fire.timer < 0 then
+			table.remove(fires,i)
+		end
+		pix(fire.x,fire.y,fire.color)
+	end
+
 	local x = 176
 	printShadowed('To report bugs,',x,110,12,nil,1,true)
 	printShadowed('please join my QQ',x,118,12,nil,1,true)
