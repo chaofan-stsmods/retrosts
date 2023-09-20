@@ -116,7 +116,7 @@ function Card:resetPowers()
 	self.damage = self.baseDamage
 	self.block = self.baseBlock
 	self.magic = self.baseMagic
-	self.cost = self.baseCost
+	self.cost = self.costForOneTurnPlay or self.costForOnePlay or self.baseCost
 end
 
 function Card:showUpgrade()
@@ -176,6 +176,8 @@ function Card:modifyBaseCost(diff)
 	end
 	if not table.anyMatch(hand,function (cardItem) return cardItem.card == self end) then
 		self:resetPowers()
+	else
+		self:applyPowers()
 	end
 end
 

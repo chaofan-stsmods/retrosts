@@ -187,7 +187,7 @@ function TitleSelectionWindow:tick()
 	end
 	map(30,51,8,8,88,36,13)
 	if effectRandom:randInt(0,5) == 0 then
-		fires[#fires+1] = {x=effectRandom:randInt(123,126),y=effectRandom:randInt(70,76),timer=effectRandom:randInt(20,30),color=effectRandom:randInt(11,12)}
+		fires[#fires+1] = {x=effectRandom:randInt(125,127),y=effectRandom:randInt(68,73),timer=effectRandom:randInt(20,30),color=effectRandom:randInt(11,12)}
 	end
 	for i=#fires,1,-1 do
 		local fire = fires[i]

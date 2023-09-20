@@ -77,7 +77,7 @@ function Watcher:getAscensionMaxHPLoss()
 end
 
 function Watcher:getMatchAndKeepCardType()
-	return Neutralize
+	return Eruption
 end
 
 function Watcher:getRelics()
@@ -393,9 +393,9 @@ function FlurryOfBlows:use(target)
 end
 
 function FlurryOfBlows:onEnterStance()
-	if table.anyMatch(discardPile,function (card) return card == self end) and #hand < HAND_LIMIT then
+	if table.anyMatch(discardPile,function (card) return card == self end) then
 		addAction(AnonymousAction:new(function ()
-			if table.anyMatch(discardPile,function (card) return card == self end) then
+			if #hand < HAND_LIMIT and table.anyMatch(discardPile,function (card) return card == self end) then
 				table.remove(discardPile,table.indexOf(discardPile,self))
 				insertHand(CardItem:new{card=self,x=240,y=136})
 			end
@@ -1052,7 +1052,7 @@ end
 function Weave:onScried()
 	if table.anyMatch(discardPile,function (card) return card == self end) then
 		addAction(AnonymousAction:new(function ()
-			if table.anyMatch(discardPile,function (card) return card == self end) and #hand < HAND_LIMIT then
+			if #hand < HAND_LIMIT and table.anyMatch(discardPile,function (card) return card == self end) then
 				table.remove(discardPile,table.indexOf(discardPile,self))
 				insertHand(CardItem:new{card=self,x=240,y=136})
 			end

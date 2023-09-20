@@ -383,14 +383,17 @@ function AllEnemyTurnAction:tick()
 			enemy:onTurnStart(turn)
 		end
 	end
+	local index = 1
 	for _, enemy in ipairs(enemies) do
 		if enemy.alive then
-			addAction(EnemeyTurnAction:new{enemy=enemy})
+			addAction(index,EnemeyTurnAction:new{enemy=enemy})
+			index = index + 1
 		end
 	end
 	for _, enemy in ipairs(enemies) do
 		if enemy.alive then
-			addAction(EnemeyTurnEndAction:new{enemy=enemy})
+			addAction(index,EnemeyTurnEndAction:new{enemy=enemy})
+			index = index + 1
 		end
 	end
 	self.isDone = true
@@ -463,8 +466,8 @@ function DiscardNonRetainCardsAction:tick()
 			if self.isDone or (math.abs(cardItem.tx - cardItem.x) < 2 and math.abs(cardItem.ty - cardItem.y) < 2) then
 				removeHand(i)
 				table.insert(discardPile,cardItem.card)
-				cardItem.card:resetPowers()
 				cardItem.card.costForOneTurnPlay = nil
+				cardItem.card:resetPowers()
 			end
 		end
 	end
@@ -473,6 +476,7 @@ function DiscardNonRetainCardsAction:tick()
 			player:triggerEvent('onRetain',cardItem.card)
 			cardItem.card.tempRetain = false
 			cardItem.card.costForOneTurnPlay = nil
+			cardItem.card:applyPowers()
 		end
 		self.isDone = true
 	end
@@ -786,12 +790,12 @@ function ExhaustCardAction:tick()
 	if self.duration == self.startDuration then
 		local cardItem = self.cardItem
 		local card = cardItem.card
+		card.costForOneTurnPlay = nil
 		card:resetPowers()
 		local limboIndex = table.indexOf(limbo,cardItem)
 		if limboIndex then
 			table.remove(limbo,limboIndex)
 		end
-		card.costForOneTurnPlay = nil
 		table.insert(exhaustPile,card)
 		player:triggerEvent('onExhaust',card)
 		cardItem.large = false
@@ -931,12 +935,12 @@ function DiscardAction:tick()
 	if self.duration == self.startDuration then
 		local cardItem = self.cardItem
 		local card = cardItem.card
+		card.costForOneTurnPlay = nil
 		card:resetPowers()
 		local limboIndex = table.indexOf(limbo,cardItem)
 		if limboIndex then
 			table.remove(limbo,limboIndex)
 		end
-		card.costForOneTurnPlay = nil
 		table.insert(discardPile,card)
 		if self.fromHand then
 			player:triggerEvent('onDiscardFromHand',card)
@@ -965,12 +969,12 @@ function PutCardInDrawPileAction:tick()
 	if self.duration == self.startDuration then
 		local cardItem = self.cardItem
 		local card = cardItem.card
+		card.costForOneTurnPlay = nil
 		card:resetPowers()
 		local limboIndex = table.indexOf(limbo,cardItem)
 		if limboIndex then
 			table.remove(limbo,limboIndex)
 		end
-		card.costForOneTurnPlay = nil
 		table.insert(drawPile,self.position or (#drawPile+1),card)
 		cardItem.large = false
 		local effect = CardEffect:new{cardItem=cardItem,pauseDuration=30,duration=50,tx=0,ty=136}

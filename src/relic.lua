@@ -948,6 +948,7 @@ function MummifiedHand:onUseCard(card)
 			if #candidates > 0 then
 				local card = candidates[miscRand:randInt(#candidates)]
 				card.card.costForOneTurnPlay = 0
+				card.card:applyPowers()
 			end
 		end))
 	end
