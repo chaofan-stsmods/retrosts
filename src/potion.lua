@@ -107,10 +107,11 @@ function LiquidMemories:use()
 	return {
 		AnonymousAction:new(function ()
 			local cardItems = {}
+			amount = math.min(amount,HAND_LIMIT-#hand)
 			for i, card in ipairs(discardPile) do
 				cardItems[i] = CardItem:new{card=card,x=240,y=136,tx=240,ty=136,isNotInHand=true}
 			end
-			if #cardItems == 0 then
+			if #cardItems == 0 or amount <= 0 then
 				return
 			elseif #cardItems <= amount then
 				for _, cardItem in ipairs(cardItems) do
@@ -119,7 +120,8 @@ function LiquidMemories:use()
 					insertHand(cardItem)
 				end
 			else
-				openWindowAbove(CardGridSelectWindow:new{cardItems=cardItems,title='Choose a Card to Return to Hand',max=amount,min=amount},
+				local title = amount == 1 and 'Choose a Card to Return to Hand' or 'Choose Cards to Return to Hand ({#}/'..tostring(amount)..')'
+				openWindowAbove(CardGridSelectWindow:new{cardItems=cardItems,title=title,max=amount,min=amount},
 					function (cards)
 						for _, cardItem in ipairs(cards) do
 							table.remove(discardPile,table.indexOf(discardPile,cardItem.card))

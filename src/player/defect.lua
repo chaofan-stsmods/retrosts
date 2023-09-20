@@ -1226,7 +1226,7 @@ function AllForOne:use(target)
 			end
 			if #cards > 0 then
 				for _,card in ipairs(cards) do
-					if #hand > HAND_LIMIT then
+					if #hand >= HAND_LIMIT then
 						break
 					end
 					local cardItem = CardItem:new{card=card,x=240,y=136}
@@ -1488,10 +1488,11 @@ function Seek:use()
 	return {
 		AnonymousAction:new(function ()
 			local cardItems = {}
+			amount = math.min(amount,HAND_LIMIT-#hand)
 			for i, card in ipairs(drawPile) do
 				cardItems[i] = CardItem:new{card=card,x=0,y=136,tx=240,ty=136,isNotInHand=true}
 			end
-			if #cardItems == 0 then
+			if #cardItems == 0 or amount <= 0 then
 				return
 			elseif #cardItems <= amount then
 				for _, cardItem in ipairs(cardItems) do

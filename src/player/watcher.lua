@@ -104,7 +104,7 @@ function Watcher:getSpireHeartText()
 end
 
 function Watcher:getEnding()
-	return IroncladEnding:new()
+	return WatcherEnding:new()
 end
 
 function Watcher:resetPosition()
@@ -393,10 +393,12 @@ function FlurryOfBlows:use(target)
 end
 
 function FlurryOfBlows:onEnterStance()
-	if table.anyMatch(discardPile,function (card) return card == self end) then
+	if table.anyMatch(discardPile,function (card) return card == self end) and #hand < HAND_LIMIT then
 		addAction(AnonymousAction:new(function ()
-			table.remove(discardPile,table.indexOf(discardPile,self))
-			insertHand(CardItem:new{card=self,x=240,y=136})
+			if table.anyMatch(discardPile,function (card) return card == self end) then
+				table.remove(discardPile,table.indexOf(discardPile,self))
+				insertHand(CardItem:new{card=self,x=240,y=136})
+			end
 		end))
 	end
 end
@@ -756,11 +758,12 @@ function Meditate:use()
 	return {
 		AnonymousAction:new(function ()
 			disableAllUseCardActions()
+			amount = math.min(amount,HAND_LIMIT-#hand)
 			local cardItems = {}
 			for i, card in ipairs(discardPile) do
 				cardItems[i] = CardItem:new{card=card,x=240,y=136,tx=240,ty=136,isNotInHand=true}
 			end
-			if #cardItems == 0 then
+			if #cardItems == 0 or amount <= 0 then
 				return
 			elseif #cardItems <= amount then
 				for _, cardItem in ipairs(cardItems) do
@@ -1049,8 +1052,10 @@ end
 function Weave:onScried()
 	if table.anyMatch(discardPile,function (card) return card == self end) then
 		addAction(AnonymousAction:new(function ()
-			table.remove(discardPile,table.indexOf(discardPile,self))
-			insertHand(CardItem:new{card=self,x=240,y=136})
+			if table.anyMatch(discardPile,function (card) return card == self end) and #hand < HAND_LIMIT then
+				table.remove(discardPile,table.indexOf(discardPile,self))
+				insertHand(CardItem:new{card=self,x=240,y=136})
+			end
 		end))
 	end
 end
@@ -1421,7 +1426,7 @@ end
 
 Damaru = PurpleRelic:new{ name='Damaru',tier='common',icon=244,description='At the start of turn, gain #11#1#12# {Mantra}.' }
 function Damaru:onTurnStart()
-	addAction(ApplyPowerAction:new(player,MantraPower:new(player,5)))
+	addAction(ApplyPowerAction:new(player,MantraPower:new(player,1)))
 end
 
 Duality = PurpleRelic:new{ name='Duality',tier='uncommon',icon=229,description='Whenever you play a {Attack}, gain #11#1#12# temporary {Dexterity}.' }

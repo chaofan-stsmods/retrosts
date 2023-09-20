@@ -707,8 +707,11 @@ function Violence:use()
 	for i=1,math.min(#cardItems,self.magic) do
 		local cardItem = cardItems[i]
 		result[i] = AnonymousAction:new(function ()
-			table.remove(drawPile,table.indexOf(drawPile,cardItem.card))
-			insertHand(cardItem)
+			local index = table.indexOf(drawPile,cardItem.card)
+			if index and #hand < HAND_LIMIT then
+				table.remove(drawPile,index)
+				insertHand(cardItem)
+			end
 		end)
 	end
 	result[#result+1] = WaitAction:new(10)
