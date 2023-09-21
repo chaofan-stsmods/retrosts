@@ -33,7 +33,7 @@ inCombat = false
 combatSpriteBank = 1
 goldStolen = 0
 local handUI = HandUI:new(hand,true)
-local combatSelection = {type='hand',index=1}
+local combatSelection = {type='hand',index=1,lastTarget=0,handIndex=nil,singleEnemy=false}
 local pauseControl = false
 
 function startCombat(encounter,completed)
@@ -87,6 +87,7 @@ function startCombat(encounter,completed)
 	addAction(NewTurnAction:new{additionalCard=math.max(0,#innateCards-5)})
 	combatSelection.type = 'hand'
 	combatSelection.index = 0
+	combatSelection.lastTarget = 0
 end
 
 function combat()
@@ -187,12 +188,12 @@ end
 local function enemyCanInteract(i) return enemies[i].canInteract end
 
 function handUISelect(selection)
-	if not hand[selection].card:canUse() and not endTurnPressed then
+	if not hand[selection] or hand[selection].isNotInHand or not hand[selection].card:canUse() or endTurnPressed then
 		return
 	end
 
 	combatSelection.handIndex = selection
-	combatSelection.index = nextOrOtherIndexInTableIf(enemies,0,enemyCanInteract)
+	combatSelection.index = keepCurrentIndexInTableIf(enemies,combatSelection.lastTarget,enemyCanInteract)
 	local card = hand[combatSelection.handIndex].card
 	combatSelection.singleEnemy = card.enemyTarget and not card.toAllEnemies
 	if combatSelection.index == 0 and combatSelection.singleEnemy then
@@ -234,6 +235,26 @@ function combatControls()
 		return
 	end
 
+	for i=27,36 do
+		local n = i==27 and 10 or i-27
+		if keyp(i) and #hand >= n then
+			if combatSelection.type == 'usecard' and combatSelection.handIndex == n then
+				combatSelection.type = 'hand'
+				handUI.cursorOnSelf = true
+				if combatSelection.handIndex >= 1 and combatSelection.handIndex <= #hand then
+					hand[combatSelection.handIndex].card:applyPowers()
+				end
+				combatSelection.handIndex = nil
+			else
+				handUISelect(n)
+				if combatSelection.handIndex == n then
+					handUI.selection = n
+				end
+			end
+			return
+		end
+	end
+
 	if combatSelection.type == 'hand' then
 		-- handled in hand UI
 		handUI.cursorOnSelf = true
@@ -255,10 +276,11 @@ function combatControls()
 		end
 
 	elseif combatSelection.type == 'usecard' then
+		handUI.hideSelection = false
 		if combatSelection.handIndex < 1 or combatSelection.handIndex > #hand or not hand[combatSelection.handIndex].card:canUse() or endTurnPressed then
 			combatSelection.type = 'hand'
 			handUI.cursorOnSelf = true
-			if combatSelection.handIndex < 1 or combatSelection.handIndex > #hand then
+			if combatSelection.handIndex >= 1 and combatSelection.handIndex <= #hand then
 				hand[combatSelection.handIndex].card:applyPowers()
 			end
 			combatSelection.handIndex = nil
@@ -293,6 +315,7 @@ function combatControls()
 			combatSelection.type = 'hand'
 			handUI.cursorOnSelf = true
 			combatSelection.handIndex = nil
+			combatSelection.lastTarget = combatSelection.index
 		elseif btnp(5) or btnp(7) then
 			combatSelection.type = 'hand'
 			handUI.cursorOnSelf = true

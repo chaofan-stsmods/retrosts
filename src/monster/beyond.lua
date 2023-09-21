@@ -108,7 +108,7 @@ function Darkling:nextIntent(first)
 	else
 		if self.canChomp then
 			self:rollIntent({
-				{'chomp','attackDebuff',self.chompDmg,2,power=40,limit=1},
+				{'chomp','attack',self.chompDmg,2,power=40,limit=1},
 				{'defend',ascension >= 17 and 'defendBuff' or 'defend',power=30,limit=1},
 				{'nip','attack',self.nipDmg,power=30,limit=2},
 			})

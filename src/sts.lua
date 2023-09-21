@@ -1,11 +1,12 @@
--- title:	8-bit sts
+-- title:	Retro STS
 -- author:	Chaofan
--- desc:	Slay the Spire 8-bit version
+-- desc:	Slay the Spire retro version
 -- site:	website link
 -- license:	MIT License (change this to your license of choice)
--- version:	0.1
+-- version:	1.0
 -- script:	lua
 -- input:	gamepad
+-- input:	keyboard
 -- saveid:	sts
 ---@diagnostic disable: lowercase-global
 

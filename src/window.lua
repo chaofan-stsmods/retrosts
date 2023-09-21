@@ -199,10 +199,6 @@ function TitleSelectionWindow:tick()
 		pix(fire.x,fire.y,fire.color)
 	end
 
-	local x = 176
-	printShadowed('To report bugs,',x,110,12,nil,1,true)
-	printShadowed('please join my QQ',x,118,12,nil,1,true)
-	printShadowed('group: 103776068',x,126,12,nil,1,true)
 	local startY = 128-#self.options*8
 	for i=1,#self.options do
 		local color = i == self.selection and 4 or 12
@@ -245,6 +241,11 @@ function TitleWindow:tick()
 	x = x + self:drawKey(getKeyForBtn(1),x,50) + 1
 	x = x + self:drawKey(getKeyForBtn(3),x,50) + 1
 	printShadowed('Move cursor',x+2,47,12,nil,1,true)
+
+	x = 176
+	printShadowed('To report bugs,',x,110,12,nil,1,true)
+	printShadowed('please join my QQ',x,118,12,nil,1,true)
+	printShadowed('group: 103776068',x,126,12,nil,1,true)
 end
 
 function TitleWindow:drawKey(key,x,y)
