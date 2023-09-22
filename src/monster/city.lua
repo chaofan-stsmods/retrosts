@@ -255,7 +255,7 @@ function Chosen:nextIntent(first)
 	end
 end
 
-HexPower = Power:new{icon=325,description='Whenever you play a non-{Attack}, shuffle #11#!A!#12# Dazed{s} into draw pile.'}
+HexPower = Power:new{icon=325,debuff=true,description='Whenever you play a non-{Attack}, shuffle #11#!A!#12# Dazed{s} into draw pile.'}
 function HexPower:onUseCard(card)
 	if card.type ~= 'attack' then
 		addAction(MakeTempCardToDrawPileAction:new(Dazed:new(),self.amount))

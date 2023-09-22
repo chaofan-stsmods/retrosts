@@ -199,7 +199,7 @@ function PlatedArmorPower:onDamaged(value,source,type)
 	end
 end
 
-ConfusionPower = Power:new{icon=36,stackable=false,description='Whenever you draw a card, randomize its cost.'}
+ConfusionPower = Power:new{icon=36,stackable=false,debuff=true,description='Whenever you draw a card, randomize its cost.'}
 function ConfusionPower:onDraw(card)
 	if card.baseCost >= 0 then
 		local newCost = miscRand:randInt(0,3)
@@ -272,7 +272,7 @@ function IntangiblePower:onBeforeDamaged()
 	return 1
 end
 
-NoBlockPower = TurnBasedPower:new{icon=25,priority=200,description='You cannot gain {Block} from cards.'}
+NoBlockPower = TurnBasedPower:new{icon=25,debuff=true,priority=200,description='You cannot gain {Block} from cards.'}
 function NoBlockPower:modifyBlock()
 	return 0
 end

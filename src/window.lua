@@ -440,7 +440,7 @@ function CardListWindow:gridUISelect(selection)
 	end
 end
 
-ItemCollectionWindow = Window:new{name='RelicCollectionWindow',scrollY=0,targetScrollY=0,itemLists=nil,itemListSelection=1,poolSelection=0,itemSelection=1}
+ItemCollectionWindow = Window:new{name='ItemCollectionWindow',scrollY=0,targetScrollY=0,itemLists=nil,itemListSelection=1,poolSelection=0,itemSelection=1}
 local itemPoolNames = {'basic','common','uncommon','rare','boss','shop','special'}
 local itemPoolDisplayNames = {basic='Starter',special='Event'}
 function ItemCollectionWindow:new(items)
@@ -617,7 +617,46 @@ end
 
 BuffListWindow = ItemCollectionWindow:new{name='BuffListWindow'}
 function BuffListWindow:new()
-	return ItemCollectionWindow.new(self,{{items={basic=allPowers},tileBank=1}})
+	local r = ItemCollectionWindow.new(self,{{items={basic=allPowers},tileBank=1}})
+	r.spriteBank = 1
+	r.tileBank = 1
+	return r
+end
+
+function BuffListWindow:tick()
+	ItemCollectionWindow.tick(self)
+	if btnp(6) then
+		self.tileBank = self.tileBank%4+1
+		queueSync(1,self.tileBank)
+	elseif btnp(7) then
+		self.spriteBank = self.spriteBank%7+1
+		queueSync(2,self.spriteBank)
+	end
+
+	local y = math.floor(-self.scrollY)
+	local sx = 20
+	local items = self.itemLists[self.itemListSelection].items
+	for pi,poolName in ipairs(itemPoolNames) do
+		local pool = items[poolName]
+		if pool then
+			local x = sx
+			y = y + 12
+			for ri,relic in ipairs(pool) do
+				if relic.debuff then
+					rectb(x-1,y-1,10,10,3)
+				end
+				x = x + 12
+				if x - sx >= 120 then
+					x = sx
+					y = y + 12
+				end
+			end
+			if x > sx then
+				y = y + 12
+			end
+		end
+	end
+
 end
 
 LoseWindow = Window:new{name='LoseWindow',title='You Lose!'}

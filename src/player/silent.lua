@@ -449,7 +449,7 @@ function Choke:use(target)
 	return { DamageAction:new{target=target,source=player,value=self.damage}, ApplyPowerAction:new(player,ChokePower:new(target,self.magic)) }
 end
 
-ChokePower = Power:new{icon=197,description='Whenever you play a card this turn, loses #11#!A!#12# HP.'}
+ChokePower = Power:new{icon=197,debuff=true,description='Whenever you play a card this turn, loses #11#!A!#12# HP.'}
 function ChokePower:onUseCard()
 	addAction(DamageAction:new{target=self.owner,source=player,value=self.amount,type='hpLoss'})
 end
