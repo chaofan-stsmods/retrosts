@@ -15,7 +15,7 @@ Card = {
 	exhaust=false,ethereal=false,innate=false,retain=false,tempRetain=false,autoPlayOnEndTurn=false,
 	upgrade=noop,upgraded=false,tags={},canGenerateInCombat=true,canRemove=true,linkedBottle=nil,canUseCache=nil,
 	onRemoveFromDeck=noop,priority=120,descriptionWidth=53,cachedGlow=nil,
-	channelCount=0,evokeCount=0,
+	channelCount=0,evokeCount=0,init=noop,
 }
 Object:new(Card)
 
@@ -35,6 +35,7 @@ function Card:new(o)
 		local canUpgradeValue = r.canUpgrade
 		r.canUpgrade = function (self) return canUpgradeValue end
 	end
+	r:init()
 	r:resetPowers()
 	return r
 end

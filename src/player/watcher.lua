@@ -815,7 +815,7 @@ end
 
 Perseverance = PurpleCard:new{
 	name='Perseverance',description='Retain. NL Gain !B! {Block}. NL When retained, this card +!M! {Block} gain this combat.',
-	rarity='uncommon',type='skill',baseCost=1,baseBlock=5,baseMagic=2,playerTarget=true,upgrade={baseBlock=7,baseMagic=3},retain=true,
+	rarity='uncommon',type='skill',baseCost=1,baseBlock=5,baseMagic=2,playerTarget=true,retain=true,
 }
 function Perseverance:use()
 	return { GainBlockAction:new{target=player,value=self.block} }
@@ -826,6 +826,10 @@ function Perseverance:onRetain(card)
 		self.baseBlock = self.baseBlock + self.magic
 		self:applyPowers()
 	end
+end
+
+function Perseverance:upgrade()
+	self:upgradeValues({baseBlock=self.baseBlock+2,baseMagic=3})
 end
 
 Pray = PurpleCard:new{
@@ -1073,7 +1077,7 @@ end
 
 WindmillStrike = PurpleCard:new{
 	name='Windmill Strike',description='Retain. NL {Damage} !D!. NL When retained, this card +!M! damage this combat.',rarity='uncommon',
-	baseCost=2,baseDamage=7,baseMagic=4,enemyTarget=true,upgrade={baseDamage=10,baseMagic=5},retain=true,tags={'strike'},
+	baseCost=2,baseDamage=7,baseMagic=4,enemyTarget=true,retain=true,tags={'strike'},
 }
 function WindmillStrike:use(target)
 	return { DamageAction:new{target=target,source=player,value=self.damage} }
@@ -1084,6 +1088,10 @@ function WindmillStrike:onRetain(card)
 		self.baseDamage = self.baseDamage + self.magic
 		self:applyPowers()
 	end
+end
+
+function WindmillStrike:upgrade()
+	self:upgradeValues({baseDamage=self.baseDamage+3,baseMagic=5})
 end
 
 Worship = PurpleCard:new{

@@ -2,10 +2,11 @@
 
 local blueCards
 
-DefectEventListener = { frostChanneled=0,lightningChanneled=0,cardsPlayedThisTurn=0 }
+DefectEventListener = { frostChanneled=0,lightningChanneled=0,cardsPlayedThisTurn=0,powerCardsPlayedThisCombat=0 }
 function DefectEventListener:onCombatStart()
 	self.frostChanneled = 0
 	self.lightningChanneled = 0
+	self.powerCardsPlayedThisCombat = 0
 end
 
 function DefectEventListener:onTurnStart()
@@ -22,6 +23,9 @@ end
 
 function DefectEventListener:onUseCard(card)
 	self.cardsPlayedThisTurn = self.cardsPlayedThisTurn + 1
+	if card.type == 'power' then
+		self.powerCardsPlayedThisCombat = self.powerCardsPlayedThisCombat + 1
+	end
 end
 
 table.insert(playerEventListeners,DefectEventListener)
@@ -371,7 +375,7 @@ end
 
 Claw = BlueCard:new{
 	name='Claw',description='{Damage} !D!. NL Claw cards +!M! damage this combat.',rarity='common',baseCost=0,baseDamage=3,baseMagic=2,
-	enemyTarget=true,upgrade={baseDamage=5,baseMagic=2},
+	enemyTarget=true,
 }
 function Claw:use(target)
 	local damageIncrease = self.magic
@@ -405,6 +409,10 @@ function Claw:use(target)
 			end
 		end)
 	}
+end
+
+function Claw:upgrade()
+	self:upgradeValues({baseDamage=self.baseDamage+2})
 end
 
 ColdSnap = BlueCard:new{
@@ -848,6 +856,20 @@ ForceField = BlueCard:new{
 	name='Force Field',description='Costs 1 less {Energy} for each {Power} played this combat. NL Gain !B! {Block}.',rarity='uncommon',type='skill',baseCost=4,
 	playerTarget=true,baseBlock=12,upgrade={baseBlock=16},
 }
+function ForceField:init()
+	if inCombat and DefectEventListener.powerCardsPlayedThisCombat > 0 then
+		self.baseCost = math.max(0,4-DefectEventListener.powerCardsPlayedThisCombat)
+		self.baseCostModified = true
+	end
+end
+
+function ForceField:onObtainCard(card)
+	if card == self then
+		self.baseCost = 4
+		self.baseCostModified = false
+	end
+end
+
 function ForceField:onUseCard(card)
 	if card.type == 'power' then
 		self:modifyBaseCost(-1)
@@ -1363,7 +1385,8 @@ ElectrodynamicsPower = Power:new{icon=215,stackable=false,description='{Lightnin
 
 Fission = BlueCard:new{
 	name='Fission',description='Remove all orbs. Gain {Energy} and draw 1 card for each orb removed. NL Exhaust.',rarity='rare',type='skill',
-	baseCost=0,playerTarget=true,upgrade={description='Evoke all orbs. Gain {Energy} and draw 1 card for each orb evoked. NL Exhaust.',evokeCount=10},
+	baseCost=0,playerTarget=true,exhaust=true,
+	upgrade={description='Evoke all orbs. Gain {Energy} and draw 1 card for each orb evoked. NL Exhaust.',evokeCount=10},
 }
 function Fission:use()
 	local upgraded = self.upgraded

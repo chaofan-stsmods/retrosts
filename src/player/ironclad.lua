@@ -557,6 +557,12 @@ end
 
 function BloodForBlood:upgrade()
 	self.baseCost = math.max(0,self.baseCost-1)
+	if self.costForOneTurnPlay then
+		self.costForOneTurnPlay = math.max(0,self.costForOneTurnPlay-1)
+	end
+	if self.costForOnePlay then
+		self.costForOnePlay = math.max(0,self.costForOnePlay-1)
+	end
 	self:upgradeValues({baseDamage=22})
 end
 
