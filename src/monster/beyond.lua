@@ -44,7 +44,7 @@ function StrengthUpPower:onTurnEnd()
 	addAction(ApplyPowerAction:new(self.owner,StrengthPower:new(self.owner,self.amount)))
 end
 
-Darkling = Monster:new{ maxHp=56,width=4,height=3,chompDmg=8,nipDmg=7,canChomp=true }
+Darkling = Monster:new{ maxHp=56,width=4,height=3,chompDmg=8,nipDmg=7,canChomp=true,isDying=false }
 function Darkling:init(random)
 	self.maxHp = ascension >= 7 and random:randInt(50,59) or random:randInt(48,56)
 	if ascension >= 2 then
@@ -85,6 +85,7 @@ function Darkling:defend()
 end
 
 function Darkling:count()
+	self.isDying = false
 	addAction(EffectAction:new(TextEffect:new{color=12,text='Regrowing...',x=self.x+self.width*4,y=self.y,ySpeed=-0.5}))
 	addAction(SetIntentAction:new(self,'reincarnate','buff'))
 end
@@ -123,9 +124,10 @@ end
 
 LifeLinkPower = Power:new{icon=427,stackable=false,description='If other enemies are still alive, revives in #11#2#12# turns at #11#50%#12# HP.'}
 function LifeLinkPower:onDeath()
-	if table.anyMatch(enemies,function (enemy) return enemy.alive and enemy:getPower(LifeLinkPower) ~= nil end) then
+	if table.anyMatch(enemies,function (enemy) return enemy.alive and enemy:getPower(LifeLinkPower) ~= nil and not enemy.isDying end) then
 		self.owner.alive = true
 		self.owner.visible = true
+		self.owner.isDying = true
 		addAction(1,AnonymousAction:new(function ()
 			self.owner.powers = {}
 		end))
@@ -1062,8 +1064,8 @@ function TimeWarpEffect:tick()
 	d1,d2,d3,d4 = d1*d,d2*d,d3*d,d4*d
 	local icon = 404
 	local u,v = 8*(icon%16),8*math.floor(icon/16)
-	ttri(x1+d1,y1+d2,x1+d3,y1+d4,x1-d1,y1-d2,u,v,u+8,v,u+8,v+8,0,0)
-	ttri(x1+d1,y1+d2,x1-d3,y1-d4,x1-d1,y1-d2,u,v,u,v+8,u+8,v+8,0,0)
+	ttri(x1+d1,y1+d2,x1+d3,y1+d4,x1-d1,y1-d2,u,v,u+8,v,u+8,v+8,0,0,1,1,1)
+	ttri(x1+d1,y1+d2,x1-d3,y1-d4,x1-d1,y1-d2,u,v,u,v+8,u+8,v+8,0,0,1,1,1)
 end
 
 DrawReductionPower = TurnBasedPower:new{icon=405,debuff=true,description='Draw #11#1#12# less card for #11#!A!#12# turn{s}.'}

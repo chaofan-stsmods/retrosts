@@ -245,8 +245,8 @@ function WheelOfChange:drawWheel()
 			d1,d2,d3,d4 = d1*d,d2*d,d3*d,d4*d
 			local icon = wheelIcons[i]
 			local u,v = 8*(icon%16),8*math.floor(icon/16)
-			ttri(x1+d1,y1+d2,x1+d3,y1+d4,x1-d1,y1-d2,u,v,u+8,v,u+8,v+8,0,0)
-			ttri(x1+d1,y1+d2,x1-d3,y1-d4,x1-d1,y1-d2,u,v,u,v+8,u+8,v+8,0,0)
+			ttri(x1+d1,y1+d2,x1+d3,y1+d4,x1-d1,y1-d2,u,v,u+8,v,u+8,v+8,0,0,1,1,1)
+			ttri(x1+d1,y1+d2,x1-d3,y1-d4,x1-d1,y1-d2,u,v,u,v+8,u+8,v+8,0,0,1,1,1)
 		else
 			spr(wheelIcons[i],x1-8,y1-8,0,2)
 		end

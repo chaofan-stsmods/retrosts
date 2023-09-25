@@ -535,12 +535,18 @@ end
 function removeCardsWithEffect(cardItems,duration)
 	duration = duration or 10
 	local startX,stepX = placeCardsInARow(#cardItems)
+	local randomDuration = #cardItems > 3
 	for i, cardItem in ipairs(cardItems) do
 		removeCard(cardItem.card)
 		cardItem.tx = startX+stepX*i
 		cardItem.ty = 68
 		cardItem.large = false
-		addEffect(CardEffect:new{cardItem=cardItem,pauseDuration=duration+effectRandom:randInt(-10,10),duration=duration+20,tx=startX+stepX*i,ty=-30})
+		addEffect(CardEffect:new{
+			cardItem=cardItem,
+			pauseDuration=duration+(randomDuration and effectRandom:randInt(-10,10) or 0),
+			duration=duration+20,
+			tx=startX+stepX*i,
+			ty=-30})
 	end
 end
 
