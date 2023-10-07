@@ -460,7 +460,7 @@ end
 
 Concentrate = GreenCard:new{
 	name='Concentrate',description='Discard !M! card. NL Gain {Energy}{Energy}.',rarity='uncommon',type='skill',baseCost=0,baseMagic=3,
-	playerTarget=true,upgrade={baseMagic=2},
+	playerTarget=true,upgrade={baseMagic=2},preferSmallMagic=true,
 }
 function Concentrate:use()
 	return { SelectDiscardHandAction:new(self.magic), GainEnergyAction:new(2) }

@@ -562,7 +562,7 @@ function TheColosseum:onOption(selection)
 			roomActionType = 'eventCombat'
 			self.screen = 'fight2'
 			self.spriteBank = 1
-			startCombat(ColosseumNobsEncounter)
+			startCombat(ColosseumNobsEncounter,false,100000)
 		end
 	else
 		completeRoom()

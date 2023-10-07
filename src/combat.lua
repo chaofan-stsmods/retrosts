@@ -36,12 +36,13 @@ local handUI = HandUI:new(hand,true)
 local combatSelection = {type='hand',index=1,lastTarget=0,handIndex=nil,singleEnemy=false}
 local pauseControl = false
 
-function startCombat(encounter,completed)
-	shuffleRand = makeRand(act.id,room.id,2)
-	miscRand = makeRand(act.id,room.id,3)
-	rewardRand = makeRand(act.id,room.id,4)
-	aiRand = makeRand(act.id,room.id,5)
-	potionRand = makeRand(act.id,room.id,6)
+function startCombat(encounter,completed,randDiff)
+	randDiff = randDiff or 0
+	shuffleRand = makeRand(act.id,room.id,2+randDiff)
+	miscRand = makeRand(act.id,room.id,3+randDiff)
+	rewardRand = makeRand(act.id,room.id,4+randDiff)
+	aiRand = makeRand(act.id,room.id,5+randDiff)
+	potionRand = makeRand(act.id,room.id,6+randDiff)
 	setupEnemies(encounter)
 	closeChildWindows()
 	resetActions()
