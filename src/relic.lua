@@ -923,7 +923,7 @@ function Matryoshka:onOpenNonBossChest(rewards)
 	end
 end
 
-MeatOnTheBone = Relic:new{name='Meat on the Bone',icon=131,tier='uncommon',description='If your HP is at or below #11#50%#12# at the end of combat, heal #11#12#12# HP.'}
+MeatOnTheBone = Relic:new{name='Meat on the Bone',icon=131,tier='uncommon',priority=60,description='If your HP is at or below #11#50%#12# at the end of combat, heal #11#12#12# HP.'}
 function MeatOnTheBone:canSpawn()
 	return floor <= 48
 end
