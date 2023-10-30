@@ -228,29 +228,41 @@ local wordKeys = {
 local keyRotation = { 0, 2, 3, 1 }
 local keyOffset = { {1,0}, {0,-1}, {1,-1}, {0,0} }
 local keyFunction = { 'Confirm, Select','Cancel','Select Potion','End turn, Proceed, Skip' }
+local keyName = { [0]='A', 'B', 'X', 'Y' }
+local keyColor = { [0]={5,7}, {3,1}, {10,9}, {4,2} }
 function TitleWindow:tick()
 	TitleSelectionWindow.tick(self)
+	local y = 2
+	local x = 10
+	local startX = x
 	for i=0,3 do
 		local key = getKeyForBtn(i+4)
-		local keyWidth = self:drawKey(key,2,2+10*i)
-		printShadowed(keyFunction[i+1],5+keyWidth,3+10*i,12,nil,1,true)
+		local keyWidth
+		if key ~= 0 then
+			local keyWidth = self:drawKey(key,x,y)
+		else
+			circb(x+4,y+4,4,keyColor[i][2])
+			circ(x+4,y+3,4,keyColor[i][1])
+			print(keyName[i],x+2,y+1,15)
+			keyWidth = 8
+		end
+		printGlowed(keyFunction[i+1],x+3+keyWidth,y+1,12,nil,1,true)
+		y = y + 10
 	end
-	local x = 2
-	x = x + self:drawKey(getKeyForBtn(2),x,50) + 1
-	self:drawKey(getKeyForBtn(0),x,42)
-	x = x + self:drawKey(getKeyForBtn(1),x,50) + 1
-	x = x + self:drawKey(getKeyForBtn(3),x,50) + 1
-	printShadowed('Move cursor',x+2,47,12,nil,1,true)
-
-	x = 176
-	printShadowed('To report bugs,',x,110,12,nil,1,true)
-	printShadowed('please join my QQ',x,118,12,nil,1,true)
-	printShadowed('group: 103776068',x,126,12,nil,1,true)
+	x = x + self:drawKey(getKeyForBtn(2),x,y+8) + 1
+	self:drawKey(getKeyForBtn(0),x,y)
+	x = x + self:drawKey(getKeyForBtn(1),x,y+8) + 1
+	x = x + self:drawKey(getKeyForBtn(3),x,y+8) + 1
+	if x > startX + 3 then
+		printGlowed('Move cursor',x+2,y+5,12,nil,1,true)
+	end
 end
 
 function TitleWindow:drawKey(key,x,y)
 	local keyWidth = 8
-	if key <= #keys then
+	if key == 0 then
+		return 0
+	elseif key <= #keys then
 		map(0,39,2,2,x,y,0)
 		local str = keys:sub(key,key)
 		print(str,x+5-strWidth(str)//2,y+1,15)
