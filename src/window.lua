@@ -239,7 +239,7 @@ function TitleWindow:tick()
 		local key = getKeyForBtn(i+4)
 		local keyWidth
 		if key ~= 0 then
-			local keyWidth = self:drawKey(key,x,y)
+			keyWidth = self:drawKey(key,x,y)
 		else
 			circb(x+4,y+4,4,keyColor[i][2])
 			circ(x+4,y+3,4,keyColor[i][1])
