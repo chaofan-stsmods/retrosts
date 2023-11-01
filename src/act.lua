@@ -150,7 +150,7 @@ function Exordium:drawBackground()
 end
 
 TheCity = Act:new{
-	id=2,title='The City',smallTitle='Act 2',cardUpgradedChance=0.25,
+	id=2,title='The City',smallTitle='Act 2',cardUpgradedChance=0.25,maxBackground=60,
 	weakEncounters={
 		{item=TwoThievesEncounter,power=2},
 		{item=ThreeByrdsEncounter,power=2},
@@ -198,7 +198,7 @@ function TheCity:drawBackground()
 end
 
 TheBeyond = Act:new{
-	id=3,title='The Beyond',smallTitle='Act 3',cardUpgradedChance=0.5,
+	id=3,title='The Beyond',smallTitle='Act 3',cardUpgradedChance=0.5,maxBackground=60,
 	weakEncounters={
 		{item=OrbWalkerEncounter,power=2},
 		{item=ThreeDarklingsEncounter,power=2},
