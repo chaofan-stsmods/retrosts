@@ -251,7 +251,11 @@ function SpireSpear:burn()
 	for _=1,self.intentAttackCount do
 		addAction(DamageAction:new{target=player,source=self,value=self.intentDamage})
 	end
-	addAction(MakeTempCardToDrawPileAction:new(Burn:new(),2,{putOnTop=ascension>=18}))
+	if ascension >= 18 then
+		addAction(MakeTempCardToDrawPileAction:new(Burn:new(),2,{putOnTop=true}))
+	else
+		addAction(MakeTempCardToDiscardPileAction:new(Burn:new(),2))
+	end
 	addAction(NextIntentAction:new(self))
 end
 

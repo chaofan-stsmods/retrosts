@@ -1177,7 +1177,7 @@ function ClearFiresAction:tick()
 end
 
 TheGuardian = Monster:new{
-	maxHp=240,width=8,height=6,bashDmg=32,rollDmg=9,twinSlamDmg=8,whirlwindDmg=4,
+	maxHp=240,width=8,height=6,bashDmg=32,rollDmg=9,twinSlamDmg=8,whirlwindDmg=5,
 	modeShiftAmount=30,defensiveMode=false,enteringDefensiveMode=false,type='boss'
 }
 function TheGuardian:init()
@@ -1245,7 +1245,7 @@ function TheGuardian:twinSlam()
 	for _=1,self.intentAttackCount do
 		addAction(DamageAction:new{target=player,source=self,value=self.intentDamage})
 	end
-	addAction(SetIntentAction:new(self,'whirlwind','attack',self.whirlwindDmg,5))
+	addAction(SetIntentAction:new(self,'whirlwind','attack',self.whirlwindDmg,4))
 end
 
 function TheGuardian:nextIntent()

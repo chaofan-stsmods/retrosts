@@ -152,6 +152,9 @@ function UseCardAction:tick()
 			local target = getRandomInteractableEnemy()
 			if target then
 				self.target = target
+			else
+				self.isDone = true
+				return
 			end
 		end
 		if self.target == nil and card.enemyTarget and card.toAllEnemies then
