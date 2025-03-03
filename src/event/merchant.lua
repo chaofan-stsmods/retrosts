@@ -315,6 +315,7 @@ function MerchantWindow:merchantControls()
 
 		if btnp(1) then
 			if self.selection < 3 then
+				cardPickSfx()
 				self.selectionType = 'card2'
 				if not isNotSold(self.selection,self.goods.card2) then
 					self.selection = 0
@@ -331,8 +332,10 @@ function MerchantWindow:merchantControls()
 				end
 			end
 		elseif btnp(2) then
+			cardPickSfx()
 			self.selection = previousOrOtherIndexInTableIf(self.goods.card1,self.selection,isNotSold)
 		elseif btnp(3) then
+			cardPickSfx()
 			self.selection = nextOrOtherIndexInTableIf(self.goods.card1,self.selection,isNotSold)
 		elseif btnp(4) then
 			local cardItem = self.goods.card1[self.selection]
@@ -357,13 +360,16 @@ function MerchantWindow:merchantControls()
 		end
 
 		if btnp(0) then
+			cardPickSfx()
 			self.selectionType = 'card1'
 			if not isNotSold(self.selection,self.goods.card1) then
 				self.selection = 0
 			end
 		elseif btnp(2) then
+			cardPickSfx()
 			self.selection = previousOrOtherIndexInTableIf(self.goods.card2,self.selection,isNotSold)
 		elseif btnp(3) then
+			cardPickSfx()
 			local oldSelection = self.selection
 			self.selection = nextOrOtherIndexInTableIf(self.goods.card2,self.selection,isNotSold)
 			if oldSelection == self.selection then
@@ -393,6 +399,7 @@ function MerchantWindow:merchantControls()
 		end
 
 		if btnp(0) then
+			cardPickSfx()
 			self.selectionType = 'card1'
 			self.selection = self.selection < 3 and 3 or 4
 			if not isNotSold(self.selection,self.goods.card1) then
@@ -407,6 +414,7 @@ function MerchantWindow:merchantControls()
 			local oldSelection = self.selection
 			self.selection = previousOrOtherIndexInTableIf(self.goods.relics,self.selection,isNotSold)
 			if oldSelection == self.selection then
+				cardPickSfx()
 				self.selectionType = 'card2'
 				self.selection = nextOrOtherIndexInTableIf(self.goods.card2,#self.goods.card2,isNotSold)
 			end
@@ -447,6 +455,7 @@ function MerchantWindow:merchantControls()
 			local oldSelection = self.selection
 			self.selection = previousOrOtherIndexInTableIf(self.goods.potions,self.selection,isNotSold)
 			if oldSelection == self.selection then
+				cardPickSfx()
 				self.selectionType = 'card2'
 				self.selection = nextOrOtherIndexInTableIf(self.goods.card2,#self.goods.card2,isNotSold)
 			end
@@ -470,12 +479,14 @@ function MerchantWindow:merchantControls()
 		end
 	elseif self.selectionType == 'cardRemoval' then
 		if self.cardRemoval.sold then
+			cardPickSfx()
 			self.selectionType = 'card1'
 			self.selection = 0
 			return
 		end
 
 		if btnp(0) then
+			cardPickSfx()
 			self.selectionType = 'card1'
 			self.selection = 5
 			if not isNotSold(self.selection,self.goods.card1) then

@@ -801,8 +801,10 @@ function HandUI:handControls()
 	end
 
 	if btnp(2) then
+		cardPickSfx()
 		self.selection = previousOrOtherIndexInTableIf(self.cardItems,self.selection,cardIsInHand)
 	elseif btnp(3) then
+		cardPickSfx()
 		self.selection = nextOrOtherIndexInTableIf(self.cardItems,self.selection,cardIsInHand)
 	elseif btnp(4) and self.selection >= 1 and self.selection <= #self.cardItems then
 		local oldSelection = self.selection
@@ -859,15 +861,19 @@ function CardGridUI:gridControls()
 
 	local pressed = false
 	if btnp(0) then
+		cardPickSfx()
 		self.selection = limit(self.selection-5,1,#self.cardItems)
 		pressed = true
 	elseif btnp(1) then
+		cardPickSfx()
 		self.selection = limit(self.selection+5,1,#self.cardItems)
 		pressed = true
 	elseif btnp(2) then
+		cardPickSfx()
 		self.selection = limit(self.selection-1,1,#self.cardItems)
 		pressed = true
 	elseif btnp(3) then
+		cardPickSfx()
 		self.selection = limit(self.selection+1,1,#self.cardItems)
 		pressed = true
 	elseif btnp(4) and self.selection >= 1 and self.selection <= #self.cardItems then
@@ -959,11 +965,14 @@ function HandSelectWindow:selectedCardsControls()
 			self.selection = 1
 		end
 		if btnp(1) and #self.cardItems > 0 then
+			cardPickSfx()
 			self.cursorOnSelectedCards = false
 			self.handUI.cursorOnSelf = true
 		elseif btnp(2) then
+			cardPickSfx()
 			self.selection = limit(self.selection-1,1,#self.selectedCards)
 		elseif btnp(3) then
+			cardPickSfx()
 			self.selection = limit(self.selection+1,1,#self.selectedCards)
 		elseif btnp(4) then
 			local cardItem = table.remove(self.selectedCards,self.selection)
@@ -977,6 +986,7 @@ function HandSelectWindow:selectedCardsControls()
 		end
 	else
 		if btnp(0) and #self.selectedCards > 0 then
+			cardPickSfx()
 			self.cursorOnSelectedCards = true
 			self.handUI.cursorOnSelf = false
 			self.selection = limit(self.selection,1,#self.selectedCards) or 0

@@ -142,6 +142,7 @@ function Creature:damage(source,value,type,action)
 	if (not source.alive and type == 'attack') or not self.canInteract then
 		return
 	end
+	hitSfx()
 	value = self:triggerReducerEvent('onBeforeDamaged',value,source,type,action)
 	if type ~= 'hpLoss' then
 		if self.block > 0 then

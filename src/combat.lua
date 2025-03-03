@@ -327,6 +327,7 @@ function combatControls()
 		end
 	elseif combatSelection.type == 'drawPile' then
 		if btnp(3) then
+			cardPickSfx()
 			combatSelection.type = 'hand'
 			handUI.cursorOnSelf = true
 		elseif btnp(4) then
@@ -345,6 +346,7 @@ function combatControls()
 		end
 	elseif combatSelection.type == 'discardPile' then
 		if btnp(2) then
+			cardPickSfx()
 			combatSelection.type = 'hand'
 			handUI.cursorOnSelf = true
 		elseif btnp(0) then
@@ -362,6 +364,7 @@ function combatControls()
 		end
 	elseif combatSelection.type == 'exhaustPile' then
 		if btnp(2) then
+			cardPickSfx()
 			combatSelection.type = 'hand'
 			handUI.cursorOnSelf = true
 		elseif btnp(1) then

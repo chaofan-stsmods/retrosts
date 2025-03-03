@@ -209,6 +209,7 @@ end
 
 TitleWindow = TitleSelectionWindow:new{options={'New Game','Card List','Relic Collection','Potion Lab'},name='TitleWindow'}
 function TitleWindow:new(o)
+	music()
 	o = o or {}
 	if hasSave() then
 		o.options = shallowcopy(TitleWindow.options)
@@ -673,6 +674,7 @@ end
 
 LoseWindow = Window:new{name='LoseWindow',title='You Lose!'}
 function LoseWindow:onOpen()
+	music()
 	queueSync(1,5)
 end
 
@@ -696,6 +698,11 @@ function LoseWindow:tick()
 end
 
 GameWindow = Window:new{name='GameWindow'}
+function GameWindow:new()
+	music(0)
+	return Window.new(self)
+end
+
 function GameWindow:onOpen()
 	if self.child == nil then
 		queueSync(1,player.tileBank)

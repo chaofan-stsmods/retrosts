@@ -519,8 +519,10 @@ function CardRewardWindow:cardRewardControls()
 
 		if #self.cards > 0 then
 			if btnp(2) then
+				cardPickSfx()
 				self.selection = limit(self.selection-1,1,#self.cards)
 			elseif btnp(3) then
+				cardPickSfx()
 				self.selection = limit(self.selection+1,1,#self.cards)
 			end
 		end
