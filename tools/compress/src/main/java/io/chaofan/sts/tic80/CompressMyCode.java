@@ -113,8 +113,8 @@ public class CompressMyCode {
         for (int i = 0, j = Math.min(lineSize, string.length());
              i < string.length();
              i = j, j = Math.min(j + lineSize, string.length())) {
-            if (string.charAt(j - 1) == '\\' && string.charAt(j - 2) != '\\') {
-                j--;
+            while (string.charAt(j - 1) == '\\') {
+                j++;
             }
             sb.append("'");
             sb.append(string, i, j);
